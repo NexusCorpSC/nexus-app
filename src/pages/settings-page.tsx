@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { useAuth } from "@/auth/auth-context";
@@ -6,6 +6,7 @@ import {
   ALLOWED_API_BASE_URLS,
   DEFAULT_API_BASE_URL,
   getApiBaseUrl,
+  isAllowedBaseUrl,
   normalizeBaseUrl,
   setApiBaseUrl,
 } from "@/lib/settings";
@@ -19,11 +20,20 @@ export default function SettingsPage() {
   const [version, setVersion] = useState("");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     void getApiBaseUrl().then(setBaseUrl);
     void getVersion().then(setVersion);
   }, []);
+
+  // Clears the "Enregistré" flash timer if the screen is left first.
+  useEffect(
+    () => () => {
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    },
+    [],
+  );
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -33,7 +43,7 @@ export default function SettingsPage() {
 
     // The `http` capability only allows the hosts declared in
     // src-tauri/capabilities/default.json; anything else fails at runtime.
-    if (!ALLOWED_API_BASE_URLS.includes(normalized)) {
+    if (!isAllowedBaseUrl(normalized)) {
       setError(
         `Cette URL n'est pas autorisée par les permissions de l'application. Valeurs possibles : ${ALLOWED_API_BASE_URLS.join(", ")}`,
       );
@@ -45,7 +55,8 @@ export default function SettingsPage() {
     queryClient.clear();
     await refresh();
     setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+    if (savedTimer.current) clearTimeout(savedTimer.current);
+    savedTimer.current = setTimeout(() => setSaved(false), 2500);
   }
 
   return (

@@ -64,7 +64,7 @@ cookie (better-auth le préfixe `__Secure-` en HTTPS).
 
 ### Prérequis
 
-- Node 20+
+- Node `^20.19.0 || >=22.12.0` (contrainte de Vite 7)
 - Rust stable
 - Linux : `libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libsoup-3.0-dev`
 

@@ -41,10 +41,24 @@ export function normalizeBaseUrl(url: string): string {
   return url.trim().replace(/\/+$/, "");
 }
 
+export function isAllowedBaseUrl(url: string): boolean {
+  return ALLOWED_API_BASE_URLS.includes(normalizeBaseUrl(url));
+}
+
+/**
+ * The stored value is re-validated against the allowlist on every read: a
+ * hand-edited or corrupted store must not be able to point `openUrl` at an
+ * arbitrary host (the `http` capability would already reject API calls).
+ */
 export async function getApiBaseUrl(): Promise<string> {
   const store = await getStore();
   const value = await store.get<string>(KEY_API_BASE_URL);
-  return value ? normalizeBaseUrl(value) : DEFAULT_API_BASE_URL;
+
+  if (!value || !isAllowedBaseUrl(value)) {
+    return DEFAULT_API_BASE_URL;
+  }
+
+  return normalizeBaseUrl(value);
 }
 
 export async function setApiBaseUrl(url: string): Promise<void> {

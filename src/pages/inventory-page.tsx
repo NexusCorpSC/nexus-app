@@ -152,7 +152,7 @@ export default function InventoryPage() {
                 </p>
                 <p className="mt-0.5 text-xs text-nexus-accent/50">
                   {item.location?.name ?? "Lieu inconnu"}
-                  {item.quality ? ` · qualité ${item.quality}` : ""}
+                  {item.quality != null ? ` · qualité ${item.quality}` : ""}
                   {` · maj ${formatDate(item.updatedAt)}`}
                 </p>
               </div>
