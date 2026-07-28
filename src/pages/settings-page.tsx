@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
-import { invoke } from "@tauri-apps/api/core";
 import { useAuth } from "@/auth/auth-context";
 import {
   ALLOWED_API_BASE_URLS,
   DEFAULT_API_BASE_URL,
   DEFAULT_SHORTCUTS,
+  formatShortcut,
   getApiBaseUrl,
   getShortcuts,
   isAllowedBaseUrl,
@@ -15,6 +15,11 @@ import {
   setShortcuts,
   type Shortcuts,
 } from "@/lib/settings";
+import {
+  applyShortcuts,
+  SHORTCUT_LABELS,
+  type ShortcutRejection,
+} from "@/lib/shortcuts";
 import { Button, Card, Field, Input, PageHeader } from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
 
@@ -30,6 +35,7 @@ export default function SettingsPage() {
 
   const [shortcuts, setLocalShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
   const [shortcutsSaved, setShortcutsSaved] = useState(false);
+  const [rejections, setRejections] = useState<ShortcutRejection[]>([]);
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const shortcutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -49,24 +55,29 @@ export default function SettingsPage() {
   );
 
   /**
-   * Binds first, persists second: if the combination is already taken by
-   * another application, nothing is written and the previous pair stays live.
+   * Each combination is bound on its own, so a conflict costs only that one.
+   * The choice is persisted either way — it is the user's — and the ones the
+   * system refused are listed underneath so they can be changed.
    */
   async function handleShortcutsSubmit(event: FormEvent) {
     event.preventDefault();
     setShortcutError(null);
 
+    // Persisted before binding: "either way" has to hold for the call failing
+    // outright too, not just for a combination the system hands back.
+    await setShortcuts(shortcuts);
+
     try {
-      await invoke("set_shortcuts", {
-        search: shortcuts.search,
-        capture: shortcuts.capture,
-      });
+      setRejections(await applyShortcuts(shortcuts));
     } catch (cause) {
-      setShortcutError(String(cause));
-      return;
+      setRejections([]);
+      setShortcutError(
+        cause instanceof Error
+          ? cause.message
+          : "Les raccourcis n'ont pas pu être appliqués. Ils le seront au prochain démarrage.",
+      );
     }
 
-    await setShortcuts(shortcuts);
     setShortcutsSaved(true);
     if (shortcutTimer.current) clearTimeout(shortcutTimer.current);
     shortcutTimer.current = setTimeout(() => setShortcutsSaved(false), 2500);
@@ -163,6 +174,15 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Bloc-notes en superposition">
+            <ShortcutInput
+              value={shortcuts.notes}
+              onChange={(notes) =>
+                setLocalShortcuts((current) => ({ ...current, notes }))
+              }
+            />
+          </Field>
+
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm">
               Appliquer
@@ -184,6 +204,23 @@ export default function SettingsPage() {
             <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
               {shortcutError}
             </p>
+          ) : null}
+
+          {rejections.length > 0 ? (
+            <div className="space-y-1 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+              <p>
+                Ces combinaisons n'ont pas pu être prises. Elles restent
+                enregistrées mais sont inactives : choisissez-en d'autres.
+              </p>
+              <ul className="list-disc space-y-0.5 pl-4">
+                {rejections.map((rejection) => (
+                  <li key={rejection.action}>
+                    {SHORTCUT_LABELS[rejection.action]} —{" "}
+                    {formatShortcut(rejection.accelerator)} : {rejection.reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ) : null}
         </form>
       </Card>

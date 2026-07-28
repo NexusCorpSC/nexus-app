@@ -1,24 +1,23 @@
 mod capture;
+mod diagnostics;
 
 use std::sync::Mutex;
 use std::time::Duration;
 
 use capture::{Capture, Selection};
+use serde::{Deserialize, Serialize};
 use tauri::{
     AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
-/// Shortcuts registered until the frontend applies the stored ones. Key names
-/// follow `KeyboardEvent.code`, so what the settings screen records maps across
-/// unchanged (see `src/lib/settings.ts`).
-const DEFAULT_SEARCH_SHORTCUT: &str = "Ctrl+Shift+KeyB";
-const DEFAULT_CAPTURE_SHORTCUT: &str = "Ctrl+Shift+KeyS";
+use diagnostics::log;
 
 /// Window labels declared in `tauri.conf.json`.
 const MAIN_WINDOW: &str = "main";
 const OVERLAY_WINDOW: &str = "overlay";
 const CAPTURE_WINDOW: &str = "capture";
+const NOTES_WINDOW: &str = "notes";
 
 /// Carries recognised text to the overlay's search bar.
 const SEARCH_EVENT: &str = "overlay://search";
@@ -31,57 +30,133 @@ const NAVIGATE_EVENT: &str = "main://navigate";
 #[derive(Default)]
 struct CaptureState(Mutex<Option<Capture>>);
 
-/// The shortcuts currently bound, so the handler can tell them apart after the
-/// user has remapped them.
-#[derive(Clone, Copy)]
-struct BoundShortcuts {
-    search: Shortcut,
-    capture: Shortcut,
+/// What a global shortcut triggers.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Action {
+    Search,
+    Capture,
+    Notes,
 }
 
+impl Action {
+    /// Name shared with the frontend, matching the keys of `Shortcuts` in
+    /// `src/lib/settings.ts`.
+    fn as_str(self) -> &'static str {
+        match self {
+            Action::Search => "search",
+            Action::Capture => "capture",
+            Action::Notes => "notes",
+        }
+    }
+}
+
+/// The combinations currently bound, so the handler can tell them apart after
+/// the user has remapped them. An action missing from this list is simply not
+/// bound: the system refused the combination and the app runs without it.
 #[derive(Default)]
-struct Shortcuts(Mutex<Option<BoundShortcuts>>);
+struct Shortcuts(Mutex<Vec<(Action, Shortcut)>>);
+
+/// The three combinations, in the format the `global-shortcut` plugin parses.
+#[derive(Debug, Deserialize)]
+struct ShortcutSettings {
+    search: String,
+    capture: String,
+    notes: String,
+}
+
+impl Default for ShortcutSettings {
+    fn default() -> Self {
+        Self {
+            search: "Ctrl+Shift+KeyB".to_string(),
+            capture: "Ctrl+Shift+KeyS".to_string(),
+            notes: "Ctrl+Shift+KeyN".to_string(),
+        }
+    }
+}
+
+/// A combination the app could not take, reported to Settings so the user can
+/// pick another one. Never fatal: the other shortcuts still bind.
+#[derive(Debug, Serialize)]
+struct ShortcutRejection {
+    action: &'static str,
+    accelerator: String,
+    reason: String,
+}
 
 fn parse_shortcut(raw: &str) -> Result<Shortcut, String> {
     raw.parse::<Shortcut>()
-        .map_err(|e| format!("raccourci invalide « {raw} » : {e}"))
+        .map_err(|error| format!("combinaison invalide : {error}"))
 }
 
-/// Rebinds both global shortcuts, restoring the previous pair if the new one
-/// cannot be taken — a combination already owned by another application is the
-/// common case, and it must not leave the app with nothing bound.
-fn apply_shortcuts(app: &AppHandle, search: &str, capture: &str) -> Result<(), String> {
-    let search = parse_shortcut(search)?;
-    let capture = parse_shortcut(capture)?;
-
-    if search == capture {
-        return Err("les deux raccourcis doivent être différents".to_string());
-    }
-
-    let state = app.state::<Shortcuts>();
-    let previous = *state.0.lock().map_err(|_| "shortcut state poisoned")?;
-
+/// Binds the three global shortcuts, each one independently.
+///
+/// A combination already owned by another application is the common case
+/// — `Ctrl+Shift+S` in particular is popular — and it must cost the user only
+/// that one shortcut: the others still bind, the app still starts, and the
+/// rejected ones are reported so Settings can suggest picking another.
+fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<ShortcutRejection> {
     let manager = app.global_shortcut();
-    manager.unregister_all().map_err(|e| e.to_string())?;
 
-    match manager
-        .register(search)
-        .and_then(|()| manager.register(capture))
-    {
-        Ok(()) => {
-            *state.0.lock().map_err(|_| "shortcut state poisoned")? =
-                Some(BoundShortcuts { search, capture });
-            Ok(())
-        }
-        Err(error) => {
-            let _ = manager.unregister_all();
-            if let Some(previous) = previous {
-                let _ = manager.register(previous.search);
-                let _ = manager.register(previous.capture);
+    if let Err(error) = manager.unregister_all() {
+        log(app, format!("could not release the shortcuts: {error}"));
+    }
+
+    let mut bound: Vec<(Action, Shortcut)> = Vec::new();
+    let mut rejected: Vec<ShortcutRejection> = Vec::new();
+
+    for (action, accelerator) in [
+        (Action::Search, &requested.search),
+        (Action::Capture, &requested.capture),
+        (Action::Notes, &requested.notes),
+    ] {
+        let shortcut = match parse_shortcut(accelerator) {
+            Ok(shortcut) => shortcut,
+            Err(reason) => {
+                rejected.push(ShortcutRejection {
+                    action: action.as_str(),
+                    accelerator: accelerator.clone(),
+                    reason,
+                });
+                continue;
             }
-            Err(format!("impossible d'enregistrer ce raccourci : {error}"))
+        };
+
+        let outcome = if bound.iter().any(|(_, already)| *already == shortcut) {
+            Err("déjà utilisée par un autre raccourci de Nexus".to_string())
+        } else {
+            manager
+                .register(shortcut)
+                .map_err(|error| format!("refusée par le système ({error})"))
+        };
+
+        match outcome {
+            Ok(()) => bound.push((action, shortcut)),
+            Err(reason) => rejected.push(ShortcutRejection {
+                action: action.as_str(),
+                accelerator: accelerator.clone(),
+                reason,
+            }),
         }
     }
+
+    for rejection in &rejected {
+        log(
+            app,
+            format!(
+                "shortcut `{}` for {} was not bound: {}",
+                rejection.accelerator, rejection.action, rejection.reason
+            ),
+        );
+    }
+
+    match app.state::<Shortcuts>().0.lock() {
+        Ok(mut state) => *state = bound,
+        // Only ever poisoned by a panic inside this very function; the
+        // combinations stay registered, they just stop being routed.
+        Err(_) => log(app, "shortcut state is poisoned"),
+    }
+
+    rejected
 }
 
 impl CaptureState {
@@ -101,17 +176,32 @@ fn window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String> {
         .ok_or_else(|| format!("window `{label}` is not declared"))
 }
 
-/// Shows the overlay and focuses it. Focus matters here: the shortcut fires
-/// while another application owns the foreground.
-fn show_overlay(app: &AppHandle) -> Result<(), String> {
-    let overlay = window(app, OVERLAY_WINDOW)?;
-    overlay.show().map_err(|e| e.to_string())?;
-    overlay.set_focus().map_err(|e| e.to_string())?;
+/// Shows a window and focuses it. Focus matters here: the shortcuts fire while
+/// another application owns the foreground.
+fn show_window(app: &AppHandle, label: &str) -> Result<(), String> {
+    let window = window(app, label)?;
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())?;
     Ok(())
 }
 
 fn hide_window(app: &AppHandle, label: &str) -> Result<(), String> {
     window(app, label)?.hide().map_err(|e| e.to_string())
+}
+
+/// Shows the notes overlay, or hides it if it is already up.
+///
+/// Unlike the search palette this window stays open until it is dismissed
+/// explicitly — the point is to keep notes readable while playing — so the
+/// shortcut has to be able to put it away again.
+fn toggle_notes_overlay(app: &AppHandle) -> Result<(), String> {
+    let notes = window(app, NOTES_WINDOW)?;
+
+    if notes.is_visible().map_err(|e| e.to_string())? {
+        return notes.hide().map_err(|e| e.to_string());
+    }
+
+    show_window(app, NOTES_WINDOW)
 }
 
 /// Takes the overlay off screen, then freezes the monitor and offers a selection.
@@ -130,7 +220,7 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
         std::thread::sleep(Duration::from_millis(120));
 
         if let Err(error) = freeze_and_select(&app) {
-            eprintln!("region capture failed: {error}");
+            log(&app, format!("region capture failed: {error}"));
         }
     });
 
@@ -161,19 +251,24 @@ fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 fn open_search_overlay(app: AppHandle) -> Result<(), String> {
-    show_overlay(&app)
+    show_window(&app, OVERLAY_WINDOW)
 }
 
-/// Applies the shortcuts chosen in Settings. Persisting them stays on the
-/// frontend, which already owns the settings store.
+/// Applies the shortcuts chosen in Settings and reports the ones the system
+/// refused. Persisting them stays on the frontend, which owns the store.
 #[tauri::command]
-fn set_shortcuts(app: AppHandle, search: String, capture: String) -> Result<(), String> {
-    apply_shortcuts(&app, &search, &capture)
+fn set_shortcuts(app: AppHandle, shortcuts: ShortcutSettings) -> Vec<ShortcutRejection> {
+    apply_shortcuts(&app, &shortcuts)
 }
 
 #[tauri::command]
 fn close_search_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, OVERLAY_WINDOW)
+}
+
+#[tauri::command]
+fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, NOTES_WINDOW)
 }
 
 /// Opens a blueprint in the main window, from an overlay result.
@@ -217,7 +312,7 @@ async fn recognize_selection(
 
     // The overlay opens either way — a failed read should still leave the user
     // somewhere they can type.
-    show_overlay(&app)?;
+    show_window(&app, OVERLAY_WINDOW)?;
 
     let text = recognized?;
     app.emit_to(OVERLAY_WINDOW, SEARCH_EVENT, text.clone())
@@ -228,7 +323,7 @@ async fn recognize_selection(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let app = tauri::Builder::default()
         // `store` persists the API base URL and the better-auth session token.
         .plugin(tauri_plugin_store::Builder::new().build())
         // `http` performs API calls from Rust, so requests to the Nexus Tools
@@ -243,14 +338,17 @@ pub fn run() {
             open_search_overlay,
             set_shortcuts,
             close_search_overlay,
+            close_notes_overlay,
             show_blueprint,
             cancel_capture,
             recognize_selection,
         ])
         .on_window_event(|window, event| {
-            // Dismiss the overlay when it loses focus, the way a command
+            // Dismiss the search palette when it loses focus, the way a command
             // palette does — otherwise an always-on-top window stays in the
-            // user's face after they click elsewhere.
+            // user's face after they click elsewhere. The notes overlay is
+            // deliberately excluded: it is there to stay readable while the
+            // user is doing something else.
             if window.label() == OVERLAY_WINDOW {
                 if let WindowEvent::Focused(false) = event {
                     let _ = window.hide();
@@ -260,54 +358,62 @@ pub fn run() {
         .setup(|app| {
             // Bound from Rust rather than the frontend so the shortcuts keep
             // working while the app is minimised, which is the point.
-            app.handle().plugin(
-                tauri_plugin_global_shortcut::Builder::new()
-                    .with_handler(|app, shortcut, event| {
-                        // Both edges are reported; act on the key going down.
-                        if event.state != ShortcutState::Pressed {
-                            return;
-                        }
-
-                        let Some(bound) = app
-                            .state::<Shortcuts>()
-                            .0
-                            .lock()
-                            .ok()
-                            .and_then(|current| *current)
-                        else {
-                            return;
-                        };
-
-                        let outcome = if *shortcut == bound.search {
-                            show_overlay(app)
-                        } else if *shortcut == bound.capture {
-                            start_capture(app)
-                        } else {
-                            Ok(())
-                        };
-
-                        if let Err(error) = outcome {
-                            eprintln!("global shortcut failed: {error}");
-                        }
-                    })
-                    .build(),
-            )?;
-
-            // The frontend overrides these with the stored pair once it boots.
             //
-            // Failing here must not stop the launch: a default combination may
-            // already be owned by another application, and that is no reason to
-            // deny the user the rest of the app.
-            if let Err(error) = apply_shortcuts(
-                app.handle(),
-                DEFAULT_SEARCH_SHORTCUT,
-                DEFAULT_CAPTURE_SHORTCUT,
-            ) {
-                eprintln!("cannot bind default shortcuts: {error}");
+            // Nothing here may abort the launch. Both the plugin and the
+            // individual combinations depend on what the rest of the system
+            // has already claimed, and losing a shortcut is no reason to deny
+            // the user the app — Settings can rebind them.
+            let plugin = tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    // Both edges are reported; act on the key going down.
+                    if event.state != ShortcutState::Pressed {
+                        return;
+                    }
+
+                    let action = app.state::<Shortcuts>().0.lock().ok().and_then(|bound| {
+                        bound
+                            .iter()
+                            .find(|(_, candidate)| candidate == shortcut)
+                            .map(|(action, _)| *action)
+                    });
+
+                    let outcome = match action {
+                        Some(Action::Search) => show_window(app, OVERLAY_WINDOW),
+                        Some(Action::Capture) => start_capture(app),
+                        Some(Action::Notes) => toggle_notes_overlay(app),
+                        None => Ok(()),
+                    };
+
+                    if let Err(error) = outcome {
+                        log(app, format!("global shortcut failed: {error}"));
+                    }
+                })
+                .build();
+
+            match app.handle().plugin(plugin) {
+                // The frontend replaces these with the stored combinations once
+                // the main window has read the settings store.
+                Ok(()) => {
+                    apply_shortcuts(app.handle(), &ShortcutSettings::default());
+                }
+                Err(error) => log(
+                    app.handle(),
+                    format!("global shortcuts unavailable: {error}"),
+                ),
             }
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!());
+
+    match app {
+        Ok(app) => app.run(|_, _| {}),
+        // Nothing is built yet, so there is no handle to log through: on
+        // Windows the process would otherwise vanish without a trace, release
+        // builds having no console to print to.
+        Err(error) => {
+            eprintln!("Nexus App could not start: {error}");
+            std::process::exit(1);
+        }
+    }
 }

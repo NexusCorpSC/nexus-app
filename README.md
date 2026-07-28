@@ -42,9 +42,11 @@ src-tauri/            binaire Tauri, plugins et permissions
 | Réputations   | `/api/reps`, `/api/reps/factions`                          | oui             |
 | Inventaire    | `/api/inventory/items`, `/api/inventory/locations`         | oui             |
 | Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                     | partiellement²  |
+| Bloc-notes    | `/api/notes`                                               | non³            |
 
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
+³ connecté, ce sont les notes en ligne du compte ; sinon, des notes locales.
 
 Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs` et
 `/api/blueprints/:slug` ont été ajoutés à `nexus-tools` pour cette application :
@@ -59,6 +61,7 @@ l'application est minimisée ou n'a pas le focus :
 | -------------------- | ----------------------------------------------------------- |
 | `Ctrl+Maj+B`         | ouvre la palette de recherche de blueprints en superposition |
 | `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette  |
+| `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition             |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
 voulue. Au moins un modificateur est exigé : un raccourci global sans
@@ -66,9 +69,18 @@ modificateur confisquerait la touche à toutes les applications.
 
 Les combinaisons sont stockées au format du plugin (`Ctrl+Shift+KeyB`), dont les
 noms de touches correspondent à `KeyboardEvent.code` — ce que le navigateur
-enregistre se transmet donc tel quel. Si la combinaison choisie est déjà prise
-par une autre application, l'enregistrement échoue et **la paire précédente est
-restaurée** plutôt que de laisser l'application sans raccourci.
+enregistre se transmet donc tel quel.
+
+**Chaque raccourci est enregistré indépendamment.** Une combinaison déjà prise
+par une autre application — `Ctrl+Maj+S` en particulier est courante — ne coûte
+que ce raccourci-là : les autres restent actifs, l'application démarre, et
+Paramètres liste les combinaisons refusées avec leur motif. Le choix reste
+enregistré même refusé, il suffit d'en saisir un autre.
+
+Rien de tout cela ne peut empêcher le démarrage : ni l'initialisation du plugin,
+ni l'enregistrement d'une combinaison. Les diagnostics partent dans
+`<données de l'app>/logs/nexus-app.log`, car les builds de release sont liés avec
+`windows_subsystem = "windows"` et n'ont donc aucune console où écrire.
 
 La palette est une fenêtre transparente et sans décoration, toujours au-dessus.
 Elle interroge `/api/blueprints?fuzzy=true`, tolérant aux imperfections de
@@ -99,6 +111,22 @@ compilation croisée (il lui manque `lib.exe`). En revanche `src-tauri/src/captu
 ne dépend que de `serde`, `xcap` et `windows` : recopié dans une crate jetable
 ciblant `x86_64-pc-windows-msvc`, il se type-checke en local, appels WinRT
 compris. C'est nettement plus rapide que d'attendre la CI.
+
+### Bloc-notes
+
+Le même bloc-notes que le site, dans une fenêtre indépendante toujours au-dessus
+pour rester lisible en jeu. `Ctrl+Maj+N` l'affiche et le masque ; contrairement à
+la palette de recherche, il ne se referme pas quand il perd le focus.
+
+Connecté, l'éditeur lit et écrit `/api/notes`, donc les notes sont les mêmes que
+sur le site. Déconnecté, il écrit dans le store local. Les deux ne fusionnent
+pas : la session décide simplement lequel s'applique, et le cache React Query
+est indexé là-dessus pour qu'une connexion échange les notes affichées.
+
+L'enregistrement est automatique, 1,2 s après la dernière frappe. Les écritures
+peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
+réponses revenir dans le désordre : seule la requête la plus récente met l'écran
+à jour.
 
 ### Authentification
 
