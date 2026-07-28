@@ -190,20 +190,30 @@ qui résout `frontendDist` (`../dist`) et échoue si le dossier n'existe pas.
 
 ### Publier une release
 
-`.github/workflows/release.yml` se déclenche sur les tags `v*` :
+`.github/workflows/release.yml` se déclenche sur les tags `v*`. **Il n'écrit pas
+la release** : il y attache les deux installeurs. Les notes restent donc écrites
+à la main, et la release doit exister — le workflow le vérifie avant de compiler
+quoi que ce soit et s'arrête aussitôt s'il n'en trouve pas.
 
 ```bash
 # aligner les trois fichiers de version, puis
 git tag v0.2.0 && git push origin v0.2.0
+# créer la release du tag (un brouillon suffit), puis relancer le run
 ```
 
-Le workflow refuse de builder si le tag ne correspond pas aux versions déclarées
-dans `src-tauri/tauri.conf.json`, `package.json` et `src-tauri/Cargo.toml` — les
-noms des installeurs venant de `tauri.conf.json`, un tag `v0.2.0` publierait
-sinon un `Nexus App_0.3.0_x64-setup.exe`.
+Créer le brouillon **avant** de pousser le tag marche tout aussi bien et évite la
+relance : un brouillon ne crée pas le tag côté GitHub, le `git push` déclenche
+donc bien le workflow. À ne pas faire avec une release **publiée**, qui crée le
+tag elle-même : le `git push origin v0.2.0` n'aurait alors plus rien à pousser et
+le workflow ne partirait jamais.
 
-La release est créée **en brouillon**, avec les notes générées depuis les commits
-et les deux installeurs attachés. À relire puis publier depuis l'onglet Releases.
+Le workflow refuse aussi de builder si le tag ne correspond pas aux versions
+déclarées dans `src-tauri/tauri.conf.json`, `package.json` et
+`src-tauri/Cargo.toml` — les noms des installeurs venant de `tauri.conf.json`, un
+tag `v0.2.0` publierait sinon un `Nexus App_0.3.0_x64-setup.exe`.
+
+Relancer le workflow après un build raté remplace les fichiers déjà envoyés au
+lieu d'échouer dessus.
 
 ### Instance ciblée
 
