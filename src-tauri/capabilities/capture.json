@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "capture",
+  "description": "Selection overlay. It only reports the dragged rectangle to the app's own commands, so it gets neither network nor storage access.",
+  "windows": ["capture"],
+  "permissions": ["core:default"]
+}

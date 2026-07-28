@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": ["main"],
+  "description": "Main window and quick-search overlay: both call the Nexus Tools API and read the persisted settings.",
+  "windows": ["main", "overlay"],
   "permissions": [
     "core:default",
     "opener:default",

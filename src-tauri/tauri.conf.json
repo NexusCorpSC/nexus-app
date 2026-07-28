@@ -12,6 +12,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Nexus App",
         "width": 1280,
         "height": 820,
@@ -19,6 +20,35 @@
         "minHeight": 600,
         "resizable": true,
         "backgroundColor": "#061E30"
+      },
+      {
+        "label": "overlay",
+        "title": "Nexus - recherche rapide",
+        "url": "index.html#/overlay",
+        "width": 720,
+        "height": 480,
+        "center": true,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
+        "label": "capture",
+        "title": "Nexus - capture d'ecran",
+        "url": "index.html#/capture",
+        "width": 800,
+        "height": 600,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {
