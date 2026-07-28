@@ -37,12 +37,15 @@ jobs:
           workspaces: src-tauri -> target
 
       # The NSIS and WiX toolchains are downloaded by the Tauri bundler on
-      # first use; caching them saves a few minutes per run.
+      # first use; caching them saves a few minutes per run. The key follows
+      # the lockfile so a Tauri CLI bump re-downloads them instead of
+      # restoring a stale toolchain (cache entries are immutable on key hit).
       - name: Cache Tauri bundler toolchains
         uses: actions/cache@v4
         with:
           path: ~/AppData/Local/tauri
-          key: tauri-bundler-${{ runner.os }}
+          key: tauri-bundler-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: tauri-bundler-${{ runner.os }}-
 
       - name: Install dependencies
         run: npm ci
@@ -50,8 +53,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # Must run before any cargo command: tauri-build resolves `frontendDist`
-      # (../dist) at compile time and fails if it is missing.
+      # Must run before anything that compiles the crate (clippy, tauri build):
+      # build.rs calls tauri_build::build(), which resolves `frontendDist`
+      # (../dist) and fails if it is missing. `cargo fmt` does not compile, so
+      # it is unaffected.
       - name: Build frontend
         run: npm run build
 

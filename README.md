@@ -96,9 +96,10 @@ seule plateforme cible, puis produit les installeurs via `tauri build`.
 Les binaires (`.msi` et `.exe` NSIS) sont publiés en artefact `nexus-app-windows`
 sur chaque exécution, ce qui permet de tester une PR sans build local.
 
-Le build du frontend précède obligatoirement les commandes `cargo` : `tauri-build`
-résout `frontendDist` (`../dist`) à la compilation et échoue si le dossier
-n'existe pas.
+Le build du frontend précède obligatoirement toute commande qui **compile** la
+crate (`cargo clippy`, `tauri build`) : `build.rs` appelle `tauri_build::build()`,
+qui résout `frontendDist` (`../dist`) et échoue si le dossier n'existe pas.
+`cargo fmt` ne compile rien et n'est pas concerné.
 
 ### Instance ciblée
 
