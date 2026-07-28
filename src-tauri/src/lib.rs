@@ -1,9 +1,11 @@
 mod capture;
 mod diagnostics;
+#[cfg(windows)]
+mod hotkeys;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use capture::{Capture, Selection};
 use serde::{Deserialize, Serialize};
@@ -33,7 +35,7 @@ struct CaptureState(Mutex<Option<Capture>>);
 
 /// What a global shortcut triggers.
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Action {
+pub(crate) enum Action {
     Search,
     Capture,
     Notes,
@@ -48,6 +50,46 @@ impl Action {
             Action::Capture => "capture",
             Action::Notes => "notes",
         }
+    }
+}
+
+/// How long the same action is ignored after it fires.
+///
+/// A combination is reported twice over: once by `RegisterHotKey`, once by the
+/// raw input listener, which sits upstream and sees the keys first. Holding the
+/// keys down then repeats it many times a second.
+const TRIGGER_DEBOUNCE: Duration = Duration::from_millis(300);
+
+static LAST_TRIGGER: Mutex<Option<(Action, Instant)>> = Mutex::new(None);
+
+/// Runs what a shortcut is bound to, whichever path reported it.
+///
+/// Must be called on the main thread: it shows and focuses windows.
+pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
+    // A poisoned lock — a panic inside this function — falls through on
+    // purpose: acting twice on a combination beats not acting at all.
+    if let Ok(mut last) = LAST_TRIGGER.lock() {
+        if let Some((previous, at)) = *last {
+            if previous == action && at.elapsed() < TRIGGER_DEBOUNCE {
+                return;
+            }
+        }
+
+        *last = Some((action, Instant::now()));
+    }
+
+    // The line that says whether a shortcut reached the app at all, which is
+    // the first thing to know when a game is holding the keyboard.
+    log(format!("shortcut {} fired ({source})", action.as_str()));
+
+    let outcome = match action {
+        Action::Search => show_window(app, OVERLAY_WINDOW),
+        Action::Capture => start_capture(app),
+        Action::Notes => toggle_notes_overlay(app),
+    };
+
+    if let Err(error) = outcome {
+        log(format!("global shortcut failed: {error}"));
     }
 }
 
@@ -112,10 +154,18 @@ fn parse_shortcut(raw: &str) -> Result<Shortcut, String> {
 
 /// Binds the three global shortcuts, each one independently.
 ///
-/// A combination already owned by another application is the common case
-/// — `Ctrl+Shift+S` in particular is popular — and it must cost the user only
-/// that one shortcut: the others still bind, the app still starts, and the
-/// rejected ones are reported so Settings can suggest picking another.
+/// Two paths watch for them, and a combination needs only one of the two:
+///
+/// * `RegisterHotKey`, through the plugin, is the one that can keep the
+///   combination from reaching the application underneath — but it is not
+///   delivered while a game holds the keyboard, which is most of the time this
+///   app is useful;
+/// * the raw input listener sees every keystroke whatever has focus, and needs
+///   no registration at all, so a combination another application already owns
+///   still reaches us.
+///
+/// Only a combination that cannot be parsed, or that is asked for twice, is
+/// therefore reported to Settings as rejected.
 fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<ShortcutRejection> {
     let wanted = [
         (Action::Search, &requested.search),
@@ -123,52 +173,20 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Notes, &requested.notes),
     ];
 
-    // The plugin failed to start (see `setup`). Report the combinations as
-    // rejected — Settings shows why — rather than reaching for state that was
-    // never managed, which would abort the process.
-    if !app.state::<ShortcutSupport>().is_available() {
-        return wanted
-            .into_iter()
-            .map(|(action, accelerator)| ShortcutRejection {
-                action: action.as_str(),
-                accelerator: accelerator.clone(),
-                reason: "les raccourcis globaux sont indisponibles sur ce système".to_string(),
-            })
-            .collect();
-    }
-
-    let manager = app.global_shortcut();
-
-    if let Err(error) = manager.unregister_all() {
-        log(format!("could not release the shortcuts: {error}"));
-    }
-
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
     let mut rejected: Vec<ShortcutRejection> = Vec::new();
 
     for (action, accelerator) in wanted {
-        let shortcut = match parse_shortcut(accelerator) {
-            Ok(shortcut) => shortcut,
-            Err(reason) => {
-                rejected.push(ShortcutRejection {
-                    action: action.as_str(),
-                    accelerator: accelerator.clone(),
-                    reason,
-                });
-                continue;
+        let outcome = match parse_shortcut(accelerator) {
+            Ok(shortcut) if bound.iter().any(|(_, already)| *already == shortcut) => {
+                Err("déjà utilisée par un autre raccourci de Nexus".to_string())
             }
-        };
-
-        let outcome = if bound.iter().any(|(_, already)| *already == shortcut) {
-            Err("déjà utilisée par un autre raccourci de Nexus".to_string())
-        } else {
-            manager
-                .register(shortcut)
-                .map_err(|error| format!("refusée par le système ({error})"))
+            Ok(shortcut) => Ok(shortcut),
+            Err(reason) => Err(reason),
         };
 
         match outcome {
-            Ok(()) => bound.push((action, shortcut)),
+            Ok(shortcut) => bound.push((action, shortcut)),
             Err(reason) => rejected.push(ShortcutRejection {
                 action: action.as_str(),
                 accelerator: accelerator.clone(),
@@ -176,6 +194,33 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
             }),
         }
     }
+
+    // Watched whatever the system has to say about them: this is the path that
+    // still works with Star Citizen in the foreground.
+    #[cfg(windows)]
+    hotkeys::set_bindings(&bound);
+
+    let unregistered = register_system_wide(app, &bound);
+
+    // Where there is no raw input to fall back on, a refusal really does cost
+    // the shortcut, and Settings has to say so.
+    #[cfg(not(windows))]
+    for (action, accelerator) in wanted {
+        if let Some((_, reason)) = unregistered
+            .iter()
+            .find(|(candidate, _)| *candidate == action)
+        {
+            rejected.push(ShortcutRejection {
+                action: action.as_str(),
+                accelerator: accelerator.clone(),
+                reason: reason.clone(),
+            });
+        }
+    }
+
+    // Raw input watches for them regardless, so there is nothing to report.
+    #[cfg(windows)]
+    drop(unregistered);
 
     for rejection in &rejected {
         log(format!(
@@ -192,6 +237,50 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
     }
 
     rejected
+}
+
+/// Claims the combinations with `RegisterHotKey`, through the plugin, and
+/// answers with the ones it could not claim and why.
+///
+/// Best effort throughout: where raw input is watching, a refusal costs the
+/// exclusivity — the application underneath keeps receiving the combination —
+/// and nothing else. Where it is not, the caller turns what comes back here
+/// into something Settings can show.
+fn register_system_wide(app: &AppHandle, bound: &[(Action, Shortcut)]) -> Vec<(Action, String)> {
+    if !app.state::<ShortcutSupport>().is_available() {
+        log("shortcuts are not registered system-wide: the plugin is unavailable");
+
+        return bound
+            .iter()
+            .map(|(action, _)| {
+                (
+                    *action,
+                    "les raccourcis globaux sont indisponibles sur ce système".to_string(),
+                )
+            })
+            .collect();
+    }
+
+    let manager = app.global_shortcut();
+
+    if let Err(error) = manager.unregister_all() {
+        log(format!("could not release the shortcuts: {error}"));
+    }
+
+    let mut unregistered = Vec::new();
+
+    for (action, shortcut) in bound {
+        if let Err(error) = manager.register(*shortcut) {
+            log(format!(
+                "shortcut for {} is not registered system-wide: {error}",
+                action.as_str()
+            ));
+
+            unregistered.push((*action, format!("refusée par le système ({error})")));
+        }
+    }
+
+    unregistered
 }
 
 impl CaptureState {
@@ -402,6 +491,12 @@ pub fn run() {
             diagnostics::init(app.handle());
             log(format!("Nexus App {} started", app.package_info().version));
 
+            // Reads the keyboard whatever has focus, which is what makes the
+            // shortcuts work with a game in the foreground. Started before the
+            // combinations are applied: it is what they are handed to.
+            #[cfg(windows)]
+            hotkeys::start(app.handle().clone());
+
             // Bound from Rust rather than the frontend so the shortcuts keep
             // working while the app is minimised, which is the point.
             //
@@ -423,15 +518,8 @@ pub fn run() {
                             .map(|(action, _)| *action)
                     });
 
-                    let outcome = match action {
-                        Some(Action::Search) => show_window(app, OVERLAY_WINDOW),
-                        Some(Action::Capture) => start_capture(app),
-                        Some(Action::Notes) => toggle_notes_overlay(app),
-                        None => Ok(()),
-                    };
-
-                    if let Err(error) = outcome {
-                        log(format!("global shortcut failed: {error}"));
+                    if let Some(action) = action {
+                        trigger(app, action, "hotkey");
                     }
                 })
                 .build();
@@ -439,15 +527,14 @@ pub fn run() {
             match app.handle().plugin(plugin) {
                 // The frontend replaces these with the stored combinations once
                 // the main window has read the settings store.
-                Ok(()) => {
-                    app.state::<ShortcutSupport>().mark_available();
-                    apply_shortcuts(app.handle(), &ShortcutSettings::default());
-                }
-                // `ShortcutSupport` stays false, so `set_shortcuts` reports the
-                // combinations as rejected instead of asking the plugin — which
-                // is not there — and taking the process down with it.
+                Ok(()) => app.state::<ShortcutSupport>().mark_available(),
+                // `ShortcutSupport` stays false, so `apply_shortcuts` leaves the
+                // system-wide registration alone instead of asking the plugin
+                // — which is not there — and taking the process down with it.
                 Err(error) => log(format!("global shortcuts unavailable: {error}")),
             }
+
+            apply_shortcuts(app.handle(), &ShortcutSettings::default());
 
             Ok(())
         })
