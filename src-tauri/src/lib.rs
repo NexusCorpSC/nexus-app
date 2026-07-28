@@ -2,6 +2,7 @@ mod capture;
 mod diagnostics;
 #[cfg(windows)]
 mod hotkeys;
+mod tray;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
@@ -313,6 +314,15 @@ fn hide_window(app: &AppHandle, label: &str) -> Result<(), String> {
     window(app, label)?.hide().map_err(|e| e.to_string())
 }
 
+/// Brings the main window back from wherever it was left: hidden by its close
+/// button, or minimised behind the game.
+pub(crate) fn show_main_window(app: &AppHandle) -> Result<(), String> {
+    let main = window(app, MAIN_WINDOW)?;
+    main.show().map_err(|e| e.to_string())?;
+    let _ = main.unminimize();
+    main.set_focus().map_err(|e| e.to_string())
+}
+
 /// Shows the notes overlay, or hides it if it is already up.
 ///
 /// Unlike the search palette this window stays open until it is dismissed
@@ -398,11 +408,9 @@ fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
 /// Opens a blueprint in the main window, from an overlay result.
 #[tauri::command]
 fn show_blueprint(app: AppHandle, slug: String) -> Result<(), String> {
-    let main = window(&app, MAIN_WINDOW)?;
-    main.show().map_err(|e| e.to_string())?;
-    // The main window is usually minimised when the overlay is in use.
-    let _ = main.unminimize();
-    main.set_focus().map_err(|e| e.to_string())?;
+    // The main window is usually minimised, or put away, when the overlay is
+    // in use.
+    show_main_window(&app)?;
 
     app.emit_to(MAIN_WINDOW, NAVIGATE_EVENT, format!("/blueprints/{slug}"))
         .map_err(|e| e.to_string())?;
@@ -484,12 +492,29 @@ pub fn run() {
                     let _ = window.hide();
                 }
             }
+
+            // Closing the main window puts it away rather than destroying it:
+            // the app goes on running behind its tray icon, and the icon has to
+            // have something left to open. Quitting is the tray's own item.
+            if window.label() == MAIN_WINDOW {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+            }
         })
         .setup(|app| {
             // Everything logged from here on lands next to the app's data
             // rather than in the process-wide fallback.
             diagnostics::init(app.handle());
             log(format!("Nexus App {} started", app.package_info().version));
+
+            // Says the app is running, and gives a way in that does not depend
+            // on a combination the system may have refused. Not fatal either:
+            // a tray the system will not take is no reason to deny the app.
+            if let Err(error) = tray::install(app.handle()) {
+                log(format!("tray icon unavailable: {error}"));
+            }
 
             // Reads the keyboard whatever has focus, which is what makes the
             // shortcuts work with a game in the foreground. Started before the

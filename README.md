@@ -52,6 +52,25 @@ Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs` et
 `/api/blueprints/:slug` ont été ajoutés à `nexus-tools` pour cette application :
 ces données n'étaient jusqu'ici disponibles qu'en rendu serveur.
 
+### Icône de notification
+
+Tant que l'application tourne, elle tient une icône dans la zone de
+notification. **Clic gauche** : la fenêtre principale revient, qu'elle ait été
+minimisée ou rangée. **Clic droit** : recherche rapide, capture de zone,
+bloc-notes, et *Quitter*.
+
+Fermer la fenêtre principale la **range** au lieu de la détruire — sans quoi
+l'icône n'aurait plus rien à rouvrir, et l'application continue de toute façon
+de tourner pour ses raccourcis. *Quitter*, dans le menu de l'icône, est donc le
+seul chemin qui termine réellement le processus.
+
+Les trois commandes du menu passent par le même point d'entrée que les
+raccourcis : elles sont journalisées de la même manière (`(tray)` au lieu de
+`(raw input)`), et le bloc-notes bascule au lieu de seulement s'ouvrir.
+
+Une icône que le système refuserait n'empêche pas le démarrage : c'est
+journalisé, et l'application se lance.
+
 ### Superposition et capture d'écran
 
 Deux raccourcis globaux, enregistrés côté Rust pour rester actifs quand
