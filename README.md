@@ -193,7 +193,8 @@ qui résout `frontendDist` (`../dist`) et échoue si le dossier n'existe pas.
 `.github/workflows/release.yml` se déclenche sur les tags `v*` :
 
 ```bash
-# aligner les trois fichiers de version, puis
+# aligner les trois fichiers de version, créer la release pour le tag
+# (un brouillon suffit), puis
 git tag v0.2.0 && git push origin v0.2.0
 ```
 
@@ -202,8 +203,11 @@ dans `src-tauri/tauri.conf.json`, `package.json` et `src-tauri/Cargo.toml` — l
 noms des installeurs venant de `tauri.conf.json`, un tag `v0.2.0` publierait
 sinon un `Nexus App_0.3.0_x64-setup.exe`.
 
-La release est créée **en brouillon**, avec les notes générées depuis les commits
-et les deux installeurs attachés. À relire puis publier depuis l'onglet Releases.
+**La release doit exister avant le build** : le workflow n'en crée pas, il
+attache les deux installeurs à celle du tag et s'arrête avec un message explicite
+s'il n'en trouve pas. Les notes restent donc écrites à la main, et relancer le
+workflow après un build raté remplace les fichiers déjà envoyés au lieu
+d'échouer.
 
 ### Instance ciblée
 

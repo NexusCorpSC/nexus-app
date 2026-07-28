@@ -4,7 +4,7 @@ on:
   push:
     tags: ["v*"]
 
-# Required to create the GitHub Release.
+# Required to upload the installers to the GitHub Release.
 permissions:
   contents: write
 
@@ -73,11 +73,19 @@ jobs:
       - name: Build Windows bundles
         run: npm run tauri:build
 
-      # Published as a draft so the notes can be reviewed before it goes out.
-      - name: Publish draft release
+      # The release is written by hand — notes included — and this only hangs
+      # the installers off it. Creating one here would either race that release
+      # or publish a second, emptier one under the same tag.
+      - name: Attach installers to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh release view $env:TAG > $null 2>&1
+
+          if ($LASTEXITCODE -ne 0) {
+            throw "No release for $env:TAG. Create it (draft is fine), then re-run this workflow."
+          }
+
           $files = @(
             Get-ChildItem -Path 'src-tauri/target/release/bundle/msi/*.msi'
             Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*.exe'
@@ -92,8 +100,11 @@ jobs:
           # Splatted, not interpolated: passing the array inline would join the
           # paths into a single argument, and the installer names contain a
           # space ("Nexus App_0.1.0_x64-setup.exe").
-          $ghArgs = @('release', 'create', $env:TAG) +
+          #
+          # `--clobber` so re-running after a failed build replaces the assets
+          # instead of stopping on the ones already uploaded.
+          $ghArgs = @('release', 'upload', $env:TAG) +
             $files.FullName +
-            @('--draft', '--generate-notes', '--title', "Nexus App $env:TAG")
+            @('--clobber')
 
           gh @ghArgs
