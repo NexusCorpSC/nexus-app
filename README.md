@@ -152,8 +152,9 @@ la palette de recherche, il ne se referme pas quand il perd le focus.
 La fenêtre n'ayant pas de décorations, **son en-tête tient lieu de barre de
 titre** : il porte `data-tauri-drag-region`, ce qui déplace la fenêtre. La
 permission qui l'autorise, `core:window:allow-start-dragging`, ne fait pas
-partie de `core:default` — d'où la capacité dédiée `capabilities/notes-overlay.json`,
-limitée à cette fenêtre. Sans elle le glissement est refusé sans un mot.
+partie de `core:default` — d'où la capacité dédiée
+`src-tauri/capabilities/notes-overlay.json`, limitée à cette fenêtre. Sans elle
+le glissement est refusé sans un mot.
 
 Connecté, l'éditeur lit et écrit `/api/notes`, donc les notes sont les mêmes que
 sur le site. Déconnecté, il écrit dans le store local. Les deux ne fusionnent

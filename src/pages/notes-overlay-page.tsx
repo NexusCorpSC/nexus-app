@@ -37,10 +37,9 @@ export default function NotesOverlayPage() {
   // window, so this is a safety net — but what it guards against is showing the
   // local scratch pad to someone who has an account.
   useEffect(() => {
-    const onFocus = () => {
-      void refresh();
-      void refetch();
-    };
+    // One after the other: the session decides which note applies, so a
+    // refetch started alongside would read whichever one was current before.
+    const onFocus = () => void refresh().then(() => refetch());
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [refresh, refetch]);

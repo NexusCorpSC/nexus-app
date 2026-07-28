@@ -72,14 +72,19 @@ pub fn start(app: AppHandle) {
         return;
     }
 
-    std::thread::Builder::new()
+    let started = std::thread::Builder::new()
         .name("nexus-raw-input".into())
         .spawn(|| {
             if let Err(error) = listen() {
                 log(format!("raw input listener stopped: {error}"));
             }
-        })
-        .ok();
+        });
+
+    // Losing the thread costs every shortcut fired from a game, so it may not
+    // pass unremarked.
+    if let Err(error) = started {
+        log(format!("raw input listener could not start: {error}"));
+    }
 }
 
 /// Replaces the combinations the listener reacts to.

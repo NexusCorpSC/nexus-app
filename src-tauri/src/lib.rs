@@ -200,7 +200,27 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
     #[cfg(windows)]
     hotkeys::set_bindings(&bound);
 
-    register_system_wide(app, &bound);
+    let unregistered = register_system_wide(app, &bound);
+
+    // Where there is no raw input to fall back on, a refusal really does cost
+    // the shortcut, and Settings has to say so.
+    #[cfg(not(windows))]
+    for (action, accelerator) in wanted {
+        if let Some((_, reason)) = unregistered
+            .iter()
+            .find(|(candidate, _)| *candidate == action)
+        {
+            rejected.push(ShortcutRejection {
+                action: action.as_str(),
+                accelerator: accelerator.clone(),
+                reason: reason.clone(),
+            });
+        }
+    }
+
+    // Raw input watches for them regardless, so there is nothing to report.
+    #[cfg(windows)]
+    drop(unregistered);
 
     for rejection in &rejected {
         log(format!(
@@ -219,16 +239,26 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
     rejected
 }
 
-/// Claims the combinations with `RegisterHotKey`, through the plugin.
+/// Claims the combinations with `RegisterHotKey`, through the plugin, and
+/// answers with the ones it could not claim and why.
 ///
-/// Best effort throughout: a refusal costs the exclusivity — the application
-/// underneath keeps receiving the combination — and nothing else, since raw
-/// input reports it either way. On a platform without that fallback there is
-/// nothing else watching, hence the warning in the log.
-fn register_system_wide(app: &AppHandle, bound: &[(Action, Shortcut)]) {
+/// Best effort throughout: where raw input is watching, a refusal costs the
+/// exclusivity — the application underneath keeps receiving the combination —
+/// and nothing else. Where it is not, the caller turns what comes back here
+/// into something Settings can show.
+fn register_system_wide(app: &AppHandle, bound: &[(Action, Shortcut)]) -> Vec<(Action, String)> {
     if !app.state::<ShortcutSupport>().is_available() {
         log("shortcuts are not registered system-wide: the plugin is unavailable");
-        return;
+
+        return bound
+            .iter()
+            .map(|(action, _)| {
+                (
+                    *action,
+                    "les raccourcis globaux sont indisponibles sur ce système".to_string(),
+                )
+            })
+            .collect();
     }
 
     let manager = app.global_shortcut();
@@ -237,14 +267,20 @@ fn register_system_wide(app: &AppHandle, bound: &[(Action, Shortcut)]) {
         log(format!("could not release the shortcuts: {error}"));
     }
 
+    let mut unregistered = Vec::new();
+
     for (action, shortcut) in bound {
         if let Err(error) = manager.register(*shortcut) {
             log(format!(
                 "shortcut for {} is not registered system-wide: {error}",
                 action.as_str()
             ));
+
+            unregistered.push((*action, format!("refusée par le système ({error})")));
         }
     }
+
+    unregistered
 }
 
 impl CaptureState {
