@@ -84,8 +84,22 @@ seul n'affiche rien : en mode debug, Tauri charge `build.devUrl`
 ```bash
 npm run typecheck   # tsc --noEmit
 npm run build       # tsc + vite build
-cargo check --manifest-path src-tauri/Cargo.toml
+cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
 ```
+
+### Intégration continue
+
+`.github/workflows/ci.yml` rejoue ces vérifications sur `windows-latest`, la
+seule plateforme cible, puis produit les installeurs via `tauri build`.
+
+Les binaires (`.msi` et `.exe` NSIS) sont publiés en artefact `nexus-app-windows`
+sur chaque exécution, ce qui permet de tester une PR sans build local.
+
+Le build du frontend précède obligatoirement toute commande qui **compile** la
+crate (`cargo clippy`, `tauri build`) : `build.rs` appelle `tauri_build::build()`,
+qui résout `frontendDist` (`../dist`) et échoue si le dossier n'existe pas.
+`cargo fmt` ne compile rien et n'est pas concerné.
 
 ### Instance ciblée
 
@@ -93,13 +107,8 @@ L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont décla
 dans `src-tauri/capabilities/default.json` — une URL absente de cette liste est
 rejetée à l'exécution par les permissions Tauri :
 
-- `https://tools.services.nexus` (défaut)
-- `https://tools.nexus.services`
+- `https://tools.services.nexus` (défaut, seul domaine de production)
 - `http://localhost:3000` / `http://127.0.0.1:3000`
-
-> Le dépôt `nexus-tools` référence les deux orthographes du domaine de
-> production. `tools.services.nexus` est retenu par défaut car il correspond au
-> `rpID` de better-auth (`services.nexus`) et aux liens du serveur MCP.
 
 ### Linux sans GPU
 

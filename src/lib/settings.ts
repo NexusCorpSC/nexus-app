@@ -10,20 +10,12 @@ const STORE_FILE = "settings.json";
 const KEY_API_BASE_URL = "apiBaseUrl";
 const KEY_SESSION_COOKIE = "sessionCookie";
 
-/**
- * Production Nexus Tools instance.
- *
- * NOTE: the web app references two spellings of the host — `tools.services.nexus`
- * (MCP tool links, better-auth `rpID: "services.nexus"`) and `tools.nexus.services`
- * (page metadata). We default to the former since it matches the auth config,
- * and the URL is overridable from the Settings screen either way.
- */
+/** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
 
 /** Hosts allowed by the `http` capability in `src-tauri/capabilities/default.json`. */
 export const ALLOWED_API_BASE_URLS = [
   "https://tools.services.nexus",
-  "https://tools.nexus.services",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
 ];
