@@ -1,6 +1,7 @@
 mod capture;
 mod diagnostics;
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::Duration;
 
@@ -56,6 +57,27 @@ impl Action {
 #[derive(Default)]
 struct Shortcuts(Mutex<Vec<(Action, Shortcut)>>);
 
+/// Whether the `global-shortcut` plugin registered at startup.
+///
+/// Binding a combination goes through state the plugin manages itself, and
+/// `global_shortcut()` asks Tauri for that state — which panics when the plugin
+/// is missing. `setup` deliberately lets the app start without it, so that
+/// panic would be raised from a command running on the thread pumping the
+/// message loop, where it cannot unwind: the process aborts. Asking here first
+/// keeps a missing plugin costing only the shortcuts.
+#[derive(Default)]
+struct ShortcutSupport(AtomicBool);
+
+impl ShortcutSupport {
+    fn mark_available(&self) {
+        self.0.store(true, Ordering::Relaxed);
+    }
+
+    fn is_available(&self) -> bool {
+        self.0.load(Ordering::Relaxed)
+    }
+}
+
 /// The three combinations, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
@@ -95,20 +117,36 @@ fn parse_shortcut(raw: &str) -> Result<Shortcut, String> {
 /// that one shortcut: the others still bind, the app still starts, and the
 /// rejected ones are reported so Settings can suggest picking another.
 fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<ShortcutRejection> {
+    let wanted = [
+        (Action::Search, &requested.search),
+        (Action::Capture, &requested.capture),
+        (Action::Notes, &requested.notes),
+    ];
+
+    // The plugin failed to start (see `setup`). Report the combinations as
+    // rejected — Settings shows why — rather than reaching for state that was
+    // never managed, which would abort the process.
+    if !app.state::<ShortcutSupport>().is_available() {
+        return wanted
+            .into_iter()
+            .map(|(action, accelerator)| ShortcutRejection {
+                action: action.as_str(),
+                accelerator: accelerator.clone(),
+                reason: "les raccourcis globaux sont indisponibles sur ce système".to_string(),
+            })
+            .collect();
+    }
+
     let manager = app.global_shortcut();
 
     if let Err(error) = manager.unregister_all() {
-        log(app, format!("could not release the shortcuts: {error}"));
+        log(format!("could not release the shortcuts: {error}"));
     }
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
     let mut rejected: Vec<ShortcutRejection> = Vec::new();
 
-    for (action, accelerator) in [
-        (Action::Search, &requested.search),
-        (Action::Capture, &requested.capture),
-        (Action::Notes, &requested.notes),
-    ] {
+    for (action, accelerator) in wanted {
         let shortcut = match parse_shortcut(accelerator) {
             Ok(shortcut) => shortcut,
             Err(reason) => {
@@ -140,20 +178,17 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
     }
 
     for rejection in &rejected {
-        log(
-            app,
-            format!(
-                "shortcut `{}` for {} was not bound: {}",
-                rejection.accelerator, rejection.action, rejection.reason
-            ),
-        );
+        log(format!(
+            "shortcut `{}` for {} was not bound: {}",
+            rejection.accelerator, rejection.action, rejection.reason
+        ));
     }
 
     match app.state::<Shortcuts>().0.lock() {
         Ok(mut state) => *state = bound,
         // Only ever poisoned by a panic inside this very function; the
         // combinations stay registered, they just stop being routed.
-        Err(_) => log(app, "shortcut state is poisoned"),
+        Err(_) => log("shortcut state is poisoned"),
     }
 
     rejected
@@ -220,7 +255,7 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
         std::thread::sleep(Duration::from_millis(120));
 
         if let Err(error) = freeze_and_select(&app) {
-            log(&app, format!("region capture failed: {error}"));
+            log(format!("region capture failed: {error}"));
         }
     });
 
@@ -323,6 +358,11 @@ async fn recognize_selection(
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Before anything else: a panic raised while the app is being built, or
+    // later on the message loop, aborts the process without printing anywhere a
+    // packaged build can show. This is what turns that into a log line.
+    diagnostics::install_panic_logger();
+
     let app = tauri::Builder::default()
         // `store` persists the API base URL and the better-auth session token.
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -334,6 +374,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(CaptureState::default())
         .manage(Shortcuts::default())
+        .manage(ShortcutSupport::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -356,6 +397,11 @@ pub fn run() {
             }
         })
         .setup(|app| {
+            // Everything logged from here on lands next to the app's data
+            // rather than in the process-wide fallback.
+            diagnostics::init(app.handle());
+            log(format!("Nexus App {} started", app.package_info().version));
+
             // Bound from Rust rather than the frontend so the shortcuts keep
             // working while the app is minimised, which is the point.
             //
@@ -385,7 +431,7 @@ pub fn run() {
                     };
 
                     if let Err(error) = outcome {
-                        log(app, format!("global shortcut failed: {error}"));
+                        log(format!("global shortcut failed: {error}"));
                     }
                 })
                 .build();
@@ -394,12 +440,13 @@ pub fn run() {
                 // The frontend replaces these with the stored combinations once
                 // the main window has read the settings store.
                 Ok(()) => {
+                    app.state::<ShortcutSupport>().mark_available();
                     apply_shortcuts(app.handle(), &ShortcutSettings::default());
                 }
-                Err(error) => log(
-                    app.handle(),
-                    format!("global shortcuts unavailable: {error}"),
-                ),
+                // `ShortcutSupport` stays false, so `set_shortcuts` reports the
+                // combinations as rejected instead of asking the plugin — which
+                // is not there — and taking the process down with it.
+                Err(error) => log(format!("global shortcuts unavailable: {error}")),
             }
 
             Ok(())
@@ -408,11 +455,11 @@ pub fn run() {
 
     match app {
         Ok(app) => app.run(|_, _| {}),
-        // Nothing is built yet, so there is no handle to log through: on
-        // Windows the process would otherwise vanish without a trace, release
-        // builds having no console to print to.
+        // The app was never built, so this goes to the fallback log directory:
+        // on Windows the process would otherwise vanish without a trace,
+        // release builds having no console to print to.
         Err(error) => {
-            eprintln!("Nexus App could not start: {error}");
+            log(format!("Nexus App could not start: {error}"));
             std::process::exit(1);
         }
     }

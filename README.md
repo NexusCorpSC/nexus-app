@@ -78,9 +78,18 @@ Paramètres liste les combinaisons refusées avec leur motif. Le choix reste
 enregistré même refusé, il suffit d'en saisir un autre.
 
 Rien de tout cela ne peut empêcher le démarrage : ni l'initialisation du plugin,
-ni l'enregistrement d'une combinaison. Les diagnostics partent dans
-`<données de l'app>/logs/nexus-app.log`, car les builds de release sont liés avec
-`windows_subsystem = "windows"` et n'ont donc aucune console où écrire.
+ni l'enregistrement d'une combinaison. Un plugin qui n'a pas démarré coûte les
+raccourcis et rien d'autre — Paramètres les liste alors comme indisponibles, là
+où demander au plugin de lier une combinaison ferait tomber le processus.
+
+Les diagnostics partent dans `<données de l'app>/logs/nexus-app.log`, car les
+builds de release sont liés avec `windows_subsystem = "windows"` et n'ont donc
+aucune console où écrire. **Les panics y sont écrits également**, avec le
+thread, le `fichier:ligne:colonne` et une backtrace : un panic levé sur la
+boucle de messages ne peut pas dérouler et abrège le processus sur-le-champ,
+sans rien laisser d'autre qu'un minidump. Avant que l'application ne soit
+construite, le fichier est celui de `%LOCALAPPDATA%\services.nexus.app\logs`,
+ce qui couvre aussi les échecs de démarrage.
 
 La palette est une fenêtre transparente et sans décoration, toujours au-dessus.
 Elle interroge `/api/blueprints?fuzzy=true`, tolérant aux imperfections de
