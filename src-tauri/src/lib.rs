@@ -1,12 +1,19 @@
 mod capture;
 
 use std::sync::Mutex;
+use std::time::Duration;
 
 use capture::{Capture, Selection};
 use tauri::{
     AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize, State, WebviewWindow, WindowEvent,
 };
-use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
+
+/// Shortcuts registered until the frontend applies the stored ones. Key names
+/// follow `KeyboardEvent.code`, so what the settings screen records maps across
+/// unchanged (see `src/lib/settings.ts`).
+const DEFAULT_SEARCH_SHORTCUT: &str = "Ctrl+Shift+KeyB";
+const DEFAULT_CAPTURE_SHORTCUT: &str = "Ctrl+Shift+KeyS";
 
 /// Window labels declared in `tauri.conf.json`.
 const MAIN_WINDOW: &str = "main";
@@ -23,6 +30,59 @@ const NAVIGATE_EVENT: &str = "main://navigate";
 /// shortcut fires, taken when the user releases the mouse.
 #[derive(Default)]
 struct CaptureState(Mutex<Option<Capture>>);
+
+/// The shortcuts currently bound, so the handler can tell them apart after the
+/// user has remapped them.
+#[derive(Clone, Copy)]
+struct BoundShortcuts {
+    search: Shortcut,
+    capture: Shortcut,
+}
+
+#[derive(Default)]
+struct Shortcuts(Mutex<Option<BoundShortcuts>>);
+
+fn parse_shortcut(raw: &str) -> Result<Shortcut, String> {
+    raw.parse::<Shortcut>()
+        .map_err(|e| format!("raccourci invalide « {raw} » : {e}"))
+}
+
+/// Rebinds both global shortcuts, restoring the previous pair if the new one
+/// cannot be taken — a combination already owned by another application is the
+/// common case, and it must not leave the app with nothing bound.
+fn apply_shortcuts(app: &AppHandle, search: &str, capture: &str) -> Result<(), String> {
+    let search = parse_shortcut(search)?;
+    let capture = parse_shortcut(capture)?;
+
+    if search == capture {
+        return Err("les deux raccourcis doivent être différents".to_string());
+    }
+
+    let state = app.state::<Shortcuts>();
+    let previous = *state.0.lock().map_err(|_| "shortcut state poisoned")?;
+
+    let manager = app.global_shortcut();
+    manager.unregister_all().map_err(|e| e.to_string())?;
+
+    match manager
+        .register(search)
+        .and_then(|()| manager.register(capture))
+    {
+        Ok(()) => {
+            *state.0.lock().map_err(|_| "shortcut state poisoned")? =
+                Some(BoundShortcuts { search, capture });
+            Ok(())
+        }
+        Err(error) => {
+            let _ = manager.unregister_all();
+            if let Some(previous) = previous {
+                let _ = manager.register(previous.search);
+                let _ = manager.register(previous.capture);
+            }
+            Err(format!("impossible d'enregistrer ce raccourci : {error}"))
+        }
+    }
+}
 
 impl CaptureState {
     fn take(&self) -> Result<Option<Capture>, String> {
@@ -54,8 +114,30 @@ fn hide_window(app: &AppHandle, label: &str) -> Result<(), String> {
     window(app, label)?.hide().map_err(|e| e.to_string())
 }
 
-/// Freezes the monitor under the cursor, then covers it with the selection window.
+/// Takes the overlay off screen, then freezes the monitor and offers a selection.
+///
+/// The palette suggests this very shortcut, so it is usually visible when the
+/// shortcut fires — without this it would end up inside its own capture and be
+/// fed to the OCR engine.
 fn start_capture(app: &AppHandle) -> Result<(), String> {
+    hide_window(app, OVERLAY_WINDOW)?;
+
+    let app = app.clone();
+    std::thread::spawn(move || {
+        // Hiding a window only queues the repaint. Grabbing the pixels on this
+        // thread — rather than sleeping on the caller's, which may be the one
+        // pumping messages — lets the compositor actually clear it first.
+        std::thread::sleep(Duration::from_millis(120));
+
+        if let Err(error) = freeze_and_select(&app) {
+            eprintln!("region capture failed: {error}");
+        }
+    });
+
+    Ok(())
+}
+
+fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
     let cursor = app.cursor_position().map_err(|e| e.to_string())?;
     let frame = capture::grab(cursor.x as i32, cursor.y as i32)?;
     let monitor = frame.monitor;
@@ -80,6 +162,13 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn open_search_overlay(app: AppHandle) -> Result<(), String> {
     show_overlay(&app)
+}
+
+/// Applies the shortcuts chosen in Settings. Persisting them stays on the
+/// frontend, which already owns the settings store.
+#[tauri::command]
+fn set_shortcuts(app: AppHandle, search: String, capture: String) -> Result<(), String> {
+    apply_shortcuts(&app, &search, &capture)
 }
 
 #[tauri::command]
@@ -149,8 +238,10 @@ pub fn run() {
         // `opener` sends external links to the user's real browser.
         .plugin(tauri_plugin_opener::init())
         .manage(CaptureState::default())
+        .manage(Shortcuts::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
+            set_shortcuts,
             close_search_overlay,
             show_blueprint,
             cancel_capture,
@@ -167,23 +258,29 @@ pub fn run() {
             }
         })
         .setup(|app| {
-            // Registered from Rust rather than the frontend so the shortcuts
-            // work while the app is minimised, which is the point.
-            let search = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyB);
-            let region = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::KeyS);
-
+            // Bound from Rust rather than the frontend so the shortcuts keep
+            // working while the app is minimised, which is the point.
             app.handle().plugin(
                 tauri_plugin_global_shortcut::Builder::new()
-                    .with_shortcuts([search, region])?
-                    .with_handler(move |app, shortcut, event| {
+                    .with_handler(|app, shortcut, event| {
                         // Both edges are reported; act on the key going down.
                         if event.state != ShortcutState::Pressed {
                             return;
                         }
 
-                        let outcome = if *shortcut == search {
+                        let Some(bound) = app
+                            .state::<Shortcuts>()
+                            .0
+                            .lock()
+                            .ok()
+                            .and_then(|current| *current)
+                        else {
+                            return;
+                        };
+
+                        let outcome = if *shortcut == bound.search {
                             show_overlay(app)
-                        } else if *shortcut == region {
+                        } else if *shortcut == bound.capture {
                             start_capture(app)
                         } else {
                             Ok(())
@@ -194,6 +291,13 @@ pub fn run() {
                         }
                     })
                     .build(),
+            )?;
+
+            // The frontend overrides these with the stored pair once it boots.
+            apply_shortcuts(
+                app.handle(),
+                DEFAULT_SEARCH_SHORTCUT,
+                DEFAULT_CAPTURE_SHORTCUT,
             )?;
 
             Ok(())

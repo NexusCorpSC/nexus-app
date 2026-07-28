@@ -5,6 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Search, Loader2 } from "lucide-react";
 import { searchBlueprints } from "@/lib/api/blueprints";
 import { useDebounced } from "@/hooks/use-debounced";
+import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import {
+  DEFAULT_SHORTCUTS,
+  formatShortcut,
+  getShortcuts,
+  type Shortcuts,
+} from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import type { Blueprint } from "@/types/nexus";
 
@@ -19,6 +26,7 @@ const SEARCH_EVENT = "overlay://search";
 export default function OverlayPage() {
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
+  const [shortcuts, setShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebounced(query, 200);
@@ -31,16 +39,11 @@ export default function OverlayPage() {
 
   const results = data ?? [];
 
-  // The window is transparent; the global stylesheet's opaque background would
-  // otherwise paint the whole rectangle.
+  useTransparentWindow();
+
+  // The hints below must show what is actually bound, not the defaults.
   useEffect(() => {
-    const { style } = document.documentElement;
-    const previous = style.background;
-    style.background = "transparent";
-    document.body.style.background = "transparent";
-    return () => {
-      style.background = previous;
-    };
+    void getShortcuts().then(setShortcuts);
   }, []);
 
   // The window is shown by Rust, which cannot focus the input for us.
@@ -140,7 +143,7 @@ export default function OverlayPage() {
             <p className="px-4 py-6 text-sm text-slate-400">
               Tapez pour rechercher, ou capturez une zone de l'écran avec
               <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
-                Ctrl+Maj+S
+                {formatShortcut(shortcuts.capture)}
               </kbd>
               pour lire le texte à l'écran.
             </p>
@@ -177,7 +180,7 @@ export default function OverlayPage() {
 
         <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-xs text-slate-500">
           <span>↑↓ naviguer · ⏎ ouvrir · Échap fermer</span>
-          <span>Ctrl+Maj+B</span>
+          <span>{formatShortcut(shortcuts.search)}</span>
         </div>
       </div>
     </div>

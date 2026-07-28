@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTransparentWindow } from "@/hooks/use-transparent-window";
 
 type Point = { x: number; y: number };
 
@@ -19,17 +20,7 @@ export default function CapturePage() {
   const [busy, setBusy] = useState(false);
   const surfaceRef = useRef<HTMLDivElement>(null);
 
-  // The window is transparent; the global stylesheet would otherwise paint an
-  // opaque background over the screen the user is trying to select from.
-  useEffect(() => {
-    const { style } = document.documentElement;
-    const previous = style.background;
-    style.background = "transparent";
-    document.body.style.background = "transparent";
-    return () => {
-      style.background = previous;
-    };
-  }, []);
+  useTransparentWindow();
 
   // A fresh capture reuses the same window, so stale state must not survive.
   useEffect(() => {

@@ -109,6 +109,15 @@ impl Selection {
     }
 }
 
+/// Adds context to a WinRT failure.
+///
+/// A function rather than a closure returning a closure: that form cannot infer
+/// a lifetime for a borrowed context. Every caller passes a literal anyway.
+#[cfg(windows)]
+fn winerr(context: &'static str) -> impl Fn(windows::core::Error) -> String {
+    move |error| format!("{context}: {error}")
+}
+
 #[cfg(windows)]
 impl Capture {
     /// Crops the selection out of the snapshot and returns the text found in it.
@@ -119,8 +128,6 @@ impl Capture {
         use windows::Graphics::Imaging::{BitmapPixelFormat, SoftwareBitmap};
         use windows::Media::Ocr::OcrEngine;
         use windows::Storage::Streams::DataWriter;
-
-        let winerr = |context: &str| move |e: windows::core::Error| format!("{context}: {e}");
 
         let (left, top, width, height) =
             selection.to_pixels(self.image.width(), self.image.height())?;

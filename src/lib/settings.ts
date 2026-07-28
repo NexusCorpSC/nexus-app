@@ -9,6 +9,8 @@ const STORE_FILE = "settings.json";
 
 const KEY_API_BASE_URL = "apiBaseUrl";
 const KEY_SESSION_COOKIE = "sessionCookie";
+const KEY_SHORTCUT_SEARCH = "shortcutSearch";
+const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -56,6 +58,53 @@ export async function getApiBaseUrl(): Promise<string> {
 export async function setApiBaseUrl(url: string): Promise<void> {
   const store = await getStore();
   await store.set(KEY_API_BASE_URL, normalizeBaseUrl(url));
+}
+
+/**
+ * Global shortcuts, written in the format the `global-shortcut` plugin parses:
+ * modifiers then one key, e.g. `Ctrl+Shift+KeyB`. Key names match the DOM's
+ * `KeyboardEvent.code`, so a recorded combination maps across as-is.
+ */
+export const DEFAULT_SHORTCUTS = {
+  search: "Ctrl+Shift+KeyB",
+  capture: "Ctrl+Shift+KeyS",
+} as const;
+
+export type Shortcuts = { search: string; capture: string };
+
+export async function getShortcuts(): Promise<Shortcuts> {
+  const store = await getStore();
+
+  return {
+    search:
+      (await store.get<string>(KEY_SHORTCUT_SEARCH)) ?? DEFAULT_SHORTCUTS.search,
+    capture:
+      (await store.get<string>(KEY_SHORTCUT_CAPTURE)) ??
+      DEFAULT_SHORTCUTS.capture,
+  };
+}
+
+export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_SHORTCUT_SEARCH, shortcuts.search);
+  await store.set(KEY_SHORTCUT_CAPTURE, shortcuts.capture);
+}
+
+/** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */
+export function formatShortcut(accelerator: string): string {
+  return accelerator
+    .split("+")
+    .map((token) => {
+      switch (token) {
+        case "Shift":
+          return "Maj";
+        case "Super":
+          return "Win";
+        default:
+          return token.replace(/^Key/, "").replace(/^Digit/, "");
+      }
+    })
+    .join(" + ");
 }
 
 /**
