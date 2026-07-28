@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
 import { getShortcuts } from "@/lib/settings";
+import { applyShortcuts } from "@/lib/shortcuts";
 import {
   Boxes,
   Hammer,
   LogIn,
   LogOut,
+  NotebookPen,
   Rocket,
   Settings as SettingsIcon,
   Star,
@@ -31,6 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/reputations", label: "Réputations", icon: Star, requiresAuth: true },
   { to: "/inventory", label: "Inventaire", icon: Boxes, requiresAuth: true },
   { to: "/orgs", label: "Organisations", icon: Users },
+  { to: "/notes", label: "Bloc-notes", icon: NotebookPen },
 ];
 
 /** Route requests sent by the overlay when a search result is picked. */
@@ -49,11 +51,12 @@ export default function AppLayout() {
     };
   }, [navigate]);
 
-  // Rust binds defaults at startup; the stored pair replaces them as soon as
-  // the main window can read the settings store.
+  // Rust binds the defaults at startup; the stored combinations replace them as
+  // soon as the main window can read the settings store. Rejections are not
+  // raised here — Settings lists them, where they can be acted on.
   useEffect(() => {
     void getShortcuts()
-      .then((shortcuts) => invoke("set_shortcuts", shortcuts))
+      .then(applyShortcuts)
       .catch((error) => console.error("cannot apply shortcuts", error));
   }, []);
 

@@ -208,3 +208,18 @@ export type CurrentUser = {
   email: string;
   image: string | null;
 };
+
+/* ------------------------------------------------------------------ */
+/* Notes                                                               */
+/* ------------------------------------------------------------------ */
+
+/** One scratch pad per user, mirroring `types/notes.ts` in nexus-tools. */
+export type Note = {
+  content: string;
+  /** ISO date, null when never saved. */
+  updatedAt: string | null;
+};
+
+export const EMPTY_NOTE: Note = { content: "", updatedAt: null };
+
+export const NOTE_CONTENT_MAX_LENGTH = 20000;

@@ -37,6 +37,22 @@
         "visible": false
       },
       {
+        "label": "notes",
+        "title": "Nexus - bloc-notes",
+        "url": "index.html#/notes-overlay",
+        "width": 460,
+        "height": 560,
+        "minWidth": 320,
+        "minHeight": 240,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "capture",
         "title": "Nexus - capture d'ecran",
         "url": "index.html#/capture",

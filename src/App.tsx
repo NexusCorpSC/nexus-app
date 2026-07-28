@@ -13,6 +13,8 @@ import SettingsPage from "@/pages/settings-page";
 import LoginPage from "@/pages/login-page";
 import OverlayPage from "@/pages/overlay-page";
 import CapturePage from "@/pages/capture-page";
+import NotesPage from "@/pages/notes-page";
+import NotesOverlayPage from "@/pages/notes-overlay-page";
 
 export default function App() {
   return (
@@ -21,6 +23,7 @@ export default function App() {
           the chrome that AppLayout provides. */}
       <Route path="overlay" element={<OverlayPage />} />
       <Route path="capture" element={<CapturePage />} />
+      <Route path="notes-overlay" element={<NotesOverlayPage />} />
 
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/blueprints" replace />} />
@@ -32,6 +35,7 @@ export default function App() {
         <Route path="missions/:missionId" element={<MissionDetailPage />} />
 
         <Route path="orgs" element={<OrgsPage />} />
+        <Route path="notes" element={<NotesPage />} />
 
         <Route element={<RequireAuth />}>
           <Route path="reputations" element={<ReputationsPage />} />

@@ -1,4 +1,5 @@
 import { load, type Store } from "@tauri-apps/plugin-store";
+import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -11,6 +12,8 @@ const KEY_API_BASE_URL = "apiBaseUrl";
 const KEY_SESSION_COOKIE = "sessionCookie";
 const KEY_SHORTCUT_SEARCH = "shortcutSearch";
 const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
+const KEY_SHORTCUT_NOTES = "shortcutNotes";
+const KEY_LOCAL_NOTE = "localNote";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -68,9 +71,12 @@ export async function setApiBaseUrl(url: string): Promise<void> {
 export const DEFAULT_SHORTCUTS = {
   search: "Ctrl+Shift+KeyB",
   capture: "Ctrl+Shift+KeyS",
+  notes: "Ctrl+Shift+KeyN",
 } as const;
 
-export type Shortcuts = { search: string; capture: string };
+export type ShortcutAction = keyof typeof DEFAULT_SHORTCUTS;
+
+export type Shortcuts = Record<ShortcutAction, string>;
 
 export async function getShortcuts(): Promise<Shortcuts> {
   const store = await getStore();
@@ -81,6 +87,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
     capture:
       (await store.get<string>(KEY_SHORTCUT_CAPTURE)) ??
       DEFAULT_SHORTCUTS.capture,
+    notes:
+      (await store.get<string>(KEY_SHORTCUT_NOTES)) ?? DEFAULT_SHORTCUTS.notes,
   };
 }
 
@@ -88,6 +96,24 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   const store = await getStore();
   await store.set(KEY_SHORTCUT_SEARCH, shortcuts.search);
   await store.set(KEY_SHORTCUT_CAPTURE, shortcuts.capture);
+  await store.set(KEY_SHORTCUT_NOTES, shortcuts.notes);
+}
+
+/**
+ * The scratch pad kept for signed-out users. Signing in does not merge it into
+ * the online note: the two live side by side, and whichever applies is decided
+ * by the session (see `src/lib/notes.ts`).
+ */
+export async function getLocalNote(): Promise<Note> {
+  const store = await getStore();
+  return (await store.get<Note>(KEY_LOCAL_NOTE)) ?? EMPTY_NOTE;
+}
+
+export async function setLocalNote(content: string): Promise<Note> {
+  const store = await getStore();
+  const note: Note = { content, updatedAt: new Date().toISOString() };
+  await store.set(KEY_LOCAL_NOTE, note);
+  return note;
 }
 
 /** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */
