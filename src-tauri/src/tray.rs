@@ -75,15 +75,25 @@ fn on_menu(app: &AppHandle, item: &str) {
     // Same route as a shortcut, so the log says where it came from and the
     // notes overlay still toggles rather than only ever opening.
     let handle = app.clone();
-    let _ = app.run_on_main_thread(move || trigger(&handle, action, "tray"));
+    dispatch(app, move || trigger(&handle, action, "tray"));
 }
 
 fn open_main_window(app: &AppHandle) {
     let handle = app.clone();
 
-    let _ = app.run_on_main_thread(move || {
+    dispatch(app, move || {
         if let Err(error) = show_main_window(&handle) {
             log(format!("tray could not open the main window: {error}"));
         }
     });
+}
+
+/// Hands `task` to the main thread, which is where windows may be touched.
+///
+/// A dispatch that fails leaves the menu item doing nothing at all, so it is
+/// the one thing here worth a line in the log.
+fn dispatch<F: FnOnce() + Send + 'static>(app: &AppHandle, task: F) {
+    if let Err(error) = app.run_on_main_thread(task) {
+        log(format!("tray could not reach the main thread: {error}"));
+    }
 }
