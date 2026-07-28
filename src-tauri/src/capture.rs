@@ -112,7 +112,10 @@ impl Selection {
 #[cfg(windows)]
 impl Capture {
     /// Crops the selection out of the snapshot and returns the text found in it.
-    pub fn recognize(&self, selection: Selection) -> Result<String, String> {
+    ///
+    /// Async because `windows-future` 0.3 dropped the blocking `get()` on
+    /// `IAsyncOperation` in favour of `IntoFuture`.
+    pub async fn recognize(&self, selection: Selection) -> Result<String, String> {
         use windows::Graphics::Imaging::{BitmapPixelFormat, SoftwareBitmap};
         use windows::Media::Ocr::OcrEngine;
         use windows::Storage::Streams::DataWriter;
@@ -134,21 +137,24 @@ impl Capture {
             pixel[3] = 0xFF;
         }
 
-        let writer = DataWriter::new().map_err(winerr("cannot allocate OCR buffer"))?;
-        writer
-            .WriteBytes(&pixels)
-            .map_err(winerr("cannot fill OCR buffer"))?;
-        let buffer = writer
-            .DetachBuffer()
-            .map_err(winerr("cannot detach OCR buffer"))?;
+        // Scoped so only `Send` values survive to the await below.
+        let bitmap = {
+            let writer = DataWriter::new().map_err(winerr("cannot allocate OCR buffer"))?;
+            writer
+                .WriteBytes(&pixels)
+                .map_err(winerr("cannot fill OCR buffer"))?;
+            let buffer = writer
+                .DetachBuffer()
+                .map_err(winerr("cannot detach OCR buffer"))?;
 
-        let bitmap = SoftwareBitmap::CreateCopyFromBuffer(
-            &buffer,
-            BitmapPixelFormat::Bgra8,
-            width as i32,
-            height as i32,
-        )
-        .map_err(winerr("cannot build bitmap"))?;
+            SoftwareBitmap::CreateCopyFromBuffer(
+                &buffer,
+                BitmapPixelFormat::Bgra8,
+                width as i32,
+                height as i32,
+            )
+            .map_err(winerr("cannot build bitmap"))?
+        };
 
         // Follows the languages configured in Windows; recognition quality
         // depends on the matching language pack being installed.
@@ -159,7 +165,7 @@ impl Capture {
         let result = engine
             .RecognizeAsync(&bitmap)
             .map_err(winerr("OCR call failed"))?
-            .get()
+            .await
             .map_err(winerr("OCR failed"))?;
 
         let text = result
@@ -173,7 +179,7 @@ impl Capture {
 
 #[cfg(not(windows))]
 impl Capture {
-    pub fn recognize(&self, _selection: Selection) -> Result<String, String> {
+    pub async fn recognize(&self, _selection: Selection) -> Result<String, String> {
         Err(UNSUPPORTED.to_string())
     }
 }

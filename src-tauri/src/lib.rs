@@ -111,9 +111,9 @@ fn cancel_capture(app: AppHandle, state: State<CaptureState>) -> Result<(), Stri
 
 /// Reads the selected region and hands the text to the overlay's search bar.
 #[tauri::command]
-fn recognize_selection(
+async fn recognize_selection(
     app: AppHandle,
-    state: State<CaptureState>,
+    state: State<'_, CaptureState>,
     selection: Selection,
 ) -> Result<String, String> {
     let frame = state
@@ -124,7 +124,7 @@ fn recognize_selection(
     // fullscreen overlay left up in the meantime reads as a frozen app.
     hide_window(&app, CAPTURE_WINDOW)?;
 
-    let recognized = frame.recognize(selection);
+    let recognized = frame.recognize(selection).await;
 
     // The overlay opens either way — a failed read should still leave the user
     // somewhere they can type.
