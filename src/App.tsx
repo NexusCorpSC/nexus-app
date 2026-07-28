@@ -11,10 +11,17 @@ import OrgsPage from "@/pages/orgs-page";
 import OrgInventoryPage from "@/pages/org-inventory-page";
 import SettingsPage from "@/pages/settings-page";
 import LoginPage from "@/pages/login-page";
+import OverlayPage from "@/pages/overlay-page";
+import CapturePage from "@/pages/capture-page";
 
 export default function App() {
   return (
     <Routes>
+      {/* Standalone windows: frameless and transparent, so they sit outside
+          the chrome that AppLayout provides. */}
+      <Route path="overlay" element={<OverlayPage />} />
+      <Route path="capture" element={<CapturePage />} />
+
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/blueprints" replace />} />
 

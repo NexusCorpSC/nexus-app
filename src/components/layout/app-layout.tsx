@@ -1,4 +1,8 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { getShortcuts } from "@/lib/settings";
 import {
   Boxes,
   Hammer,
@@ -29,8 +33,29 @@ const NAV_ITEMS: NavItem[] = [
   { to: "/orgs", label: "Organisations", icon: Users },
 ];
 
+/** Route requests sent by the overlay when a search result is picked. */
+const NAVIGATE_EVENT = "main://navigate";
+
 export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const pending = listen<string>(NAVIGATE_EVENT, (event) => {
+      navigate(event.payload);
+    });
+    return () => {
+      void pending.then((unlisten) => unlisten());
+    };
+  }, [navigate]);
+
+  // Rust binds defaults at startup; the stored pair replaces them as soon as
+  // the main window can read the settings store.
+  useEffect(() => {
+    void getShortcuts()
+      .then((shortcuts) => invoke("set_shortcuts", shortcuts))
+      .catch((error) => console.error("cannot apply shortcuts", error));
+  }, []);
 
   return (
     <div className="flex h-full">

@@ -50,6 +50,56 @@ Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs` et
 `/api/blueprints/:slug` ont été ajoutés à `nexus-tools` pour cette application :
 ces données n'étaient jusqu'ici disponibles qu'en rendu serveur.
 
+### Superposition et capture d'écran
+
+Deux raccourcis globaux, enregistrés côté Rust pour rester actifs quand
+l'application est minimisée ou n'a pas le focus :
+
+| Raccourci par défaut | Effet                                                       |
+| -------------------- | ----------------------------------------------------------- |
+| `Ctrl+Maj+B`         | ouvre la palette de recherche de blueprints en superposition |
+| `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette  |
+
+Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
+voulue. Au moins un modificateur est exigé : un raccourci global sans
+modificateur confisquerait la touche à toutes les applications.
+
+Les combinaisons sont stockées au format du plugin (`Ctrl+Shift+KeyB`), dont les
+noms de touches correspondent à `KeyboardEvent.code` — ce que le navigateur
+enregistre se transmet donc tel quel. Si la combinaison choisie est déjà prise
+par une autre application, l'enregistrement échoue et **la paire précédente est
+restaurée** plutôt que de laisser l'application sans raccourci.
+
+La palette est une fenêtre transparente et sans décoration, toujours au-dessus.
+Elle interroge `/api/blueprints?fuzzy=true`, tolérant aux imperfections de
+l'OCR. Choisir un résultat ramène la fenêtre principale sur la fiche.
+
+La capture suit cet enchaînement :
+
+1. le raccourci **fige** l'écran sous le curseur (`xcap`) **avant** d'afficher
+   quoi que ce soit — la surface de sélection ne peut donc pas se retrouver
+   dans sa propre capture, et le tracé se fait sur une image stable ;
+2. la fenêtre de sélection couvre exactement ce moniteur ;
+3. au relâchement, la zone est découpée puis lue par **`Windows.Media.Ocr`**,
+   le moteur fourni avec le système — rien à embarquer, contrairement à
+   Tesseract qui demanderait un binaire et ses données d'entraînement ;
+4. le texte reconnu remplit la barre de recherche.
+
+Le frontend envoie la sélection en **fractions de la fenêtre** (0..1) plutôt
+qu'en pixels : la mise à l'échelle DPI disparaît du protocole et les valeurs se
+projettent directement sur l'image capturée, quelle que soit sa définition.
+
+> Limites connues : la capture porte sur le moniteur sous le curseur, et la
+> qualité de l'OCR dépend du module linguistique installé dans Windows.
+
+#### Vérifier le code Windows sans machine Windows
+
+`xcap` ne compile pas sur Linux et la chaîne Tauri ne se contrôle pas en
+compilation croisée (il lui manque `lib.exe`). En revanche `src-tauri/src/capture.rs`
+ne dépend que de `serde`, `xcap` et `windows` : recopié dans une crate jetable
+ciblant `x86_64-pc-windows-msvc`, il se type-checke en local, appels WinRT
+compris. C'est nettement plus rapide que d'attendre la CI.
+
 ### Authentification
 
 La connexion utilise le flux **OTP par e-mail** de better-auth : c'est le seul
