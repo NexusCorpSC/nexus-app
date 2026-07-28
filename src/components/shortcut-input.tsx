@@ -22,6 +22,14 @@ export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
   const [error, setError] = useState<string | null>(null);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>) {
+    // Tab keeps its normal behaviour, otherwise recording mode traps keyboard
+    // focus in this field. The cost is that Tab cannot be part of a shortcut.
+    if (event.key === "Tab") {
+      setRecording(false);
+      setError(null);
+      return;
+    }
+
     event.preventDefault();
 
     if (event.key === "Escape") {

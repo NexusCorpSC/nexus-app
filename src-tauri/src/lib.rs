@@ -294,11 +294,17 @@ pub fn run() {
             )?;
 
             // The frontend overrides these with the stored pair once it boots.
-            apply_shortcuts(
+            //
+            // Failing here must not stop the launch: a default combination may
+            // already be owned by another application, and that is no reason to
+            // deny the user the rest of the app.
+            if let Err(error) = apply_shortcuts(
                 app.handle(),
                 DEFAULT_SEARCH_SHORTCUT,
                 DEFAULT_CAPTURE_SHORTCUT,
-            )?;
+            ) {
+                eprintln!("cannot bind default shortcuts: {error}");
+            }
 
             Ok(())
         })
