@@ -149,10 +149,25 @@ Le même bloc-notes que le site, dans une fenêtre indépendante toujours au-des
 pour rester lisible en jeu. `Ctrl+Maj+N` l'affiche et le masque ; contrairement à
 la palette de recherche, il ne se referme pas quand il perd le focus.
 
+La fenêtre n'ayant pas de décorations, **son en-tête tient lieu de barre de
+titre** : il porte `data-tauri-drag-region`, ce qui déplace la fenêtre. La
+permission qui l'autorise, `core:window:allow-start-dragging`, ne fait pas
+partie de `core:default` — d'où la capacité dédiée `capabilities/notes-overlay.json`,
+limitée à cette fenêtre. Sans elle le glissement est refusé sans un mot.
+
 Connecté, l'éditeur lit et écrit `/api/notes`, donc les notes sont les mêmes que
 sur le site. Déconnecté, il écrit dans le store local. Les deux ne fusionnent
 pas : la session décide simplement lequel s'applique, et le cache React Query
 est indexé là-dessus pour qu'une connexion échange les notes affichées.
+
+**Chaque fenêtre a sa propre copie du contexte d'authentification**, et les
+superpositions sont créées au démarrage : celle du bloc-notes garderait donc
+indéfiniment la session vue à ce moment-là — aucune — et continuerait d'afficher
+le bloc-notes local à quelqu'un qui vient de se connecter. Une connexion ou une
+déconnexion est donc diffusée à toutes les fenêtres (`auth://session-changed`),
+qui relisent la session du store ; la fenêtre à l'origine du changement ignore sa
+propre diffusion, sinon elle repasserait par son écran de chargement pour rien.
+La superposition revérifie aussi la session quand elle reprend le focus.
 
 L'enregistrement est automatique, 1,2 s après la dernière frappe. Les écritures
 peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les

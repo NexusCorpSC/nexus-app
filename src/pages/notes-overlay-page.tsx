@@ -14,7 +14,7 @@ import { useTransparentWindow } from "@/hooks/use-transparent-window";
  * focus — it is dismissed by its shortcut or its close button.
  */
 export default function NotesOverlayPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refresh } = useAuth();
   const signedIn = Boolean(user);
   const queryClient = useQueryClient();
 
@@ -32,11 +32,18 @@ export default function NotesOverlayPage() {
   // The window is hidden and shown again rather than recreated, so nothing
   // remounts: without this the overlay would keep showing whatever it read the
   // first time, ignoring edits made from the main window.
+  //
+  // The session is re-checked along with it. Signing in is broadcast to every
+  // window, so this is a safety net — but what it guards against is showing the
+  // local scratch pad to someone who has an account.
   useEffect(() => {
-    const onFocus = () => void refetch();
+    const onFocus = () => {
+      void refresh();
+      void refetch();
+    };
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [refetch]);
+  }, [refresh, refetch]);
 
   function close() {
     void invoke("close_notes_overlay");
