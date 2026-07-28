@@ -101,6 +101,23 @@ crate (`cargo clippy`, `tauri build`) : `build.rs` appelle `tauri_build::build()
 qui résout `frontendDist` (`../dist`) et échoue si le dossier n'existe pas.
 `cargo fmt` ne compile rien et n'est pas concerné.
 
+### Publier une release
+
+`.github/workflows/release.yml` se déclenche sur les tags `v*` :
+
+```bash
+# aligner les trois fichiers de version, puis
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+Le workflow refuse de builder si le tag ne correspond pas aux versions déclarées
+dans `src-tauri/tauri.conf.json`, `package.json` et `src-tauri/Cargo.toml` — les
+noms des installeurs venant de `tauri.conf.json`, un tag `v0.2.0` publierait
+sinon un `Nexus App_0.1.0_x64-setup.exe`.
+
+La release est créée **en brouillon**, avec les notes générées depuis les commits
+et les deux installeurs attachés. À relire puis publier depuis l'onglet Releases.
+
 ### Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés
