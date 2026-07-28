@@ -42,6 +42,27 @@ jobs:
             throw "Tag $env:TAG does not match: $($mismatch -join ', '). Align the versions before tagging."
           }
 
+      # Checked here rather than next to the upload: a missing release then
+      # costs a re-run instead of four minutes of compilation.
+      - name: Check the release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `gh` exiting non-zero is the answer being looked for, not a failure
+          # to report, so read $LASTEXITCODE whichever way the shell is
+          # configured to treat native commands.
+          $exists = $false
+          try {
+            gh release view $env:TAG *> $null
+            $exists = $LASTEXITCODE -eq 0
+          } catch {
+            $exists = $false
+          }
+
+          if (-not $exists) {
+            throw "No release for $env:TAG. Create it (a draft is enough), then re-run this workflow."
+          }
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
@@ -80,15 +101,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release view $env:TAG > $null 2>&1
-
-          if ($LASTEXITCODE -ne 0) {
-            throw "No release for $env:TAG. Create it (draft is fine), then re-run this workflow."
-          }
-
+          # `-ErrorAction SilentlyContinue`: a bundle directory that does not
+          # exist is exactly the case the check below reports, and letting
+          # Get-ChildItem raise first would bury it.
           $files = @(
-            Get-ChildItem -Path 'src-tauri/target/release/bundle/msi/*.msi'
-            Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*.exe'
+            Get-ChildItem -Path 'src-tauri/target/release/bundle/msi/*.msi' -File -ErrorAction SilentlyContinue
+            Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*.exe' -File -ErrorAction SilentlyContinue
           )
 
           if ($files.Count -eq 0) {
