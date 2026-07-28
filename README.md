@@ -71,16 +71,38 @@ Les combinaisons sont stockées au format du plugin (`Ctrl+Shift+KeyB`), dont le
 noms de touches correspondent à `KeyboardEvent.code` — ce que le navigateur
 enregistre se transmet donc tel quel.
 
-**Chaque raccourci est enregistré indépendamment.** Une combinaison déjà prise
-par une autre application — `Ctrl+Maj+S` en particulier est courante — ne coûte
-que ce raccourci-là : les autres restent actifs, l'application démarre, et
-Paramètres liste les combinaisons refusées avec leur motif. Le choix reste
-enregistré même refusé, il suffit d'en saisir un autre.
+**Deux chemins guettent les combinaisons, et il en suffit d'un.**
+
+`RegisterHotKey`, via le plugin `global-shortcut`, est le seul qui puisse
+*confisquer* la combinaison à l'application en dessous. Mais il n'est pas
+délivré tant qu'un jeu tient le clavier : Star Citizen le prend pour lui et la
+combinaison n'arrive jamais jusqu'ici — c'est-à-dire précisément quand ces
+raccourcis servent.
+
+Un écouteur **Raw Input** (`src-tauri/src/hotkeys.rs`) comble ce trou. La couche
+périphérique rapporte chaque frappe à qui l'a demandée, focus ou pas, et sans
+aucun enregistrement préalable : une combinaison déjà prise par une autre
+application nous parvient donc quand même. C'est l'approche des overlays de la
+communauté autour du jeu — l'écouteur lit, il n'accroche aucun hook et n'injecte
+rien dans un autre processus, il n'y a donc rien qui puisse inquiéter un
+anti-triche. En contrepartie il ne peut pas avaler la frappe : le jeu reçoit
+aussi la combinaison. Cela ne coûte rien en pratique, puisque ce chemin ne sert
+que là où `RegisterHotKey` n'a pas fonctionné, donc là où le jeu recevait déjà
+les touches.
+
+Seule une combinaison illisible, ou demandée deux fois, est donc rapportée comme
+refusée dans Paramètres. Le choix reste enregistré même refusé, il suffit d'en
+saisir un autre.
 
 Rien de tout cela ne peut empêcher le démarrage : ni l'initialisation du plugin,
-ni l'enregistrement d'une combinaison. Un plugin qui n'a pas démarré coûte les
-raccourcis et rien d'autre — Paramètres les liste alors comme indisponibles, là
-où demander au plugin de lier une combinaison ferait tomber le processus.
+ni l'enregistrement d'une combinaison. Un plugin qui n'a pas démarré coûte
+l'exclusivité de la combinaison, pas le raccourci lui-même — Raw Input continue
+de le rapporter.
+
+Chaque déclenchement est écrit dans le journal avec sa provenance
+(`shortcut notes fired (raw input)`), ce qui répond du premier coup d'œil à la
+seule question qui compte quand un raccourci ne réagit pas : est-il arrivé
+jusqu'à l'application ?
 
 Les diagnostics partent dans `<données de l'app>/logs/nexus-app.log`, car les
 builds de release sont liés avec `windows_subsystem = "windows"` et n'ont donc
