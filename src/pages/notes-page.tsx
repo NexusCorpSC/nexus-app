@@ -56,7 +56,7 @@ export default function NotesPage() {
       ) : (
         <NoteEditor
           key={queryKey.join(":")}
-          initialNote={data}
+          note={data}
           signedIn={signedIn}
           className="h-[32rem]"
           onSaved={(note) => queryClient.setQueryData(queryKey, note)}

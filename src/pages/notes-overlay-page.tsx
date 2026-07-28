@@ -85,7 +85,7 @@ export default function NotesOverlayPage() {
         ) : (
           <NoteEditor
             key={queryKey.join(":")}
-            initialNote={data}
+            note={data}
             signedIn={signedIn}
             autoFocus
             className="flex-1"

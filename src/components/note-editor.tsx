@@ -10,7 +10,11 @@ const AUTOSAVE_DELAY_MS = 1200;
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 type NoteEditorProps = {
-  initialNote: Note;
+  /**
+   * The stored revision. Not just an initial value: the overlay rereads the
+   * note every time it regains focus, and the editor follows what comes back.
+   */
+  note: Note;
   /** Where the note lives: the account when signed in, the local store else. */
   signedIn: boolean;
   autoFocus?: boolean;
@@ -40,19 +44,33 @@ function formatUpdatedAt(iso: string | null): string | null {
  * request is allowed to move the UI.
  */
 export function NoteEditor({
-  initialNote,
+  note,
   signedIn,
   autoFocus = false,
   className,
   textareaClassName,
   onSaved,
 }: NoteEditorProps) {
-  const [saved, setSaved] = useState(initialNote);
-  const [content, setContent] = useState(initialNote.content);
+  const [saved, setSaved] = useState(note);
+  const [content, setContent] = useState(note.content);
   const [status, setStatus] = useState<SaveStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const isDirty = content !== saved.content;
+
+  // A reread brought a revision the editor has not seen — typically the main
+  // window edited the note while the overlay was hidden. Adopt it, but never
+  // over edits that are unsaved or still being written: those would vanish
+  // under the user without a trace.
+  useEffect(() => {
+    if (isDirty || status === "saving") return;
+    if (note.content === saved.content && note.updatedAt === saved.updatedAt) {
+      return;
+    }
+
+    setSaved(note);
+    setContent(note.content);
+  }, [note, saved, isDirty, status]);
 
   const lastRequestRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -72,22 +90,29 @@ export function NoteEditor({
   const save = useCallback(
     async (value: string) => {
       const requestId = ++lastRequestRef.current;
-      const isCurrent = () =>
-        isMountedRef.current && requestId === lastRequestRef.current;
+      const isLatest = () => requestId === lastRequestRef.current;
 
       setStatus("saving");
 
       try {
-        const note = await writeNote(signedIn, value);
-        onSavedRef.current?.(note);
+        const written = await writeNote(signedIn, value);
 
-        if (!isCurrent()) return;
+        // A late answer from an overtaken save must not reach the surrounding
+        // query either, or it would put back the content the editor has
+        // already moved past.
+        if (!isLatest()) return;
 
-        setSaved(note);
+        // Reported even once unmounted: closing the overlay flushes the last
+        // edit, and the main window has to hear about that revision.
+        onSavedRef.current?.(written);
+
+        if (!isMountedRef.current) return;
+
+        setSaved(written);
         setStatus("saved");
         setError(null);
       } catch (cause) {
-        if (!isCurrent()) return;
+        if (!isLatest() || !isMountedRef.current) return;
 
         setStatus("error");
         setError(

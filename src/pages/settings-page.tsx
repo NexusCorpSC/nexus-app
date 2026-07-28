@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const [shortcuts, setLocalShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
   const [shortcutsSaved, setShortcutsSaved] = useState(false);
   const [rejections, setRejections] = useState<ShortcutRejection[]>([]);
+  const [shortcutError, setShortcutError] = useState<string | null>(null);
   const shortcutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -60,9 +61,22 @@ export default function SettingsPage() {
    */
   async function handleShortcutsSubmit(event: FormEvent) {
     event.preventDefault();
+    setShortcutError(null);
 
-    setRejections(await applyShortcuts(shortcuts));
+    // Persisted before binding: "either way" has to hold for the call failing
+    // outright too, not just for a combination the system hands back.
     await setShortcuts(shortcuts);
+
+    try {
+      setRejections(await applyShortcuts(shortcuts));
+    } catch (cause) {
+      setRejections([]);
+      setShortcutError(
+        cause instanceof Error
+          ? cause.message
+          : "Les raccourcis n'ont pas pu être appliqués. Ils le seront au prochain démarrage.",
+      );
+    }
 
     setShortcutsSaved(true);
     if (shortcutTimer.current) clearTimeout(shortcutTimer.current);
@@ -185,6 +199,12 @@ export default function SettingsPage() {
               <span className="text-xs text-emerald-300">Appliqué</span>
             ) : null}
           </div>
+
+          {shortcutError ? (
+            <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+              {shortcutError}
+            </p>
+          ) : null}
 
           {rejections.length > 0 ? (
             <div className="space-y-1 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">

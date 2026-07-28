@@ -15,11 +15,13 @@ use tauri::{Manager, Runtime};
 const LOG_FILE: &str = "nexus-app.log";
 
 fn log_path<R: Runtime, M: Manager<R>>(manager: &M) -> Option<PathBuf> {
-    let dir = manager
-        .path()
-        .app_log_dir()
-        .or_else(|_| manager.path().app_data_dir())
-        .ok()?;
+    let dir = match manager.path().app_log_dir() {
+        Ok(dir) => dir,
+        // Not every platform hands out a log dir. Fall back to the app data,
+        // keeping the `logs/` level so the file stays where the README sends
+        // whoever is trying to diagnose a start-up that produced no window.
+        Err(_) => manager.path().app_data_dir().ok()?.join("logs"),
+    };
 
     std::fs::create_dir_all(&dir).ok()?;
 
