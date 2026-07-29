@@ -85,11 +85,6 @@ export function notify(notification: NotificationInput): Promise<void> {
   return invoke("notify", { notification });
 }
 
-/** Brings the main window up on `route`, from a toast the user clicked. */
-export function openMainRoute(route: string): Promise<void> {
-  return invoke("open_main_route", { route });
-}
-
 /** Moves the overlay to `corner`. Persisting the choice is `settings.ts`'s. */
 export function applyNotificationCorner(
   corner: NotificationCorner,

@@ -223,3 +223,89 @@ export type Note = {
 export const EMPTY_NOTE: Note = { content: "", updatedAt: null };
 
 export const NOTE_CONTENT_MAX_LENGTH = 20000;
+
+/* ------------------------------------------------------------------ */
+/* Factions                                                            */
+/* ------------------------------------------------------------------ */
+
+/** A blueprint as `GET /api/factions` lists it: enough to link to its page. */
+export type FactionBlueprint = {
+  _id: string;
+  name: string;
+  slug: string;
+  category?: string;
+  subcategory?: string;
+};
+
+/**
+ * A faction and the blueprints its missions reward, from `GET /api/factions`.
+ * The route answers with raw Mongo documents, hence `_id` rather than `id`.
+ */
+export type FactionWithBlueprints = {
+  _id: string;
+  name: string;
+  blueprints: FactionBlueprint[];
+};
+
+/* ------------------------------------------------------------------ */
+/* Blueprint ownership inside an organization                          */
+/* ------------------------------------------------------------------ */
+
+/** A member of one of your organizations who owns a given blueprint. */
+export type BlueprintOrgMember = {
+  userId: string;
+  name: string;
+  avatar?: string;
+};
+
+/* ------------------------------------------------------------------ */
+/* Generalized search                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Everything `GET /api/search` can return, mirroring `types/search.ts` in
+ * nexus-tools. The order is the tie-breaker the API uses between two results
+ * of equal score.
+ */
+export const SEARCH_TYPES = [
+  "blueprint",
+  "mission",
+  "faction",
+  "shopItem",
+  "shop",
+  "organization",
+  "cargoShip",
+  "inventoryItem",
+] as const;
+
+export type SearchType = (typeof SEARCH_TYPES)[number];
+
+/** Shorter than this, the API answers 400 rather than searching. */
+export const MIN_SEARCH_QUERY_LENGTH = 2;
+
+export type SearchResult = {
+  type: SearchType;
+  /** Mongo id, slug or nanoid, depending on the type. */
+  id: string;
+  title: string;
+  /** Short qualifier: category, faction, shop, location… */
+  subtitle?: string;
+  description?: string;
+  /** Relative link to the **website** page showing this entity. */
+  url: string;
+  imageUrl?: string;
+  meta?: Record<string, string | number | boolean>;
+  /** Relevance, highest first. Only comparable within one response. */
+  score: number;
+};
+
+export type SearchResponse = {
+  query: string;
+  /** Types actually searched, after dropping the ones the caller cannot read. */
+  types: SearchType[];
+  limit: number;
+  total: number;
+  results: SearchResult[];
+  countsByType: Record<string, number>;
+  hasMore: SearchType[];
+};

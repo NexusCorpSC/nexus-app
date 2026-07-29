@@ -3,6 +3,7 @@ import AppLayout from "@/components/layout/app-layout";
 import RequireAuth from "@/components/layout/require-auth";
 import BlueprintsPage from "@/pages/blueprints-page";
 import BlueprintDetailPage from "@/pages/blueprint-detail-page";
+import FactionsPage from "@/pages/factions-page";
 import MissionsPage from "@/pages/missions-page";
 import MissionDetailPage from "@/pages/mission-detail-page";
 import ReputationsPage from "@/pages/reputations-page";
@@ -35,6 +36,10 @@ export default function App() {
 
         <Route path="missions" element={<MissionsPage />} />
         <Route path="missions/:missionId" element={<MissionDetailPage />} />
+
+        {/* With an id when the search palette points at one faction. */}
+        <Route path="factions" element={<FactionsPage />} />
+        <Route path="factions/:factionId" element={<FactionsPage />} />
 
         <Route path="orgs" element={<OrgsPage />} />
         <Route path="notes" element={<NotesPage />} />

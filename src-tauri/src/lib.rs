@@ -411,29 +411,18 @@ fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NOTES_WINDOW)
 }
 
-/// Opens a route in the main window, from a notification the user clicked.
+/// Opens a route in the main window, for the windows that have nowhere to show
+/// the thing themselves: a notification the user clicked, a result picked in
+/// the search palette.
 ///
-/// A notification is shown while the main window is put away — that is the
-/// point of it — so acting on one has to bring the window back first.
+/// Both are used while the main window is put away — that is the point of them
+/// — so acting on one has to bring the window back first.
 #[tauri::command]
 fn open_main_route(app: AppHandle, route: String) -> Result<(), String> {
     show_main_window(&app)?;
 
     app.emit_to(MAIN_WINDOW, NAVIGATE_EVENT, route)
         .map_err(|e| e.to_string())
-}
-
-/// Opens a blueprint in the main window, from an overlay result.
-#[tauri::command]
-fn show_blueprint(app: AppHandle, slug: String) -> Result<(), String> {
-    // The main window is usually minimised, or put away, when the overlay is
-    // in use.
-    show_main_window(&app)?;
-
-    app.emit_to(MAIN_WINDOW, NAVIGATE_EVENT, format!("/blueprints/{slug}"))
-        .map_err(|e| e.to_string())?;
-
-    hide_window(&app, OVERLAY_WINDOW)
 }
 
 /// Drops the pending snapshot when the user abandons the selection.
@@ -511,7 +500,6 @@ pub fn run() {
             set_shortcuts,
             close_search_overlay,
             close_notes_overlay,
-            show_blueprint,
             open_main_route,
             cancel_capture,
             recognize_selection,
