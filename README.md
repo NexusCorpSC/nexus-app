@@ -39,6 +39,7 @@ src-tauri/            binaire Tauri, plugins et permissions
 | ------------- | ----------------------------------------------------------- | --------------- |
 | Recherche     | `/api/search`                                                | non⁴            |
 | Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories`  | non¹            |
+| ↳ ajouter aux miens | `/api/blueprints/:id/ownership`                        | oui             |
 | ↳ dans mon org | `/api/blueprints/:id/org-owners`                            | oui             |
 | Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
 | Factions      | `/api/factions`                                              | non             |
@@ -60,9 +61,29 @@ et ne sont rendus que côté serveur. Les écrans correspondants demanderaient d
 d'abord du travail dans `nexus-tools` ; d'ici là, la palette de recherche ouvre
 ces résultats-là dans le navigateur.
 
-Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs` et
-`/api/blueprints/:slug` ont été ajoutés à `nexus-tools` pour cette application :
-ces données n'étaient jusqu'ici disponibles qu'en rendu serveur.
+Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs`,
+`/api/blueprints/:slug` et `/api/blueprints/:id/ownership` ont été ajoutés à
+`nexus-tools` pour cette application : ces données n'étaient jusqu'ici
+disponibles qu'en rendu serveur, ou par une *server action* que seul le site
+sait appeler.
+
+#### Ajouter un blueprint à « mes blueprints »
+
+Trois endroits en donnent la possibilité, parce que c'est trois moments
+différents : la **grille**, où l'on parcourt ; la **fiche**, où l'on décide ; et
+la **liste de la palette de recherche**, où l'on ne faisait que passer.
+
+Les deux premiers savent si le blueprint est déjà possédé et n'affichent donc
+rien à ajouter quand il l'est. La palette, elle, ne le sait pas : un résultat de
+recherche ne dit rien de la possession. D'où une route **idempotente** qui
+répond ce qu'elle a fait — `added: false` veut dire « il y était déjà » — ce qui
+suffit à la palette pour répondre juste sans poser une deuxième question.
+
+L'ajout est fait dans la fenêtre où l'on a cliqué, et la palette est une fenêtre
+à part. Comme le client de requêtes ne rafraîchit pas au retour du focus, un
+ajout depuis la palette laisserait la fenêtre principale afficher « non
+possédé » indéfiniment : l'ajout est donc annoncé aux autres fenêtres, comme
+l'est une modification de la feuille de cargo.
 
 ### Icône de notification
 

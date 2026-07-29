@@ -22,6 +22,8 @@ import {
   parseMissionText,
 } from "@/lib/mission-objectives";
 import { CargoCaptureImport } from "@/components/cargo/capture-import";
+import { BlueprintQuickAdd } from "@/components/blueprint-add-button";
+import { useAuth } from "@/auth/auth-context";
 import { cn } from "@/lib/utils";
 import type { ParsedBulkLine } from "@/lib/cargo";
 import { MIN_SEARCH_QUERY_LENGTH, type SearchResult } from "@/types/nexus";
@@ -49,6 +51,7 @@ function asQuery(text: string): string {
  * clients has a screen for it (see `src/lib/search.ts`).
  */
 export default function OverlayPage() {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
   const [shortcuts, setShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
@@ -246,37 +249,51 @@ export default function OverlayPage() {
           )}
 
           {results.map((result, index) => (
-            <button
+            /* The row is a button, so the quick add sits beside it rather than
+               inside: nested buttons are not a thing, and opening the result
+               is not what the add is for. */
+            <div
               key={`${result.type}:${result.id}`}
-              type="button"
-              onClick={() => open(result)}
               onMouseEnter={() => setHighlighted(index)}
               className={cn(
-                "flex w-full items-center gap-3 px-4 py-3 text-left transition",
+                "flex w-full items-center gap-1 pr-3 transition",
                 index === highlighted ? "bg-white/10" : "hover:bg-white/5",
               )}
             >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-slate-100">
-                  {result.title}
-                </p>
-                {result.subtitle && (
-                  <p className="truncate text-xs text-slate-400">
-                    {result.subtitle}
+              <button
+                type="button"
+                onClick={() => open(result)}
+                className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-slate-100">
+                    {result.title}
                   </p>
+                  {result.subtitle && (
+                    <p className="truncate text-xs text-slate-400">
+                      {result.subtitle}
+                    </p>
+                  )}
+                </div>
+
+                {/* Says where it will open, since half the results have no
+                    screen here and land in the browser. */}
+                {opensInBrowser(result) && (
+                  <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
                 )}
-              </div>
 
-              {/* Says where it will open, since half the results have no
-                  screen here and land in the browser. */}
-              {opensInBrowser(result) && (
-                <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
-              )}
+                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
+                  {SEARCH_TYPE_LABELS[result.type]}
+                </span>
+              </button>
 
-              <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
-                {SEARCH_TYPE_LABELS[result.type]}
-              </span>
-            </button>
+              {/* A result says nothing about possession, so the button is
+                  offered on every blueprint: the add is idempotent and reports
+                  back which of the two it did. */}
+              {user && result.type === "blueprint" ? (
+                <BlueprintQuickAdd blueprintId={result.id} tone="overlay" />
+              ) : null}
+            </div>
           ))}
         </div>
 
