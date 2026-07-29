@@ -53,6 +53,20 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
     );
   }
 
+  // Before the empty case, and not folded into it: a list that could not be
+  // read is not an empty list, and saying «vous n'appartenez à aucune
+  // organisation» to someone who has several is worse than saying nothing.
+  if (orgsQuery.isError) {
+    return (
+      <Section>
+        <ErrorState
+          error={orgsQuery.error}
+          onRetry={() => void orgsQuery.refetch()}
+        />
+      </Section>
+    );
+  }
+
   if (organizations.length === 0) {
     return (
       <Section>
