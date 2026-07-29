@@ -247,6 +247,39 @@ Deux conséquences voulues : la superposition n'a besoin de rien d'autre que la
 feuille pour tracer sa jauge — ni liste, ni réseau — et une capacité modifiée
 sur le site en cours de route ne déplace pas la cible sous les pieds du pilote.
 
+#### Modifier la feuille sans quitter le jeu
+
+La superposition **s'ouvre en lecture**, parce que c'est ce qu'on lui demande en
+vol : la liste et la capacité restante, et rien à cliquer par erreur au-dessus
+d'un jeu. Les contrôles sont derrière un « Modifier » explicite, et ce sont les
+mêmes que ceux de l'écran principal — ajouter une ligne, la réécrire, la
+déplacer d'une mission à l'autre, renommer ou supprimer un bloc mission entier,
+ouvrir la mission suivante, changer de plus gros conteneur, clôturer.
+
+Renommer un bloc a deux conséquences assumées. Renommer **vers un nom déjà
+pris** fusionne les deux blocs : la feuille regroupe par nom, pas par identité,
+c'est donc déjà ce qu'elle affichait. Et renommer **le bloc en cours de
+remplissage** fait avancer le compteur — le numéro qu'il portait est libre, et
+une ligne ajoutée ensuite doit ouvrir un nouveau bloc plutôt que ressusciter le
+nom dont on vient de le sortir.
+
+Une exception : **le vaisseau ne se change pas depuis la superposition.** C'est
+la seule chose qui demanderait la liste, donc le réseau, alors que la feuille
+est justement faite pour s'en passer.
+
+Deux détails du même souci :
+
+- la clôture demande **deux fois** plutôt qu'une, sans boîte de dialogue native
+  — celle-ci passerait devant un jeu en plein écran, ce qui coûte plus cher que
+  ce qu'elle protège ;
+- `Échap` **quitte d'abord les contrôles**, et ne ferme la fenêtre qu'ensuite :
+  la même touche ne doit pas jeter ce qu'on était en train de taper.
+
+Les deux écrans dessinent le même composant (`src/components/cargo/sheet-view.tsx`),
+chaque contrôle n'étant tracé que si son gestionnaire est fourni. La version
+`compact` est la superposition : mêmes champs, étiquettes descendues dans les
+libellés indicatifs, faute de largeur.
+
 #### Une capture d'écran qui devient du cargo
 
 Le journal de mission du jeu a une forme fixe, répétée par livraison :

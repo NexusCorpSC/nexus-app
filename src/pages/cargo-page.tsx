@@ -1,10 +1,9 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { PanelRight, Plus } from "lucide-react";
 import {
   CONTAINER_SIZES,
   isContainerSize,
-  MAX_VOLUME,
   missionName,
   type ContainerSize,
 } from "@/lib/cargo";
@@ -13,10 +12,12 @@ import {
   closeSheet,
   removeLine,
   removeMission,
+  renameMission,
   setMaxContainer,
   setShip,
   startNewMission,
   startSheet,
+  updateLine,
 } from "@/lib/cargo-sheet";
 import { parseQuickEntry } from "@/lib/mission-objectives";
 import { useCargoSheet } from "@/hooks/use-cargo-sheet";
@@ -25,13 +26,16 @@ import {
   TRANSPORT_SOURCE_LABELS,
   useTransports,
 } from "@/components/cargo/ship-picker";
-import { CapacitySummary, MissionGroups } from "@/components/cargo/sheet-view";
+import {
+  CapacitySummary,
+  CargoLineForm,
+  MissionGroups,
+} from "@/components/cargo/sheet-view";
 import {
   Button,
   Card,
   EmptyState,
   Field,
-  Input,
   LoadingState,
   PageHeader,
   Select,
@@ -140,8 +144,11 @@ export default function CargoPage() {
           ) : (
             <MissionGroups
               lines={sheet.lines}
+              missionPlaceholder={missionName(sheet.missionCounter)}
               onRemoveLine={(id) => void removeLine(id)}
               onRemoveMission={(mission) => void removeMission(mission)}
+              onRenameMission={(from, to) => void renameMission(from, to)}
+              onEditLine={(id, line) => void updateLine(id, line)}
             />
           )}
         </div>
@@ -219,39 +226,8 @@ function confirmClose(): boolean {
 
 /** Manual entry, and the paste that accepts a whole mission log at once. */
 function AddLineCard({ currentMission }: { currentMission: string }) {
-  const [destination, setDestination] = useState("");
-  const [content, setContent] = useState("");
-  const [volume, setVolume] = useState("");
-  const [location, setLocation] = useState("");
   const [paste, setPaste] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
-
-  const parsedVolume = Math.floor(Number(volume));
-  const canAdd =
-    destination.trim() !== "" &&
-    Number.isFinite(parsedVolume) &&
-    parsedVolume > 0 &&
-    parsedVolume <= MAX_VOLUME;
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!canAdd) return;
-
-    void addLines([
-      {
-        destination: destination.trim(),
-        content: content.trim(),
-        volume: parsedVolume,
-        location: location.trim(),
-        mission: "",
-      },
-    ]);
-
-    setDestination("");
-    setContent("");
-    setVolume("");
-    setFeedback(null);
-  }
 
   function importPaste() {
     const result = parseQuickEntry(paste);
@@ -282,47 +258,14 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
         Sans mission indiquée, la ligne rejoint « {currentMission} ».
       </p>
 
-      <form onSubmit={submit} className="space-y-3">
-        <Field label="Destination">
-          <Input
-            value={destination}
-            onChange={(event) => setDestination(event.target.value)}
-            placeholder="Port Olisar"
-          />
-        </Field>
-
-        <Field label="Contenu">
-          <Input
-            value={content}
-            onChange={(event) => setContent(event.target.value)}
-            placeholder="Titanium"
-          />
-        </Field>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Field label="Volume (SCU)">
-            <Input
-              value={volume}
-              inputMode="numeric"
-              onChange={(event) => setVolume(event.target.value)}
-              placeholder="32"
-            />
-          </Field>
-
-          <Field label="Emplacement">
-            <Input
-              value={location}
-              onChange={(event) => setLocation(event.target.value)}
-              placeholder="Area18"
-            />
-          </Field>
-        </div>
-
-        <Button type="submit" size="sm" disabled={!canAdd}>
-          <Plus className="h-3.5 w-3.5" />
-          Ajouter
-        </Button>
-      </form>
+      <CargoLineForm
+        submitLabel="Ajouter"
+        submitIcon={<Plus className="h-3.5 w-3.5" />}
+        onSubmit={(line) => {
+          void addLines([line]);
+          setFeedback(null);
+        }}
+      />
 
       <div className="mt-4 space-y-2 border-t border-nexus-accent/10 pt-4">
         <Field label="Coller un journal de mission">
