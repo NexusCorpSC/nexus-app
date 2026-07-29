@@ -30,6 +30,15 @@ import { MIN_SEARCH_QUERY_LENGTH, type SearchResult } from "@/types/nexus";
 const SEARCH_EVENT = "overlay://search";
 
 /**
+ * A capture reads line by line, which the mission log needs but a search query
+ * does not: a text input drops the newlines rather than honouring them, gluing
+ * the last word of a line to the first of the next.
+ */
+function asQuery(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/**
  * Quick-search palette shown over whatever the user is doing, opened by a
  * global shortcut. Its window is transparent and frameless, so this component
  * draws the whole surface.
@@ -103,7 +112,7 @@ export default function OverlayPage() {
       }
 
       setCargo(null);
-      setQuery(event.payload);
+      setQuery(asQuery(event.payload));
       setHighlighted(0);
       inputRef.current?.focus();
       inputRef.current?.select();

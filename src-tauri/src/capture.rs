@@ -11,6 +11,31 @@ use serde::Deserialize;
 #[cfg(windows)]
 const MIN_SELECTION_PX: u32 = 8;
 
+/// Longest side an enlarged crop may reach. Windows OCR refuses bitmaps past a
+/// limit of its own, a little above this one.
+#[cfg(windows)]
+const MAX_SCALED_SIDE: u32 = 8_192;
+
+/// Most pixels an enlarged crop may hold: past this the resize costs more time
+/// than the sharper glyphs win back.
+#[cfg(windows)]
+const MAX_SCALED_PIXELS: u32 = 8_000_000;
+
+/// How much to enlarge a crop before reading it, or `None` to read it as it is.
+///
+/// The engine reads a game HUD far better when the glyphs are document-sized,
+/// and a selection drawn around a mission log is small enough to take the full
+/// 3× while staying inside both limits.
+#[cfg(windows)]
+fn upscale(width: u32, height: u32) -> Option<u32> {
+    let side = width.max(height).max(1);
+    let pixels = width.max(1) * height.max(1);
+
+    (2..=3).rev().find(|factor| {
+        side * factor <= MAX_SCALED_SIDE && pixels * factor * factor <= MAX_SCALED_PIXELS
+    })
+}
+
 #[cfg(not(windows))]
 const UNSUPPORTED: &str = "Screen capture is only available on Windows.";
 
@@ -135,6 +160,27 @@ impl Capture {
         let region =
             xcap::image::imageops::crop_imm(&self.image, left, top, width, height).to_image();
 
+        // The engine is trained on document-sized text and reads a game HUD
+        // poorly at native resolution: letters come back as their look-alikes
+        // and short words are dropped outright. Enlarging the crop first costs
+        // a few milliseconds on a region this small and buys back most of it.
+        let (region, width, height) = match upscale(width, height) {
+            Some(factor) => {
+                let (scaled_width, scaled_height) = (width * factor, height * factor);
+                (
+                    xcap::image::imageops::resize(
+                        &region,
+                        scaled_width,
+                        scaled_height,
+                        xcap::image::imageops::FilterType::Lanczos3,
+                    ),
+                    scaled_width,
+                    scaled_height,
+                )
+            }
+            None => (region, width, height),
+        };
+
         // Windows OCR expects BGRA8 while xcap hands back RGBA8. Alpha is
         // forced opaque: a screenshot carries none, and a zero would blank the
         // bitmap the engine sees.
@@ -175,12 +221,33 @@ impl Capture {
             .await
             .map_err(winerr("OCR failed"))?;
 
-        let text = result
-            .Text()
-            .map_err(winerr("cannot read OCR output"))?
-            .to_string_lossy();
+        // Line by line rather than `OcrResult::Text()`, which glues every line
+        // together with a single space: a mission log read that way arrives as
+        // one endless sentence, and the objectives can no longer be told apart.
+        let lines = result.Lines().map_err(winerr("cannot read OCR output"))?;
+        let count = lines.Size().map_err(winerr("cannot count OCR lines"))?;
 
-        Ok(text.trim().to_string())
+        let mut text = String::new();
+        for index in 0..count {
+            let line = lines
+                .GetAt(index)
+                .map_err(winerr("cannot read an OCR line"))?
+                .Text()
+                .map_err(winerr("cannot read an OCR line"))?
+                .to_string_lossy();
+
+            let line = line.trim();
+            if line.is_empty() {
+                continue;
+            }
+
+            if !text.is_empty() {
+                text.push('\n');
+            }
+            text.push_str(line);
+        }
+
+        Ok(text)
     }
 }
 
