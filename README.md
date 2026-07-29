@@ -81,6 +81,14 @@ raccourcis : elles sont journalisées de la même manière (`(tray)` au lieu de
 Une icône que le système refuserait n'empêche pas le démarrage : c'est
 journalisé, et l'application se lance.
 
+L'icône est le logo Nexus Corp, celui du site
+(`nexus-tools/public/nexus_logo_square.png`), décliné par `tauri icon` dans
+`src-tauri/icons/`. Le lanceur, la fenêtre et les installeurs le prennent de là.
+La zone de notification, elle, reçoit le PNG **128 px** plutôt que l'icône de
+fenêtre en 32 px : elle réclame entre 16 et 32 pixels selon l'écran, et une
+source large se réduit mieux qu'une petite ne s'agrandit. C'est ce qui vaut au
+crate la fonctionnalité `image-png`.
+
 ### Superposition et capture d'écran
 
 Deux raccourcis globaux, enregistrés côté Rust pour rester actifs quand

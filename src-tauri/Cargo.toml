@@ -1,6 +1,6 @@
 [package]
 name = "nexus-app"
-version = "0.5.0"
+version = "0.6.0"
 description = "Desktop client for Nexus Tools"
 authors = ["Nexus Corp"]
 edition = "2021"
@@ -20,7 +20,9 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 # `tray-icon`: the notification area icon, which is what says the app is
 # running while every window is hidden.
-tauri = { version = "2", features = ["tray-icon"] }
+# `image-png`: so that icon can be decoded from the logo rather than reusing
+# the window's own 32 px icon.
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2"
 tauri-plugin-http = "2"
 tauri-plugin-store = "2"

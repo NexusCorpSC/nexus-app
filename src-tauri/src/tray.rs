@@ -5,12 +5,19 @@
 //! tray icon is what says it is still running, and gives back a way in that
 //! does not depend on a combination the system may have refused.
 
+use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::AppHandle;
 
 use crate::diagnostics::log;
 use crate::{show_main_window, trigger, Action};
+
+/// The Nexus Corp logo, taken at 128 px rather than at the 32 px of the window
+/// icon: the notification area asks for anything between 16 and 32 pixels
+/// depending on the display, and a large source scales down better than a
+/// small one scales up.
+const ICON: &[u8] = include_bytes!("../icons/128x128.png");
 
 const SEARCH_ITEM: &str = "tray-search";
 const CAPTURE_ITEM: &str = "tray-capture";
@@ -47,9 +54,18 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
             }
         });
 
-    // The window icon is the app icon, already embedded by the bundler.
-    if let Some(icon) = app.default_window_icon() {
-        tray = tray.icon(icon.clone());
+    // Falls back on the window icon — the same logo, one size down — if the
+    // embedded PNG ever fails to decode. A tray icon that ends up blank is
+    // very hard to find again in the notification area.
+    match Image::from_bytes(ICON) {
+        Ok(icon) => tray = tray.icon(icon),
+        Err(error) => {
+            log(format!("tray icon could not be decoded: {error}"));
+
+            if let Some(icon) = app.default_window_icon() {
+                tray = tray.icon(icon.clone());
+            }
+        }
     }
 
     tray.build(app)?;
