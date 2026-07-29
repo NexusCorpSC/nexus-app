@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
-import { getShortcuts } from "@/lib/settings";
+import { getNotificationCorner, getShortcuts } from "@/lib/settings";
+import { applyNotificationCorner } from "@/lib/notifications";
 import { applyShortcuts } from "@/lib/shortcuts";
 import {
   Boxes,
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
+import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -42,6 +44,10 @@ export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
+  // Only the main window looks: the check is per application, not per window,
+  // and this is the one that can show what to do about it.
+  useUpdateWatcher();
+
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {
       navigate(event.payload);
@@ -58,6 +64,16 @@ export default function AppLayout() {
     void getShortcuts()
       .then(applyShortcuts)
       .catch((error) => console.error("cannot apply shortcuts", error));
+  }, []);
+
+  // Same handover for the notification corner: Rust starts in the bottom-right
+  // one and takes the stored choice as soon as the store can be read.
+  useEffect(() => {
+    void getNotificationCorner()
+      .then(applyNotificationCorner)
+      .catch((error) =>
+        console.error("cannot apply the notification corner", error),
+      );
   }, []);
 
   return (

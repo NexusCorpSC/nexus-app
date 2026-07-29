@@ -8,20 +8,52 @@ import {
   DEFAULT_SHORTCUTS,
   formatShortcut,
   getApiBaseUrl,
+  getNotificationCorner,
   getShortcuts,
   isAllowedBaseUrl,
   normalizeBaseUrl,
   setApiBaseUrl,
+  setNotificationCorner,
   setShortcuts,
   type Shortcuts,
 } from "@/lib/settings";
+import {
+  applyNotificationCorner,
+  DEFAULT_NOTIFICATION_CORNER,
+  notify,
+  NOTIFICATION_CORNER_LABELS,
+  NOTIFICATION_CORNERS,
+  type NotificationCorner,
+} from "@/lib/notifications";
 import {
   applyShortcuts,
   SHORTCUT_LABELS,
   type ShortcutRejection,
 } from "@/lib/shortcuts";
-import { Button, Card, Field, Input, PageHeader } from "@/components/ui";
+import {
+  checkForUpdate,
+  describeUpdateError,
+  installUpdate,
+  type Update,
+  type UpdateProgress,
+} from "@/lib/updates";
+import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
+
+/**
+ * Percentage downloaded, or `null` when there is no total to measure against.
+ *
+ * A total of zero counts as no total rather than as an empty download: it is
+ * not something to show a bar for, and it is not something to divide by.
+ */
+function updateDownloadPercent(progress: UpdateProgress | null): number | null {
+  if (!progress || progress.total === null || progress.total <= 0) return null;
+  return Math.min(100, Math.round((progress.downloaded / progress.total) * 100));
+}
+
+function formatBytes(bytes: number): string {
+  return `${(bytes / 1_000_000).toFixed(1)} Mo`;
+}
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
@@ -39,10 +71,28 @@ export default function SettingsPage() {
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const shortcutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [corner, setCorner] = useState<NotificationCorner>(
+    DEFAULT_NOTIFICATION_CORNER,
+  );
+  const [notificationError, setNotificationError] = useState<string | null>(
+    null,
+  );
+
+  const [update, setUpdate] = useState<Update | null>(null);
+  const [updateState, setUpdateState] = useState<
+    "idle" | "checking" | "latest" | "available" | "installing"
+  >("idle");
+  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(
+    null,
+  );
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const downloadPercent = updateDownloadPercent(updateProgress);
+
   useEffect(() => {
     void getApiBaseUrl().then(setBaseUrl);
     void getVersion().then(setVersion);
     void getShortcuts().then(setLocalShortcuts);
+    void getNotificationCorner().then(setCorner);
   }, []);
 
   // Clears the "Enregistré" flash timers if the screen is left first.
@@ -81,6 +131,71 @@ export default function SettingsPage() {
     setShortcutsSaved(true);
     if (shortcutTimer.current) clearTimeout(shortcutTimer.current);
     shortcutTimer.current = setTimeout(() => setShortcutsSaved(false), 2500);
+  }
+
+  /**
+   * The choice is applied and shown at once: a corner is far easier to pick
+   * when the example lands in it while the list is still open.
+   */
+  async function handleCornerChange(next: NotificationCorner) {
+    setCorner(next);
+    setNotificationError(null);
+
+    try {
+      // Persisted before it is applied, so a corner the overlay refuses is
+      // still the one taken at the next start — and inside the try, because a
+      // store that will not write is exactly what the user needs told.
+      await setNotificationCorner(next);
+      await applyNotificationCorner(next);
+      await notify({
+        title: "Notifications",
+        body: `Elles s'afficheront ${NOTIFICATION_CORNER_LABELS[next].toLowerCase()}.`,
+      });
+    } catch (cause) {
+      setNotificationError(
+        cause instanceof Error
+          ? cause.message
+          : "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
+      );
+    }
+  }
+
+  /** The check the user asked for, so its failures are shown rather than logged. */
+  async function handleUpdateCheck() {
+    setUpdateError(null);
+    setUpdateState("checking");
+
+    try {
+      const found = await checkForUpdate();
+      setUpdate(found);
+      setUpdateState(found ? "available" : "latest");
+    } catch (cause) {
+      setUpdateState("idle");
+      setUpdateError(describeUpdateError(cause));
+    }
+  }
+
+  /**
+   * Nothing after the download returns on Windows: the plugin hands the
+   * installer over and ends this process, and the installer brings the app
+   * back up. The error path is therefore only about the download itself.
+   */
+  async function handleUpdateInstall() {
+    if (!update) return;
+
+    setUpdateError(null);
+    setUpdateState("installing");
+    setUpdateProgress({ downloaded: 0, total: null });
+
+    try {
+      await installUpdate(update, setUpdateProgress);
+    } catch (cause) {
+      setUpdateState("available");
+      setUpdateProgress(null);
+      setUpdateError(
+        `L'installation a échoué : ${cause instanceof Error ? cause.message : String(cause)}`,
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -223,6 +338,143 @@ export default function SettingsPage() {
             </div>
           ) : null}
         </form>
+      </Card>
+
+      <Card className="mb-4 p-6">
+        <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
+          Notifications
+        </h2>
+        <p className="mb-4 text-xs text-nexus-accent/50">
+          Elles s'affichent par-dessus le jeu, dans le coin choisi de l'écran où
+          se trouve le curseur, puis disparaissent d'elles-mêmes. Survolez-en
+          une pour la garder à l'écran.
+        </p>
+
+        <div className="space-y-4">
+          <Field label="Coin d'affichage">
+            <Select
+              value={corner}
+              onChange={(event) =>
+                void handleCornerChange(
+                  event.target.value as NotificationCorner,
+                )
+              }
+            >
+              {NOTIFICATION_CORNERS.map((value) => (
+                <option key={value} value={value}>
+                  {NOTIFICATION_CORNER_LABELS[value]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              void notify({
+                kind: "success",
+                title: "Nexus App",
+                body: "Ceci est un exemple de notification.",
+              })
+            }
+          >
+            Afficher un exemple
+          </Button>
+
+          {notificationError ? (
+            <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+              {notificationError}
+            </p>
+          ) : null}
+        </div>
+      </Card>
+
+      <Card className="mb-4 p-6">
+        <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
+          Mises à jour
+        </h2>
+        <p className="mb-4 text-xs text-nexus-accent/50">
+          L'application regarde au démarrage, puis toutes les six heures, si une
+          release plus récente est publiée. Rien n'est installé sans votre
+          accord.
+        </p>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void handleUpdateCheck()}
+              disabled={updateState === "checking" || updateState === "installing"}
+            >
+              {updateState === "checking" ? "Recherche…" : "Vérifier maintenant"}
+            </Button>
+
+            {updateState === "latest" ? (
+              <span className="text-xs text-emerald-300">
+                Vous avez la dernière version ({version || "—"}).
+              </span>
+            ) : null}
+          </div>
+
+          {update ? (
+            <div className="space-y-3 rounded-lg border border-nexus-accent/20 bg-nexus-abyss/40 p-4">
+              <div className="flex items-baseline gap-2">
+                <p className="text-sm font-medium text-nexus-bright">
+                  Version {update.version}
+                </p>
+                <span className="text-xs text-nexus-accent/50">
+                  installée : {update.currentVersion}
+                </span>
+              </div>
+
+              {update.body ? (
+                <p className="max-h-40 overflow-y-auto whitespace-pre-line text-xs text-nexus-accent/70">
+                  {update.body}
+                </p>
+              ) : null}
+
+              {updateState === "installing" ? (
+                <div className="space-y-1.5">
+                  {/* No bar when the size was never announced: a full one would
+                      read as finished, an empty one as stuck. The bytes
+                      received say more than either. */}
+                  {downloadPercent !== null ? (
+                    <div className="h-1 overflow-hidden rounded-full bg-nexus-accent/10">
+                      <div
+                        className="h-full rounded-full bg-nexus-accent/70 transition-[width]"
+                        style={{ width: `${downloadPercent}%` }}
+                      />
+                    </div>
+                  ) : null}
+                  <p className="text-xs text-nexus-accent/60">
+                    Téléchargement…{" "}
+                    {downloadPercent !== null
+                      ? `${downloadPercent} %`
+                      : formatBytes(updateProgress?.downloaded ?? 0)}
+                    . L'application redémarrera pour terminer.
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void handleUpdateInstall()}
+                >
+                  Installer et redémarrer
+                </Button>
+              )}
+            </div>
+          ) : null}
+
+          {updateError ? (
+            <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+              {updateError}
+            </p>
+          ) : null}
+        </div>
       </Card>
 
       <Card className="p-6">

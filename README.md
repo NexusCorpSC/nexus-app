@@ -194,6 +194,132 @@ peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
 réponses revenir dans le désordre : seule la requête la plus récente met l'écran
 à jour.
 
+### Notifications
+
+Les notifications s'affichent dans **une fenêtre à elles**, accrochée à un coin
+de l'écran — en bas à droite par défaut, comme celles de Windows. Le coin se
+choisit dans **Paramètres**, où un exemple part à chaque changement pour montrer
+où il tombe.
+
+Une fenêtre séparée plutôt qu'un coin de la fenêtre principale : celle-ci est
+presque toujours rangée ou minimisée derrière le jeu, et une notification que
+personne ne voit n'en est pas une.
+
+Le partage des rôles :
+
+- **Rust** possède la géométrie (`src-tauri/src/notifications.rs`). Il choisit le
+  moniteur, lit sa *zone de travail* — pas l'écran entier, pour que les toasts se
+  posent au-dessus de la barre des tâches et non dessous — et place la fenêtre
+  dans le coin retenu. Le moniteur est celui **sous le curseur**, la règle que
+  suit déjà la capture de zone ; il est figé le temps d'une pile, pour qu'elle ne
+  saute pas d'un écran à l'autre en cours de route.
+- **La superposition** (`src/pages/notifications-overlay-page.tsx`) dessine la
+  pile et renvoie sa hauteur : la fenêtre est redimensionnée à chaque changement
+  pour ne jamais couvrir plus que les toasts eux-mêmes.
+
+Émettre une notification depuis n'importe quelle fenêtre :
+
+```ts
+import { notify } from "@/lib/notifications";
+
+await notify({ kind: "error", title: "Capture impossible", body: raison });
+```
+
+L'appel passe par Rust plutôt que par un état React : la fenêtre qui émet n'est
+pratiquement jamais celle qui affiche. Rust en émet aussi directement — un échec
+de capture ou d'OCR n'avait jusqu'ici nulle part où s'afficher, puisque la
+fenêtre de sélection est refermée avant l'erreur.
+
+Une notification levée pendant que la superposition charge encore n'est pas
+perdue : elle est mise de côté (huit au plus) et remise quand elle signale
+qu'elle écoute.
+
+Quatre niveaux — `info`, `success`, `warning`, `error` — qui décident de l'icône,
+de la couleur et de la durée (5 à 10 s). Quatre toasts au maximum à l'écran, le
+plus récent contre le coin. Survoler un toast le retient ; le quitter relance son
+compte à rebours depuis le début. Un curseur oublié dans ce coin — ce qu'un jeu
+qui tient la souris rend très possible — ne l'épingle pas pour autant : passé
+30 s, il s'en va quoi qu'il arrive.
+
+> Limites connues : la fenêtre ne prend jamais le focus (`focusable: false`), mais
+> elle reste une fenêtre — un clic dans la zone qu'elle occupe lui revient et
+> n'atteint pas ce qu'il y a dessous. D'où le redimensionnement au plus juste.
+> Et comme toute fenêtre en surimpression, elle est invisible d'un jeu en plein
+> écran exclusif ; en plein écran fenêtré, elle s'affiche.
+
+### Mises à jour
+
+L'application interroge la dernière release GitHub au démarrage puis toutes les
+six heures. Si elle annonce une version **supérieure** à celle du binaire en
+cours, une notification le dit ; un clic dessus ouvre **Paramètres → Mises à
+jour**, où l'on voit la version, les notes de release, et un bouton qui
+télécharge et installe. Rien ne s'installe sans ce clic.
+
+Ce qui rend la notification nécessaire : la fenêtre principale est presque
+toujours rangée. Elle porte donc une route (`/settings`), et le clic ramène la
+fenêtre dessus — c'est le seul cas où un toast fait autre chose que disparaître.
+
+Sous Windows, l'installateur NSIS est lancé en mode `passive` (`/P /R`) : le
+greffon termine le processus lui-même juste après l'avoir lancé, et
+l'installateur relance l'application. Rien de ce qui suit l'appel ne s'exécute,
+ce qui est pourquoi l'écran reste sur « Téléchargement… ».
+
+#### Signature
+
+Le greffon refuse toute mise à jour qu'il ne peut pas vérifier, d'où une paire
+de clés minisign. La **publique** est versionnée dans
+`plugins.updater.pubkey` (`src-tauri/tauri.conf.json`), identifiant
+`C301B23CC68E65F2` — c'est son rôle d'être connue de tous.
+
+La **privée** n'existe que chez qui publie, et dans les secrets du dépôt :
+
+| Secret                               | Contenu                            |
+| ------------------------------------ | ---------------------------------- |
+| `TAURI_SIGNING_PRIVATE_KEY`          | le contenu du fichier `.key`       |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | le mot de passe choisi à sa création |
+
+Sans eux, l'étape de build de `release.yml` échoue franchement plutôt que de
+publier des installateurs que personne ne pourra installer.
+
+Pour en refaire une — la privée perdue, la paire est à remplacer, et les
+versions déjà installées ne pourront plus se mettre à jour d'elles-mêmes :
+
+```bash
+npm run tauri signer generate -- -w "$HOME/.tauri/nexus-app.key"
+```
+
+La sortie donne la clé publique à recopier dans la configuration, et le fichier
+`.key` à déposer dans les secrets.
+
+#### Ce que publie la CI
+
+`release.yml` construit avec `--config src-tauri/updater.conf.json`, qui ajoute
+`createUpdaterArtifacts` : le bundler signe alors chaque installateur et écrit
+un `.sig` à côté. Ce réglage est tenu **hors** de `tauri.conf.json` pour que la
+CI des pull requests, qui n'a pas de clé, continue de compiler.
+
+Le workflow attache ensuite un `latest.json` à la release :
+
+```json
+{
+  "version": "0.6.0",
+  "notes": "le corps de la release, tel qu'écrit à la main",
+  "pub_date": "2026-08-01T12:00:00.0000000Z",
+  "platforms": {
+    "windows-x86_64": { "signature": "…", "url": "https://github.com/…" }
+  }
+}
+```
+
+L'URL y est relue **depuis les assets de la release** plutôt que construite : en
+publiant, GitHub remplace les espaces des noms de fichiers par des points
+(`Nexus App_0.6.0_x64-setup.exe` devient `Nexus.App_0.6.0_x64-setup.exe`).
+
+L'application lit ce fichier via
+`https://github.com/NexusCorpSC/nexus-app/releases/latest/download/latest.json`,
+qui ne résout que vers la dernière release **publiée** : tant qu'elle reste en
+brouillon, personne ne se voit proposer la mise à jour.
+
 ### Authentification
 
 La connexion utilise le flux **OTP par e-mail** de better-auth : c'est le seul
@@ -271,6 +397,13 @@ tag `v0.2.0` publierait sinon un `Nexus App_0.3.0_x64-setup.exe`.
 
 Relancer le workflow après un build raté remplace les fichiers déjà envoyés au
 lieu d'échouer dessus.
+
+Il refuse enfin de builder si `plugins.updater.pubkey` est vide, et exige les
+secrets de signature : sans eux les installateurs partiraient sans `.sig`, donc
+sans mise à jour possible depuis l'application (voir « Mises à jour »). Une fois
+les installeurs attachés, le workflow publie le `latest.json` que liront les
+versions déjà installées — **tant que la release reste un brouillon, personne ne
+la voit passer**.
 
 ### Instance ciblée
 

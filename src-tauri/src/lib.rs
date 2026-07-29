@@ -2,6 +2,7 @@ mod capture;
 mod diagnostics;
 #[cfg(windows)]
 mod hotkeys;
+mod notifications;
 mod tray;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -16,12 +17,14 @@ use tauri::{
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 use diagnostics::log;
+use notifications::Kind;
 
 /// Window labels declared in `tauri.conf.json`.
 const MAIN_WINDOW: &str = "main";
 const OVERLAY_WINDOW: &str = "overlay";
 const CAPTURE_WINDOW: &str = "capture";
 const NOTES_WINDOW: &str = "notes";
+pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 
 /// Carries recognised text to the overlay's search bar.
 const SEARCH_EVENT: &str = "overlay://search";
@@ -296,7 +299,7 @@ impl CaptureState {
     }
 }
 
-fn window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String> {
+pub(crate) fn window(app: &AppHandle, label: &str) -> Result<WebviewWindow, String> {
     app.get_webview_window(label)
         .ok_or_else(|| format!("window `{label}` is not declared"))
 }
@@ -355,6 +358,9 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
 
         if let Err(error) = freeze_and_select(&app) {
             log(format!("region capture failed: {error}"));
+            // The shortcut fires with no window of ours on screen, so a
+            // notification is the only place this can be seen.
+            notifications::push(&app, Kind::Error, "Capture impossible", Some(error));
         }
     });
 
@@ -405,6 +411,18 @@ fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NOTES_WINDOW)
 }
 
+/// Opens a route in the main window, from a notification the user clicked.
+///
+/// A notification is shown while the main window is put away — that is the
+/// point of it — so acting on one has to bring the window back first.
+#[tauri::command]
+fn open_main_route(app: AppHandle, route: String) -> Result<(), String> {
+    show_main_window(&app)?;
+
+    app.emit_to(MAIN_WINDOW, NAVIGATE_EVENT, route)
+        .map_err(|e| e.to_string())
+}
+
 /// Opens a blueprint in the main window, from an overlay result.
 #[tauri::command]
 fn show_blueprint(app: AppHandle, slug: String) -> Result<(), String> {
@@ -446,7 +464,22 @@ async fn recognize_selection(
     // somewhere they can type.
     show_window(&app, OVERLAY_WINDOW)?;
 
-    let text = recognized?;
+    let text = match recognized {
+        Ok(text) => text,
+        // The selection window is gone by now and the caller lives in it, so
+        // it has nowhere left to show this.
+        Err(error) => {
+            notifications::push(
+                &app,
+                Kind::Error,
+                "Lecture du texte impossible",
+                Some(error.clone()),
+            );
+
+            return Err(error);
+        }
+    };
+
     app.emit_to(OVERLAY_WINDOW, SEARCH_EVENT, text.clone())
         .map_err(|e| e.to_string())?;
 
@@ -472,14 +505,21 @@ pub fn run() {
         .manage(CaptureState::default())
         .manage(Shortcuts::default())
         .manage(ShortcutSupport::default())
+        .manage(notifications::Notifications::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
             close_search_overlay,
             close_notes_overlay,
             show_blueprint,
+            open_main_route,
             cancel_capture,
             recognize_selection,
+            notifications::notify,
+            notifications::notifications_ready,
+            notifications::resize_notifications,
+            notifications::hide_notifications,
+            notifications::set_notification_corner,
         ])
         .on_window_event(|window, event| {
             // Dismiss the search palette when it loses focus, the way a command
@@ -514,6 +554,18 @@ pub fn run() {
             // a tray the system will not take is no reason to deny the app.
             if let Err(error) = tray::install(app.handle()) {
                 log(format!("tray icon unavailable: {error}"));
+            }
+
+            // Registered here rather than on the builder, and fallibly: the
+            // updater parses its own configuration when it starts, and a
+            // configuration it refuses would otherwise take the whole launch
+            // down with it. Losing the update check is no reason to deny the
+            // user the app — the same rule the global shortcuts follow below.
+            if let Err(error) = app
+                .handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())
+            {
+                log(format!("updates unavailable: {error}"));
             }
 
             // Reads the keyboard whatever has focus, which is what makes the
