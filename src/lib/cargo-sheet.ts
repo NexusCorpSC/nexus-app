@@ -237,6 +237,43 @@ export function addLines(
   }));
 }
 
+/**
+ * Rewrites one line, in the same shape a line is added in.
+ *
+ * The volume decides the box counts, so they are re-split rather than carried
+ * over — and clamped on the way in, because this ends up in a stored file that
+ * outlives whichever form produced it.
+ */
+export function updateLine(
+  id: string,
+  edit: ParsedBulkLine,
+): Promise<CargoSheet | null> {
+  return mutate((sheet) => {
+    const volume = Math.min(
+      MAX_VOLUME,
+      Math.max(1, Math.floor(Number(edit.volume) || 0)),
+    );
+
+    return {
+      ...sheet,
+      lines: sheet.lines.map((line) =>
+        line.id === id
+          ? {
+              ...line,
+              destination: edit.destination,
+              content: edit.content,
+              location: edit.location,
+              mission: edit.mission.trim() || missionName(sheet.missionCounter),
+              volume,
+              maxContainer: sheet.maxContainer,
+              quantities: splitVolume(volume, sheet.maxContainer),
+            }
+          : line,
+      ),
+    };
+  });
+}
+
 export function removeLine(id: string): Promise<CargoSheet | null> {
   return mutate((sheet) => ({
     ...sheet,
