@@ -12,9 +12,15 @@ import { cn } from "@/lib/utils";
  * Putting a blueprint in «mes blueprints» and taking it back out, wherever one
  * is shown.
  *
- * Both routes are idempotent and say which of the two happened, so a button can
- * be offered without knowing the current state — which is exactly the search
- * palette's case, where a result carries no possession of its own.
+ * Both calls report whether they changed anything, which is what lets the
+ * **add** be offered where possession is unknown — the search palette, whose
+ * results carry none: a click on an already-owned blueprint is answered «it was
+ * already there» rather than going wrong.
+ *
+ * The **remove** is deliberately not offered there, and should not be. The
+ * asymmetry is not in the routes but in the mistake: an add made in the dark
+ * costs nothing, a remove made in the dark takes away a blueprint the user
+ * meant to keep. Hence `BlueprintQuickRemove` only where `owned` is known.
  */
 
 type Mutation = UseMutationResult<BlueprintOwnership, Error, string>;
@@ -25,12 +31,12 @@ function outcome(mutation: Mutation, verb: "add" | "remove") {
   if (!data) return null;
 
   if (verb === "add") {
-    return data.added
+    return data.changed
       ? { label: "Ajouté", title: "Ajouté à vos blueprints" }
       : { label: "Déjà dedans", title: "Déjà dans vos blueprints" };
   }
 
-  return data.removed
+  return data.changed
     ? { label: "Retiré", title: "Retiré de vos blueprints" }
     : { label: "Déjà retiré", title: "N'était pas dans vos blueprints" };
 }
