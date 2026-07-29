@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
+import { useBlueprintOwnershipSync } from "@/hooks/use-add-blueprint";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -51,6 +52,11 @@ export default function AppLayout() {
   // Only the main window looks: the check is per application, not per window,
   // and this is the one that can show what to do about it.
   useUpdateWatcher();
+
+  // A blueprint added from the search palette is added in another window, so
+  // the screens here have to be told: the query client never refetches on
+  // focus, and would keep showing it as not owned.
+  useBlueprintOwnershipSync();
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {
@@ -137,7 +143,10 @@ export default function AppLayout() {
             </div>
           ) : user ? (
             <div className="rounded-lg px-3 py-2">
-              <p className="truncate text-sm text-nexus-bright" title={user.name}>
+              <p
+                className="truncate text-sm text-nexus-bright"
+                title={user.name}
+              >
                 {user.name}
               </p>
               <button

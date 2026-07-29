@@ -1,12 +1,11 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import {
-  listBlueprintCategories,
-  listBlueprints,
-} from "@/lib/api/blueprints";
+import { listBlueprintCategories, listBlueprints } from "@/lib/api/blueprints";
 import { useDebounced } from "@/hooks/use-debounced";
 import { useAuth } from "@/auth/auth-context";
+import { BlueprintQuickAdd } from "@/components/blueprint-add-button";
+import type { Blueprint } from "@/types/nexus";
 import {
   Badge,
   Card,
@@ -19,7 +18,7 @@ import {
   Pagination,
   Select,
 } from "@/components/ui";
-import { formatDuration } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 
 export default function BlueprintsPage() {
   const { user } = useAuth();
@@ -61,6 +60,16 @@ export default function BlueprintsPage() {
   function updateFilter(apply: () => void) {
     apply();
     setPage(1);
+  }
+
+  /**
+   * Only when possession is known to be false. `owned` is absent from a list
+   * read without a session, and that list stays on screen through the refetch
+   * that signing in triggers — «unknown» must not read as «yours to add», or
+   * the button would flash on blueprints already owned.
+   */
+  function canAdd(blueprint: Blueprint): boolean {
+    return Boolean(user) && blueprint.owned === false;
   }
 
   return (
@@ -159,35 +168,58 @@ export default function BlueprintsPage() {
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {blueprintsQuery.data.blueprints.map((blueprint) => (
-              <Link key={blueprint.id} to={`/blueprints/${blueprint.slug}`}>
-                <Card className="h-full p-4 transition-colors hover:border-nexus-accent/40">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-nexus-bright">
-                      {blueprint.name}
+              /* The quick add sits beside the link rather than inside it: a
+                 button nested in a link would open the blueprint on its way
+                 through. It only shows when there is something to add, where
+                 the «Possédé» badge would otherwise be. */
+              <div key={blueprint.id} className="relative h-full">
+                <Link
+                  to={`/blueprints/${blueprint.slug}`}
+                  className="block h-full"
+                >
+                  <Card className="h-full p-4 transition-colors hover:border-nexus-accent/40">
+                    <div className="flex items-start justify-between gap-2">
+                      <p
+                        className={cn(
+                          "font-medium text-nexus-bright",
+                          canAdd(blueprint) ? "pr-8" : null,
+                        )}
+                      >
+                        {blueprint.name}
+                      </p>
+                      {blueprint.owned ? (
+                        <Badge tone="success">Possédé</Badge>
+                      ) : null}
+                    </div>
+
+                    <p className="mt-1 text-xs text-nexus-accent/50">
+                      {blueprint.category}
+                      {blueprint.subcategory
+                        ? ` · ${blueprint.subcategory}`
+                        : ""}
                     </p>
-                    {blueprint.owned ? (
-                      <Badge tone="success">Possédé</Badge>
+
+                    {blueprint.description ? (
+                      <p className="mt-2 line-clamp-2 text-xs text-nexus-accent/70">
+                        {blueprint.description}
+                      </p>
                     ) : null}
-                  </div>
 
-                  <p className="mt-1 text-xs text-nexus-accent/50">
-                    {blueprint.category}
-                    {blueprint.subcategory ? ` · ${blueprint.subcategory}` : ""}
-                  </p>
+                    {blueprint.craftingTime ? (
+                      <p className="mt-3 text-[11px] text-nexus-accent/45">
+                        Fabrication : {formatDuration(blueprint.craftingTime)}
+                      </p>
+                    ) : null}
+                  </Card>
+                </Link>
 
-                  {blueprint.description ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-nexus-accent/70">
-                      {blueprint.description}
-                    </p>
-                  ) : null}
-
-                  {blueprint.craftingTime ? (
-                    <p className="mt-3 text-[11px] text-nexus-accent/45">
-                      Fabrication : {formatDuration(blueprint.craftingTime)}
-                    </p>
-                  ) : null}
-                </Card>
-              </Link>
+                {canAdd(blueprint) ? (
+                  <BlueprintQuickAdd
+                    blueprintId={blueprint.id}
+                    className="absolute right-2.5 top-2.5"
+                  />
+                ) : null}
+              </div>
             ))}
           </div>
 

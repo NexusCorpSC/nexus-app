@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
 import { BlueprintOrgOwners } from "@/components/blueprint-org-owners";
+import { BlueprintAddButton } from "@/components/blueprint-add-button";
 import { getApiBaseUrl } from "@/lib/settings";
 import {
   Badge,
@@ -58,10 +59,18 @@ export default function BlueprintDetailPage() {
           .filter(Boolean)
           .join(" · ")}
         actions={
-          <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>
-            <ExternalLink className="h-3.5 w-3.5" />
-            Ouvrir sur le web
-          </Button>
+          <>
+            {/* `owned` only comes back for a signed-in caller, so its absence
+                is «nobody to add it for». */}
+            {blueprint.owned === false ? (
+              <BlueprintAddButton blueprintId={blueprint.id} />
+            ) : null}
+
+            <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ouvrir sur le web
+            </Button>
+          </>
         }
       />
 

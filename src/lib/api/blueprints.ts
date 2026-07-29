@@ -37,6 +37,25 @@ export function getBlueprint(slug: string) {
   return apiRequest<Blueprint>(`/api/blueprints/${encodeURIComponent(slug)}`);
 }
 
+export type BlueprintOwnership = {
+  owned: boolean;
+  /** False when it was already there — the route is idempotent. */
+  added: boolean;
+};
+
+/**
+ * Adds a blueprint to «mes blueprints».
+ *
+ * Takes the blueprint id rather than its slug, which is what the list, the
+ * detail and a search result all carry.
+ */
+export function addBlueprintToMine(blueprintId: string) {
+  return apiRequest<BlueprintOwnership>(
+    `/api/blueprints/${encodeURIComponent(blueprintId)}/ownership`,
+    { method: "POST" },
+  );
+}
+
 /**
  * Which members of `orgId` own this blueprint.
  *
