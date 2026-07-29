@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
+import { BlueprintOrgOwners } from "@/components/blueprint-org-owners";
 import { getApiBaseUrl } from "@/lib/settings";
 import {
   Badge,
@@ -182,6 +183,8 @@ export default function BlueprintDetailPage() {
               </p>
             </Card>
           ) : null}
+
+          <BlueprintOrgOwners blueprintId={blueprint.id} />
         </div>
       </div>
     </>

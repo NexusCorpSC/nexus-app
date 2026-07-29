@@ -6,6 +6,7 @@ import { applyNotificationCorner } from "@/lib/notifications";
 import { applyShortcuts } from "@/lib/shortcuts";
 import {
   Boxes,
+  Flag,
   Hammer,
   LogIn,
   LogOut,
@@ -31,6 +32,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { to: "/blueprints", label: "Blueprints", icon: Hammer },
   { to: "/missions", label: "Missions", icon: Rocket },
+  { to: "/factions", label: "Factions", icon: Flag },
   { to: "/reputations", label: "Réputations", icon: Star, requiresAuth: true },
   { to: "/inventory", label: "Inventaire", icon: Boxes, requiresAuth: true },
   { to: "/orgs", label: "Organisations", icon: Users },

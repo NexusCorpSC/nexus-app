@@ -35,18 +35,28 @@ src-tauri/            binaire Tauri, plugins et permissions
 
 ### Fonctionnalités
 
-| Écran         | Endpoints                                                  | Session requise |
-| ------------- | ---------------------------------------------------------- | --------------- |
-| Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories` | non¹            |
-| Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`         | non             |
-| Réputations   | `/api/reps`, `/api/reps/factions`                          | oui             |
-| Inventaire    | `/api/inventory/items`, `/api/inventory/locations`         | oui             |
-| Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                     | partiellement²  |
-| Bloc-notes    | `/api/notes`                                               | non³            |
+| Écran         | Endpoints                                                   | Session requise |
+| ------------- | ----------------------------------------------------------- | --------------- |
+| Recherche     | `/api/search`                                                | non⁴            |
+| Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories`  | non¹            |
+| ↳ dans mon org | `/api/blueprints/:id/org-owners`                            | oui             |
+| Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
+| Factions      | `/api/factions`                                              | non             |
+| Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
+| Inventaire    | `/api/inventory/items`, `/api/inventory/locations`           | oui             |
+| Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                       | partiellement²  |
+| Bloc-notes    | `/api/notes`                                                 | non³            |
 
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
 ³ connecté, ce sont les notes en ligne du compte ; sinon, des notes locales.
+⁴ l'inventaire personnel n'entre dans les résultats qu'une fois connecté.
+
+Le site va plus loin que cette application : boutiques, marché, commandes,
+industrie (fret, raffinage) et fiche d'organisation n'ont **aucune route API**
+et ne sont rendus que côté serveur. Les écrans correspondants demanderaient donc
+d'abord du travail dans `nexus-tools` ; d'ici là, la palette de recherche ouvre
+ces résultats-là dans le navigateur.
 
 Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs` et
 `/api/blueprints/:slug` ont été ajoutés à `nexus-tools` pour cette application :
@@ -142,14 +152,15 @@ attend donc, plutôt que d'afficher une erreur sur un mot à moitié tapé.
 
 Cette adresse est celle du **site**, et cette application n'en couvre qu'une
 partie. `src/lib/search.ts` tient la table des écrans qu'elle a — un blueprint,
-une mission, l'inventaire — et ouvre tout le reste dans le navigateur, à
-l'adresse de l'instance configurée. Sans cette table, un résultat sans écran ici
-atterrirait sur une route inexistante, que le routeur transforme en silence en
-liste de blueprints. Une petite flèche sur la ligne annonce lesquels sortent de
-l'application.
+une mission, une faction, l'inventaire — et ouvre tout le reste dans le
+navigateur, à l'adresse de l'instance configurée. Sans cette table, un résultat
+sans écran ici atterrirait sur une route inexistante, que le routeur transforme
+en silence en liste de blueprints. Une petite flèche sur la ligne annonce
+lesquels sortent de l'application.
 
 > Le piège de la table : `/missions/factions/<id>` est une faction, pas une
-> mission. Le motif des missions exige donc un segment unique.
+> mission. Son motif passe donc **avant** celui des missions, qui n'accepte
+> qu'un seul segment.
 
 La capture suit cet enchaînement :
 
@@ -176,6 +187,28 @@ compilation croisée (il lui manque `lib.exe`). En revanche `src-tauri/src/captu
 ne dépend que de `serde`, `xcap` et `windows` : recopié dans une crate jetable
 ciblant `x86_64-pc-windows-msvc`, il se type-checke en local, appels WinRT
 compris. C'est nettement plus rapide que d'attendre la CI.
+
+### Factions et possession dans l'organisation
+
+Deux écrans qui répondent à des questions que les listes ne savaient pas
+poser :
+
+- **Factions** (`/api/factions`) : quelle faction récompense quel blueprint. La
+  route rend tout d'un coup, sans filtre — la recherche de l'écran filtre donc
+  ce qui est déjà là, sur les noms de faction *et* de blueprint, puisque
+  « où est-ce que j'obtiens ça » est la question posée. La palette de recherche
+  y renvoie avec un identifiant, et la faction visée est alors mise en évidence
+  et amenée à l'écran.
+- **Dans mon organisation**, sur la fiche d'un blueprint
+  (`/api/blueprints/:id/org-owners`) : qui, parmi les membres, le possède déjà —
+  autrement dit à qui le demander plutôt que de le refarmer. La route refuse
+  (403) toute organisation dont l'appelant n'est pas membre, et la liste
+  proposée est justement celle de ses organisations.
+
+> Ce qui n'a pas pu suivre : un filtre par statistique sur les blueprints.
+> `/api/blueprints/stat-names` n'est qu'une autocomplétion pour le formulaire
+> de création côté site — `/api/blueprints` n'accepte aucun paramètre de
+> statistique, il n'y a donc rien à filtrer tant que la route n'en prend pas.
 
 ### Bloc-notes
 

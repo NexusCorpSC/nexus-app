@@ -2,6 +2,7 @@ import { apiRequest } from "@/lib/api-client";
 import type {
   Blueprint,
   BlueprintCategory,
+  BlueprintOrgMember,
   BlueprintPage,
 } from "@/types/nexus";
 
@@ -34,6 +35,19 @@ export function listBlueprints(filters: BlueprintFilters = {}) {
 
 export function getBlueprint(slug: string) {
   return apiRequest<Blueprint>(`/api/blueprints/${encodeURIComponent(slug)}`);
+}
+
+/**
+ * Which members of `orgId` own this blueprint.
+ *
+ * The caller has to be a member of that organization — the route answers 403
+ * otherwise — so this is only ever asked for the user's own organizations.
+ */
+export function listBlueprintOrgOwners(blueprintId: string, orgId: string) {
+  return apiRequest<BlueprintOrgMember[]>(
+    `/api/blueprints/${encodeURIComponent(blueprintId)}/org-owners`,
+    { params: { orgId } },
+  );
 }
 
 export function listBlueprintCategories() {

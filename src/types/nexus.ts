@@ -225,6 +225,40 @@ export const EMPTY_NOTE: Note = { content: "", updatedAt: null };
 export const NOTE_CONTENT_MAX_LENGTH = 20000;
 
 /* ------------------------------------------------------------------ */
+/* Factions                                                            */
+/* ------------------------------------------------------------------ */
+
+/** A blueprint as `GET /api/factions` lists it: enough to link to its page. */
+export type FactionBlueprint = {
+  _id: string;
+  name: string;
+  slug: string;
+  category?: string;
+  subcategory?: string;
+};
+
+/**
+ * A faction and the blueprints its missions reward, from `GET /api/factions`.
+ * The route answers with raw Mongo documents, hence `_id` rather than `id`.
+ */
+export type FactionWithBlueprints = {
+  _id: string;
+  name: string;
+  blueprints: FactionBlueprint[];
+};
+
+/* ------------------------------------------------------------------ */
+/* Blueprint ownership inside an organization                          */
+/* ------------------------------------------------------------------ */
+
+/** A member of one of your organizations who owns a given blueprint. */
+export type BlueprintOrgMember = {
+  userId: string;
+  name: string;
+  avatar?: string;
+};
+
+/* ------------------------------------------------------------------ */
 /* Generalized search                                                  */
 /* ------------------------------------------------------------------ */
 

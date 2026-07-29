@@ -29,8 +29,12 @@ const DESKTOP_SCREENS: { pattern: RegExp; route: (id: string) => string }[] = [
     pattern: /^\/crafting\/blueprints\/([^/?#]+)$/,
     route: (slug) => `/blueprints/${slug}`,
   },
-  // `[^/]` keeps `/missions/factions/<id>` out: a faction is not a mission,
-  // and this app has no screen for one.
+  // Before the missions, and `[^/]` in that one, because
+  // `/missions/factions/<id>` is a faction and not a mission.
+  {
+    pattern: /^\/missions\/factions\/([^/?#]+)$/,
+    route: (id) => `/factions/${id}`,
+  },
   {
     pattern: /^\/missions\/([^/?#]+)$/,
     route: (id) => `/missions/${id}`,
