@@ -9,6 +9,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import { openMainRoute } from "@/lib/main-window";
 import {
   DEFAULT_NOTIFICATION_CORNER,
   MAX_VISIBLE_NOTIFICATIONS,
@@ -16,7 +17,6 @@ import {
   NOTIFICATION_EVENT,
   NOTIFICATION_WIDTH,
   notificationTimeout,
-  openMainRoute,
   type AppNotification,
   type NotificationCorner,
   type NotificationKind,

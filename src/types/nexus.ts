@@ -223,3 +223,55 @@ export type Note = {
 export const EMPTY_NOTE: Note = { content: "", updatedAt: null };
 
 export const NOTE_CONTENT_MAX_LENGTH = 20000;
+
+/* ------------------------------------------------------------------ */
+/* Generalized search                                                  */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Everything `GET /api/search` can return, mirroring `types/search.ts` in
+ * nexus-tools. The order is the tie-breaker the API uses between two results
+ * of equal score.
+ */
+export const SEARCH_TYPES = [
+  "blueprint",
+  "mission",
+  "faction",
+  "shopItem",
+  "shop",
+  "organization",
+  "cargoShip",
+  "inventoryItem",
+] as const;
+
+export type SearchType = (typeof SEARCH_TYPES)[number];
+
+/** Shorter than this, the API answers 400 rather than searching. */
+export const MIN_SEARCH_QUERY_LENGTH = 2;
+
+export type SearchResult = {
+  type: SearchType;
+  /** Mongo id, slug or nanoid, depending on the type. */
+  id: string;
+  title: string;
+  /** Short qualifier: category, faction, shop, location… */
+  subtitle?: string;
+  description?: string;
+  /** Relative link to the **website** page showing this entity. */
+  url: string;
+  imageUrl?: string;
+  meta?: Record<string, string | number | boolean>;
+  /** Relevance, highest first. Only comparable within one response. */
+  score: number;
+};
+
+export type SearchResponse = {
+  query: string;
+  /** Types actually searched, after dropping the ones the caller cannot read. */
+  types: SearchType[];
+  limit: number;
+  total: number;
+  results: SearchResult[];
+  countsByType: Record<string, number>;
+  hasMore: SearchType[];
+};

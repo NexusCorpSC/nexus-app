@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Loader2 } from "lucide-react";
-import { searchBlueprints } from "@/lib/api/blueprints";
+import { ExternalLink, Search, Loader2 } from "lucide-react";
+import { searchEverything } from "@/lib/api/search";
 import { useDebounced } from "@/hooks/use-debounced";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import {
@@ -12,8 +12,13 @@ import {
   getShortcuts,
   type Shortcuts,
 } from "@/lib/settings";
+import {
+  openSearchResult,
+  opensInBrowser,
+  SEARCH_TYPE_LABELS,
+} from "@/lib/search";
 import { cn } from "@/lib/utils";
-import type { Blueprint } from "@/types/nexus";
+import { MIN_SEARCH_QUERY_LENGTH, type SearchResult } from "@/types/nexus";
 
 /** Event carrying OCR text from a region capture (see src-tauri/src/lib.rs). */
 const SEARCH_EVENT = "overlay://search";
@@ -22,6 +27,11 @@ const SEARCH_EVENT = "overlay://search";
  * Quick-search palette shown over whatever the user is doing, opened by a
  * global shortcut. Its window is transparent and frameless, so this component
  * draws the whole surface.
+ *
+ * It searches everything the site searches — blueprints, missions, factions,
+ * items on sale, shops, organizations, cargo ships, and the user's own
+ * inventory when signed in — and hands each result to whichever of the two
+ * clients has a screen for it (see `src/lib/search.ts`).
  */
 export default function OverlayPage() {
   const [query, setQuery] = useState("");
@@ -31,13 +41,18 @@ export default function OverlayPage() {
 
   const debouncedQuery = useDebounced(query, 200);
 
+  const trimmedQuery = debouncedQuery.trim();
+  // Below the minimum the API answers 400 rather than searching, so asking
+  // would only turn a half-typed word into an error message.
+  const searchable = trimmedQuery.length >= MIN_SEARCH_QUERY_LENGTH;
+
   const { data, isFetching, error } = useQuery({
-    queryKey: ["overlay-search", debouncedQuery],
-    queryFn: () => searchBlueprints(debouncedQuery),
-    enabled: debouncedQuery.trim().length > 0,
+    queryKey: ["overlay-search", trimmedQuery],
+    queryFn: () => searchEverything(trimmedQuery),
+    enabled: searchable,
   });
 
-  const results = data ?? [];
+  const results = data?.results ?? [];
 
   useTransparentWindow();
 
@@ -75,8 +90,14 @@ export default function OverlayPage() {
     void invoke("close_search_overlay");
   }
 
-  function open(blueprint: Blueprint) {
-    void invoke("show_blueprint", { slug: blueprint.slug });
+  function open(result: SearchResult) {
+    void openSearchResult(result).catch((cause) => {
+      console.error("cannot open the search result", cause);
+    });
+
+    // Closed either way: the main window comes to the front, and a palette
+    // left behind it would only be in the way at the next shortcut.
+    close();
   }
 
   function onKeyDown(event: React.KeyboardEvent) {
@@ -117,7 +138,7 @@ export default function OverlayPage() {
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Rechercher un blueprint…"
+            placeholder="Rechercher…"
             className="w-full bg-transparent py-4 text-lg text-slate-100 outline-none placeholder:text-slate-500"
             /* The palette owns keyboard navigation. */
             autoComplete="off"
@@ -135,25 +156,32 @@ export default function OverlayPage() {
             </p>
           )}
 
-          {!error && debouncedQuery.trim() && results.length === 0 && !isFetching && (
-            <p className="px-4 py-6 text-sm text-slate-400">Aucun blueprint trouvé.</p>
+          {!error && searchable && results.length === 0 && !isFetching && (
+            <p className="px-4 py-6 text-sm text-slate-400">Aucun résultat.</p>
           )}
 
-          {!error && !debouncedQuery.trim() && (
+          {!error && !searchable && (
             <p className="px-4 py-6 text-sm text-slate-400">
-              Tapez pour rechercher, ou capturez une zone de l'écran avec
-              <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
-                {formatShortcut(shortcuts.capture)}
-              </kbd>
-              pour lire le texte à l'écran.
+              {trimmedQuery
+                ? `Tapez au moins ${MIN_SEARCH_QUERY_LENGTH} caractères.`
+                : null}
+              {!trimmedQuery && (
+                <>
+                  Tapez pour rechercher, ou capturez une zone de l'écran avec
+                  <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
+                    {formatShortcut(shortcuts.capture)}
+                  </kbd>
+                  pour lire le texte à l'écran.
+                </>
+              )}
             </p>
           )}
 
-          {results.map((blueprint, index) => (
+          {results.map((result, index) => (
             <button
-              key={blueprint.id}
+              key={`${result.type}:${result.id}`}
               type="button"
-              onClick={() => open(blueprint)}
+              onClick={() => open(result)}
               onMouseEnter={() => setHighlighted(index)}
               className={cn(
                 "flex w-full items-center gap-3 px-4 py-3 text-left transition",
@@ -162,18 +190,24 @@ export default function OverlayPage() {
             >
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-slate-100">
-                  {blueprint.name}
+                  {result.title}
                 </p>
-                <p className="truncate text-xs text-slate-400">
-                  {blueprint.category}
-                  {blueprint.subcategory ? ` · ${blueprint.subcategory}` : ""}
-                </p>
+                {result.subtitle && (
+                  <p className="truncate text-xs text-slate-400">
+                    {result.subtitle}
+                  </p>
+                )}
               </div>
-              {blueprint.owned && (
-                <span className="shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-300">
-                  possédé
-                </span>
+
+              {/* Says where it will open, since half the results have no
+                  screen here and land in the browser. */}
+              {opensInBrowser(result) && (
+                <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
               )}
+
+              <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
+                {SEARCH_TYPE_LABELS[result.type]}
+              </span>
             </button>
           ))}
         </div>

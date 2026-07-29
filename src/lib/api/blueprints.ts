@@ -32,13 +32,6 @@ export function listBlueprints(filters: BlueprintFilters = {}) {
   });
 }
 
-/** Fuzzy quick-search used by the command palette. */
-export function searchBlueprints(query: string) {
-  return apiRequest<Blueprint[]>("/api/blueprints", {
-    params: { query, fuzzy: "true" },
-  });
-}
-
 export function getBlueprint(slug: string) {
   return apiRequest<Blueprint>(`/api/blueprints/${encodeURIComponent(slug)}`);
 }

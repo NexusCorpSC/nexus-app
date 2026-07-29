@@ -76,11 +76,11 @@ journalisé, et l'application se lance.
 Deux raccourcis globaux, enregistrés côté Rust pour rester actifs quand
 l'application est minimisée ou n'a pas le focus :
 
-| Raccourci par défaut | Effet                                                       |
-| -------------------- | ----------------------------------------------------------- |
-| `Ctrl+Maj+B`         | ouvre la palette de recherche de blueprints en superposition |
-| `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette  |
-| `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition             |
+| Raccourci par défaut | Effet                                                      |
+| -------------------- | ---------------------------------------------------------- |
+| `Ctrl+Maj+B`         | ouvre la palette de recherche en superposition              |
+| `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette |
+| `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition            |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
 voulue. Au moins un modificateur est exigé : un raccourci global sans
@@ -133,8 +133,23 @@ construite, le fichier est celui de `%LOCALAPPDATA%\services.nexus.app\logs`,
 ce qui couvre aussi les échecs de démarrage.
 
 La palette est une fenêtre transparente et sans décoration, toujours au-dessus.
-Elle interroge `/api/blueprints?fuzzy=true`, tolérant aux imperfections de
-l'OCR. Choisir un résultat ramène la fenêtre principale sur la fiche.
+Elle interroge **`/api/search`**, la recherche générale du site : blueprints,
+missions, factions, articles en vente, boutiques, organisations, vaisseaux de
+fret, et l'inventaire de l'utilisateur quand il est connecté. Une seule liste,
+classée par pertinence, chaque résultat portant son type et l'adresse de la page
+qui le montre. En dessous de deux caractères l'API répond 400 : la palette
+attend donc, plutôt que d'afficher une erreur sur un mot à moitié tapé.
+
+Cette adresse est celle du **site**, et cette application n'en couvre qu'une
+partie. `src/lib/search.ts` tient la table des écrans qu'elle a — un blueprint,
+une mission, l'inventaire — et ouvre tout le reste dans le navigateur, à
+l'adresse de l'instance configurée. Sans cette table, un résultat sans écran ici
+atterrirait sur une route inexistante, que le routeur transforme en silence en
+liste de blueprints. Une petite flèche sur la ligne annonce lesquels sortent de
+l'application.
+
+> Le piège de la table : `/missions/factions/<id>` est une faction, pas une
+> mission. Le motif des missions exige donc un segment unique.
 
 La capture suit cet enchaînement :
 
