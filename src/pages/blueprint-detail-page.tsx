@@ -4,7 +4,10 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
 import { BlueprintOrgOwners } from "@/components/blueprint-org-owners";
-import { BlueprintAddButton } from "@/components/blueprint-add-button";
+import {
+  BlueprintAddButton,
+  BlueprintRemoveButton,
+} from "@/components/blueprint-ownership-buttons";
 import { getApiBaseUrl } from "@/lib/settings";
 import {
   Badge,
@@ -61,9 +64,12 @@ export default function BlueprintDetailPage() {
         actions={
           <>
             {/* `owned` only comes back for a signed-in caller, so its absence
-                is «nobody to add it for». */}
+                is «nobody to change it for». A default blueprint is owned by
+                everyone: nothing to add, and nothing to take back. */}
             {blueprint.owned === false ? (
               <BlueprintAddButton blueprintId={blueprint.id} />
+            ) : blueprint.owned === true && !blueprint.isDefault ? (
+              <BlueprintRemoveButton blueprintId={blueprint.id} />
             ) : null}
 
             <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>

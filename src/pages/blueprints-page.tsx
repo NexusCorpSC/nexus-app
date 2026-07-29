@@ -4,7 +4,10 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { listBlueprintCategories, listBlueprints } from "@/lib/api/blueprints";
 import { useDebounced } from "@/hooks/use-debounced";
 import { useAuth } from "@/auth/auth-context";
-import { BlueprintQuickAdd } from "@/components/blueprint-add-button";
+import {
+  BlueprintQuickAdd,
+  BlueprintQuickRemove,
+} from "@/components/blueprint-ownership-buttons";
 import type { Blueprint } from "@/types/nexus";
 import {
   Badge,
@@ -70,6 +73,14 @@ export default function BlueprintsPage() {
    */
   function canAdd(blueprint: Blueprint): boolean {
     return Boolean(user) && blueprint.owned === false;
+  }
+
+  /**
+   * A default blueprint is owned by everyone: it wears the badge like the
+   * others, but there is nothing to take back.
+   */
+  function canRemove(blueprint: Blueprint): boolean {
+    return Boolean(user) && blueprint.owned === true && !blueprint.isDefault;
   }
 
   return (
@@ -168,10 +179,11 @@ export default function BlueprintsPage() {
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {blueprintsQuery.data.blueprints.map((blueprint) => (
-              /* The quick add sits beside the link rather than inside it: a
-                 button nested in a link would open the blueprint on its way
-                 through. It only shows when there is something to add, where
-                 the «Possédé» badge would otherwise be. */
+              /* The quick controls sit beside the link rather than inside it:
+                 a button nested in a link would open the blueprint on its way
+                 through. They take the corner where the «Possédé» badge
+                 otherwise sits — one control per card, not a badge next to a
+                 button. */
               <div key={blueprint.id} className="relative h-full">
                 <Link
                   to={`/blueprints/${blueprint.slug}`}
@@ -182,12 +194,14 @@ export default function BlueprintsPage() {
                       <p
                         className={cn(
                           "font-medium text-nexus-bright",
-                          canAdd(blueprint) ? "pr-8" : null,
+                          canAdd(blueprint) || canRemove(blueprint)
+                            ? "pr-8"
+                            : null,
                         )}
                       >
                         {blueprint.name}
                       </p>
-                      {blueprint.owned ? (
+                      {blueprint.owned && !canRemove(blueprint) ? (
                         <Badge tone="success">Possédé</Badge>
                       ) : null}
                     </div>
@@ -215,6 +229,11 @@ export default function BlueprintsPage() {
 
                 {canAdd(blueprint) ? (
                   <BlueprintQuickAdd
+                    blueprintId={blueprint.id}
+                    className="absolute right-2.5 top-2.5"
+                  />
+                ) : canRemove(blueprint) ? (
+                  <BlueprintQuickRemove
                     blueprintId={blueprint.id}
                     className="absolute right-2.5 top-2.5"
                   />

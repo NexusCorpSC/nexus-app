@@ -36,6 +36,11 @@ export type Blueprint = {
   subcategory?: string;
   imageUrl?: string;
   owned?: boolean;
+  /**
+   * Owned by everyone, so nothing to add and nothing to drop. Comes back
+   * alongside `owned`, which means only for a signed-in caller.
+   */
+  isDefault?: boolean;
   tier?: number;
   craftingTime?: number;
   statistics?: BlueprintStatistics;
