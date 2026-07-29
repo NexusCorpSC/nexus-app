@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "cargo-overlay",
-  "description": "Cargo sheet overlay. It reads the sheet and the cached ship list from the store, and — having no decorations — its header doubles as the title bar, which `core:default` does not cover.",
+  "description": "Cargo sheet overlay. It reads the sheet from the store — and nothing else: the ship it shows is recorded in the sheet, so this window never asks the network for anything. Having no decorations, its header doubles as the title bar, which `core:default` does not cover.",
   "windows": ["cargo"],
   "permissions": ["core:default", "store:default", "core:window:allow-start-dragging"]
 }

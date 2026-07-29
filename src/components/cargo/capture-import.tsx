@@ -23,6 +23,9 @@ import { Button } from "@/components/ui";
  * If there is no sheet, there is one thing the application cannot guess — the
  * ship — so it asks for it, and starts the sheet with the capture already in
  * it. Everything else is derived.
+ *
+ * Mounted with the capture as its `key`: a second capture is a second import,
+ * not an update of this one.
  */
 export function CargoCaptureImport({
   lines,
@@ -38,10 +41,9 @@ export function CargoCaptureImport({
     "reading",
   );
   const [error, setError] = useState<string | null>(null);
-  const { transports, source, loading } = useTransports();
 
-  // Guards the effect below against React's double mount in development: the
-  // lines would otherwise be added twice.
+  // Guards against React's double mount in development, where the lines would
+  // otherwise be added twice. A new capture arrives as a new mount.
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -109,30 +111,9 @@ export function CargoCaptureImport({
         <p className="text-xs text-slate-400">Lecture de la feuille…</p>
       ) : null}
 
-      {state === "ship" ? (
-        <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
-          <p className="text-xs text-slate-300">
-            Aucune feuille en cours. Quel vaisseau utilisez-vous ?
-          </p>
-
-          {loading || !transports ? (
-            <TransportsLoading />
-          ) : (
-            <>
-              <ShipPicker
-                transports={transports}
-                submitLabel="Créer la feuille et ajouter"
-                onSubmit={(ship) => void createAndAdd(ship)}
-              />
-              {TRANSPORT_SOURCE_LABELS[source] ? (
-                <p className="text-[11px] text-amber-300/80">
-                  {TRANSPORT_SOURCE_LABELS[source]}
-                </p>
-              ) : null}
-            </>
-          )}
-        </div>
-      ) : null}
+      {/* Rendered only when a ship is actually needed: loading it is what
+          reaches for the network, and adding to an existing sheet must not. */}
+      {state === "ship" ? <ShipPrompt onSubmit={createAndAdd} /> : null}
 
       {state === "added" ? (
         <div className="flex items-center gap-2">
@@ -162,6 +143,35 @@ export function CargoCaptureImport({
           La feuille n'a pas pu être écrite{error ? ` : ${error}` : ""}.
         </p>
       ) : null}
+    </div>
+  );
+}
+
+function ShipPrompt({ onSubmit }: { onSubmit: (ship: SheetShip) => void }) {
+  const { transports, source, loading } = useTransports();
+
+  return (
+    <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
+      <p className="text-xs text-slate-300">
+        Aucune feuille en cours. Quel vaisseau utilisez-vous ?
+      </p>
+
+      {loading || !transports ? (
+        <TransportsLoading />
+      ) : (
+        <>
+          <ShipPicker
+            transports={transports}
+            submitLabel="Créer la feuille et ajouter"
+            onSubmit={onSubmit}
+          />
+          {TRANSPORT_SOURCE_LABELS[source] ? (
+            <p className="text-[11px] text-amber-300/80">
+              {TRANSPORT_SOURCE_LABELS[source]}
+            </p>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

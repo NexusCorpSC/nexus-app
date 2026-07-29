@@ -43,8 +43,15 @@ export default function OverlayPage() {
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
   const [shortcuts, setShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
-  /** A capture that read as a mission log: the palette becomes an import. */
+  /**
+   * A capture that read as a mission log: the palette becomes an import.
+   *
+   * `id` counts the captures, and keys the import below: a second capture
+   * while the first is still on screen is a second import, not an update of
+   * the first — which would otherwise never be added to the sheet.
+   */
   const [cargo, setCargo] = useState<{
+    id: number;
     lines: ParsedBulkLine[];
     ignored: number;
   } | null>(null);
@@ -87,10 +94,11 @@ export default function OverlayPage() {
       const mission = parseMissionText(event.payload);
 
       if (mission.objectives.length > 0) {
-        setCargo({
+        setCargo((current) => ({
+          id: (current?.id ?? 0) + 1,
           lines: objectivesToBulkLines(mission.objectives),
           ignored: mission.ignored.length,
-        });
+        }));
         return;
       }
 
@@ -164,6 +172,7 @@ export default function OverlayPage() {
       >
         <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl">
           <CargoCaptureImport
+            key={cargo.id}
             lines={cargo.lines}
             ignored={cargo.ignored}
             onDone={() => {
