@@ -22,7 +22,7 @@ import {
   parseMissionText,
 } from "@/lib/mission-objectives";
 import { CargoCaptureImport } from "@/components/cargo/capture-import";
-import { BlueprintQuickAdd } from "@/components/blueprint-add-button";
+import { BlueprintQuickAdd } from "@/components/blueprint-ownership-buttons";
 import { useAuth } from "@/auth/auth-context";
 import { cn } from "@/lib/utils";
 import type { ParsedBulkLine } from "@/lib/cargo";

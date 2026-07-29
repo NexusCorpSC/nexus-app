@@ -37,10 +37,15 @@ export function getBlueprint(slug: string) {
   return apiRequest<Blueprint>(`/api/blueprints/${encodeURIComponent(slug)}`);
 }
 
+/**
+ * Possession after the call, and whether the call is what changed it — both
+ * verbs being idempotent. A blueprint owned by everyone stays `owned` through
+ * a removal, which is why the field is not an echo of the verb.
+ */
 export type BlueprintOwnership = {
   owned: boolean;
-  /** False when it was already there — the route is idempotent. */
-  added: boolean;
+  added?: boolean;
+  removed?: boolean;
 };
 
 /**
@@ -53,6 +58,14 @@ export function addBlueprintToMine(blueprintId: string) {
   return apiRequest<BlueprintOwnership>(
     `/api/blueprints/${encodeURIComponent(blueprintId)}/ownership`,
     { method: "POST" },
+  );
+}
+
+/** Drops a blueprint from «mes blueprints». */
+export function removeBlueprintFromMine(blueprintId: string) {
+  return apiRequest<BlueprintOwnership>(
+    `/api/blueprints/${encodeURIComponent(blueprintId)}/ownership`,
+    { method: "DELETE" },
   );
 }
 

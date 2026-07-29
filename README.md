@@ -39,7 +39,7 @@ src-tauri/            binaire Tauri, plugins et permissions
 | ------------- | ----------------------------------------------------------- | --------------- |
 | Recherche     | `/api/search`                                                | non⁴            |
 | Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories`  | non¹            |
-| ↳ ajouter aux miens | `/api/blueprints/:id/ownership`                        | oui             |
+| ↳ mes blueprints | `/api/blueprints/:id/ownership` (POST, DELETE)            | oui             |
 | ↳ dans mon org | `/api/blueprints/:id/org-owners`                            | oui             |
 | Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
 | Factions      | `/api/factions`                                              | non             |
@@ -67,23 +67,37 @@ Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs`,
 disponibles qu'en rendu serveur, ou par une *server action* que seul le site
 sait appeler.
 
-#### Ajouter un blueprint à « mes blueprints »
+#### « Mes blueprints », depuis l'application
 
-Trois endroits en donnent la possibilité, parce que c'est trois moments
-différents : la **grille**, où l'on parcourt ; la **fiche**, où l'on décide ; et
-la **liste de la palette de recherche**, où l'on ne faisait que passer.
+Trois endroits donnent la possibilité d'**ajouter**, parce que c'est trois
+moments différents : la **grille**, où l'on parcourt ; la **fiche**, où l'on
+décide ; et la **liste de la palette de recherche**, où l'on ne faisait que
+passer.
 
-Les deux premiers savent si le blueprint est déjà possédé et n'affichent donc
-rien à ajouter quand il l'est. La palette, elle, ne le sait pas : un résultat de
-recherche ne dit rien de la possession. D'où une route **idempotente** qui
-répond ce qu'elle a fait — `added: false` veut dire « il y était déjà » — ce qui
-suffit à la palette pour répondre juste sans poser une deuxième question.
+**Retirer** n'est offert que là où la possession est connue, c'est-à-dire dans
+la grille et sur la fiche. Un résultat de recherche n'en dit rien : proposer un
+retrait à l'aveugle reviendrait à parier. La palette garde donc son seul `+`,
+que la route idempotente rend sans conséquence — `added: false` veut dire « il y
+était déjà », ce qui suffit à répondre juste sans poser une deuxième question.
 
-L'ajout est fait dans la fenêtre où l'on a cliqué, et la palette est une fenêtre
-à part. Comme le client de requêtes ne rafraîchit pas au retour du focus, un
-ajout depuis la palette laisserait la fenêtre principale afficher « non
-possédé » indéfiniment : l'ajout est donc annoncé aux autres fenêtres, comme
-l'est une modification de la feuille de cargo.
+Dans la grille, un blueprint possédé porte un contrôle plutôt qu'un badge : une
+coche qui devient un moins au survol. Une carte a la place d'un seul élément
+dans ce coin, et un badge à côté d'un bouton dirait deux fois la même chose.
+
+Un **blueprint par défaut** est possédé par tout le monde. C'est le seul cas où
+la carte garde son badge « Possédé » sans bouton : il n'y a rien à ajouter, et
+rien à reprendre. Le site le sait par `isDefault`, que la liste et la fiche
+renvoient à côté de `owned` — et pour la même raison, seulement à un appelant
+connecté.
+
+Le changement est fait dans la fenêtre où l'on a cliqué, et la palette est une
+fenêtre à part. Comme le client de requêtes ne rafraîchit pas au retour du
+focus, un ajout depuis la palette laisserait la fenêtre principale afficher
+« non possédé » indéfiniment : il est donc annoncé aux autres fenêtres, comme
+l'est une modification de la feuille de cargo. L'annonce part quoi qu'ait
+répondu la route, « c'était déjà le cas » compris — elle se lit « quelqu'un
+vient d'affirmer une possession, relisez », et une fenêtre qui affiche le
+contraire est précisément celle qu'il faut prévenir.
 
 ### Icône de notification
 

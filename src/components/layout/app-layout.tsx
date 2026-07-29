@@ -20,7 +20,7 @@ import {
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
-import { useBlueprintOwnershipSync } from "@/hooks/use-add-blueprint";
+import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
