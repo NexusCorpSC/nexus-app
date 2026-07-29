@@ -40,9 +40,14 @@ import {
 import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
 
-/** Percentage downloaded, or `null` when the server announced no total. */
+/**
+ * Percentage downloaded, or `null` when there is no total to measure against.
+ *
+ * A total of zero counts as no total rather than as an empty download: it is
+ * not something to show a bar for, and it is not something to divide by.
+ */
 function updateDownloadPercent(progress: UpdateProgress | null): number | null {
-  if (!progress?.total) return null;
+  if (!progress || progress.total === null || progress.total <= 0) return null;
   return Math.min(100, Math.round((progress.downloaded / progress.total) * 100));
 }
 
@@ -81,6 +86,7 @@ export default function SettingsPage() {
     null,
   );
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const downloadPercent = updateDownloadPercent(updateProgress);
 
   useEffect(() => {
     void getApiBaseUrl().then(setBaseUrl);
@@ -134,9 +140,12 @@ export default function SettingsPage() {
   async function handleCornerChange(next: NotificationCorner) {
     setCorner(next);
     setNotificationError(null);
-    await setNotificationCorner(next);
 
     try {
+      // Persisted before it is applied, so a corner the overlay refuses is
+      // still the one taken at the next start — and inside the try, because a
+      // store that will not write is exactly what the user needs told.
+      await setNotificationCorner(next);
       await applyNotificationCorner(next);
       await notify({
         title: "Notifications",
@@ -429,18 +438,21 @@ export default function SettingsPage() {
 
               {updateState === "installing" ? (
                 <div className="space-y-1.5">
-                  <div className="h-1 overflow-hidden rounded-full bg-nexus-accent/10">
-                    <div
-                      className="h-full rounded-full bg-nexus-accent/70 transition-[width]"
-                      style={{
-                        width: `${updateDownloadPercent(updateProgress) ?? 100}%`,
-                      }}
-                    />
-                  </div>
+                  {/* No bar when the size was never announced: a full one would
+                      read as finished, an empty one as stuck. The bytes
+                      received say more than either. */}
+                  {downloadPercent !== null ? (
+                    <div className="h-1 overflow-hidden rounded-full bg-nexus-accent/10">
+                      <div
+                        className="h-full rounded-full bg-nexus-accent/70 transition-[width]"
+                        style={{ width: `${downloadPercent}%` }}
+                      />
+                    </div>
+                  ) : null}
                   <p className="text-xs text-nexus-accent/60">
                     Téléchargement…{" "}
-                    {updateDownloadPercent(updateProgress) !== null
-                      ? `${updateDownloadPercent(updateProgress)} %`
+                    {downloadPercent !== null
+                      ? `${downloadPercent} %`
                       : formatBytes(updateProgress?.downloaded ?? 0)}
                     . L'application redémarrera pour terminer.
                   </p>

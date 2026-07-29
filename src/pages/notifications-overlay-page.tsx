@@ -6,7 +6,7 @@ import {
   type CSSProperties,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import {
@@ -80,29 +80,44 @@ export default function NotificationsOverlayPage() {
 
   // Listening is set up before Rust is told this window is ready, because that
   // very call hands over whatever was raised while the bundle was loading.
+  //
+  // Each listener is collected as it comes back rather than awaited as a
+  // batch: one of them failing must not strand the one that succeeded, and one
+  // coming back after the window went away must not outlive it.
   useEffect(() => {
-    const pending = Promise.all([
-      listen<AppNotification>(NOTIFICATION_EVENT, (event) => {
-        setItems((current) =>
-          [...current, event.payload].slice(-MAX_VISIBLE_NOTIFICATIONS),
-        );
-      }),
-      listen<NotificationCorner>(NOTIFICATION_CORNER_EVENT, (event) => {
-        setCorner(event.payload);
-      }),
-    ]);
+    const unlisteners: UnlistenFn[] = [];
+    let gone = false;
 
-    void pending
-      .then(() => invoke<NotificationCorner>("notifications_ready"))
-      .then(setCorner)
-      .catch((error) => {
-        console.error("cannot register the notification overlay", error);
-      });
+    const keep = (unlisten: UnlistenFn) => {
+      if (gone) unlisten();
+      else unlisteners.push(unlisten);
+    };
+
+    const register = async () => {
+      keep(
+        await listen<AppNotification>(NOTIFICATION_EVENT, (event) => {
+          setItems((current) =>
+            [...current, event.payload].slice(-MAX_VISIBLE_NOTIFICATIONS),
+          );
+        }),
+      );
+
+      keep(
+        await listen<NotificationCorner>(NOTIFICATION_CORNER_EVENT, (event) => {
+          setCorner(event.payload);
+        }),
+      );
+
+      setCorner(await invoke<NotificationCorner>("notifications_ready"));
+    };
+
+    void register().catch((error) => {
+      console.error("cannot register the notification overlay", error);
+    });
 
     return () => {
-      void pending.then((unlisteners) => {
-        for (const unlisten of unlisteners) unlisten();
-      });
+      gone = true;
+      for (const unlisten of unlisteners) unlisten();
     };
   }, []);
 
@@ -265,7 +280,7 @@ function Toast({
       </div>
 
       {timeout > 0 ? (
-        <div className="h-0.5 bg-white/5" aria-hidden>
+        <div className="nexus-toast-timer h-0.5 bg-white/5" aria-hidden>
           <div
             className={cn("nexus-toast-countdown h-full origin-left", tone.bar)}
             style={{

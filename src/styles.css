@@ -84,6 +84,13 @@ label {
   .nexus-toast {
     animation: none;
   }
+
+  /* The whole bar goes, track included: stopped, it would sit there full and
+     read as a toast that is not going anywhere. What it says is said by the
+     toast leaving on its own. */
+  .nexus-toast-timer {
+    display: none;
+  }
 }
 
 ::-webkit-scrollbar {
