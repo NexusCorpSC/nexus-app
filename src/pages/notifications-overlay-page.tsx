@@ -16,6 +16,7 @@ import {
   NOTIFICATION_EVENT,
   NOTIFICATION_WIDTH,
   notificationTimeout,
+  openMainRoute,
   type AppNotification,
   type NotificationCorner,
   type NotificationKind,
@@ -207,6 +208,19 @@ function Toast({
 
   const Icon = ICONS[kind];
   const tone = TONES[kind];
+  const { route } = notification;
+
+  // A toast with a route is the only way in while the app is behind the game,
+  // so acting on it dismisses it: the main window now carries the subject.
+  const act = () => {
+    if (!route) return;
+
+    void openMainRoute(route).catch((error) => {
+      console.error("cannot open the main window", error);
+    });
+
+    onDismiss(id);
+  };
 
   return (
     <div
@@ -223,13 +237,20 @@ function Toast({
       <div className="flex items-start gap-2.5 p-3">
         <Icon className={cn("mt-0.5 size-4 shrink-0", tone.icon)} />
 
+        {/* A button only when there is somewhere to go: a message that does
+            nothing when clicked should not look like it would. */}
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-slate-100">{title}</p>
-          {body ? (
-            <p className="mt-0.5 whitespace-pre-line break-words text-xs text-slate-400">
-              {body}
-            </p>
-          ) : null}
+          {route ? (
+            <button
+              type="button"
+              onClick={act}
+              className="block w-full cursor-pointer text-left"
+            >
+              <Message title={title} body={body} />
+            </button>
+          ) : (
+            <Message title={title} body={body} />
+          )}
         </div>
 
         <button
@@ -244,7 +265,7 @@ function Toast({
       </div>
 
       {timeout > 0 ? (
-        <div className="h-0.5 bg-white/5">
+        <div className="h-0.5 bg-white/5" aria-hidden>
           <div
             className={cn("nexus-toast-countdown h-full origin-left", tone.bar)}
             style={{
@@ -255,5 +276,18 @@ function Toast({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function Message({ title, body }: { title: string; body: string | null }) {
+  return (
+    <>
+      <p className="text-sm font-medium text-slate-100">{title}</p>
+      {body ? (
+        <p className="mt-0.5 whitespace-pre-line break-words text-xs text-slate-400">
+          {body}
+        </p>
+      ) : null}
+    </>
   );
 }

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
+import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -42,6 +43,10 @@ const NAVIGATE_EVENT = "main://navigate";
 export default function AppLayout() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+
+  // Only the main window looks: the check is per application, not per window,
+  // and this is the one that can show what to do about it.
+  useUpdateWatcher();
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {

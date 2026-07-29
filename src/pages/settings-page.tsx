@@ -30,8 +30,25 @@ import {
   SHORTCUT_LABELS,
   type ShortcutRejection,
 } from "@/lib/shortcuts";
+import {
+  checkForUpdate,
+  describeUpdateError,
+  installUpdate,
+  type Update,
+  type UpdateProgress,
+} from "@/lib/updates";
 import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
+
+/** Percentage downloaded, or `null` when the server announced no total. */
+function updateDownloadPercent(progress: UpdateProgress | null): number | null {
+  if (!progress?.total) return null;
+  return Math.min(100, Math.round((progress.downloaded / progress.total) * 100));
+}
+
+function formatBytes(bytes: number): string {
+  return `${(bytes / 1_000_000).toFixed(1)} Mo`;
+}
 
 export default function SettingsPage() {
   const { user, refresh } = useAuth();
@@ -55,6 +72,15 @@ export default function SettingsPage() {
   const [notificationError, setNotificationError] = useState<string | null>(
     null,
   );
+
+  const [update, setUpdate] = useState<Update | null>(null);
+  const [updateState, setUpdateState] = useState<
+    "idle" | "checking" | "latest" | "available" | "installing"
+  >("idle");
+  const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(
+    null,
+  );
+  const [updateError, setUpdateError] = useState<string | null>(null);
 
   useEffect(() => {
     void getApiBaseUrl().then(setBaseUrl);
@@ -121,6 +147,44 @@ export default function SettingsPage() {
         cause instanceof Error
           ? cause.message
           : "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
+      );
+    }
+  }
+
+  /** The check the user asked for, so its failures are shown rather than logged. */
+  async function handleUpdateCheck() {
+    setUpdateError(null);
+    setUpdateState("checking");
+
+    try {
+      const found = await checkForUpdate();
+      setUpdate(found);
+      setUpdateState(found ? "available" : "latest");
+    } catch (cause) {
+      setUpdateState("idle");
+      setUpdateError(describeUpdateError(cause));
+    }
+  }
+
+  /**
+   * Nothing after the download returns on Windows: the plugin hands the
+   * installer over and ends this process, and the installer brings the app
+   * back up. The error path is therefore only about the download itself.
+   */
+  async function handleUpdateInstall() {
+    if (!update) return;
+
+    setUpdateError(null);
+    setUpdateState("installing");
+    setUpdateProgress({ downloaded: 0, total: null });
+
+    try {
+      await installUpdate(update, setUpdateProgress);
+    } catch (cause) {
+      setUpdateState("available");
+      setUpdateProgress(null);
+      setUpdateError(
+        `L'installation a échoué : ${cause instanceof Error ? cause.message : String(cause)}`,
       );
     }
   }
@@ -313,6 +377,89 @@ export default function SettingsPage() {
           {notificationError ? (
             <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
               {notificationError}
+            </p>
+          ) : null}
+        </div>
+      </Card>
+
+      <Card className="mb-4 p-6">
+        <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
+          Mises à jour
+        </h2>
+        <p className="mb-4 text-xs text-nexus-accent/50">
+          L'application regarde au démarrage, puis toutes les six heures, si une
+          release plus récente est publiée. Rien n'est installé sans votre
+          accord.
+        </p>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => void handleUpdateCheck()}
+              disabled={updateState === "checking" || updateState === "installing"}
+            >
+              {updateState === "checking" ? "Recherche…" : "Vérifier maintenant"}
+            </Button>
+
+            {updateState === "latest" ? (
+              <span className="text-xs text-emerald-300">
+                Vous avez la dernière version ({version || "—"}).
+              </span>
+            ) : null}
+          </div>
+
+          {update ? (
+            <div className="space-y-3 rounded-lg border border-nexus-accent/20 bg-nexus-abyss/40 p-4">
+              <div className="flex items-baseline gap-2">
+                <p className="text-sm font-medium text-nexus-bright">
+                  Version {update.version}
+                </p>
+                <span className="text-xs text-nexus-accent/50">
+                  installée : {update.currentVersion}
+                </span>
+              </div>
+
+              {update.body ? (
+                <p className="max-h-40 overflow-y-auto whitespace-pre-line text-xs text-nexus-accent/70">
+                  {update.body}
+                </p>
+              ) : null}
+
+              {updateState === "installing" ? (
+                <div className="space-y-1.5">
+                  <div className="h-1 overflow-hidden rounded-full bg-nexus-accent/10">
+                    <div
+                      className="h-full rounded-full bg-nexus-accent/70 transition-[width]"
+                      style={{
+                        width: `${updateDownloadPercent(updateProgress) ?? 100}%`,
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-nexus-accent/60">
+                    Téléchargement…{" "}
+                    {updateDownloadPercent(updateProgress) !== null
+                      ? `${updateDownloadPercent(updateProgress)} %`
+                      : formatBytes(updateProgress?.downloaded ?? 0)}
+                    . L'application redémarrera pour terminer.
+                  </p>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void handleUpdateInstall()}
+                >
+                  Installer et redémarrer
+                </Button>
+              )}
+            </div>
+          ) : null}
+
+          {updateError ? (
+            <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+              {updateError}
             </p>
           ) : null}
         </div>

@@ -411,6 +411,18 @@ fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NOTES_WINDOW)
 }
 
+/// Opens a route in the main window, from a notification the user clicked.
+///
+/// A notification is shown while the main window is put away — that is the
+/// point of it — so acting on one has to bring the window back first.
+#[tauri::command]
+fn open_main_route(app: AppHandle, route: String) -> Result<(), String> {
+    show_main_window(&app)?;
+
+    app.emit_to(MAIN_WINDOW, NAVIGATE_EVENT, route)
+        .map_err(|e| e.to_string())
+}
+
 /// Opens a blueprint in the main window, from an overlay result.
 #[tauri::command]
 fn show_blueprint(app: AppHandle, slug: String) -> Result<(), String> {
@@ -500,6 +512,7 @@ pub fn run() {
             close_search_overlay,
             close_notes_overlay,
             show_blueprint,
+            open_main_route,
             cancel_capture,
             recognize_selection,
             notifications::notify,
@@ -541,6 +554,18 @@ pub fn run() {
             // a tray the system will not take is no reason to deny the app.
             if let Err(error) = tray::install(app.handle()) {
                 log(format!("tray icon unavailable: {error}"));
+            }
+
+            // Registered here rather than on the builder, and fallibly: the
+            // updater parses its own configuration when it starts, and a
+            // configuration it refuses would otherwise take the whole launch
+            // down with it. Losing the update check is no reason to deny the
+            // user the app — the same rule the global shortcuts follow below.
+            if let Err(error) = app
+                .handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())
+            {
+                log(format!("updates unavailable: {error}"));
             }
 
             // Reads the keyboard whatever has focus, which is what makes the

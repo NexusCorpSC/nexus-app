@@ -247,6 +247,72 @@ qui tient la souris rend très possible — ne l'épingle pas pour autant : pass
 > Et comme toute fenêtre en surimpression, elle est invisible d'un jeu en plein
 > écran exclusif ; en plein écran fenêtré, elle s'affiche.
 
+### Mises à jour
+
+L'application interroge la dernière release GitHub au démarrage puis toutes les
+six heures. Si elle annonce une version **supérieure** à celle du binaire en
+cours, une notification le dit ; un clic dessus ouvre **Paramètres → Mises à
+jour**, où l'on voit la version, les notes de release, et un bouton qui
+télécharge et installe. Rien ne s'installe sans ce clic.
+
+Ce qui rend la notification nécessaire : la fenêtre principale est presque
+toujours rangée. Elle porte donc une route (`/settings`), et le clic ramène la
+fenêtre dessus — c'est le seul cas où un toast fait autre chose que disparaître.
+
+Sous Windows, l'installateur NSIS est lancé en mode `passive` (`/P /R`) : le
+greffon termine le processus lui-même juste après l'avoir lancé, et
+l'installateur relance l'application. Rien de ce qui suit l'appel ne s'exécute,
+ce qui est pourquoi l'écran reste sur « Téléchargement… ».
+
+#### Ce qu'il faut mettre en place une fois
+
+Le greffon refuse toute mise à jour qu'il ne peut pas vérifier, donc il faut une
+paire de clés :
+
+```bash
+# 1. générer la paire (garder le mot de passe choisi)
+npm run tauri signer generate -- -w "$HOME/.tauri/nexus-app.key"
+```
+
+2. coller la **clé publique** affichée dans `plugins.updater.pubkey`
+   (`src-tauri/tauri.conf.json`) — elle est vide dans ce dépôt, et la CI de
+   release refuse de publier tant qu'elle l'est ;
+3. déposer la **clé privée** (le contenu du fichier `.key`) et son mot de passe
+   dans les secrets du dépôt, sous `TAURI_SIGNING_PRIVATE_KEY` et
+   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
+
+Sans ces secrets, l'étape de build de `release.yml` échoue franchement plutôt
+que de publier des installateurs que personne ne pourra installer.
+
+#### Ce que publie la CI
+
+`release.yml` construit avec `--config src-tauri/updater.conf.json`, qui ajoute
+`createUpdaterArtifacts` : le bundler signe alors chaque installateur et écrit
+un `.sig` à côté. Ce réglage est tenu **hors** de `tauri.conf.json` pour que la
+CI des pull requests, qui n'a pas de clé, continue de compiler.
+
+Le workflow attache ensuite un `latest.json` à la release :
+
+```json
+{
+  "version": "0.6.0",
+  "notes": "le corps de la release, tel qu'écrit à la main",
+  "pub_date": "2026-08-01T12:00:00.0000000Z",
+  "platforms": {
+    "windows-x86_64": { "signature": "…", "url": "https://github.com/…" }
+  }
+}
+```
+
+L'URL y est relue **depuis les assets de la release** plutôt que construite : en
+publiant, GitHub remplace les espaces des noms de fichiers par des points
+(`Nexus App_0.6.0_x64-setup.exe` devient `Nexus.App_0.6.0_x64-setup.exe`).
+
+L'application lit ce fichier via
+`https://github.com/NexusCorpSC/nexus-app/releases/latest/download/latest.json`,
+qui ne résout que vers la dernière release **publiée** : tant qu'elle reste en
+brouillon, personne ne se voit proposer la mise à jour.
+
 ### Authentification
 
 La connexion utilise le flux **OTP par e-mail** de better-auth : c'est le seul
@@ -324,6 +390,13 @@ tag `v0.2.0` publierait sinon un `Nexus App_0.3.0_x64-setup.exe`.
 
 Relancer le workflow après un build raté remplace les fichiers déjà envoyés au
 lieu d'échouer dessus.
+
+Il refuse enfin de builder si `plugins.updater.pubkey` est vide, et exige les
+secrets de signature : sans eux les installateurs partiraient sans `.sig`, donc
+sans mise à jour possible depuis l'application (voir « Mises à jour »). Une fois
+les installeurs attachés, le workflow publie le `latest.json` que liront les
+versions déjà installées — **tant que la release reste un brouillon, personne ne
+la voit passer**.
 
 ### Instance ciblée
 

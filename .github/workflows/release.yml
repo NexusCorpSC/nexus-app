@@ -42,6 +42,17 @@ jobs:
             throw "Tag $env:TAG does not match: $($mismatch -join ', '). Align the versions before tagging."
           }
 
+      # Without a public key the app cannot verify what it downloads, so the
+      # updater would refuse the release this run is about to publish. Said
+      # here rather than discovered by users after the fact.
+      - name: Check the updater is configured
+        run: |
+          $pubkey = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).plugins.updater.pubkey
+
+          if ([string]::IsNullOrWhiteSpace($pubkey)) {
+            throw 'plugins.updater.pubkey is empty. Generate a key pair (see README) and store the private half in the repository secrets before releasing.'
+          }
+
       # Checked here rather than next to the upload: a missing release then
       # costs a re-run instead of four minutes of compilation.
       - name: Check the release exists
@@ -91,8 +102,15 @@ jobs:
       - name: Build frontend
         run: npm run build
 
+      # `updater.conf.json` adds `createUpdaterArtifacts`, which is what makes
+      # the bundler sign the installers. It is kept out of tauri.conf.json so
+      # that CI — which has no signing key — still builds on every pull request.
       - name: Build Windows bundles
-        run: npm run tauri:build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        # The path is resolved from the working directory, not from src-tauri.
+        run: npm run tauri:build -- --config src-tauri/updater.conf.json
 
       # The release is written by hand — notes included — and this only hangs
       # the installers off it. Creating one here would either race that release
@@ -126,3 +144,53 @@ jobs:
             @('--clobber')
 
           gh @ghArgs
+
+      # What the running app reads to learn a newer version exists. Written
+      # after the upload because it has to carry the URL GitHub actually gave
+      # the installer — asset names are not the file names, spaces become dots.
+      - name: Publish the update manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $setup = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*-setup.exe' -File |
+            Select-Object -First 1
+
+          if (-not $setup) {
+            throw 'no NSIS installer to advertise.'
+          }
+
+          # The bundler writes it next to the installer, and only when it has a
+          # signing key. Its absence means the release would be un-installable
+          # by the updater, which refuses anything it cannot verify.
+          $signature = "$($setup.FullName).sig"
+          if (-not (Test-Path $signature)) {
+            throw "no signature next to $($setup.Name). Is TAURI_SIGNING_PRIVATE_KEY set in the repository secrets?"
+          }
+
+          $url = gh api "repos/$env:GITHUB_REPOSITORY/releases/tags/$env:TAG" `
+            --jq '.assets[] | select(.name | endswith("-setup.exe")) | .browser_download_url' |
+            Select-Object -First 1
+
+          if (-not $url) {
+            throw 'the installer was not found among the release assets.'
+          }
+
+          # The release notes are written by hand; the update dialog shows them.
+          $notes = gh release view $env:TAG --json body --jq .body
+
+          $manifest = [ordered]@{
+            version   = $env:TAG.TrimStart('v')
+            notes     = $notes
+            pub_date  = (Get-Date).ToUniversalTime().ToString('o')
+            platforms = [ordered]@{
+              'windows-x86_64' = [ordered]@{
+                signature = (Get-Content $signature -Raw).Trim()
+                url       = $url
+              }
+            }
+          }
+
+          $manifest | ConvertTo-Json -Depth 5 | Set-Content latest.json -Encoding utf8
+          Write-Host "advertising $url"
+
+          gh release upload $env:TAG latest.json --clobber

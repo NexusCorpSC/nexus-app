@@ -75,6 +75,11 @@ pub struct NotificationInput {
     /// gives errors longer than the rest.
     #[serde(default)]
     timeout_ms: Option<u64>,
+    /// Route the main window opens when the toast is clicked. A notification
+    /// with something to act on has to say where, since the window it would be
+    /// acted on in is usually not on screen.
+    #[serde(default)]
+    route: Option<String>,
 }
 
 /// What the overlay receives.
@@ -89,6 +94,7 @@ struct Notification {
     title: String,
     body: Option<String>,
     timeout_ms: Option<u64>,
+    route: Option<String>,
 }
 
 /// The work area a visible stack is placed in.
@@ -127,6 +133,7 @@ pub(crate) fn push(app: &AppHandle, kind: Kind, title: impl Into<String>, body: 
             title: title.into(),
             body,
             timeout_ms: None,
+            route: None,
         },
     );
 }
@@ -140,6 +147,7 @@ fn deliver(app: &AppHandle, input: NotificationInput) {
         title: input.title,
         body: input.body,
         timeout_ms: input.timeout_ms,
+        route: input.route,
     };
 
     // The overlay is created hidden at startup and loads the same bundle as

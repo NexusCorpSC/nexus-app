@@ -17,6 +17,12 @@ export type NotificationInput = {
   body?: string;
   /** Overrides the duration the overlay derives from `kind`. */
   timeoutMs?: number;
+  /**
+   * Route the main window opens when the toast is clicked. Give one whenever
+   * there is something to do about the notification: the window it would be
+   * done in is, by construction, not the one showing the toast.
+   */
+  route?: string;
 };
 
 /** A notification as it reaches the overlay, id assigned by Rust. */
@@ -26,6 +32,7 @@ export type AppNotification = {
   title: string;
   body: string | null;
   timeoutMs: number | null;
+  route: string | null;
 };
 
 /** Events the overlay listens for; the names are shared with Rust. */
@@ -76,6 +83,11 @@ export function notificationTimeout(notification: AppNotification): number {
 /** Raises a notification, from any window. */
 export function notify(notification: NotificationInput): Promise<void> {
   return invoke("notify", { notification });
+}
+
+/** Brings the main window up on `route`, from a toast the user clicked. */
+export function openMainRoute(route: string): Promise<void> {
+  return invoke("open_main_route", { route });
 }
 
 /** Moves the overlay to `corner`. Persisting the choice is `settings.ts`'s. */
