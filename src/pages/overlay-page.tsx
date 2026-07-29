@@ -17,7 +17,13 @@ import {
   opensInBrowser,
   SEARCH_TYPE_LABELS,
 } from "@/lib/search";
+import {
+  objectivesToBulkLines,
+  parseMissionText,
+} from "@/lib/mission-objectives";
+import { CargoCaptureImport } from "@/components/cargo/capture-import";
 import { cn } from "@/lib/utils";
+import type { ParsedBulkLine } from "@/lib/cargo";
 import { MIN_SEARCH_QUERY_LENGTH, type SearchResult } from "@/types/nexus";
 
 /** Event carrying OCR text from a region capture (see src-tauri/src/lib.rs). */
@@ -37,6 +43,18 @@ export default function OverlayPage() {
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
   const [shortcuts, setShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
+  /**
+   * A capture that read as a mission log: the palette becomes an import.
+   *
+   * `id` counts the captures, and keys the import below: a second capture
+   * while the first is still on screen is a second import, not an update of
+   * the first — which would otherwise never be added to the sheet.
+   */
+  const [cargo, setCargo] = useState<{
+    id: number;
+    lines: ParsedBulkLine[];
+    ignored: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebounced(query, 200);
@@ -69,9 +87,22 @@ export default function OverlayPage() {
     return () => window.removeEventListener("focus", focus);
   }, []);
 
-  // Text recognised from a screen capture lands straight in the search bar.
+  // Text recognised from a screen capture lands straight in the search bar —
+  // unless it reads as an in-game mission log, which is cargo, not a search.
   useEffect(() => {
     const pending = listen<string>(SEARCH_EVENT, (event) => {
+      const mission = parseMissionText(event.payload);
+
+      if (mission.objectives.length > 0) {
+        setCargo((current) => ({
+          id: (current?.id ?? 0) + 1,
+          lines: objectivesToBulkLines(mission.objectives),
+          ignored: mission.ignored.length,
+        }));
+        return;
+      }
+
+      setCargo(null);
       setQuery(event.payload);
       setHighlighted(0);
       inputRef.current?.focus();
@@ -124,6 +155,34 @@ export default function OverlayPage() {
       event.preventDefault();
       open(results[highlighted]);
     }
+  }
+
+  // A capture that read as a mission log has nothing to do with searching:
+  // the palette hands it to the cargo sheet and says what became of it.
+  if (cargo) {
+    return (
+      <div
+        className="flex h-screen w-screen items-start justify-center p-3"
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+          }
+        }}
+      >
+        <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl">
+          <CargoCaptureImport
+            key={cargo.id}
+            lines={cargo.lines}
+            ignored={cargo.ignored}
+            onDone={() => {
+              setCargo(null);
+              close();
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (

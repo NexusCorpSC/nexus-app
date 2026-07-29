@@ -24,6 +24,7 @@ const MAIN_WINDOW: &str = "main";
 const OVERLAY_WINDOW: &str = "overlay";
 const CAPTURE_WINDOW: &str = "capture";
 const NOTES_WINDOW: &str = "notes";
+const CARGO_WINDOW: &str = "cargo";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 
 /// Carries recognised text to the overlay's search bar.
@@ -43,6 +44,7 @@ pub(crate) enum Action {
     Search,
     Capture,
     Notes,
+    Cargo,
 }
 
 impl Action {
@@ -53,6 +55,7 @@ impl Action {
             Action::Search => "search",
             Action::Capture => "capture",
             Action::Notes => "notes",
+            Action::Cargo => "cargo",
         }
     }
 }
@@ -90,6 +93,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Search => show_window(app, OVERLAY_WINDOW),
         Action::Capture => start_capture(app),
         Action::Notes => toggle_notes_overlay(app),
+        Action::Cargo => toggle_overlay(app, CARGO_WINDOW),
     };
 
     if let Err(error) = outcome {
@@ -124,12 +128,13 @@ impl ShortcutSupport {
     }
 }
 
-/// The three combinations, in the format the `global-shortcut` plugin parses.
+/// The four combinations, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
     search: String,
     capture: String,
     notes: String,
+    cargo: String,
 }
 
 impl Default for ShortcutSettings {
@@ -138,6 +143,7 @@ impl Default for ShortcutSettings {
             search: "Ctrl+Shift+KeyB".to_string(),
             capture: "Ctrl+Shift+KeyS".to_string(),
             notes: "Ctrl+Shift+KeyN".to_string(),
+            cargo: "Ctrl+Shift+KeyG".to_string(),
         }
     }
 }
@@ -156,7 +162,7 @@ fn parse_shortcut(raw: &str) -> Result<Shortcut, String> {
         .map_err(|error| format!("combinaison invalide : {error}"))
 }
 
-/// Binds the three global shortcuts, each one independently.
+/// Binds the global shortcuts, each one independently.
 ///
 /// Two paths watch for them, and a combination needs only one of the two:
 ///
@@ -175,6 +181,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Search, &requested.search),
         (Action::Capture, &requested.capture),
         (Action::Notes, &requested.notes),
+        (Action::Cargo, &requested.cargo),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -332,13 +339,22 @@ pub(crate) fn show_main_window(app: &AppHandle) -> Result<(), String> {
 /// explicitly — the point is to keep notes readable while playing — so the
 /// shortcut has to be able to put it away again.
 fn toggle_notes_overlay(app: &AppHandle) -> Result<(), String> {
-    let notes = window(app, NOTES_WINDOW)?;
+    toggle_overlay(app, NOTES_WINDOW)
+}
 
-    if notes.is_visible().map_err(|e| e.to_string())? {
-        return notes.hide().map_err(|e| e.to_string());
+/// Shows an overlay, or hides it if it is already up.
+///
+/// Unlike the search palette, these windows stay open until they are dismissed
+/// explicitly — the point is to keep them readable while playing — so the
+/// shortcut has to be able to put them away again.
+fn toggle_overlay(app: &AppHandle, label: &str) -> Result<(), String> {
+    let overlay = window(app, label)?;
+
+    if overlay.is_visible().map_err(|e| e.to_string())? {
+        return overlay.hide().map_err(|e| e.to_string());
     }
 
-    show_window(app, NOTES_WINDOW)
+    show_window(app, label)
 }
 
 /// Takes the overlay off screen, then freezes the monitor and offers a selection.
@@ -409,6 +425,18 @@ fn close_search_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NOTES_WINDOW)
+}
+
+#[tauri::command]
+fn close_cargo_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, CARGO_WINDOW)
+}
+
+/// Shows the cargo sheet overlay, or hides it. Called from the cargo screen
+/// and from the capture import, neither of which knows its current state.
+#[tauri::command]
+fn toggle_cargo_overlay(app: AppHandle) -> Result<(), String> {
+    toggle_overlay(&app, CARGO_WINDOW)
 }
 
 /// Opens a route in the main window, for the windows that have nowhere to show
@@ -500,6 +528,8 @@ pub fn run() {
             set_shortcuts,
             close_search_overlay,
             close_notes_overlay,
+            close_cargo_overlay,
+            toggle_cargo_overlay,
             open_main_route,
             cancel_capture,
             recognize_selection,
