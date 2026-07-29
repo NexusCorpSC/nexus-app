@@ -179,10 +179,19 @@ La capture suit cet enchaînement :
    quoi que ce soit — la surface de sélection ne peut donc pas se retrouver
    dans sa propre capture, et le tracé se fait sur une image stable ;
 2. la fenêtre de sélection couvre exactement ce moniteur ;
-3. au relâchement, la zone est découpée puis lue par **`Windows.Media.Ocr`**,
-   le moteur fourni avec le système — rien à embarquer, contrairement à
-   Tesseract qui demanderait un binaire et ses données d'entraînement ;
+3. au relâchement, la zone est découpée, agrandie puis lue par
+   **`Windows.Media.Ocr`**, le moteur fourni avec le système — rien à
+   embarquer, contrairement à Tesseract qui demanderait un binaire et ses
+   données d'entraînement ;
 4. le texte reconnu remplit la barre de recherche.
+
+Deux détails pèsent lourd sur ce que le moteur rend. La zone est **agrandie**
+avant d'être lue — jusqu'à 3×, tant que le résultat reste raisonnable — parce
+qu'il est entraîné sur du texte de document et qu'à sa taille native un ATH de
+jeu lui fait confondre les glyphes, voire avaler les mots courts. Et le résultat
+est repris **ligne par ligne** plutôt que par `OcrResult::Text()`, qui recolle
+tout avec une simple espace : un journal de mission lu ainsi revient en une
+seule phrase interminable, où plus rien ne sépare les objectifs.
 
 Le frontend envoie la sélection en **fractions de la fenêtre** (0..1) plutôt
 qu'en pixels : la mise à l'échelle DPI disparaît du protocole et les valeurs se
@@ -257,9 +266,24 @@ part pas dans la recherche : la palette devient un import de cargo.
   le vaisseau. Elle le demande, crée la feuille et y met la capture.
 
 Le parseur (`src/lib/mission-objectives.ts`) est recopié du site et reste
-tolérant, parce que l'OCR l'est peu : le `0/` revient en `O/`, la puce en
-losange devient `©` ou `*`, et une ligne longue est coupée en deux par le jeu —
-elle est donc recollée avant d'être lue.
+tolérant, parce que l'OCR l'est peu :
+
+- le `0/` revient en `O/`, et les chiffres passent pour les lettres qui leur
+  ressemblent — `O/l6 SCU` se lit bien 16 ;
+- la puce en losange devient `©`, `*` ou une simple lettre `O`, qu'aucun
+  nettoyage de ponctuation n'attrape ;
+- le `l` minuscule remonte en `I` majuscule (`Audio-VisuaI Equipment`) ;
+- la station est « above » sa planète, ou « on » quand la livraison se pose au
+  sol — Area18 on ArcCorp ;
+- le verbe `Deliver` disparaît parfois : la forme `0/3 SCU of … to …` porte
+  alors l'objectif à elle seule ;
+- une ligne longue est coupée en deux par le jeu, elle est donc recollée avant
+  d'être lue ; à l'inverse, une capture qui revient d'un bloc est redécoupée sur
+  les mots qui ouvrent un objectif.
+
+La ligne `Collect` nomme la ressource une seconde fois : elle s'en sert pour
+retrouver sa livraison, même quand celle du dessus a été manquée ou que le
+journal a été lu dans le désordre.
 
 Le même texte se colle à la main dans l'écran, qui accepte aussi le format
 tabulé `Destination;Contenu;Volume;Emplacement`.
