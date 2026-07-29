@@ -62,9 +62,14 @@ export default function BlueprintsPage() {
     setPage(1);
   }
 
-  /** Nothing to add when signed out, or when the blueprint is already owned. */
+  /**
+   * Only when possession is known to be false. `owned` is absent from a list
+   * read without a session, and that list stays on screen through the refetch
+   * that signing in triggers — «unknown» must not read as «yours to add», or
+   * the button would flash on blueprints already owned.
+   */
   function canAdd(blueprint: Blueprint): boolean {
-    return Boolean(user) && !blueprint.owned;
+    return Boolean(user) && blueprint.owned === false;
   }
 
   return (
