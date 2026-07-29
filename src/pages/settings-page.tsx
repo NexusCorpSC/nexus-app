@@ -298,6 +298,15 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Feuille de cargo en superposition">
+            <ShortcutInput
+              value={shortcuts.cargo}
+              onChange={(cargo) =>
+                setLocalShortcuts((current) => ({ ...current, cargo }))
+              }
+            />
+          </Field>
+
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm">
               Appliquer

@@ -53,6 +53,22 @@
         "visible": false
       },
       {
+        "label": "cargo",
+        "title": "Nexus - feuille de cargo",
+        "url": "index.html#/cargo-overlay",
+        "width": 460,
+        "height": 620,
+        "minWidth": 320,
+        "minHeight": 240,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "capture",
         "title": "Nexus - capture d'ecran",
         "url": "index.html#/capture",

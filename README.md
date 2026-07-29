@@ -45,12 +45,14 @@ src-tauri/            binaire Tauri, plugins et permissions
 | Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
 | Inventaire    | `/api/inventory/items`, `/api/inventory/locations`           | oui             |
 | Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                       | partiellement²  |
+| Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
 | Bloc-notes    | `/api/notes`                                                 | non³            |
 
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
 ³ connecté, ce sont les notes en ligne du compte ; sinon, des notes locales.
 ⁴ l'inventaire personnel n'entre dans les résultats qu'une fois connecté.
+⁵ la feuille elle-même ne quitte jamais la machine ; voir « Feuille de cargo ».
 
 Le site va plus loin que cette application : boutiques, marché, commandes,
 industrie (fret, raffinage) et fiche d'organisation n'ont **aucune route API**
@@ -99,6 +101,7 @@ l'application est minimisée ou n'a pas le focus :
 | `Ctrl+Maj+B`         | ouvre la palette de recherche en superposition              |
 | `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette |
 | `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition            |
+| `Ctrl+Maj+G`         | affiche ou masque la feuille de cargo en superposition      |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
 voulue. Au moins un modificateur est exigé : un raccourci global sans
@@ -217,6 +220,49 @@ poser :
 > `/api/blueprints/stat-names` n'est qu'une autocomplétion pour le formulaire
 > de création côté site — `/api/blueprints` n'accepte aucun paramètre de
 > statistique, il n'y a donc rien à filtrer tant que la route n'en prend pas.
+
+### Feuille de cargo
+
+Le portage de `/industry/cargo` : on y répartit un volume en conteneurs SCU
+(32, 24, 16, 8, 4, 2, 1) et on suit le remplissage du vaisseau. `Ctrl+Maj+G`
+l'affiche en superposition, comme le bloc-notes.
+
+**Hors ligne, et pas seulement « ça marche hors ligne »** : la feuille vit dans
+le store local, personne d'autre ne la lit, rien ne la synchronise. Le seul
+appel réseau de la fonctionnalité est la liste des vaisseaux
+(`GET /api/cargo-ships`, ajoutée à `nexus-tools` pour l'occasion), lue une fois
+et gardée en cache — l'écran dit d'où elle vient quand ce n'est pas du réseau.
+
+Le vaisseau choisi est **recopié dans la feuille**, nom et capacité compris.
+Deux conséquences voulues : la superposition n'a besoin de rien d'autre que la
+feuille pour tracer sa jauge — ni liste, ni réseau — et une capacité modifiée
+sur le site en cours de route ne déplace pas la cible sous les pieds du pilote.
+
+#### Une capture d'écran qui devient du cargo
+
+Le journal de mission du jeu a une forme fixe, répétée par livraison :
+
+```
+Deliver 0/32 SCU of Titanium to Port Olisar above Crusader.
+   Collect Titanium from Area18.
+```
+
+Quand le texte reconnu par la capture de zone correspond à ce modèle, il ne
+part pas dans la recherche : la palette devient un import de cargo.
+
+- **Une feuille existe** : les lignes y sont ajoutées, sans rien demander. La
+  ligne rejoint la mission en cours, ce qui fait qu'une deuxième capture du
+  même contrat atterrit dans le même bloc.
+- **Aucune feuille** : la seule chose que l'application ne peut pas deviner est
+  le vaisseau. Elle le demande, crée la feuille et y met la capture.
+
+Le parseur (`src/lib/mission-objectives.ts`) est recopié du site et reste
+tolérant, parce que l'OCR l'est peu : le `0/` revient en `O/`, la puce en
+losange devient `©` ou `*`, et une ligne longue est coupée en deux par le jeu —
+elle est donc recollée avant d'être lue.
+
+Le même texte se colle à la main dans l'écran, qui accepte aussi le format
+tabulé `Destination;Contenu;Volume;Emplacement`.
 
 ### Bloc-notes
 

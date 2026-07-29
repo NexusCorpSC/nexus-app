@@ -24,4 +24,5 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   search: "Recherche rapide",
   capture: "Capture de zone",
   notes: "Bloc-notes",
+  cargo: "Feuille de cargo",
 };

@@ -18,8 +18,11 @@ const KEY_SESSION_COOKIE = "sessionCookie";
 const KEY_SHORTCUT_SEARCH = "shortcutSearch";
 const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 const KEY_SHORTCUT_NOTES = "shortcutNotes";
+const KEY_SHORTCUT_CARGO = "shortcutCargo";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
+const KEY_CARGO_SHEET = "cargoSheet";
+const KEY_CARGO_SHIPS = "cargoShips";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -38,6 +41,16 @@ function getStore(): Promise<Store> {
     storePromise = load(STORE_FILE, { autoSave: true });
   }
   return storePromise;
+}
+
+/**
+ * The one store of the application, shared by every module that persists
+ * something. Handing the handle out rather than opening a second one: two
+ * handles on the same file each keep their own copy in memory, and the last
+ * write would win over an unread change.
+ */
+export function getSettingsStore(): Promise<Store> {
+  return getStore();
 }
 
 export function normalizeBaseUrl(url: string): string {
@@ -78,6 +91,7 @@ export const DEFAULT_SHORTCUTS = {
   search: "Ctrl+Shift+KeyB",
   capture: "Ctrl+Shift+KeyS",
   notes: "Ctrl+Shift+KeyN",
+  cargo: "Ctrl+Shift+KeyG",
 } as const;
 
 export type ShortcutAction = keyof typeof DEFAULT_SHORTCUTS;
@@ -95,6 +109,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
       DEFAULT_SHORTCUTS.capture,
     notes:
       (await store.get<string>(KEY_SHORTCUT_NOTES)) ?? DEFAULT_SHORTCUTS.notes,
+    cargo:
+      (await store.get<string>(KEY_SHORTCUT_CARGO)) ?? DEFAULT_SHORTCUTS.cargo,
   };
 }
 
@@ -103,6 +119,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_SEARCH, shortcuts.search);
   await store.set(KEY_SHORTCUT_CAPTURE, shortcuts.capture);
   await store.set(KEY_SHORTCUT_NOTES, shortcuts.notes);
+  await store.set(KEY_SHORTCUT_CARGO, shortcuts.cargo);
 }
 
 /**
@@ -143,6 +160,37 @@ export async function setNotificationCorner(
 ): Promise<void> {
   const store = await getStore();
   await store.set(KEY_NOTIFICATION_CORNER, corner);
+}
+
+/**
+ * The cargo sheet, kept entirely on this machine: it is a scratch pad for a
+ * haul in progress, not shared data. `null` means no sheet has been started.
+ */
+export async function getStoredCargoSheet(): Promise<unknown> {
+  const store = await getStore();
+  return (await store.get<unknown>(KEY_CARGO_SHEET)) ?? null;
+}
+
+export async function setStoredCargoSheet(sheet: unknown): Promise<void> {
+  const store = await getStore();
+
+  if (sheet === null) await store.delete(KEY_CARGO_SHEET);
+  else await store.set(KEY_CARGO_SHEET, sheet);
+}
+
+/**
+ * Last known ship list from `/api/cargo-ships`. The only part of the cargo
+ * sheet that comes from the network, hence the only part worth caching: with
+ * it, the tool opens and works with no connection at all.
+ */
+export async function getCachedCargoShips(): Promise<unknown> {
+  const store = await getStore();
+  return (await store.get<unknown>(KEY_CARGO_SHIPS)) ?? null;
+}
+
+export async function setCachedCargoShips(ships: unknown): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_CARGO_SHIPS, ships);
 }
 
 /** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */

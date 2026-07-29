@@ -17,6 +17,8 @@ import CapturePage from "@/pages/capture-page";
 import NotesPage from "@/pages/notes-page";
 import NotesOverlayPage from "@/pages/notes-overlay-page";
 import NotificationsOverlayPage from "@/pages/notifications-overlay-page";
+import CargoPage from "@/pages/cargo-page";
+import CargoOverlayPage from "@/pages/cargo-overlay-page";
 
 export default function App() {
   return (
@@ -27,6 +29,7 @@ export default function App() {
       <Route path="capture" element={<CapturePage />} />
       <Route path="notes-overlay" element={<NotesOverlayPage />} />
       <Route path="notifications" element={<NotificationsOverlayPage />} />
+      <Route path="cargo-overlay" element={<CargoOverlayPage />} />
 
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/blueprints" replace />} />
@@ -41,6 +44,7 @@ export default function App() {
         <Route path="factions" element={<FactionsPage />} />
         <Route path="factions/:factionId" element={<FactionsPage />} />
 
+        <Route path="cargo" element={<CargoPage />} />
         <Route path="orgs" element={<OrgsPage />} />
         <Route path="notes" element={<NotesPage />} />
 
