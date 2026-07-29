@@ -176,7 +176,12 @@ jobs:
           }
 
           # The release notes are written by hand; the update dialog shows them.
-          $notes = gh release view $env:TAG --json body --jq .body
+          #
+          # Joined back together: PowerShell hands the output of a native
+          # command back as an array of lines as soon as there is more than
+          # one, and `ConvertTo-Json` would then write a JSON array where the
+          # manifest — and the updater reading it — expects a string.
+          $notes = (gh release view $env:TAG --json body --jq .body) -join "`n"
 
           $manifest = [ordered]@{
             version   = $env:TAG.TrimStart('v')
@@ -191,6 +196,19 @@ jobs:
           }
 
           $manifest | ConvertTo-Json -Depth 5 | Set-Content latest.json -Encoding utf8
+
+          # Read back and checked against what the updater will accept: a
+          # manifest it cannot deserialize is reported as *no update at all*,
+          # so a mistake here would be silent for everyone already installed.
+          $written = Get-Content latest.json -Raw | ConvertFrom-Json
+
+          if ($written.notes -isnot [string]) {
+            throw "the manifest notes must be a single string, got $($written.notes.GetType().Name)."
+          }
+          if ([string]::IsNullOrWhiteSpace($written.platforms.'windows-x86_64'.signature)) {
+            throw 'the manifest carries no signature.'
+          }
+
           Write-Host "advertising $url"
 
           gh release upload $env:TAG latest.json --clobber
