@@ -264,25 +264,32 @@ greffon termine le processus lui-même juste après l'avoir lancé, et
 l'installateur relance l'application. Rien de ce qui suit l'appel ne s'exécute,
 ce qui est pourquoi l'écran reste sur « Téléchargement… ».
 
-#### Ce qu'il faut mettre en place une fois
+#### Signature
 
-Le greffon refuse toute mise à jour qu'il ne peut pas vérifier, donc il faut une
-paire de clés :
+Le greffon refuse toute mise à jour qu'il ne peut pas vérifier, d'où une paire
+de clés minisign. La **publique** est versionnée dans
+`plugins.updater.pubkey` (`src-tauri/tauri.conf.json`), identifiant
+`C301B23CC68E65F2` — c'est son rôle d'être connue de tous.
+
+La **privée** n'existe que chez qui publie, et dans les secrets du dépôt :
+
+| Secret                               | Contenu                            |
+| ------------------------------------ | ---------------------------------- |
+| `TAURI_SIGNING_PRIVATE_KEY`          | le contenu du fichier `.key`       |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | le mot de passe choisi à sa création |
+
+Sans eux, l'étape de build de `release.yml` échoue franchement plutôt que de
+publier des installateurs que personne ne pourra installer.
+
+Pour en refaire une — la privée perdue, la paire est à remplacer, et les
+versions déjà installées ne pourront plus se mettre à jour d'elles-mêmes :
 
 ```bash
-# 1. générer la paire (garder le mot de passe choisi)
 npm run tauri signer generate -- -w "$HOME/.tauri/nexus-app.key"
 ```
 
-2. coller la **clé publique** affichée dans `plugins.updater.pubkey`
-   (`src-tauri/tauri.conf.json`) — elle est vide dans ce dépôt, et la CI de
-   release refuse de publier tant qu'elle l'est ;
-3. déposer la **clé privée** (le contenu du fichier `.key`) et son mot de passe
-   dans les secrets du dépôt, sous `TAURI_SIGNING_PRIVATE_KEY` et
-   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`.
-
-Sans ces secrets, l'étape de build de `release.yml` échoue franchement plutôt
-que de publier des installateurs que personne ne pourra installer.
+La sortie donne la clé publique à recopier dans la configuration, et le fichier
+`.key` à déposer dans les secrets.
 
 #### Ce que publie la CI
 

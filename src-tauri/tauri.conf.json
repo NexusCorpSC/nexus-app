@@ -97,7 +97,7 @@
       "endpoints": [
         "https://github.com/NexusCorpSC/nexus-app/releases/latest/download/latest.json"
       ],
-      "pubkey": "",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEMzMDFCMjNDQzY4RTY1RjIKUldUeVpZN0dQTElCdzIydHdiMVZ3WHFUc1BPQUF1SGZQK1d5SDlGQWg2MFd5RjZTOHA1eGprTGoK",
       "windows": {
         "installMode": "passive"
       }
