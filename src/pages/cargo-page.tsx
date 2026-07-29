@@ -12,6 +12,7 @@ import {
   closeSheet,
   removeLine,
   removeMission,
+  renameMission,
   setMaxContainer,
   setShip,
   startNewMission,
@@ -146,6 +147,7 @@ export default function CargoPage() {
               missionPlaceholder={missionName(sheet.missionCounter)}
               onRemoveLine={(id) => void removeLine(id)}
               onRemoveMission={(mission) => void removeMission(mission)}
+              onRenameMission={(from, to) => void renameMission(from, to)}
               onEditLine={(id, line) => void updateLine(id, line)}
             />
           )}

@@ -160,6 +160,11 @@ async function mutate(
   if (!current) return null;
 
   const next = update(current);
+
+  // An update that changed nothing hands back the sheet it was given. Writing
+  // it anyway would have every window re-read the store for no reason.
+  if (next === current) return current;
+
   await write(next);
 
   return next;
@@ -279,6 +284,39 @@ export function removeLine(id: string): Promise<CargoSheet | null> {
     ...sheet,
     lines: sheet.lines.filter((line) => line.id !== id),
   }));
+}
+
+/**
+ * Renames a whole mission block.
+ *
+ * Renaming onto a name already in use merges the two blocks — the sheet groups
+ * by name, not by identity, so that is what it was already showing.
+ *
+ * Renaming the block being filled also advances the counter: the number it
+ * carried is free again, and a line added afterwards should open a new block
+ * rather than resurrect the name the user has just moved away from.
+ */
+export function renameMission(
+  from: string,
+  to: string,
+): Promise<CargoSheet | null> {
+  return mutate((sheet) => {
+    const name = to.trim();
+    if (name === "" || name === from) return sheet;
+
+    const lines = sheet.lines.map((line) =>
+      line.mission === from ? { ...line, mission: name } : line,
+    );
+
+    return {
+      ...sheet,
+      missionCounter:
+        from === missionName(sheet.missionCounter)
+          ? nextMissionCounter(sheet.missionCounter, lines)
+          : sheet.missionCounter,
+      lines,
+    };
+  });
 }
 
 export function removeMission(mission: string): Promise<CargoSheet | null> {

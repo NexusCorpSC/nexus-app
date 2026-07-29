@@ -253,8 +253,15 @@ La superposition **s'ouvre en lecture**, parce que c'est ce qu'on lui demande en
 vol : la liste et la capacité restante, et rien à cliquer par erreur au-dessus
 d'un jeu. Les contrôles sont derrière un « Modifier » explicite, et ce sont les
 mêmes que ceux de l'écran principal — ajouter une ligne, la réécrire, la
-déplacer d'une mission à l'autre, supprimer une ligne ou une mission entière,
+déplacer d'une mission à l'autre, renommer ou supprimer un bloc mission entier,
 ouvrir la mission suivante, changer de plus gros conteneur, clôturer.
+
+Renommer un bloc a deux conséquences assumées. Renommer **vers un nom déjà
+pris** fusionne les deux blocs : la feuille regroupe par nom, pas par identité,
+c'est donc déjà ce qu'elle affichait. Et renommer **le bloc en cours de
+remplissage** fait avancer le compteur — le numéro qu'il portait est libre, et
+une ligne ajoutée ensuite doit ouvrir un nouveau bloc plutôt que ressusciter le
+nom dont on vient de le sortir.
 
 Une exception : **le vaisseau ne se change pas depuis la superposition.** C'est
 la seule chose qui demanderait la liste, donc le réseau, alors que la feuille

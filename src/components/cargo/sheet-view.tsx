@@ -169,9 +169,18 @@ export function CargoLineForm({
     }
   }
 
+  function onKeyDown(event: { key: string; stopPropagation: () => void }) {
+    if (event.key !== "Escape" || !onCancel) return;
+
+    // The overlay closes on Escape: backing out of this form is not leaving
+    // the window.
+    event.stopPropagation();
+    onCancel();
+  }
+
   if (compact) {
     return (
-      <form onSubmit={submit} className="space-y-1.5">
+      <form onSubmit={submit} onKeyDown={onKeyDown} className="space-y-1.5">
         <div className="grid grid-cols-2 gap-1.5">
           <CompactInput
             label="Destination"
@@ -221,7 +230,7 @@ export function CargoLineForm({
   }
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} onKeyDown={onKeyDown} className="space-y-3">
       <Field label="Destination">
         <Input
           value={destination}
@@ -348,6 +357,7 @@ export function MissionGroups({
   missionPlaceholder,
   onRemoveLine,
   onRemoveMission,
+  onRenameMission,
   onEditLine,
 }: {
   lines: CargoLine[];
@@ -355,10 +365,12 @@ export function MissionGroups({
   missionPlaceholder?: string;
   onRemoveLine?: (id: string) => void;
   onRemoveMission?: (mission: string) => void;
+  onRenameMission?: (from: string, to: string) => void;
   onEditLine?: (id: string, line: ParsedBulkLine) => void;
 }) {
   const groups = groupByMission(lines);
   const [editing, setEditing] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<string | null>(null);
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
@@ -368,23 +380,62 @@ export function MissionGroups({
           className="overflow-hidden rounded-lg border border-nexus-accent/15 bg-nexus-abyss/40"
         >
           <div className="flex items-center justify-between gap-2 border-b border-nexus-accent/10 px-3 py-1.5">
-            <p className="truncate text-xs font-medium text-nexus-bright/90">
-              {group.mission || "Sans mission"}
-            </p>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-[11px] tabular-nums text-nexus-accent/60">
-                {group.volume} SCU · {formatQuantities(group.quantities)}
-              </span>
-              {onRemoveMission && group.mission ? (
-                <IconButton
-                  label="Supprimer la mission"
-                  danger
-                  onClick={() => onRemoveMission(group.mission)}
-                >
-                  <Trash2 className="size-3" />
-                </IconButton>
-              ) : null}
-            </div>
+            {onRenameMission && renaming === group.mission ? (
+              <MissionRename
+                name={group.mission}
+                onSubmit={(name) => {
+                  onRenameMission(group.mission, name);
+                  setRenaming(null);
+                }}
+                onCancel={() => setRenaming(null)}
+              />
+            ) : (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-medium text-nexus-bright/90">
+                    {group.mission || "Sans mission"}
+                  </p>
+
+                  {/* Narrow, the counts go under the name rather than beside
+                      it: a mission carries whatever name it was given, and it
+                      would otherwise squeeze that name down to nothing. */}
+                  {compact ? (
+                    <span className="text-[11px] tabular-nums text-nexus-accent/60">
+                      {group.volume} SCU · {formatQuantities(group.quantities)}
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  {!compact ? (
+                    <span className="text-[11px] tabular-nums text-nexus-accent/60">
+                      {group.volume} SCU · {formatQuantities(group.quantities)}
+                    </span>
+                  ) : null}
+
+                  {/* Lines with no mission of their own are one block by
+                      default, not a mission: there is no name to rewrite. */}
+                  {onRenameMission && group.mission ? (
+                    <IconButton
+                      label="Renommer la mission"
+                      onClick={() => setRenaming(group.mission)}
+                    >
+                      <Pencil className="size-3" />
+                    </IconButton>
+                  ) : null}
+
+                  {onRemoveMission && group.mission ? (
+                    <IconButton
+                      label="Supprimer la mission"
+                      danger
+                      onClick={() => onRemoveMission(group.mission)}
+                    >
+                      <Trash2 className="size-3" />
+                    </IconButton>
+                  ) : null}
+                </div>
+              </>
+            )}
           </div>
 
           <ul className="divide-y divide-nexus-accent/10">
@@ -478,17 +529,19 @@ export function MissionGroups({
 function IconButton({
   label,
   danger = false,
+  type = "button",
   onClick,
   children,
 }: {
   label: string;
   danger?: boolean;
-  onClick: () => void;
+  type?: "button" | "submit";
+  onClick?: () => void;
   children: ReactNode;
 }) {
   return (
     <button
-      type="button"
+      type={type}
       title={label}
       onClick={onClick}
       className={cn(
@@ -499,6 +552,59 @@ function IconButton({
       <span className="sr-only">{label}</span>
       {children}
     </button>
+  );
+}
+
+/**
+ * The mission name, rewritten in place in its own header — the alternative
+ * being to reopen every line of the block one at a time.
+ */
+function MissionRename({
+  name,
+  onSubmit,
+  onCancel,
+}: {
+  name: string;
+  onSubmit: (name: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState(name);
+  const trimmed = value.trim();
+
+  return (
+    <form
+      className="flex flex-1 items-center gap-1"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (trimmed !== "") onSubmit(trimmed);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape") return;
+
+        // The overlay closes on Escape: backing out of this field is not
+        // leaving the window.
+        event.stopPropagation();
+        onCancel();
+      }}
+    >
+      <input
+        aria-label="Nom de la mission"
+        autoFocus
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        className={cn(
+          "min-w-0 flex-1 rounded border border-nexus-accent/20 bg-nexus-abyss/60 px-2 py-0.5",
+          "text-xs font-medium text-nexus-bright focus:border-nexus-accent/50 focus:outline-none",
+        )}
+      />
+
+      <IconButton type="submit" label="Enregistrer le nom">
+        <Check className="size-3" />
+      </IconButton>
+      <IconButton label="Annuler" onClick={onCancel}>
+        <X className="size-3" />
+      </IconButton>
+    </form>
   );
 }
 

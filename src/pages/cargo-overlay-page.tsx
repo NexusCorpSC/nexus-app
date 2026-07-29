@@ -7,6 +7,7 @@ import {
   closeSheet,
   removeLine,
   removeMission,
+  renameMission,
   setMaxContainer,
   startNewMission,
   updateLine,
@@ -210,6 +211,11 @@ export default function CargoOverlayPage() {
                   onRemoveLine={editing ? (id) => void removeLine(id) : undefined}
                   onRemoveMission={
                     editing ? (mission) => void removeMission(mission) : undefined
+                  }
+                  onRenameMission={
+                    editing
+                      ? (from, to) => void renameMission(from, to)
+                      : undefined
                   }
                   onEditLine={
                     editing
