@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import {
   CONTAINER_SIZES,
@@ -195,11 +195,13 @@ export function CargoLineForm({
             onChange={setContent}
             placeholder="Titanium"
           />
+          {/* A bare number: the unit belongs in the label, and «32 SCU» as an
+              example invites typing it back, which the field then refuses. */}
           <CompactInput
             label="Volume en SCU"
             value={volume}
             onChange={setVolume}
-            placeholder="32 SCU"
+            placeholder="32"
             inputMode="numeric"
           />
           <CompactInput
@@ -371,6 +373,17 @@ export function MissionGroups({
   const groups = groupByMission(lines);
   const [editing, setEditing] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
+
+  // The overlay drops the handlers rather than unmounting the sheet when it
+  // leaves its editable view, so what was open has to be forgotten here: a
+  // form still remembered would reopen on its own on the way back in.
+  const editable = Boolean(onEditLine);
+  const renameable = Boolean(onRenameMission);
+
+  useEffect(() => {
+    if (!editable) setEditing(null);
+    if (!renameable) setRenaming(null);
+  }, [editable, renameable]);
 
   return (
     <div className={compact ? "space-y-2" : "space-y-3"}>
