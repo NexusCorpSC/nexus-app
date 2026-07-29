@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
-import { getShortcuts } from "@/lib/settings";
+import { getNotificationCorner, getShortcuts } from "@/lib/settings";
+import { applyNotificationCorner } from "@/lib/notifications";
 import { applyShortcuts } from "@/lib/shortcuts";
 import {
   Boxes,
@@ -58,6 +59,16 @@ export default function AppLayout() {
     void getShortcuts()
       .then(applyShortcuts)
       .catch((error) => console.error("cannot apply shortcuts", error));
+  }, []);
+
+  // Same handover for the notification corner: Rust starts in the bottom-right
+  // one and takes the stored choice as soon as the store can be read.
+  useEffect(() => {
+    void getNotificationCorner()
+      .then(applyNotificationCorner)
+      .catch((error) =>
+        console.error("cannot apply the notification corner", error),
+      );
   }, []);
 
   return (

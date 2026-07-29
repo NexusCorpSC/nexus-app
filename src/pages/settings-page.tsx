@@ -8,19 +8,29 @@ import {
   DEFAULT_SHORTCUTS,
   formatShortcut,
   getApiBaseUrl,
+  getNotificationCorner,
   getShortcuts,
   isAllowedBaseUrl,
   normalizeBaseUrl,
   setApiBaseUrl,
+  setNotificationCorner,
   setShortcuts,
   type Shortcuts,
 } from "@/lib/settings";
+import {
+  applyNotificationCorner,
+  DEFAULT_NOTIFICATION_CORNER,
+  notify,
+  NOTIFICATION_CORNER_LABELS,
+  NOTIFICATION_CORNERS,
+  type NotificationCorner,
+} from "@/lib/notifications";
 import {
   applyShortcuts,
   SHORTCUT_LABELS,
   type ShortcutRejection,
 } from "@/lib/shortcuts";
-import { Button, Card, Field, Input, PageHeader } from "@/components/ui";
+import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
 
 export default function SettingsPage() {
@@ -39,10 +49,18 @@ export default function SettingsPage() {
   const [shortcutError, setShortcutError] = useState<string | null>(null);
   const shortcutTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [corner, setCorner] = useState<NotificationCorner>(
+    DEFAULT_NOTIFICATION_CORNER,
+  );
+  const [notificationError, setNotificationError] = useState<string | null>(
+    null,
+  );
+
   useEffect(() => {
     void getApiBaseUrl().then(setBaseUrl);
     void getVersion().then(setVersion);
     void getShortcuts().then(setLocalShortcuts);
+    void getNotificationCorner().then(setCorner);
   }, []);
 
   // Clears the "Enregistré" flash timers if the screen is left first.
@@ -81,6 +99,30 @@ export default function SettingsPage() {
     setShortcutsSaved(true);
     if (shortcutTimer.current) clearTimeout(shortcutTimer.current);
     shortcutTimer.current = setTimeout(() => setShortcutsSaved(false), 2500);
+  }
+
+  /**
+   * The choice is applied and shown at once: a corner is far easier to pick
+   * when the example lands in it while the list is still open.
+   */
+  async function handleCornerChange(next: NotificationCorner) {
+    setCorner(next);
+    setNotificationError(null);
+    await setNotificationCorner(next);
+
+    try {
+      await applyNotificationCorner(next);
+      await notify({
+        title: "Notifications",
+        body: `Elles s'afficheront ${NOTIFICATION_CORNER_LABELS[next].toLowerCase()}.`,
+      });
+    } catch (cause) {
+      setNotificationError(
+        cause instanceof Error
+          ? cause.message
+          : "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -223,6 +265,57 @@ export default function SettingsPage() {
             </div>
           ) : null}
         </form>
+      </Card>
+
+      <Card className="mb-4 p-6">
+        <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
+          Notifications
+        </h2>
+        <p className="mb-4 text-xs text-nexus-accent/50">
+          Elles s'affichent par-dessus le jeu, dans le coin choisi de l'écran où
+          se trouve le curseur, puis disparaissent d'elles-mêmes. Survolez-en
+          une pour la garder à l'écran.
+        </p>
+
+        <div className="space-y-4">
+          <Field label="Coin d'affichage">
+            <Select
+              value={corner}
+              onChange={(event) =>
+                void handleCornerChange(
+                  event.target.value as NotificationCorner,
+                )
+              }
+            >
+              {NOTIFICATION_CORNERS.map((value) => (
+                <option key={value} value={value}>
+                  {NOTIFICATION_CORNER_LABELS[value]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() =>
+              void notify({
+                kind: "success",
+                title: "Nexus App",
+                body: "Ceci est un exemple de notification.",
+              })
+            }
+          >
+            Afficher un exemple
+          </Button>
+
+          {notificationError ? (
+            <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+              {notificationError}
+            </p>
+          ) : null}
+        </div>
       </Card>
 
       <Card className="p-6">

@@ -47,6 +47,45 @@ label {
   user-select: none;
 }
 
+/*
+ * Notification overlay: each toast slides in from the screen edge it hangs off,
+ * and the bar under it runs down the time it has left.
+ */
+@keyframes nexus-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--toast-from, 1.5rem));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes nexus-toast-countdown {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.nexus-toast {
+  animation: nexus-toast-in 180ms ease-out both;
+}
+
+/* Duration comes from the toast itself, which knows how long it has. */
+.nexus-toast-countdown {
+  animation: nexus-toast-countdown linear both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexus-toast {
+    animation: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

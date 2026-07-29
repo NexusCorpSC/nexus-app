@@ -1,4 +1,9 @@
 import { load, type Store } from "@tauri-apps/plugin-store";
+import {
+  DEFAULT_NOTIFICATION_CORNER,
+  NOTIFICATION_CORNERS,
+  type NotificationCorner,
+} from "@/lib/notifications";
 import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
@@ -14,6 +19,7 @@ const KEY_SHORTCUT_SEARCH = "shortcutSearch";
 const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 const KEY_SHORTCUT_NOTES = "shortcutNotes";
 const KEY_LOCAL_NOTE = "localNote";
+const KEY_NOTIFICATION_CORNER = "notificationCorner";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -114,6 +120,29 @@ export async function setLocalNote(content: string): Promise<Note> {
   const note: Note = { content, updatedAt: new Date().toISOString() };
   await store.set(KEY_LOCAL_NOTE, note);
   return note;
+}
+
+/**
+ * The corner the notification overlay hangs from.
+ *
+ * Re-validated on read, like the API URL above: a hand-edited or corrupted
+ * store must not leave Rust with a corner it cannot parse — it would refuse
+ * every notification rather than just this setting.
+ */
+export async function getNotificationCorner(): Promise<NotificationCorner> {
+  const store = await getStore();
+  const value = await store.get<NotificationCorner>(KEY_NOTIFICATION_CORNER);
+
+  return value && NOTIFICATION_CORNERS.includes(value)
+    ? value
+    : DEFAULT_NOTIFICATION_CORNER;
+}
+
+export async function setNotificationCorner(
+  corner: NotificationCorner,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_NOTIFICATION_CORNER, corner);
 }
 
 /** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */

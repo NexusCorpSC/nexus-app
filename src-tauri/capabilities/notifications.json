@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "notifications",
+  "description": "Notification overlay. It only renders what Rust hands it and reports back the size of the stack, so it needs neither network nor storage access.",
+  "windows": ["notifications"],
+  "permissions": ["core:default"]
+}

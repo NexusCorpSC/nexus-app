@@ -65,6 +65,22 @@
         "skipTaskbar": true,
         "shadow": false,
         "visible": false
+      },
+      {
+        "label": "notifications",
+        "title": "Nexus - notifications",
+        "url": "index.html#/notifications",
+        "width": 340,
+        "height": 140,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false,
+        "focus": false,
+        "focusable": false
       }
     ],
     "security": {

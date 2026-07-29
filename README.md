@@ -194,6 +194,59 @@ peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
 réponses revenir dans le désordre : seule la requête la plus récente met l'écran
 à jour.
 
+### Notifications
+
+Les notifications s'affichent dans **une fenêtre à elles**, accrochée à un coin
+de l'écran — en bas à droite par défaut, comme celles de Windows. Le coin se
+choisit dans **Paramètres**, où un exemple part à chaque changement pour montrer
+où il tombe.
+
+Une fenêtre séparée plutôt qu'un coin de la fenêtre principale : celle-ci est
+presque toujours rangée ou minimisée derrière le jeu, et une notification que
+personne ne voit n'en est pas une.
+
+Le partage des rôles :
+
+- **Rust** possède la géométrie (`src-tauri/src/notifications.rs`). Il choisit le
+  moniteur, lit sa *zone de travail* — pas l'écran entier, pour que les toasts se
+  posent au-dessus de la barre des tâches et non dessous — et place la fenêtre
+  dans le coin retenu. Le moniteur est celui **sous le curseur**, la règle que
+  suit déjà la capture de zone ; il est figé le temps d'une pile, pour qu'elle ne
+  saute pas d'un écran à l'autre en cours de route.
+- **La superposition** (`src/pages/notifications-overlay-page.tsx`) dessine la
+  pile et renvoie sa hauteur : la fenêtre est redimensionnée à chaque changement
+  pour ne jamais couvrir plus que les toasts eux-mêmes.
+
+Émettre une notification depuis n'importe quelle fenêtre :
+
+```ts
+import { notify } from "@/lib/notifications";
+
+await notify({ kind: "error", title: "Capture impossible", body: raison });
+```
+
+L'appel passe par Rust plutôt que par un état React : la fenêtre qui émet n'est
+pratiquement jamais celle qui affiche. Rust en émet aussi directement — un échec
+de capture ou d'OCR n'avait jusqu'ici nulle part où s'afficher, puisque la
+fenêtre de sélection est refermée avant l'erreur.
+
+Une notification levée pendant que la superposition charge encore n'est pas
+perdue : elle est mise de côté (huit au plus) et remise quand elle signale
+qu'elle écoute.
+
+Quatre niveaux — `info`, `success`, `warning`, `error` — qui décident de l'icône,
+de la couleur et de la durée (5 à 10 s). Quatre toasts au maximum à l'écran, le
+plus récent contre le coin. Survoler un toast le retient ; le quitter relance son
+compte à rebours depuis le début. Un curseur oublié dans ce coin — ce qu'un jeu
+qui tient la souris rend très possible — ne l'épingle pas pour autant : passé
+30 s, il s'en va quoi qu'il arrive.
+
+> Limites connues : la fenêtre ne prend jamais le focus (`focusable: false`), mais
+> elle reste une fenêtre — un clic dans la zone qu'elle occupe lui revient et
+> n'atteint pas ce qu'il y a dessous. D'où le redimensionnement au plus juste.
+> Et comme toute fenêtre en surimpression, elle est invisible d'un jeu en plein
+> écran exclusif ; en plein écran fenêtré, elle s'affiche.
+
 ### Authentification
 
 La connexion utilise le flux **OTP par e-mail** de better-auth : c'est le seul
