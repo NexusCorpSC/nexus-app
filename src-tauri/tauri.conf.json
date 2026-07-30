@@ -69,6 +69,22 @@
         "visible": false
       },
       {
+        "label": "squad",
+        "title": "Nexus - escouade",
+        "url": "index.html#/squad-overlay",
+        "width": 420,
+        "height": 520,
+        "minWidth": 300,
+        "minHeight": 200,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "capture",
         "title": "Nexus - capture d'ecran",
         "url": "index.html#/capture",

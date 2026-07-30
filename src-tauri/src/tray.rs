@@ -23,6 +23,7 @@ const SEARCH_ITEM: &str = "tray-search";
 const CAPTURE_ITEM: &str = "tray-capture";
 const NOTES_ITEM: &str = "tray-notes";
 const CARGO_ITEM: &str = "tray-cargo";
+const SQUAD_ITEM: &str = "tray-squad";
 const QUIT_ITEM: &str = "tray-quit";
 
 /// Adds the icon for as long as the app runs.
@@ -31,10 +32,14 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
     let capture = MenuItem::with_id(app, CAPTURE_ITEM, "Capture de zone", true, None::<&str>)?;
     let notes = MenuItem::with_id(app, NOTES_ITEM, "Bloc-notes", true, None::<&str>)?;
     let cargo = MenuItem::with_id(app, CARGO_ITEM, "Feuille de cargo", true, None::<&str>)?;
+    let squad = MenuItem::with_id(app, SQUAD_ITEM, "Escouade", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, QUIT_ITEM, "Quitter Nexus App", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&search, &capture, &notes, &cargo, &separator, &quit])?;
+    let menu = Menu::with_items(
+        app,
+        &[&search, &capture, &notes, &cargo, &squad, &separator, &quit],
+    )?;
 
     let mut tray = TrayIconBuilder::with_id("nexus-app")
         .tooltip("Nexus App")
@@ -81,6 +86,7 @@ fn on_menu(app: &AppHandle, item: &str) {
         CAPTURE_ITEM => Action::Capture,
         NOTES_ITEM => Action::Notes,
         CARGO_ITEM => Action::Cargo,
+        SQUAD_ITEM => Action::Squad,
         QUIT_ITEM => {
             log("quitting from the tray");
             // Closes every window and ends the process, which is the only way
