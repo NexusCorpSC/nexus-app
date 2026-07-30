@@ -161,7 +161,10 @@ function NoSquad({
         className="flex items-center gap-1.5"
         onSubmit={(event) => {
           event.preventDefault();
-          if (code.trim()) onJoin(code);
+          // Trimmed here as well as by the API: what the button checks and what
+          // the request carries should be the same string.
+          const typed = code.trim();
+          if (typed) onJoin(typed);
         }}
       >
         <input

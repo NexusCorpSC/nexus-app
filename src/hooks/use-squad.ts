@@ -93,7 +93,12 @@ function useSquadMutation<TVariables>(
     mutationKey: SQUAD_KEY,
     mutationFn: call,
     onMutate: async (variables: TVariables) => {
-      await queryClient.cancelQueries({ queryKey: SQUAD_KEY });
+      // Started, not awaited: cancelling marks the queries synchronously, so no
+      // answer already on the wire can land after this — but its promise only
+      // settles a microtask later, and nothing should render in between. A
+      // `useTypedField` whose blur triggered this would spend that gap showing
+      // the value the user just replaced.
+      const cancelling = queryClient.cancelQueries({ queryKey: SQUAD_KEY });
 
       const previous = queryClient.getQueryData<Squad | null>(SQUAD_KEY);
 
@@ -103,6 +108,10 @@ function useSquadMutation<TVariables>(
           guess(previous, variables),
         );
       }
+
+      // Awaited before the request goes out all the same: the point of
+      // cancelling is that nothing is in flight beside it.
+      await cancelling;
 
       return { previous };
     },
