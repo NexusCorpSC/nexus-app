@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "squad-overlay",
+  "description": "Squad overlay. It has no decorations, so its header doubles as the title bar and the webview has to be allowed to drag the window — `core:default` does not cover that. The rest of what it needs, the API among it, comes from `default`, whose window list it joins.",
+  "windows": ["squad"],
+  "permissions": ["core:window:allow-start-dragging"]
+}

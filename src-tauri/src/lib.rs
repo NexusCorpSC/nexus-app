@@ -25,6 +25,7 @@ const OVERLAY_WINDOW: &str = "overlay";
 const CAPTURE_WINDOW: &str = "capture";
 const NOTES_WINDOW: &str = "notes";
 const CARGO_WINDOW: &str = "cargo";
+const SQUAD_WINDOW: &str = "squad";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 
 /// Carries recognised text to the overlay's search bar.
@@ -32,6 +33,13 @@ const SEARCH_EVENT: &str = "overlay://search";
 
 /// Asks the main window to navigate to a route.
 const NAVIGATE_EVENT: &str = "main://navigate";
+
+/// Tells the squad overlay whether it is on screen, carrying a boolean.
+///
+/// It polls the API while it is up and stops while it is not; only this side
+/// knows which, since a hidden window and an unfocused one look the same from
+/// the webview.
+const SQUAD_VISIBILITY_EVENT: &str = "squad://visibility";
 
 /// Frozen monitor snapshot awaiting a selection: filled when the capture
 /// shortcut fires, taken when the user releases the mouse.
@@ -45,6 +53,7 @@ pub(crate) enum Action {
     Capture,
     Notes,
     Cargo,
+    Squad,
 }
 
 impl Action {
@@ -56,6 +65,7 @@ impl Action {
             Action::Capture => "capture",
             Action::Notes => "notes",
             Action::Cargo => "cargo",
+            Action::Squad => "squad",
         }
     }
 }
@@ -94,6 +104,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Capture => start_capture(app),
         Action::Notes => toggle_notes_overlay(app),
         Action::Cargo => toggle_overlay(app, CARGO_WINDOW),
+        Action::Squad => toggle_squad(app),
     };
 
     if let Err(error) = outcome {
@@ -128,13 +139,14 @@ impl ShortcutSupport {
     }
 }
 
-/// The four combinations, in the format the `global-shortcut` plugin parses.
+/// The five combinations, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
     search: String,
     capture: String,
     notes: String,
     cargo: String,
+    squad: String,
 }
 
 impl Default for ShortcutSettings {
@@ -144,6 +156,7 @@ impl Default for ShortcutSettings {
             capture: "Ctrl+Shift+KeyS".to_string(),
             notes: "Ctrl+Shift+KeyN".to_string(),
             cargo: "Ctrl+Shift+KeyG".to_string(),
+            squad: "Ctrl+Shift+KeyE".to_string(),
         }
     }
 }
@@ -182,6 +195,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Capture, &requested.capture),
         (Action::Notes, &requested.notes),
         (Action::Cargo, &requested.cargo),
+        (Action::Squad, &requested.squad),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -357,6 +371,28 @@ fn toggle_overlay(app: &AppHandle, label: &str) -> Result<(), String> {
     show_window(app, label)
 }
 
+/// Shows or hides the squad overlay, telling it which of the two happened.
+///
+/// The squad overlay polls the API while it is up, and must stop while it is
+/// not: nobody needs a hidden window asking for a squad every two seconds. It
+/// cannot work that out on its own — losing focus is not the same as being
+/// hidden, and over a game this window is *always* out of focus, which is
+/// exactly when it has to keep refreshing. So the answer comes from here, where
+/// showing and hiding actually happen.
+fn toggle_squad(app: &AppHandle) -> Result<(), String> {
+    toggle_overlay(app, SQUAD_WINDOW)?;
+    announce_squad_visibility(app)
+}
+
+fn announce_squad_visibility(app: &AppHandle) -> Result<(), String> {
+    let visible = window(app, SQUAD_WINDOW)?
+        .is_visible()
+        .map_err(|e| e.to_string())?;
+
+    app.emit_to(SQUAD_WINDOW, SQUAD_VISIBILITY_EVENT, visible)
+        .map_err(|e| e.to_string())
+}
+
 /// Takes the overlay off screen, then freezes the monitor and offers a selection.
 ///
 /// The palette suggests this very shortcut, so it is usually visible when the
@@ -430,6 +466,31 @@ fn close_notes_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_cargo_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, CARGO_WINDOW)
+}
+
+#[tauri::command]
+fn close_squad_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, SQUAD_WINDOW)?;
+    announce_squad_visibility(&app)
+}
+
+/// Shows the squad overlay, or hides it. Called from the tray, and reachable
+/// from the shortcut through the same path.
+#[tauri::command]
+fn toggle_squad_overlay(app: AppHandle) -> Result<(), String> {
+    toggle_squad(&app)
+}
+
+/// Whether the squad overlay is on screen right now.
+///
+/// Asked once by the window when it mounts: it is created hidden at startup, so
+/// its React tree is running long before anyone asks to see it, and the
+/// visibility event alone would leave it guessing until the first toggle.
+#[tauri::command]
+fn is_squad_overlay_visible(app: AppHandle) -> Result<bool, String> {
+    window(&app, SQUAD_WINDOW)?
+        .is_visible()
+        .map_err(|e| e.to_string())
 }
 
 /// Shows the cargo sheet overlay, or hides it. Called from the cargo screen
@@ -530,6 +591,9 @@ pub fn run() {
             close_notes_overlay,
             close_cargo_overlay,
             toggle_cargo_overlay,
+            close_squad_overlay,
+            toggle_squad_overlay,
+            is_squad_overlay_visible,
             open_main_route,
             cancel_capture,
             recognize_selection,

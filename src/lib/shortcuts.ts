@@ -25,4 +25,5 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   capture: "Capture de zone",
   notes: "Bloc-notes",
   cargo: "Feuille de cargo",
+  squad: "Escouade",
 };

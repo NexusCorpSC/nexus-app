@@ -19,6 +19,7 @@ const KEY_SHORTCUT_SEARCH = "shortcutSearch";
 const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 const KEY_SHORTCUT_NOTES = "shortcutNotes";
 const KEY_SHORTCUT_CARGO = "shortcutCargo";
+const KEY_SHORTCUT_SQUAD = "shortcutSquad";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
@@ -92,6 +93,7 @@ export const DEFAULT_SHORTCUTS = {
   capture: "Ctrl+Shift+KeyS",
   notes: "Ctrl+Shift+KeyN",
   cargo: "Ctrl+Shift+KeyG",
+  squad: "Ctrl+Shift+KeyE",
 } as const;
 
 export type ShortcutAction = keyof typeof DEFAULT_SHORTCUTS;
@@ -103,7 +105,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
 
   return {
     search:
-      (await store.get<string>(KEY_SHORTCUT_SEARCH)) ?? DEFAULT_SHORTCUTS.search,
+      (await store.get<string>(KEY_SHORTCUT_SEARCH)) ??
+      DEFAULT_SHORTCUTS.search,
     capture:
       (await store.get<string>(KEY_SHORTCUT_CAPTURE)) ??
       DEFAULT_SHORTCUTS.capture,
@@ -111,6 +114,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_NOTES)) ?? DEFAULT_SHORTCUTS.notes,
     cargo:
       (await store.get<string>(KEY_SHORTCUT_CARGO)) ?? DEFAULT_SHORTCUTS.cargo,
+    squad:
+      (await store.get<string>(KEY_SHORTCUT_SQUAD)) ?? DEFAULT_SHORTCUTS.squad,
   };
 }
 
@@ -120,6 +125,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_CAPTURE, shortcuts.capture);
   await store.set(KEY_SHORTCUT_NOTES, shortcuts.notes);
   await store.set(KEY_SHORTCUT_CARGO, shortcuts.cargo);
+  await store.set(KEY_SHORTCUT_SQUAD, shortcuts.squad);
 }
 
 /**

@@ -37,7 +37,14 @@ import {
   type Update,
   type UpdateProgress,
 } from "@/lib/updates";
-import { Button, Card, Field, Input, PageHeader, Select } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Field,
+  Input,
+  PageHeader,
+  Select,
+} from "@/components/ui";
 import { ShortcutInput } from "@/components/shortcut-input";
 
 /**
@@ -48,7 +55,10 @@ import { ShortcutInput } from "@/components/shortcut-input";
  */
 function updateDownloadPercent(progress: UpdateProgress | null): number | null {
   if (!progress || progress.total === null || progress.total <= 0) return null;
-  return Math.min(100, Math.round((progress.downloaded / progress.total) * 100));
+  return Math.min(
+    100,
+    Math.round((progress.downloaded / progress.total) * 100),
+  );
 }
 
 function formatBytes(bytes: number): string {
@@ -307,6 +317,15 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Escouade en superposition">
+            <ShortcutInput
+              value={shortcuts.squad}
+              onChange={(squad) =>
+                setLocalShortcuts((current) => ({ ...current, squad }))
+              }
+            />
+          </Field>
+
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm">
               Appliquer
@@ -416,9 +435,13 @@ export default function SettingsPage() {
               type="button"
               size="sm"
               onClick={() => void handleUpdateCheck()}
-              disabled={updateState === "checking" || updateState === "installing"}
+              disabled={
+                updateState === "checking" || updateState === "installing"
+              }
             >
-              {updateState === "checking" ? "Recherche…" : "Vérifier maintenant"}
+              {updateState === "checking"
+                ? "Recherche…"
+                : "Vérifier maintenant"}
             </Button>
 
             {updateState === "latest" ? (

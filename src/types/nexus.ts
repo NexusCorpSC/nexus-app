@@ -314,3 +314,40 @@ export type SearchResponse = {
   countsByType: Record<string, number>;
   hasMore: SearchType[];
 };
+
+/* ------------------------------------------------------------------ */
+/* Squads                                                              */
+/* ------------------------------------------------------------------ */
+
+export const ANNOUNCEMENTS_MAX_LENGTH = 2000;
+export const POSITION_MAX_LENGTH = 120;
+
+export type SquadMember = {
+  userId: string;
+  name: string;
+  /** Decides succession: the longest-standing member takes over. */
+  joinedAt: string;
+  ready: boolean;
+  /** «actif» when true, «éliminé» when false. */
+  alive: boolean;
+  position: string;
+};
+
+export type Squad = {
+  id: string;
+  name: string;
+  /** Short, spoken out loud, shared to let others in. */
+  code: string;
+  leaderId: string;
+  announcements: string;
+  members: SquadMember[];
+  version: number;
+  updatedAt: string;
+};
+
+/** What a member may change about themselves, and a leader about anyone. */
+export type SquadMemberPatch = {
+  ready?: boolean;
+  alive?: boolean;
+  position?: string;
+};
