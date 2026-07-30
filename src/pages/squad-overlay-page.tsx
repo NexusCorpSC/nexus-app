@@ -8,6 +8,7 @@ import {
   LogOut,
   Plus,
   Skull,
+  UserMinus,
   Users,
   X,
 } from "lucide-react";
@@ -43,9 +44,8 @@ const COMMIT_DELAY = 600;
 
 export default function SquadOverlayPage() {
   const { user, loading: session } = useAuth();
-  const { state, create, join, leave, patchMember, announce } = useSquad(
-    Boolean(user),
-  );
+  const { state, create, join, leave, patchMember, removeMember, announce } =
+    useSquad(Boolean(user));
 
   useTransparentWindow();
 
@@ -103,6 +103,7 @@ export default function SquadOverlayPage() {
             squad={squad}
             userId={user.id}
             onPatch={(userId, patch) => patchMember.mutate({ userId, patch })}
+            onRemove={(userId) => removeMember.mutate(userId)}
             onAnnounce={(announcements) => announce.mutate(announcements)}
             onLeave={() => leave.mutate()}
             leaving={leave.isPending}
@@ -196,6 +197,7 @@ function SquadDashboard({
   squad,
   userId,
   onPatch,
+  onRemove,
   onAnnounce,
   onLeave,
   leaving,
@@ -203,6 +205,7 @@ function SquadDashboard({
   squad: Squad;
   userId: string;
   onPatch: (userId: string, patch: SquadMemberPatch) => void;
+  onRemove: (userId: string) => void;
   onAnnounce: (announcements: string) => void;
   onLeave: () => void;
   leaving: boolean;
@@ -231,6 +234,12 @@ function SquadDashboard({
             isLeader={squad.leaderId === member.userId}
             // A member writes to their own row; the leader writes to anyone's.
             editable={member.userId === userId || isLeader}
+            // The leader puts people out; leaving is everyone's own business.
+            onRemove={
+              isLeader && member.userId !== userId
+                ? () => onRemove(member.userId)
+                : undefined
+            }
             onPatch={(patch) => onPatch(member.userId, patch)}
           />
         ))}
@@ -262,12 +271,15 @@ function MemberRow({
   isSelf,
   isLeader,
   editable,
+  onRemove,
   onPatch,
 }: {
   member: SquadMember;
   isSelf: boolean;
   isLeader: boolean;
   editable: boolean;
+  /** Absent for everyone but the leader, and for the leader's own row. */
+  onRemove?: () => void;
   onPatch: (patch: SquadMemberPatch) => void;
 }) {
   return (
@@ -311,6 +323,10 @@ function MemberRow({
           offTone="text-red-300"
           offIcon={<Skull className="size-3" />}
         />
+
+        {onRemove ? (
+          <RemoveMember name={member.name} onConfirm={onRemove} />
+        ) : null}
       </div>
 
       <PositionField
@@ -319,6 +335,77 @@ function MemberRow({
         onCommit={(position) => onPatch({ position })}
       />
     </li>
+  );
+}
+
+/**
+ * Putting someone out of the squad, asked twice.
+ *
+ * Once would be wrong here: the button sits a few pixels from two toggles that
+ * are pressed constantly, over a game, often in a hurry — and a misfire costs
+ * the other player the code and a rejoin, mid-drop. The second click is the same
+ * bargain `CloseSheetButton` strikes on the cargo sheet.
+ */
+function RemoveMember({
+  name,
+  onConfirm,
+}: {
+  name: string;
+  onConfirm: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+
+  if (!asking) {
+    return (
+      <button
+        type="button"
+        title={`Retirer ${name} de l'escouade`}
+        onClick={() => setAsking(true)}
+        className={cn(
+          "flex shrink-0 items-center rounded px-1.5 py-0.5",
+          SURFACE,
+          "text-nexus-accent/60 transition hover:bg-red-500/20 hover:text-red-300",
+        )}
+      >
+        <span className="sr-only">Retirer {name} de l'escouade</span>
+        <UserMinus className="size-3" />
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        title={`Retirer ${name} de l'escouade`}
+        onClick={() => {
+          setAsking(false);
+          onConfirm();
+        }}
+        className={cn(
+          "flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px]",
+          SURFACE,
+          "text-red-300 transition hover:bg-red-500/20",
+        )}
+      >
+        <Check className="size-3" />
+        Retirer
+      </button>
+
+      <button
+        type="button"
+        title="Annuler"
+        onClick={() => setAsking(false)}
+        className={cn(
+          "flex items-center rounded px-1.5 py-0.5",
+          SURFACE,
+          "text-nexus-accent/70 transition hover:text-nexus-bright",
+        )}
+      >
+        <span className="sr-only">Annuler</span>
+        <X className="size-3" />
+      </button>
+    </span>
   );
 }
 

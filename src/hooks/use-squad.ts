@@ -12,6 +12,7 @@ import {
   getMySquad,
   joinSquad,
   leaveSquad,
+  removeSquadMember,
   setSquadAnnouncements,
   updateSquadMember,
 } from "@/lib/api/squads";
@@ -157,6 +158,14 @@ export function useSquad(enabled: boolean) {
     }),
   );
 
+  const removeMember = useSquadMutation(
+    (userId: string) => removeSquadMember(userId),
+    (squad, userId) => ({
+      ...squad,
+      members: squad.members.filter((member) => member.userId !== userId),
+    }),
+  );
+
   const announce = useSquadMutation(
     (announcements: string) => setSquadAnnouncements(announcements),
     (squad, announcements) => ({ ...squad, announcements }),
@@ -173,6 +182,7 @@ export function useSquad(enabled: boolean) {
     join,
     leave,
     patchMember,
+    removeMember,
     announce,
   };
 }

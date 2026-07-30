@@ -53,6 +53,19 @@ export async function updateSquadMember(
   return squad;
 }
 
+/**
+ * Puts a member out, which only the leader may do — and never on themselves:
+ * a leader on the way out uses `leaveSquad`, which hands the squad over.
+ */
+export async function removeSquadMember(userId: string): Promise<Squad> {
+  const { squad } = await apiRequest<{ squad: Squad }>(
+    `/api/squads/members/${encodeURIComponent(userId)}`,
+    { method: "DELETE" },
+  );
+
+  return squad;
+}
+
 /** The leader alone; everyone else reads it. */
 export async function setSquadAnnouncements(
   announcements: string,
