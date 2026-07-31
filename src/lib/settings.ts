@@ -4,6 +4,10 @@ import {
   NOTIFICATION_CORNERS,
   type NotificationCorner,
 } from "@/lib/notifications";
+import {
+  DEFAULT_OVERLAY_OPACITY,
+  type OverlayOpacity,
+} from "@/lib/overlay-opacity";
 import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
@@ -20,10 +24,12 @@ const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 const KEY_SHORTCUT_NOTES = "shortcutNotes";
 const KEY_SHORTCUT_CARGO = "shortcutCargo";
 const KEY_SHORTCUT_SQUAD = "shortcutSquad";
+const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_CARGO_SHIPS = "cargoShips";
+const KEY_OVERLAY_OPACITY = "overlayOpacity";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -94,6 +100,7 @@ export const DEFAULT_SHORTCUTS = {
   notes: "Ctrl+Shift+KeyN",
   cargo: "Ctrl+Shift+KeyG",
   squad: "Ctrl+Shift+KeyE",
+  opacity: "Ctrl+Shift+KeyO",
 } as const;
 
 export type ShortcutAction = keyof typeof DEFAULT_SHORTCUTS;
@@ -116,6 +123,9 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_CARGO)) ?? DEFAULT_SHORTCUTS.cargo,
     squad:
       (await store.get<string>(KEY_SHORTCUT_SQUAD)) ?? DEFAULT_SHORTCUTS.squad,
+    opacity:
+      (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
+      DEFAULT_SHORTCUTS.opacity,
   };
 }
 
@@ -126,6 +136,33 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_NOTES, shortcuts.notes);
   await store.set(KEY_SHORTCUT_CARGO, shortcuts.cargo);
   await store.set(KEY_SHORTCUT_SQUAD, shortcuts.squad);
+  await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
+}
+
+/**
+ * Whether each overlay draws its panel — the only durable copy of it. Rust holds
+ * what is in force and is handed this at startup (`src/lib/overlay-opacity.ts`).
+ *
+ * Read field by field rather than as a whole so that a store written by an older
+ * version, which knew nothing of this, still yields each window its own default
+ * instead of one missing key costing all three.
+ */
+export async function getOverlayOpacity(): Promise<OverlayOpacity> {
+  const store = await getStore();
+  const stored = await store.get<Partial<OverlayOpacity>>(KEY_OVERLAY_OPACITY);
+
+  return {
+    notes: stored?.notes ?? DEFAULT_OVERLAY_OPACITY.notes,
+    cargo: stored?.cargo ?? DEFAULT_OVERLAY_OPACITY.cargo,
+    squad: stored?.squad ?? DEFAULT_OVERLAY_OPACITY.squad,
+  };
+}
+
+export async function setOverlayOpacity(
+  opacity: OverlayOpacity,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_OVERLAY_OPACITY, opacity);
 }
 
 /**

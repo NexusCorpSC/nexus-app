@@ -15,6 +15,9 @@ import {
 import { useAuth } from "@/auth/auth-context";
 import { useSquad } from "@/hooks/use-squad";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { overlaySkin } from "@/lib/overlay-opacity";
 import {
   ANNOUNCEMENTS_MAX_LENGTH,
   POSITION_MAX_LENGTH,
@@ -27,12 +30,15 @@ import { cn } from "@/lib/utils";
 /**
  * The squad, over the game.
  *
- * Unlike the other overlays this one has **no background**: it is meant to sit
- * on the cockpit and be read through, so the panel is gone and only light blue
- * text is left. Legibility over arbitrary pixels comes from a shadow behind
- * every glyph rather than from a surface — the same trick the capture overlay
- * uses. What has to be *clicked*, on the other hand, does get a faint tint:
- * a button nobody can find is not a button.
+ * This one is see-through by default: it is meant to sit on the cockpit and be
+ * read through, so there is no panel and only light blue text is left.
+ * Legibility over arbitrary pixels comes from a shadow behind every glyph
+ * rather than from a surface. What has to be *clicked*, on the other hand, does
+ * get a faint tint whichever mode is on: a button nobody can find is not a
+ * button.
+ *
+ * The panel can be brought back from the header button, or from the global
+ * shortcut that lines the three overlays up (`src/lib/overlay-opacity.ts`).
  *
  * It also carries its own management — create, join by code, leave — because
  * there is no squad screen in the main window. So it has three states: signed
@@ -49,6 +55,11 @@ export default function SquadOverlayPage() {
 
   useTransparentWindow();
 
+  // This one alone starts see-through: it was built that way. The header
+  // button brings its panel back, and the global shortcut lines the three
+  // overlays up on the same mode.
+  const opaque = useOverlayOpaque("squad");
+
   function close() {
     void invoke("close_squad_overlay");
   }
@@ -58,12 +69,10 @@ export default function SquadOverlayPage() {
   return (
     <div
       className={cn(
-        "flex h-screen w-screen flex-col text-nexus-accent",
-        // Inherited by everything below: the only thing standing between light
-        // blue text and a bright planet. Two layers, because one is not enough
-        // over a lit surface — a tight shadow for the edge of each glyph, and a
-        // wider halo that darkens the pixels around it.
-        "[text-shadow:0_1px_2px_rgb(0_0_0/0.95),0_0_8px_rgb(0_0_0/0.75)]",
+        "flex h-screen w-screen flex-col overflow-hidden text-nexus-accent",
+        // See-through, this is a shadow behind every glyph; opaque, it is the
+        // same panel the other two overlays wear.
+        overlaySkin(opaque),
       )}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
@@ -82,6 +91,12 @@ export default function SquadOverlayPage() {
         </p>
 
         {squad ? <CodeButton code={squad.code} /> : null}
+
+        <OverlayOpacityButton
+          label="squad"
+          opaque={opaque}
+          className="text-nexus-accent/70 hover:bg-nexus-abyss/60 hover:text-nexus-bright"
+        />
 
         <IconButton label="Fermer" onClick={close}>
           <X className="size-4" />

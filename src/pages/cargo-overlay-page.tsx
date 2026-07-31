@@ -26,6 +26,9 @@ import {
 } from "@/components/cargo/sheet-view";
 import { Button, Select } from "@/components/ui";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { overlaySkin } from "@/lib/overlay-opacity";
 import { cn } from "@/lib/utils";
 
 /**
@@ -48,6 +51,10 @@ export default function CargoOverlayPage() {
 
   useTransparentWindow();
 
+  // Its own mode, flipped by the header button — and by the global shortcut,
+  // which takes all three overlays to the same one.
+  const opaque = useOverlayOpaque("cargo");
+
   function close() {
     void invoke("close_cargo_overlay");
   }
@@ -61,7 +68,10 @@ export default function CargoOverlayPage() {
 
   return (
     <div
-      className="flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl"
+      className={cn(
+        "flex h-screen w-screen flex-col overflow-hidden",
+        overlaySkin(opaque),
+      )}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
         event.preventDefault();
@@ -75,7 +85,12 @@ export default function CargoOverlayPage() {
       {/* No decorations, so the header doubles as the title bar. */}
       <div
         data-tauri-drag-region
-        className="flex shrink-0 cursor-grab items-center gap-2 border-b border-white/10 px-3 py-2"
+        className={cn(
+          "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
+          // The rule separates the header from the body of a panel; with no
+          // panel it is just a line drawn across the game.
+          opaque ? "border-b border-white/10" : null,
+        )}
       >
         <Boxes className="pointer-events-none size-4 text-slate-400" />
         <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
@@ -101,6 +116,8 @@ export default function CargoOverlayPage() {
             <Pencil className="size-4" />
           </button>
         ) : null}
+
+        <OverlayOpacityButton label="cargo" opaque={opaque} />
 
         <button
           type="button"
@@ -183,8 +200,8 @@ export default function CargoOverlayPage() {
                 {adding ? (
                   <>
                     <p className="text-[11px] text-nexus-accent/50">
-                      Sans mission indiquée, la ligne rejoint «{" "}
-                      {currentMission} ».
+                      Sans mission indiquée, la ligne rejoint « {currentMission}{" "}
+                      ».
                     </p>
                     <CargoLineForm
                       compact
@@ -208,9 +225,13 @@ export default function CargoOverlayPage() {
                   lines={sheet.lines}
                   compact
                   missionPlaceholder={currentMission}
-                  onRemoveLine={editing ? (id) => void removeLine(id) : undefined}
+                  onRemoveLine={
+                    editing ? (id) => void removeLine(id) : undefined
+                  }
                   onRemoveMission={
-                    editing ? (mission) => void removeMission(mission) : undefined
+                    editing
+                      ? (mission) => void removeMission(mission)
+                      : undefined
                   }
                   onRenameMission={
                     editing

@@ -1,9 +1,19 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
-import { getNotificationCorner, getShortcuts } from "@/lib/settings";
+import {
+  getNotificationCorner,
+  getOverlayOpacity,
+  getShortcuts,
+  setOverlayOpacity,
+} from "@/lib/settings";
 import { applyNotificationCorner } from "@/lib/notifications";
 import { applyShortcuts } from "@/lib/shortcuts";
+import {
+  applyOverlayOpacity,
+  OVERLAY_OPACITY_EVENT,
+  type OverlayOpacity,
+} from "@/lib/overlay-opacity";
 import {
   Boxes,
   Container,
@@ -84,6 +94,29 @@ export default function AppLayout() {
       .catch((error) =>
         console.error("cannot apply the notification corner", error),
       );
+  }, []);
+
+  // And for the overlay opacity, with a second half the other two do not need:
+  // it is flipped from the overlays themselves and by a global shortcut, so
+  // this window also has to write down what it becomes. Rust holds what is in
+  // force; the store is only its memory across restarts, and this window is the
+  // one that owns it.
+  useEffect(() => {
+    void getOverlayOpacity()
+      .then(applyOverlayOpacity)
+      .catch((error) =>
+        console.error("cannot apply the overlay opacity", error),
+      );
+
+    const pending = listen<OverlayOpacity>(OVERLAY_OPACITY_EVENT, (event) => {
+      void setOverlayOpacity(event.payload).catch((error) =>
+        console.error("cannot save the overlay opacity", error),
+      );
+    });
+
+    return () => {
+      void pending.then((unlisten) => unlisten());
+    };
   }, []);
 
   return (
