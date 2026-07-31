@@ -331,6 +331,13 @@ export type SquadMember = {
   /** «actif» when true, «éliminé» when false. */
   alive: boolean;
   position: string;
+  /**
+   * Commands the squad alongside the leader, with exactly the same powers —
+   * appointing further lieutenants and handing the squad over included.
+   *
+   * Absent on documents written before the rank existed, which reads as «no».
+   */
+  lieutenant: boolean;
 };
 
 export type Squad = {
@@ -345,9 +352,14 @@ export type Squad = {
   updatedAt: string;
 };
 
-/** What a member may change about themselves, and a leader about anyone. */
+/**
+ * What a member may change about themselves, and what commanding the squad lets
+ * you change about anyone. `lieutenant` is never self-reported: the API refuses
+ * it from anyone who does not command.
+ */
 export type SquadMemberPatch = {
   ready?: boolean;
   alive?: boolean;
   position?: string;
+  lieutenant?: boolean;
 };

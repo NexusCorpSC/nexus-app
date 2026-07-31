@@ -66,7 +66,21 @@ export async function removeSquadMember(userId: string): Promise<Squad> {
   return squad;
 }
 
-/** The leader alone; everyone else reads it. */
+/**
+ * Hands the squad to another member. Open to lieutenants as well as the leader,
+ * which is what «the same powers» means — and it does mean a lieutenant can take
+ * the squad from whoever appointed them.
+ */
+export async function transferSquadLeadership(userId: string): Promise<Squad> {
+  const { squad } = await apiRequest<{ squad: Squad }>("/api/squads/leader", {
+    method: "PATCH",
+    body: { userId },
+  });
+
+  return squad;
+}
+
+/** Whoever commands the squad writes it; everyone else reads it. */
 export async function setSquadAnnouncements(
   announcements: string,
 ): Promise<Squad> {
