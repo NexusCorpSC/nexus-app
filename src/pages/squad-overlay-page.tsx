@@ -286,7 +286,9 @@ function SquadDashboard({
                 ? () => onRemove(member.userId)
                 : undefined
             }
-            // The rank is never self-reported, and the leader outranks it.
+            // The rank is never self-reported, and the leader outranks it. Own
+            // row included: whoever commands may resign the rank, or take the
+            // squad — the same act on themselves as on anyone else.
             onRank={
               commands && member.userId !== squad.leaderId
                 ? (lieutenant) => onPatch(member.userId, { lieutenant })
@@ -337,9 +339,14 @@ function MemberRow({
   isSelf: boolean;
   isLeader: boolean;
   editable: boolean;
-  /** Absent unless the reader commands, and never on the leader's row. */
+  /** Absent unless the reader commands, on their own row, or on the leader's. */
   onRemove?: () => void;
-  /** Same, and it is the only control a member cannot use on themselves. */
+  /**
+   * Absent unless the reader commands, and on the leader's row — the rank is
+   * beneath them. Present on the reader's own row, though: a lieutenant may
+   * resign, and appoint themselves leader, exactly as they may do either to
+   * anybody else.
+   */
   onRank?: (lieutenant: boolean) => void;
   onMakeLeader?: () => void;
   onPatch: (patch: SquadMemberPatch) => void;
@@ -393,7 +400,9 @@ function MemberRow({
 
         {onRank ? (
           <IconToggle
-            on={member.lieutenant}
+            // Coerced, unlike everywhere else this field is read: `aria-pressed`
+            // is «false» or nothing at all, and nothing is not what it means.
+            on={member.lieutenant ?? false}
             title={
               member.lieutenant
                 ? `Retirer son grade à ${member.name}`

@@ -335,9 +335,11 @@ export type SquadMember = {
    * Commands the squad alongside the leader, with exactly the same powers —
    * appointing further lieutenants and handing the squad over included.
    *
-   * Absent on documents written before the rank existed, which reads as «no».
+   * Optional because the wire really can omit it: a squad created before the
+   * rank existed carries no such field, and nothing between here and Mongo adds
+   * one. Absent reads as «no», which is what every use of it below assumes.
    */
-  lieutenant: boolean;
+  lieutenant?: boolean;
 };
 
 export type Squad = {
