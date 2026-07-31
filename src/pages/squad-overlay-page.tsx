@@ -7,6 +7,7 @@ import {
   Loader2,
   LogOut,
   Plus,
+  Shield,
   Skull,
   UserMinus,
   Users,
@@ -50,8 +51,16 @@ const COMMIT_DELAY = 600;
 
 export default function SquadOverlayPage() {
   const { user, loading: session } = useAuth();
-  const { state, create, join, leave, patchMember, removeMember, announce } =
-    useSquad(Boolean(user));
+  const {
+    state,
+    create,
+    join,
+    leave,
+    patchMember,
+    removeMember,
+    makeLeader,
+    announce,
+  } = useSquad(Boolean(user));
 
   useTransparentWindow();
 
@@ -119,6 +128,7 @@ export default function SquadOverlayPage() {
             userId={user.id}
             onPatch={(userId, patch) => patchMember.mutate({ userId, patch })}
             onRemove={(userId) => removeMember.mutate(userId)}
+            onMakeLeader={(userId) => makeLeader.mutate(userId)}
             onAnnounce={(announcements) => announce.mutate(announcements)}
             onLeave={() => leave.mutate()}
             leaving={leave.isPending}
@@ -216,6 +226,7 @@ function SquadDashboard({
   userId,
   onPatch,
   onRemove,
+  onMakeLeader,
   onAnnounce,
   onLeave,
   leaving,
@@ -224,11 +235,24 @@ function SquadDashboard({
   userId: string;
   onPatch: (userId: string, patch: SquadMemberPatch) => void;
   onRemove: (userId: string) => void;
+  onMakeLeader: (userId: string) => void;
   onAnnounce: (announcements: string) => void;
   onLeave: () => void;
   leaving: boolean;
 }) {
-  const isLeader = squad.leaderId === userId;
+  /*
+   * The one question the whole screen turns on, and the same one the API asks:
+   * the leader and the lieutenants they appointed have identical powers, so
+   * nothing below tells them apart.
+   *
+   * Disabling a button is a courtesy, not a rule — every one of these acts is
+   * refused server-side too.
+   */
+  const commands =
+    squad.leaderId === userId ||
+    squad.members.some(
+      (member) => member.userId === userId && member.lieutenant,
+    );
 
   // Longest-standing first, which is also the order of succession.
   const members = [...squad.members].sort((a, b) =>
@@ -239,7 +263,7 @@ function SquadDashboard({
     <>
       <Announcements
         value={squad.announcements}
-        editable={isLeader}
+        editable={commands}
         onCommit={onAnnounce}
       />
 
@@ -250,12 +274,29 @@ function SquadDashboard({
             member={member}
             isSelf={member.userId === userId}
             isLeader={squad.leaderId === member.userId}
-            // A member writes to their own row; the leader writes to anyone's.
-            editable={member.userId === userId || isLeader}
-            // The leader puts people out; leaving is everyone's own business.
+            // A member writes to their own row; whoever commands writes to
+            // anyone's.
+            editable={member.userId === userId || commands}
+            // Nobody is put out of their own squad, and the leader is never
+            // removed — they leave, or hand over first.
             onRemove={
-              isLeader && member.userId !== userId
+              commands &&
+              member.userId !== userId &&
+              member.userId !== squad.leaderId
                 ? () => onRemove(member.userId)
+                : undefined
+            }
+            // The rank is never self-reported, and the leader outranks it. Own
+            // row included: whoever commands may resign the rank, or take the
+            // squad — the same act on themselves as on anyone else.
+            onRank={
+              commands && member.userId !== squad.leaderId
+                ? (lieutenant) => onPatch(member.userId, { lieutenant })
+                : undefined
+            }
+            onMakeLeader={
+              commands && member.userId !== squad.leaderId
+                ? () => onMakeLeader(member.userId)
                 : undefined
             }
             onPatch={(patch) => onPatch(member.userId, patch)}
@@ -290,14 +331,24 @@ function MemberRow({
   isLeader,
   editable,
   onRemove,
+  onRank,
+  onMakeLeader,
   onPatch,
 }: {
   member: SquadMember;
   isSelf: boolean;
   isLeader: boolean;
   editable: boolean;
-  /** Absent for everyone but the leader, and for the leader's own row. */
+  /** Absent unless the reader commands, on their own row, or on the leader's. */
   onRemove?: () => void;
+  /**
+   * Absent unless the reader commands, and on the leader's row — the rank is
+   * beneath them. Present on the reader's own row, though: a lieutenant may
+   * resign, and appoint themselves leader, exactly as they may do either to
+   * anybody else.
+   */
+  onRank?: (lieutenant: boolean) => void;
+  onMakeLeader?: () => void;
   onPatch: (patch: SquadMemberPatch) => void;
 }) {
   return (
@@ -307,6 +358,11 @@ function MemberRow({
           <span title="Chef de l'escouade" className="shrink-0">
             <Crown className="size-3 text-amber-300" />
             <span className="sr-only">Chef de l'escouade</span>
+          </span>
+        ) : member.lieutenant ? (
+          <span title="Lieutenant" className="shrink-0">
+            <Shield className="size-3 text-sky-300" />
+            <span className="sr-only">Lieutenant</span>
           </span>
         ) : null}
 
@@ -342,8 +398,43 @@ function MemberRow({
           offIcon={<Skull className="size-3" />}
         />
 
+        {onRank ? (
+          <IconToggle
+            // Coerced, unlike everywhere else this field is read: `aria-pressed`
+            // is «false» or nothing at all, and nothing is not what it means.
+            on={member.lieutenant ?? false}
+            title={
+              member.lieutenant
+                ? `Retirer son grade à ${member.name}`
+                : `Nommer ${member.name} lieutenant`
+            }
+            onClick={() => onRank(!member.lieutenant)}
+            onTone="text-sky-300"
+          >
+            <Shield className="size-3" />
+          </IconToggle>
+        ) : null}
+
+        {onMakeLeader ? (
+          <Confirm
+            title={`Nommer ${member.name} chef de l'escouade`}
+            confirmLabel="Nommer"
+            onConfirm={onMakeLeader}
+            tone="command"
+          >
+            <Crown className="size-3" />
+          </Confirm>
+        ) : null}
+
         {onRemove ? (
-          <RemoveMember name={member.name} onConfirm={onRemove} />
+          <Confirm
+            title={`Retirer ${member.name} de l'escouade`}
+            confirmLabel="Retirer"
+            onConfirm={onRemove}
+            tone="danger"
+          >
+            <UserMinus className="size-3" />
+          </Confirm>
         ) : null}
       </div>
 
@@ -357,36 +448,55 @@ function MemberRow({
 }
 
 /**
- * Putting someone out of the squad, asked twice.
+ * An act of command, asked twice.
  *
- * Once would be wrong here: the button sits a few pixels from two toggles that
- * are pressed constantly, over a game, often in a hurry — and a misfire costs
- * the other player the code and a rejoin, mid-drop. The second click is the same
+ * Once would be wrong for either of the two that use this: both sit a few pixels
+ * from two toggles that are pressed constantly, over a game, often in a hurry.
+ * A misfired removal costs the other player the code and a rejoin mid-drop; a
+ * misfired appointment hands them the squad. The second click is the same
  * bargain `CloseSheetButton` strikes on the cargo sheet.
+ *
+ * Collapsed to an icon until it is armed, because the row has no space for two
+ * spelled-out verbs — and the `title` carries the whole sentence for anyone who
+ * hovers or reads it aloud.
  */
-function RemoveMember({
-  name,
+function Confirm({
+  title,
+  confirmLabel,
   onConfirm,
+  tone,
+  children,
 }: {
-  name: string;
+  title: string;
+  confirmLabel: string;
   onConfirm: () => void;
+  tone: "danger" | "command";
+  children: React.ReactNode;
 }) {
   const [asking, setAsking] = useState(false);
+
+  const armed =
+    tone === "danger"
+      ? "text-red-300 hover:bg-red-500/20"
+      : "text-amber-300 hover:bg-amber-500/20";
 
   if (!asking) {
     return (
       <button
         type="button"
-        title={`Retirer ${name} de l'escouade`}
+        title={title}
         onClick={() => setAsking(true)}
         className={cn(
           "flex shrink-0 items-center rounded px-1.5 py-0.5",
           SURFACE,
-          "text-nexus-accent/60 transition hover:bg-red-500/20 hover:text-red-300",
+          "text-nexus-accent/60 transition",
+          tone === "danger"
+            ? "hover:bg-red-500/20 hover:text-red-300"
+            : "hover:bg-amber-500/20 hover:text-amber-300",
         )}
       >
-        <span className="sr-only">Retirer {name} de l'escouade</span>
-        <UserMinus className="size-3" />
+        <span className="sr-only">{title}</span>
+        {children}
       </button>
     );
   }
@@ -395,7 +505,7 @@ function RemoveMember({
     <span className="flex shrink-0 items-center gap-1">
       <button
         type="button"
-        title={`Retirer ${name} de l'escouade`}
+        title={title}
         onClick={() => {
           setAsking(false);
           onConfirm();
@@ -403,11 +513,12 @@ function RemoveMember({
         className={cn(
           "flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px]",
           SURFACE,
-          "text-red-300 transition hover:bg-red-500/20",
+          "transition",
+          armed,
         )}
       >
         <Check className="size-3" />
-        Retirer
+        {confirmLabel}
       </button>
 
       <button
@@ -424,6 +535,44 @@ function RemoveMember({
         <X className="size-3" />
       </button>
     </span>
+  );
+}
+
+/**
+ * A rank, worn and taken off with one click.
+ *
+ * No confirmation, unlike the two above: appointing a lieutenant is undone by
+ * pressing the same button again, and the state is written on the row for
+ * everyone to see.
+ */
+function IconToggle({
+  on,
+  title,
+  onClick,
+  onTone,
+  children,
+}: {
+  on: boolean;
+  title: string;
+  onClick: () => void;
+  onTone: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      aria-pressed={on}
+      onClick={onClick}
+      className={cn(
+        "flex shrink-0 items-center rounded px-1.5 py-0.5 transition",
+        SURFACE,
+        on ? onTone : "text-nexus-accent/40 hover:text-nexus-accent/80",
+      )}
+    >
+      <span className="sr-only">{title}</span>
+      {children}
+    </button>
   );
 }
 

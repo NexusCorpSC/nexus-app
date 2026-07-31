@@ -331,6 +331,15 @@ export type SquadMember = {
   /** «actif» when true, «éliminé» when false. */
   alive: boolean;
   position: string;
+  /**
+   * Commands the squad alongside the leader, with exactly the same powers —
+   * appointing further lieutenants and handing the squad over included.
+   *
+   * Optional because the wire really can omit it: a squad created before the
+   * rank existed carries no such field, and nothing between here and Mongo adds
+   * one. Absent reads as «no», which is what every use of it below assumes.
+   */
+  lieutenant?: boolean;
 };
 
 export type Squad = {
@@ -345,9 +354,14 @@ export type Squad = {
   updatedAt: string;
 };
 
-/** What a member may change about themselves, and a leader about anyone. */
+/**
+ * What a member may change about themselves, and what commanding the squad lets
+ * you change about anyone. `lieutenant` is never self-reported: the API refuses
+ * it from anyone who does not command.
+ */
 export type SquadMemberPatch = {
   ready?: boolean;
   alive?: boolean;
   position?: string;
+  lieutenant?: boolean;
 };

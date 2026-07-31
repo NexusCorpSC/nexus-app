@@ -14,6 +14,7 @@ import {
   leaveSquad,
   removeSquadMember,
   setSquadAnnouncements,
+  transferSquadLeadership,
   updateSquadMember,
 } from "@/lib/api/squads";
 import type { Squad, SquadMemberPatch } from "@/types/nexus";
@@ -175,6 +176,23 @@ export function useSquad(enabled: boolean) {
     }),
   );
 
+  const makeLeader = useSquadMutation(
+    (userId: string) => transferSquadLeadership(userId),
+    // Guessed the way the API does it, so the two ranks change together on
+    // screen: the squad has one leader, and the outgoing one keeps a say.
+    (squad, userId) => ({
+      ...squad,
+      leaderId: userId,
+      members: squad.members.map((member) => {
+        if (member.userId === userId) return { ...member, lieutenant: false };
+        if (member.userId === squad.leaderId) {
+          return { ...member, lieutenant: true };
+        }
+        return member;
+      }),
+    }),
+  );
+
   const announce = useSquadMutation(
     (announcements: string) => setSquadAnnouncements(announcements),
     (squad, announcements) => ({ ...squad, announcements }),
@@ -192,6 +210,7 @@ export function useSquad(enabled: boolean) {
     leave,
     patchMember,
     removeMember,
+    makeLeader,
     announce,
   };
 }
