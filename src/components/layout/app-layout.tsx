@@ -102,16 +102,35 @@ export default function AppLayout() {
   // force; the store is only its memory across restarts, and this window is the
   // one that owns it.
   useEffect(() => {
+    // What the store already holds. The handover below makes Rust broadcast it
+    // straight back, and every later event that changes nothing would be
+    // written again — the store saves itself on each `set`, so an unchanged
+    // value must not reach it.
+    let saved: string | null = null;
+
     void getOverlayOpacity()
-      .then(applyOverlayOpacity)
+      .then((opacity) => {
+        saved = JSON.stringify(opacity);
+        return applyOverlayOpacity(opacity);
+      })
       .catch((error) =>
         console.error("cannot apply the overlay opacity", error),
       );
 
     const pending = listen<OverlayOpacity>(OVERLAY_OPACITY_EVENT, (event) => {
-      void setOverlayOpacity(event.payload).catch((error) =>
-        console.error("cannot save the overlay opacity", error),
-      );
+      const announced = JSON.stringify(event.payload);
+      if (announced === saved) return;
+
+      // Recorded before the write rather than after: two events in a row must
+      // not both get through while the first is still being written.
+      saved = announced;
+
+      void setOverlayOpacity(event.payload).catch((error) => {
+        console.error("cannot save the overlay opacity", error);
+        // Nothing was written, so nothing is known to be on disk: let the next
+        // event try again rather than trusting a save that did not happen.
+        if (saved === announced) saved = null;
+      });
     });
 
     return () => {

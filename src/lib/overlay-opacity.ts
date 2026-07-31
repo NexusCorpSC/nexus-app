@@ -32,10 +32,6 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   squad: false,
 };
 
-export function isOverlayLabel(label: string): label is OverlayLabel {
-  return label in DEFAULT_OVERLAY_OPACITY;
-}
-
 /** Flips one overlay. Called by the button that overlay carries. */
 export function toggleOverlayOpacity(label: OverlayLabel): Promise<void> {
   return invoke("toggle_overlay_opacity", { label });
