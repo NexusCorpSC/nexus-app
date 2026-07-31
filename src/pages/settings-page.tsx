@@ -326,6 +326,19 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Opacité des superpositions">
+            <ShortcutInput
+              value={shortcuts.opacity}
+              onChange={(opacity) =>
+                setLocalShortcuts((current) => ({ ...current, opacity }))
+              }
+            />
+            <span className="text-xs text-nexus-accent/50">
+              Bascule les trois superpositions entre leur panneau et le jeu vu
+              au travers. Chacune porte aussi le bouton.
+            </span>
+          </Field>
+
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm">
               Appliquer

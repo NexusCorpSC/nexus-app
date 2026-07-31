@@ -7,6 +7,10 @@ import { NoteEditor } from "@/components/note-editor";
 import { ErrorState, LoadingState } from "@/components/ui";
 import { noteQueryKey, readNote } from "@/lib/notes";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { overlaySkin } from "@/lib/overlay-opacity";
+import { cn } from "@/lib/utils";
 
 /**
  * The scratch pad as a standalone always-on-top window, so notes stay readable
@@ -19,6 +23,10 @@ export default function NotesOverlayPage() {
   const queryClient = useQueryClient();
 
   useTransparentWindow();
+
+  // Its own mode, flipped by the header button — and by the global shortcut,
+  // which takes all three overlays to the same one.
+  const opaque = useOverlayOpaque("notes");
 
   const queryKey = noteQueryKey(signedIn);
 
@@ -50,7 +58,10 @@ export default function NotesOverlayPage() {
 
   return (
     <div
-      className="flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl"
+      className={cn(
+        "flex h-screen w-screen flex-col overflow-hidden",
+        overlaySkin(opaque),
+      )}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.preventDefault();
@@ -61,7 +72,12 @@ export default function NotesOverlayPage() {
       {/* The window has no decorations, so the header doubles as its title bar. */}
       <div
         data-tauri-drag-region
-        className="flex shrink-0 cursor-grab items-center gap-2 border-b border-white/10 px-3 py-2"
+        className={cn(
+          "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
+          // The rule separates the header from the body of a panel; with no
+          // panel it is just a line drawn across the game.
+          opaque ? "border-b border-white/10" : null,
+        )}
       >
         <NotebookPen className="pointer-events-none size-4 text-slate-400" />
         <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
@@ -72,6 +88,8 @@ export default function NotesOverlayPage() {
             local
           </span>
         )}
+        <OverlayOpacityButton label="notes" opaque={opaque} />
+
         <button
           type="button"
           onClick={close}

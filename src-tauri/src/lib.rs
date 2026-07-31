@@ -41,6 +41,80 @@ const NAVIGATE_EVENT: &str = "main://navigate";
 /// the webview.
 const SQUAD_VISIBILITY_EVENT: &str = "squad://visibility";
 
+/// Carries the three overlays' opacity to every window at once.
+///
+/// Broadcast rather than sent to named windows: each overlay picks its own field
+/// out of it, and the main window listens too because it is the one that writes
+/// the choice to the settings store. The search palette and the capture
+/// selection ignore it; both are momentary, and neither has a panel to drop.
+const OVERLAY_OPACITY_EVENT: &str = "overlay://opacity";
+
+/// Whether each overlay draws its background.
+///
+/// Per window rather than one flag for the three: the cargo sheet is dense text
+/// that wants a surface behind it, while the squad list was built to be read
+/// through a cockpit. One shared flag could only have honoured one of the two
+/// defaults.
+///
+/// Held here rather than in the windows because the shortcut has to reach all
+/// three at once, including the ones nobody has opened yet — a hidden window
+/// still has to come back up in the mode that was chosen for it.
+#[derive(Clone, Copy, Serialize, Deserialize)]
+struct OverlayOpacity {
+    notes: bool,
+    cargo: bool,
+    squad: bool,
+}
+
+impl Default for OverlayOpacity {
+    fn default() -> Self {
+        // What each window has always looked like, and what it opens on until
+        // the main window hands over the stored choice.
+        Self {
+            notes: true,
+            cargo: true,
+            squad: false,
+        }
+    }
+}
+
+impl OverlayOpacity {
+    fn get(&self, label: &str) -> Option<bool> {
+        match label {
+            NOTES_WINDOW => Some(self.notes),
+            CARGO_WINDOW => Some(self.cargo),
+            SQUAD_WINDOW => Some(self.squad),
+            _ => None,
+        }
+    }
+
+    fn flip(&mut self, label: &str) -> Result<(), String> {
+        let flag = match label {
+            NOTES_WINDOW => &mut self.notes,
+            CARGO_WINDOW => &mut self.cargo,
+            SQUAD_WINDOW => &mut self.squad,
+            other => return Err(format!("{other} is not an overlay")),
+        };
+
+        *flag = !*flag;
+        Ok(())
+    }
+
+    fn any_opaque(&self) -> bool {
+        self.notes || self.cargo || self.squad
+    }
+
+    fn set_all(&mut self, opaque: bool) {
+        self.notes = opaque;
+        self.cargo = opaque;
+        self.squad = opaque;
+    }
+}
+
+/// The live opacity of the three overlays.
+#[derive(Default)]
+struct OverlayOpacityState(Mutex<OverlayOpacity>);
+
 /// Frozen monitor snapshot awaiting a selection: filled when the capture
 /// shortcut fires, taken when the user releases the mouse.
 #[derive(Default)]
@@ -54,6 +128,7 @@ pub(crate) enum Action {
     Notes,
     Cargo,
     Squad,
+    Opacity,
 }
 
 impl Action {
@@ -66,6 +141,7 @@ impl Action {
             Action::Notes => "notes",
             Action::Cargo => "cargo",
             Action::Squad => "squad",
+            Action::Opacity => "opacity",
         }
     }
 }
@@ -105,6 +181,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Notes => toggle_notes_overlay(app),
         Action::Cargo => toggle_overlay(app, CARGO_WINDOW),
         Action::Squad => toggle_squad(app),
+        Action::Opacity => flip_all_overlay_opacity(app),
     };
 
     if let Err(error) = outcome {
@@ -139,7 +216,7 @@ impl ShortcutSupport {
     }
 }
 
-/// The five combinations, in the format the `global-shortcut` plugin parses.
+/// The six combinations, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
     search: String,
@@ -147,6 +224,7 @@ struct ShortcutSettings {
     notes: String,
     cargo: String,
     squad: String,
+    opacity: String,
 }
 
 impl Default for ShortcutSettings {
@@ -157,6 +235,7 @@ impl Default for ShortcutSettings {
             notes: "Ctrl+Shift+KeyN".to_string(),
             cargo: "Ctrl+Shift+KeyG".to_string(),
             squad: "Ctrl+Shift+KeyE".to_string(),
+            opacity: "Ctrl+Shift+KeyO".to_string(),
         }
     }
 }
@@ -196,6 +275,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Notes, &requested.notes),
         (Action::Cargo, &requested.cargo),
         (Action::Squad, &requested.squad),
+        (Action::Opacity, &requested.opacity),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -384,6 +464,49 @@ fn toggle_squad(app: &AppHandle) -> Result<(), String> {
     announce_squad_visibility(app)
 }
 
+/// Takes every overlay to the same mode: see-through if any of them is still
+/// showing a panel, opaque otherwise.
+///
+/// «Toggle all» has to mean something when the three disagree, which they
+/// normally do — the squad list opens see-through and the other two do not. One
+/// press clears the cockpit; the next brings the panels back.
+fn flip_all_overlay_opacity(app: &AppHandle) -> Result<(), String> {
+    let state = app.state::<OverlayOpacityState>();
+    let mut opacity = state.0.lock().map_err(|e| e.to_string())?;
+
+    let opaque = !opacity.any_opaque();
+    opacity.set_all(opaque);
+
+    let announced = *opacity;
+    // Released before the event goes out: a listener that calls back into this
+    // state would otherwise deadlock on a lock we are still holding.
+    drop(opacity);
+
+    announce_overlay_opacity(app, announced)
+}
+
+/// Flips one overlay, leaving the other two as they are.
+fn flip_overlay_opacity(app: &AppHandle, label: &str) -> Result<(), String> {
+    let state = app.state::<OverlayOpacityState>();
+    let mut opacity = state.0.lock().map_err(|e| e.to_string())?;
+
+    opacity.flip(label)?;
+
+    let announced = *opacity;
+    drop(opacity);
+
+    announce_overlay_opacity(app, announced)
+}
+
+/// Tells every window what the overlays now look like.
+///
+/// Broadcast: the three overlays repaint, and the main window writes the choice
+/// to the store — it owns the settings file, as it does for the shortcuts.
+fn announce_overlay_opacity(app: &AppHandle, opacity: OverlayOpacity) -> Result<(), String> {
+    app.emit(OVERLAY_OPACITY_EVENT, opacity)
+        .map_err(|e| e.to_string())
+}
+
 fn announce_squad_visibility(app: &AppHandle) -> Result<(), String> {
     let visible = window(app, SQUAD_WINDOW)?
         .is_visible()
@@ -493,6 +616,42 @@ fn is_squad_overlay_visible(app: AppHandle) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
+/// Flips one overlay, named by its window label. Called by the button each of
+/// them carries.
+#[tauri::command]
+fn toggle_overlay_opacity(app: AppHandle, label: String) -> Result<(), String> {
+    flip_overlay_opacity(&app, &label)
+}
+
+/// Hands over the stored choice at startup, from the main window.
+///
+/// The same division as the shortcuts and the notification corner: this side
+/// holds what is in force, the frontend owns the store and says what was saved.
+#[tauri::command]
+fn set_overlay_opacity(app: AppHandle, opacity: OverlayOpacity) -> Result<(), String> {
+    *app.state::<OverlayOpacityState>()
+        .0
+        .lock()
+        .map_err(|e| e.to_string())? = opacity;
+
+    announce_overlay_opacity(&app, opacity)
+}
+
+/// Whether the window asking is drawing its panel.
+///
+/// Asked by each overlay as it mounts: they are created hidden at startup, so
+/// their React trees run long before anyone opens them, and the event alone
+/// would leave them showing the default until the first flip.
+#[tauri::command]
+fn is_overlay_opaque(app: AppHandle, label: String) -> Result<bool, String> {
+    app.state::<OverlayOpacityState>()
+        .0
+        .lock()
+        .map_err(|e| e.to_string())?
+        .get(&label)
+        .ok_or_else(|| format!("{label} is not an overlay"))
+}
+
 /// Shows the cargo sheet overlay, or hides it. Called from the cargo screen
 /// and from the capture import, neither of which knows its current state.
 #[tauri::command]
@@ -584,6 +743,7 @@ pub fn run() {
         .manage(Shortcuts::default())
         .manage(ShortcutSupport::default())
         .manage(notifications::Notifications::default())
+        .manage(OverlayOpacityState::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -594,6 +754,9 @@ pub fn run() {
             close_squad_overlay,
             toggle_squad_overlay,
             is_squad_overlay_visible,
+            toggle_overlay_opacity,
+            set_overlay_opacity,
+            is_overlay_opaque,
             open_main_route,
             cancel_capture,
             recognize_selection,
