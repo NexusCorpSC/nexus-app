@@ -599,6 +599,79 @@ les installeurs attachés, le workflow publie le `latest.json` que liront les
 versions déjà installées — **tant que la release reste un brouillon, personne ne
 la voit passer**.
 
+### Microsoft Store
+
+Le Store se soumet un installeur **différent** de celui des releases GitHub, d'où
+un mode de build à part :
+
+```bash
+npm run tauri:build:store
+```
+
+Il compile le binaire sans l'empaqueter (`tauri build --no-bundle`), puis
+l'empaquette avec `src-tauri/tauri.microsoftstore.conf.json` par-dessus la
+configuration normale (`tauri bundle --config …`). Le fichier à téléverser est
+`src-tauri/target/release/bundle/nsis/Nexus App_<version>_x64-setup.exe`.
+
+Ce que change l'overlay, et pourquoi :
+
+| Réglage                             | Raison                                                        |
+| ----------------------------------- | ------------------------------------------------------------- |
+| `windows.webviewInstallMode.type: "offlineInstaller"` | exigence du Store : l'installeur embarque WebView2 au lieu de le télécharger |
+| `targets: ["nsis"]`                 | une soumission ne porte qu'un installeur ; NSIS est celui que l'application sait déjà relancer |
+
+L'installeur passe donc d'environ 5 Mo à ~140 Mo : c'est le runtime WebView2
+embarqué, et le workflow refuse un bundle trop léger — un repli silencieux sur le
+bootstrapper produirait un installeur parfaitement fonctionnel, que Partner
+Center rejetterait ensuite.
+
+Le MSI reste possible (`msiexec /quiet` au lieu de `/S`), mais rien ne l'exige
+ici et le choisir demanderait de redéclarer le paramètre silencieux.
+
+#### Ce que demande Partner Center
+
+- un **compte développeur** Microsoft, à titre individuel ou au nom d'une société ;
+- un produit créé depuis
+  [Apps and Games](https://partner.microsoft.com/en-us/dashboard/apps-and-games/overview)
+  en **« EXE or MSI app »**, avec un nom réservé ;
+- le **paramètre d'installation silencieuse**, à déclarer dans la soumission :
+  `/S` — en **majuscule**, c'est celui de NSIS. Sans lui la soumission est
+  refusée avec « Win32 products must install silently » ;
+- un installeur **signé** (Authenticode). C'est le seul prérequis que le dépôt ne
+  couvre pas encore : il demande un certificat, donc
+  `bundle.windows.certificateThumbprint` (ou `signCommand`) et un secret de plus.
+  À garder dans un overlay privé plutôt que dans `tauri.conf.json`, pour la même
+  raison que `updater.conf.json` : la CI des pull requests n'a pas de certificat.
+
+Les logos attendus par le Store (`Square*Logo.png`, `StoreLogo.png`) sont déjà
+dans `src-tauri/icons`, écrits par `npm run tauri icon`.
+
+#### Éditeur
+
+`bundle.publisher` vaut `"Nexus Corp"`, et pas seulement pour l'affichage : le
+Store refuse un éditeur **identique au nom du produit**. Sans ce réglage, Tauri
+déduit l'éditeur du deuxième segment de l'identifiant (`services.nexus.app`,
+donc « nexus »), ce qui passerait la règle mais n'est le nom de personne.
+
+#### Mises à jour
+
+Elles restent celles de l'application (voir « Mises à jour ») : pour un produit
+EXE/MSI, le Store distribue l'installeur, il ne met rien à jour de lui-même. Une
+copie installée depuis le Store se mettra donc à jour avec l'installeur **en
+ligne** attaché à la release GitHub — sans conséquence, WebView2 étant déjà là.
+
+#### Ce que fait la CI
+
+`.github/workflows/microsoft-store.yml` rejoue ce build sur les tags `v*` et à la
+demande, et publie l'installeur en artefact `nexus-app-microsoft-store` (90
+jours) — il n'est pas attaché à la release : deux installeurs de même nom et de
+contenus différents au même endroit seraient une façon de servir le mauvais.
+
+Il tourne aussi sur les pull requests qui touchent le workflow ou l'overlay :
+rien d'autre ne construit cette variante, une erreur dedans ne se découvrirait
+donc qu'au moment du tag. Les autres pull requests gardent le seul build de
+`ci.yml`.
+
 ### Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés

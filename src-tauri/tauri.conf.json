@@ -138,6 +138,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "Nexus Corp",
     "category": "Utility",
     "shortDescription": "Nexus Tools on the desktop",
     "longDescription": "Desktop client for Nexus Tools - blueprints, missions, reputations, inventory and organizations for Star Citizen.",
