@@ -10,6 +10,14 @@ on:
   workflow_dispatch:
   push:
     tags: ["v*"]
+  # Nothing else builds this variant: without this trigger the overlay would
+  # first be exercised by a tag, which is the worst moment to learn it is
+  # wrong. Restricted to the two files that decide what it produces, so
+  # ordinary pull requests keep to the single Windows build of ci.yml.
+  pull_request:
+    paths:
+      - ".github/workflows/microsoft-store.yml"
+      - "src-tauri/tauri.microsoftstore.conf.json"
 
 permissions:
   contents: read

@@ -667,6 +667,11 @@ demande, et publie l'installeur en artefact `nexus-app-microsoft-store` (90
 jours) — il n'est pas attaché à la release : deux installeurs de même nom et de
 contenus différents au même endroit seraient une façon de servir le mauvais.
 
+Il tourne aussi sur les pull requests qui touchent le workflow ou l'overlay :
+rien d'autre ne construit cette variante, une erreur dedans ne se découvrirait
+donc qu'au moment du tag. Les autres pull requests gardent le seul build de
+`ci.yml`.
+
 ### Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés
