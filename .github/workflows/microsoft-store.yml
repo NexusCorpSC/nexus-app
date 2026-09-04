@@ -78,10 +78,12 @@ jobs:
             throw 'tauri bundle produced no NSIS installer.'
           }
 
+          # Compared in bytes, displayed in megabytes: rounding first would let
+          # 59.96 MB through as "60.0".
           $mb = [math]::Round($setup.Length / 1MB, 1)
           Write-Host "$($setup.Name) — $mb MB"
 
-          if ($mb -lt 60) {
+          if ($setup.Length -lt 60MB) {
             throw "$($setup.Name) is only $mb MB: the WebView2 offline installer is missing. Check bundle.windows.webviewInstallMode in src-tauri/tauri.microsoftstore.conf.json."
           }
 

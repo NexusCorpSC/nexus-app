@@ -617,7 +617,7 @@ Ce que change l'overlay, et pourquoi :
 
 | Réglage                             | Raison                                                        |
 | ----------------------------------- | ------------------------------------------------------------- |
-| `webviewInstallMode: offlineInstaller` | exigence du Store : l'installeur embarque WebView2 au lieu de le télécharger |
+| `windows.webviewInstallMode.type: "offlineInstaller"` | exigence du Store : l'installeur embarque WebView2 au lieu de le télécharger |
 | `targets: ["nsis"]`                 | une soumission ne porte qu'un installeur ; NSIS est celui que l'application sait déjà relancer |
 
 L'installeur passe donc d'environ 5 Mo à ~140 Mo : c'est le runtime WebView2
