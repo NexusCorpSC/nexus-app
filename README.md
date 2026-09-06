@@ -663,11 +663,26 @@ ligne** attaché à la release GitHub — sans conséquence, WebView2 étant dé
 #### Ce que fait la CI
 
 `.github/workflows/microsoft-store.yml` rejoue ce build sur les tags `v*` et à la
-demande, et publie l'installeur en artefact `nexus-app-microsoft-store` (90
-jours) — il n'est pas attaché à la release : deux installeurs de même nom et de
-contenus différents au même endroit seraient une façon de servir le mauvais.
+demande, et **attache l'installeur à la release du tag**, à côté de celui du
+build normal — mais pas sous le même nom :
 
-Il tourne aussi sur les pull requests qui touchent le workflow ou l'overlay :
+| Asset de la release                             | Contenu                                            |
+| ----------------------------------------------- | -------------------------------------------------- |
+| `Nexus.App_<version>_x64-setup.exe`             | l'installeur public, qui télécharge WebView2        |
+| `Nexus.App_<version>_x64-microsoft-store.exe`   | celui à soumettre à Partner Center, WebView2 embarqué |
+
+Le renommage n'est pas cosmétique. Le bundler donne le **même** nom aux deux, et
+`release.yml` annonce aux copies déjà installées le premier asset qui se termine
+par `-setup.exe` : sous son nom d'origine, celui du Store remplacerait l'autre
+purement et simplement, et à défaut enverrait 140 Mo de WebView2 embarqué à des
+gens qui l'ont déjà.
+
+Comme `release.yml`, le workflow exige que la release existe et le vérifie
+**avant** de compiler. L'installeur reste par ailleurs publié en artefact
+`nexus-app-microsoft-store` (90 jours) : c'est le seul moyen de le récupérer
+depuis une exécution qui n'a pas de release — pull request ou lancement manuel.
+
+Il tourne enfin sur les pull requests qui touchent le workflow ou l'overlay :
 rien d'autre ne construit cette variante, une erreur dedans ne se découvrirait
 donc qu'au moment du tag. Les autres pull requests gardent le seul build de
 `ci.yml`.
