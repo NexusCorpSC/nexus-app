@@ -1,11 +1,12 @@
 name: Microsoft Store
 
-# The installer submitted to the Store is not the one attached to a GitHub
+# The installer submitted to the Store is not the one users download from a
 # release: it embeds the WebView2 runtime, which the Store requires and which
 # the release installer downloads instead. Both are NSIS bundles written to
 # `bundle/nsis/` under the same file name, so building them in one run would
 # have the second silently overwrite the first — hence a workflow of its own,
-# from a clean checkout.
+# from a clean checkout, and a rename before the two sit side by side on the
+# release.
 on:
   workflow_dispatch:
   push:
@@ -19,16 +20,44 @@ on:
       - ".github/workflows/microsoft-store.yml"
       - "src-tauri/tauri.microsoftstore.conf.json"
 
+# To attach the installer to the release the tag points at.
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   store:
     name: Store installer
     runs-on: windows-latest
 
+    env:
+      TAG: ${{ github.ref_name }}
+
     steps:
       - uses: actions/checkout@v4
+
+      # Same rule as release.yml: the release is written by hand and must
+      # already exist. Checked before the build rather than next to the upload,
+      # so a missing release costs a re-run instead of ten minutes of
+      # compilation.
+      - name: Check the release exists
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `gh` exiting non-zero is the answer being looked for, not a failure
+          # to report, so read $LASTEXITCODE whichever way the shell is
+          # configured to treat native commands.
+          $exists = $false
+          try {
+            gh release view $env:TAG *> $null
+            $exists = $LASTEXITCODE -eq 0
+          } catch {
+            $exists = $false
+          }
+
+          if (-not $exists) {
+            throw "No release for $env:TAG. Create it (a draft is enough), then re-run this workflow."
+          }
 
       - uses: actions/setup-node@v4
         with:
@@ -87,10 +116,26 @@ jobs:
             throw "$($setup.Name) is only $mb MB: the WebView2 offline installer is missing. Check bundle.windows.webviewInstallMode in src-tauri/tauri.microsoftstore.conf.json."
           }
 
-      # Uploaded rather than attached to the release: this installer is meant
-      # for Partner Center only, and publishing it next to the release one —
-      # same name, different contents — would be a way to hand users the wrong
-      # file.
+      # Renamed before it goes anywhere. The bundler calls both variants
+      # `…_x64-setup.exe`, and this one is about to sit next to the release
+      # installer: under that name it would replace it outright, and short of
+      # that, `release.yml` advertises to every installed copy whichever asset
+      # ends in `-setup.exe` — which would push 140 MB of embedded WebView2 to
+      # people who already have it. The name also says what the file is, which
+      # is what someone picking one of the two assets needs.
+      - name: Name the installer for what it is
+        run: |
+          $setup = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*-setup.exe' -File |
+            Select-Object -First 1
+
+          $name = $setup.Name -replace '-setup\.exe$', '-microsoft-store.exe'
+          Rename-Item -Path $setup.FullName -NewName $name
+
+          Write-Host "renamed to $name"
+
+      # Kept even when the installer is attached to a release below: pull
+      # request and manual runs have no release to attach it to, and this is
+      # what makes them testable.
       - name: Upload the Store installer
         uses: actions/upload-artifact@v4
         with:
@@ -98,3 +143,29 @@ jobs:
           path: src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
           retention-days: 90
+
+      # Attached to the release the tag points at, so the file submitted to
+      # Partner Center is archived with the version it carries and can be
+      # fetched again — a submission that comes back rejected has to be resent
+      # from the same bits, not from a rebuild.
+      #
+      # `--clobber` so re-running after a failure replaces the asset instead of
+      # stopping on the one already uploaded.
+      - name: Attach the Store installer to the release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $store = Get-ChildItem -Path 'src-tauri/target/release/bundle/nsis/*-microsoft-store.exe' -File |
+            Select-Object -First 1
+
+          if (-not $store) {
+            throw 'no Store installer to attach.'
+          }
+
+          Write-Host "attaching $($store.Name) to $env:TAG"
+
+          # Through a variable of its own: the file name carries a space
+          # ("Nexus App_0.11.0_x64-microsoft-store.exe").
+          $path = $store.FullName
+          gh release upload $env:TAG $path --clobber
