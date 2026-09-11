@@ -602,6 +602,116 @@ export type SearchResponse = {
 
 export const ANNOUNCEMENTS_MAX_LENGTH = 2000;
 export const POSITION_MAX_LENGTH = 120;
+export const SQUAD_NAME_MAX_LENGTH = 60;
+export const ROLE_LABEL_MAX_LENGTH = 24;
+export const RAID_NAME_MAX_LENGTH = 60;
+
+/**
+ * The glyphs a role may wear, and nothing else — mirrored from the API, which
+ * refuses anything outside this list.
+ *
+ * Each name is mapped to a Lucide component in
+ * `src/components/squad/role-icon.tsx`; adding one means adding it there and in
+ * the API's own copy too.
+ *
+ * Grouped the way the picker shows them: whoever is choosing is looking for a
+ * shape, not reading an alphabet.
+ */
+export const ROLE_ICON_GROUPS = [
+  {
+    id: "combat",
+    label: "Combat",
+    icons: [
+      "crosshair",
+      "target",
+      "sword",
+      "shield",
+      "shield-half",
+      "bomb",
+      "flame",
+      "zap",
+      "skull",
+    ],
+  },
+  {
+    id: "vol",
+    label: "Vol",
+    icons: [
+      "navigation",
+      "rocket",
+      "plane",
+      "compass",
+      "anchor",
+      "fuel",
+      "gauge",
+      "orbit",
+    ],
+  },
+  {
+    id: "soutien",
+    label: "Soutien",
+    icons: [
+      "cross",
+      "heart-pulse",
+      "pill",
+      "life-buoy",
+      "battery",
+      "users",
+      "bell",
+      "radio",
+    ],
+  },
+  {
+    id: "metier",
+    label: "Métier",
+    icons: [
+      "wrench",
+      "hammer",
+      "cog",
+      "box",
+      "truck",
+      "hard-hat",
+      "coins",
+      "key",
+    ],
+  },
+  {
+    id: "reperes",
+    label: "Repères",
+    icons: [
+      "eye",
+      "search",
+      "map",
+      "map-pin",
+      "flag",
+      "star",
+      "hexagon",
+      "triangle",
+      "diamond",
+      "ghost",
+    ],
+  },
+] as const;
+
+export type SquadRoleIcon = (typeof ROLE_ICON_GROUPS)[number]["icons"][number];
+
+/**
+ * A job inside the squad, worn by a member and shown as an icon left of their
+ * name.
+ *
+ * Roles belong to the squad rather than to the player: everyone sees the same
+ * «Boarder» with the same glyph, which is the whole point of having them.
+ */
+export type SquadRole = {
+  id: string;
+  label: string;
+  icon: SquadRoleIcon;
+  /**
+   * One of the seven every squad starts with. Renameable and re-drawable, never
+   * removable — the API refuses it.
+   */
+  base: boolean;
+};
 
 export type SquadMember = {
   userId: string;
@@ -613,12 +723,19 @@ export type SquadMember = {
   alive: boolean;
   position: string;
   /**
+   * The id of one of the squad's `roles`, or `""` for none.
+   *
+   * Optional because the wire really can omit it: a squad created before roles
+   * existed carries no such field. Absent reads as «none», and an id that
+   * resolves to nothing is shown as «none» too rather than as a hole.
+   */
+  role?: string;
+  /**
    * Commands the squad alongside the leader, with exactly the same powers —
    * appointing further lieutenants and handing the squad over included.
    *
-   * Optional because the wire really can omit it: a squad created before the
-   * rank existed carries no such field, and nothing between here and Mongo adds
-   * one. Absent reads as «no», which is what every use of it below assumes.
+   * Optional for the same reason as `role`: a squad created before the rank
+   * existed carries no such field, and nothing between here and Mongo adds one.
    */
   lieutenant?: boolean;
 };
@@ -631,8 +748,42 @@ export type Squad = {
   leaderId: string;
   announcements: string;
   members: SquadMember[];
+  /** Absent from a squad older than the feature; read as the seven base ones. */
+  roles?: SquadRole[];
+  /** The raid this squad was linked into, or `null` when it runs alone. */
+  raidId?: string | null;
   version: number;
   updatedAt: string;
+};
+
+/**
+ * Several squads under one announcement.
+ *
+ * The raid holds no members of its own: its roster is `squads`, each keeping
+ * its code, its leader and its roles. `leadSquadId` names the one that runs it —
+ * whoever commands *that* squad renames the raid, writes its announcement and
+ * unlinks the others.
+ */
+export type Raid = {
+  id: string;
+  name: string;
+  code: string;
+  announcement: string;
+  leadSquadId: string;
+  updatedAt: string;
+  /** Longest-standing first, which is also the order the lead is handed down. */
+  squads: Squad[];
+};
+
+/**
+ * What every squad route answers: where the caller stands, in one object.
+ *
+ * The raid rides along with the squad, so the overlay draws every sub-squad
+ * from the poll it already makes.
+ */
+export type SquadView = {
+  squad: Squad | null;
+  raid: Raid | null;
 };
 
 /**
@@ -644,5 +795,6 @@ export type SquadMemberPatch = {
   ready?: boolean;
   alive?: boolean;
   position?: string;
+  role?: string;
   lieutenant?: boolean;
 };

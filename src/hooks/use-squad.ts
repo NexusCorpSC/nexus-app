@@ -8,16 +8,30 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  createRaid,
   createSquad,
+  createSquadRole,
+  deleteSquadRole,
   getMySquad,
+  joinRaid,
   joinSquad,
+  leaveRaid,
   leaveSquad,
   removeSquadMember,
+  renameSquad,
   setSquadAnnouncements,
   transferSquadLeadership,
+  unlinkRaidSquad,
+  updateRaid,
   updateSquadMember,
+  updateSquadRole,
 } from "@/lib/api/squads";
-import type { Squad, SquadMemberPatch } from "@/types/nexus";
+import type {
+  Squad,
+  SquadMemberPatch,
+  SquadRoleIcon,
+  SquadView,
+} from "@/types/nexus";
 
 /** Emitted by Rust whenever the squad window is shown or hidden. */
 const SQUAD_VISIBILITY_EVENT = "squad://visibility";
@@ -72,6 +86,32 @@ export function useSquadOverlayVisible(): boolean {
 }
 
 /**
+ * The caller's own squad, rewritten — and the same rewrite carried into the
+ * raid, where that squad appears a second time.
+ *
+ * Both copies come from the same document server-side, so they must not drift
+ * on screen: a «prêt» toggled from the raid view has to light up in the row the
+ * click landed on, not only in the squad view nobody is looking at.
+ */
+function withSquad(view: SquadView, next: (squad: Squad) => Squad): SquadView {
+  if (!view.squad) return view;
+
+  const squad = next(view.squad);
+
+  return {
+    squad,
+    raid: view.raid
+      ? {
+          ...view.raid,
+          squads: view.raid.squads.map((other) =>
+            other.id === squad.id ? squad : other,
+          ),
+        }
+      : null,
+  };
+}
+
+/**
  * One mutation of the squad, shown before the server has agreed.
  *
  * Three pieces make a click feel immediate without the poll undoing it:
@@ -80,12 +120,12 @@ export function useSquadOverlayVisible(): boolean {
  *    the cache at once;
  * 2. the poll is held off while any squad mutation runs (see `useSquad`) — that
  *    is what stops an answer sent *before* the click from landing *after* it;
- * 3. the API answers with the whole squad, so success replaces the guess with
+ * 3. the API answers with the whole view, so success replaces the guess with
  *    the truth rather than waiting two seconds for it.
  */
 function useSquadMutation<TVariables>(
-  call: (variables: TVariables) => Promise<Squad | null>,
-  guess?: (squad: Squad, variables: TVariables) => Squad,
+  call: (variables: TVariables) => Promise<SquadView>,
+  guess?: (view: SquadView, variables: TVariables) => SquadView,
 ) {
   const queryClient = useQueryClient();
 
@@ -101,13 +141,10 @@ function useSquadMutation<TVariables>(
       // the value the user just replaced.
       const cancelling = queryClient.cancelQueries({ queryKey: SQUAD_KEY });
 
-      const previous = queryClient.getQueryData<Squad | null>(SQUAD_KEY);
+      const previous = queryClient.getQueryData<SquadView>(SQUAD_KEY);
 
       if (guess && previous) {
-        queryClient.setQueryData<Squad | null>(
-          SQUAD_KEY,
-          guess(previous, variables),
-        );
+        queryClient.setQueryData<SquadView>(SQUAD_KEY, guess(previous, variables));
       }
 
       // Awaited before the request goes out all the same: the point of
@@ -120,14 +157,16 @@ function useSquadMutation<TVariables>(
       // Put back what was on screen: the click did not take.
       if (context) queryClient.setQueryData(SQUAD_KEY, context.previous);
     },
-    onSuccess: (squad) => {
-      queryClient.setQueryData<Squad | null>(SQUAD_KEY, squad);
+    onSuccess: (view) => {
+      queryClient.setQueryData<SquadView>(SQUAD_KEY, view);
     },
   });
 }
 
 export interface SquadState {
   squad: Squad | null | undefined;
+  /** The raid the squad was linked into, with every sub-squad. */
+  raid: SquadView["raid"] | undefined;
   loading: boolean;
   error: unknown;
   /** True while the window is up, which is also while the squad is polled. */
@@ -157,50 +196,103 @@ export function useSquad(enabled: boolean) {
   const join = useSquadMutation((code: string) => joinSquad(code));
   const leave = useSquadMutation<void>(() => leaveSquad());
 
+  const rename = useSquadMutation(
+    (name: string) => renameSquad(name),
+    (view, name) => withSquad(view, (squad) => ({ ...squad, name })),
+  );
+
   const patchMember = useSquadMutation(
     ({ userId, patch }: { userId: string; patch: SquadMemberPatch }) =>
       updateSquadMember(userId, patch),
-    (squad, { userId, patch }) => ({
-      ...squad,
-      members: squad.members.map((member) =>
-        member.userId === userId ? { ...member, ...patch } : member,
-      ),
-    }),
+    (view, { userId, patch }) =>
+      withSquad(view, (squad) => ({
+        ...squad,
+        members: squad.members.map((member) =>
+          member.userId === userId ? { ...member, ...patch } : member,
+        ),
+      })),
   );
 
   const removeMember = useSquadMutation(
     (userId: string) => removeSquadMember(userId),
-    (squad, userId) => ({
-      ...squad,
-      members: squad.members.filter((member) => member.userId !== userId),
-    }),
+    (view, userId) =>
+      withSquad(view, (squad) => ({
+        ...squad,
+        members: squad.members.filter((member) => member.userId !== userId),
+      })),
   );
 
   const makeLeader = useSquadMutation(
     (userId: string) => transferSquadLeadership(userId),
     // Guessed the way the API does it, so the two ranks change together on
     // screen: the squad has one leader, and the outgoing one keeps a say.
-    (squad, userId) => ({
-      ...squad,
-      leaderId: userId,
-      members: squad.members.map((member) => {
-        if (member.userId === userId) return { ...member, lieutenant: false };
-        if (member.userId === squad.leaderId) {
-          return { ...member, lieutenant: true };
-        }
-        return member;
-      }),
-    }),
+    (view, userId) =>
+      withSquad(view, (squad) => ({
+        ...squad,
+        leaderId: userId,
+        members: squad.members.map((member) => {
+          if (member.userId === userId) return { ...member, lieutenant: false };
+          if (member.userId === squad.leaderId) {
+            return { ...member, lieutenant: true };
+          }
+          return member;
+        }),
+      })),
   );
 
   const announce = useSquadMutation(
     (announcements: string) => setSquadAnnouncements(announcements),
-    (squad, announcements) => ({ ...squad, announcements }),
+    (view, announcements) =>
+      withSquad(view, (squad) => ({ ...squad, announcements })),
+  );
+
+  /*
+   * Roles are not guessed. The id of a new one is the server's to mint, and
+   * every other role write reshuffles a list several rows read from — a wrong
+   * guess would show a glyph that is about to change. They are also the rare
+   * click nobody makes mid-firefight.
+   */
+  const addRole = useSquadMutation(
+    ({ label, icon }: { label: string; icon: SquadRoleIcon }) =>
+      createSquadRole(label, icon),
+  );
+
+  const editRole = useSquadMutation(
+    ({
+      roleId,
+      patch,
+    }: {
+      roleId: string;
+      patch: { label?: string; icon?: SquadRoleIcon };
+    }) => updateSquadRole(roleId, patch),
+  );
+
+  const removeRole = useSquadMutation((roleId: string) =>
+    deleteSquadRole(roleId),
+  );
+
+  const startRaid = useSquadMutation((name?: string) => createRaid(name));
+  const enterRaid = useSquadMutation((code: string) => joinRaid(code));
+  const quitRaid = useSquadMutation<void>(() => leaveRaid());
+  const unlinkSquad = useSquadMutation((squadId: string) =>
+    unlinkRaidSquad(squadId),
+  );
+
+  const announceRaid = useSquadMutation(
+    (announcement: string) => updateRaid({ announcement }),
+    (view, announcement) =>
+      view.raid ? { ...view, raid: { ...view.raid, announcement } } : view,
+  );
+
+  const renameRaid = useSquadMutation(
+    (name: string) => updateRaid({ name }),
+    (view, name) => (view.raid ? { ...view, raid: { ...view.raid, name } } : view),
   );
 
   return {
     state: {
-      squad: query.data,
+      squad: query.data?.squad,
+      raid: query.data?.raid,
       loading: query.isPending && enabled,
       error: query.error,
       live,
@@ -208,9 +300,19 @@ export function useSquad(enabled: boolean) {
     create,
     join,
     leave,
+    rename,
     patchMember,
     removeMember,
     makeLeader,
     announce,
+    addRole,
+    editRole,
+    removeRole,
+    startRaid,
+    enterRaid,
+    quitRaid,
+    unlinkSquad,
+    announceRaid,
+    renameRaid,
   };
 }
