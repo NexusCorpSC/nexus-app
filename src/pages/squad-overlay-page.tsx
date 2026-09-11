@@ -4,10 +4,14 @@ import {
   ArrowLeft,
   Check,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  ChevronUp,
+  Columns3,
   Copy,
   Crown,
   Flag,
+  GripVertical,
   Loader2,
   LogOut,
   Megaphone,
@@ -29,6 +33,8 @@ import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { RoleIcon, roleOf, rolesOf } from "@/components/squad/role-icon";
+import { useRaidLayout } from "@/hooks/use-raid-layout";
+import { columnsLabel, nextColumns } from "@/lib/raid-layout";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import {
   ANNOUNCEMENTS_MAX_LENGTH,
@@ -880,7 +886,32 @@ function RaidBoard({
   const leads = raid.leadSquadId === squad.id && commands;
   const counts = tally(raid.squads);
 
+  const layout = useRaidLayout(raid);
+
   const [folded, setFolded] = useState<Record<string, boolean>>({});
+  /** The squad being dragged, and the one the pointer is currently over. */
+  const [dragging, setDragging] = useState<string | null>(null);
+  const [over, setOver] = useState<string | null>(null);
+
+  /*
+   * The colour belongs to the squad, not to its place.
+   *
+   * Taken from the order the server sends — which nobody rearranges — so that
+   * moving Bravo does not repaint it, nor repaint everything it passes. A dot
+   * whose colour changed every time somebody tidied the raid would be worse
+   * than no dot at all.
+   */
+  const hues = new Map(
+    raid.squads.map((sub, index) => [
+      sub.id,
+      SQUAD_HUES[index % SQUAD_HUES.length],
+    ]),
+  );
+
+  function endDrag() {
+    setDragging(null);
+    setOver(null);
+  }
 
   return (
     <>
@@ -891,48 +922,95 @@ function RaidBoard({
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {raid.squads.map((sub, index) => {
-          const mine = sub.id === squad.id;
-          const open = !folded[sub.id];
+        <div
+          className="grid gap-x-2"
+          style={{
+            gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`,
+          }}
+        >
+          {layout.squads.map((sub) => {
+            const mine = sub.id === squad.id;
+            const open = !folded[sub.id];
 
-          return (
-            <section key={sub.id} className="mb-1">
-              <SubSquadHeader
-                squad={sub}
-                hue={SQUAD_HUES[index % SQUAD_HUES.length]}
-                open={open}
-                mine={mine}
-                isLead={raid.leadSquadId === sub.id}
-                onToggle={() =>
-                  setFolded((previous) => ({
-                    ...previous,
-                    [sub.id]: !previous[sub.id],
-                  }))
-                }
-              />
-
-              {sub.announcements ? (
-                <p className="truncate pl-[26px] text-[10.5px] text-nexus-accent/55">
-                  {sub.announcements}
-                </p>
-              ) : null}
-
-              {open ? (
-                <MemberList
+            return (
+              <section
+                key={sub.id}
+                className={cn(
+                  "mb-1 rounded transition",
+                  dragging === sub.id && "opacity-40",
+                  over === sub.id &&
+                    dragging !== sub.id &&
+                    "ring-1 ring-nexus-accent/60",
+                )}
+                onDragOver={(event) => {
+                  if (!dragging) return;
+                  // Without this the drop never fires: the default is to refuse.
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  setOver(sub.id);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  if (dragging) layout.dropOnto(dragging, sub.id);
+                  endDrag();
+                }}
+              >
+                <SubSquadHeader
                   squad={sub}
-                  userId={mine ? userId : null}
-                  commands={mine && commands}
-                  api={api}
-                  onRoles={onRoles}
-                  indent
+                  hue={hues.get(sub.id) ?? SQUAD_HUES[0]}
+                  open={open}
+                  mine={mine}
+                  isLead={raid.leadSquadId === sub.id}
+                  columns={layout.columns}
+                  canMoveEarlier={layout.canMove(sub.id, -1)}
+                  canMoveLater={layout.canMove(sub.id, 1)}
+                  dragging={dragging !== null}
+                  onMove={(delta) => layout.move(sub.id, delta)}
+                  onDragStart={() => setDragging(sub.id)}
+                  onDragEnd={endDrag}
+                  onToggle={() =>
+                    setFolded((previous) => ({
+                      ...previous,
+                      [sub.id]: !previous[sub.id],
+                    }))
+                  }
                 />
-              ) : null}
-            </section>
-          );
-        })}
+
+                {sub.announcements ? (
+                  <p className="truncate pl-[26px] text-[10.5px] text-nexus-accent/55">
+                    {sub.announcements}
+                  </p>
+                ) : null}
+
+                {open ? (
+                  <MemberList
+                    squad={sub}
+                    userId={mine ? userId : null}
+                    commands={mine && commands}
+                    api={api}
+                    onRoles={onRoles}
+                    indent
+                  />
+                ) : null}
+              </section>
+            );
+          })}
+        </div>
       </div>
 
       <Footer counts={counts}>
+        <IconButton
+          label={`${columnsLabel(layout.columns)} — passer à ${columnsLabel(
+            nextColumns(layout.columns),
+          ).toLowerCase()}`}
+          onClick={layout.cycleColumns}
+        >
+          <span className="flex items-center gap-1">
+            <Columns3 className="size-3.5" />
+            <span className="text-[11px] tabular-nums">{layout.columns}</span>
+          </span>
+        </IconButton>
+
         <OverlayButton onClick={onCompose}>
           <Flag className="size-3.5" />
           Composer
@@ -965,6 +1043,13 @@ function SubSquadHeader({
   open,
   mine,
   isLead,
+  columns,
+  canMoveEarlier,
+  canMoveLater,
+  dragging,
+  onMove,
+  onDragStart,
+  onDragEnd,
   onToggle,
 }: {
   squad: Squad;
@@ -972,12 +1057,52 @@ function SubSquadHeader({
   open: boolean;
   mine: boolean;
   isLead: boolean;
+  columns: number;
+  canMoveEarlier: boolean;
+  canMoveLater: boolean;
+  /** True while any squad is being dragged, this one or another. */
+  dragging: boolean;
+  onMove: (delta: number) => void;
+  onDragStart: () => void;
+  onDragEnd: () => void;
   onToggle: () => void;
 }) {
   const counts = tally([squad]);
 
+  // Laid out in a column, «earlier» is up; laid out in a grid, it is left.
+  // Naming it after the direction the eye travels, not after the array index.
+  const Earlier = columns === 1 ? ChevronUp : ChevronLeft;
+  const Later = columns === 1 ? ChevronDown : ChevronRight;
+
   return (
-    <div className="flex items-center gap-1.5 rounded px-1 py-0.5 hover:bg-nexus-accent/5">
+    <div
+      /*
+       * The whole header is the handle, not the grip beside it.
+       *
+       * The grip only shows on hover, so it stops existing the moment the
+       * pointer leaves the header — which is the first thing a drag does, and
+       * a drag whose source vanishes is one the browser cancels. The grip
+       * stays as the thing that says «this moves»; the surface under it is
+       * what you actually grab.
+       *
+       * The buttons inside keep working: a press that does not travel is still
+       * a click.
+       */
+      draggable
+      onDragStart={(event) => {
+        /*
+         * The payload is the squad's id, and it is not optional: a drag
+         * carrying nothing is not a drag any browser will let you drop. What
+         * is read back on the other side is React state — this is here to make
+         * the gesture legal, and to say what it is to anything outside the app.
+         */
+        event.dataTransfer.setData("text/plain", squad.id);
+        event.dataTransfer.effectAllowed = "move";
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      className="group/head flex items-center gap-1.5 rounded px-1 py-0.5 hover:bg-nexus-accent/5"
+    >
       <button
         type="button"
         title={open ? `Replier ${squad.name}` : `Déplier ${squad.name}`}
@@ -1046,6 +1171,53 @@ function SubSquadHeader({
       ) : null}
 
       <span className="flex-1" />
+
+      {/*
+       * Arranging the raid, on hover.
+       *
+       * Hidden until then because at three columns a header is barely a
+       * hundred pixels wide, and these three controls would cost the name.
+       * Nobody needs a rank for them: the arrangement is this player's own and
+       * goes no further than this window.
+       */}
+      <span
+        className={cn(
+          "shrink-0 items-center",
+          // Kept on screen for as long as a drag lasts: these controls sharing
+          // a row with the thing being dragged must not flicker under it.
+          dragging ? "flex" : "hidden group-hover/head:flex",
+        )}
+      >
+        <span
+          title={`Déplacer ${squad.name}`}
+          className="flex size-4 cursor-grab items-center justify-center text-nexus-accent/50"
+        >
+          <span className="sr-only">Déplacer {squad.name}</span>
+          <GripVertical className="size-3" />
+        </span>
+
+        <button
+          type="button"
+          title={`Avancer ${squad.name}`}
+          disabled={!canMoveEarlier}
+          onClick={() => onMove(-1)}
+          className="flex size-4 items-center justify-center text-nexus-accent/65 transition hover:text-nexus-bright disabled:cursor-default disabled:opacity-25"
+        >
+          <span className="sr-only">Avancer {squad.name}</span>
+          <Earlier className="size-3" />
+        </button>
+
+        <button
+          type="button"
+          title={`Reculer ${squad.name}`}
+          disabled={!canMoveLater}
+          onClick={() => onMove(1)}
+          className="flex size-4 items-center justify-center text-nexus-accent/65 transition hover:text-nexus-bright disabled:cursor-default disabled:opacity-25"
+        >
+          <span className="sr-only">Reculer {squad.name}</span>
+          <Later className="size-3" />
+        </button>
+      </span>
 
       <span
         className={cn(
@@ -1396,6 +1568,10 @@ function RaidSheet({
   const [code, setCode] = useState("");
   const leads = Boolean(raid && raid.leadSquadId === squad.id && editable);
 
+  // The same arrangement the board is showing, read from the same store: two
+  // lists of the same four squads in two different orders would be a puzzle.
+  const layout = useRaidLayout(raid);
+
   const error =
     api.enterRaid.error ?? api.startRaid.error ?? api.unlinkSquad.error;
 
@@ -1431,7 +1607,7 @@ function RaidSheet({
               </div>
 
               <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
-                {raid.squads.map((sub) => (
+                {layout.squads.map((sub) => (
                   <li
                     key={sub.id}
                     className={cn(
