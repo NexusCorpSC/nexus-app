@@ -8,6 +8,11 @@ import {
   DEFAULT_OVERLAY_OPACITY,
   type OverlayOpacity,
 } from "@/lib/overlay-opacity";
+import {
+  DEFAULT_RAID_LAYOUT,
+  isRaidColumns,
+  type RaidLayout,
+} from "@/lib/raid-layout";
 import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
@@ -30,6 +35,7 @@ const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
+const KEY_RAID_LAYOUT = "raidLayout";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -163,6 +169,38 @@ export async function setOverlayOpacity(
 ): Promise<void> {
   const store = await getStore();
   await store.set(KEY_OVERLAY_OPACITY, opacity);
+}
+
+/**
+ * How this player lays the raid out — columns, and the order of the squads.
+ *
+ * Personal by design (see `src/lib/raid-layout.ts`), so it is stored here and
+ * never sent anywhere: two raiders watching the same fifteen people have no
+ * reason to want the same arrangement.
+ *
+ * Re-validated field by field on read, like the API URL and the notification
+ * corner: a hand-edited store must not hand the overlay a column count it
+ * cannot lay out, and a stored order is treated as a preference over the real
+ * roster rather than as the roster.
+ */
+export async function getRaidLayout(): Promise<RaidLayout> {
+  const store = await getStore();
+  const stored = await store.get<Partial<RaidLayout>>(KEY_RAID_LAYOUT);
+
+  return {
+    columns: isRaidColumns(stored?.columns)
+      ? stored.columns
+      : DEFAULT_RAID_LAYOUT.columns,
+    raidId: typeof stored?.raidId === "string" ? stored.raidId : null,
+    order: Array.isArray(stored?.order)
+      ? stored.order.filter((id): id is string => typeof id === "string")
+      : [],
+  };
+}
+
+export async function setRaidLayout(layout: RaidLayout): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_RAID_LAYOUT, layout);
 }
 
 /**
