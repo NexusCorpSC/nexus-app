@@ -62,6 +62,286 @@ export type BlueprintPage = {
 };
 
 /* ------------------------------------------------------------------ */
+/* In-game objects (items, weapons, vehicles, resources)               */
+/* ------------------------------------------------------------------ */
+
+/**
+ * What exists in the game, as opposed to the blueprints that make it.
+ * Mirrors `types/items.ts` in nexus-tools and the `/api/items` routes.
+ */
+export const ITEM_KINDS = ["item", "weapon", "vehicle", "resource"] as const;
+
+export type ItemKind = (typeof ITEM_KINDS)[number];
+
+export function isItemKind(value: string): value is ItemKind {
+  return (ITEM_KINDS as readonly string[]).includes(value);
+}
+
+export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
+  item: "Objet",
+  weapon: "Arme",
+  vehicle: "Véhicule",
+  resource: "Ressource",
+};
+
+export type ItemStatistics = BlueprintStatistics;
+
+/**
+ * A slot holding another object: a vehicle hardpoint, a mounted component, a
+ * weapon attachment. `itemSlug` points at the fiche when the object is in the
+ * catalogue; `itemName` carries its name otherwise.
+ */
+export type ItemSlot = {
+  label: string;
+  /** 2 for S2. */
+  size?: number;
+  itemSlug?: string;
+  itemName?: string;
+  /** Copies mounted: «2 × Repeater». */
+  quantity?: number;
+  note?: string;
+};
+
+export type ResolvedItemSlot = ItemSlot & {
+  /** Set when the slot names an object that has a fiche, by slug or by name. */
+  mounted?: ItemSummary;
+};
+
+export type VehicleDetails = {
+  crew?: number;
+  /** m/s */
+  speedMax?: number;
+  /** m/s */
+  speedScm?: number;
+  /** SCU */
+  cargoScu?: number;
+  /** kg */
+  mass?: number;
+  /** metres */
+  length?: number;
+  width?: number;
+  height?: number;
+  hardpoints?: ItemSlot[];
+  components?: ItemSlot[];
+};
+
+export type WeaponStat = {
+  label: string;
+  value: number;
+  unit?: string;
+};
+
+export type WeaponFireMode = {
+  /** As the game shows it: AUTO, SEMI, BURST, CHARGE. */
+  label: string;
+  rpm?: number;
+  dps?: number;
+  ammoPerShot?: number;
+  pelletsPerShot?: number;
+  burstCount?: number;
+  heatPerShot?: number;
+};
+
+/** Cone of fire in degrees; `decay` in degrees per second. */
+export type WeaponSpread = {
+  min?: number;
+  max?: number;
+  firstShot?: number;
+  perShot?: number;
+  decay?: number;
+};
+
+export type WeaponAmmunition = {
+  size?: number;
+  /** m/s */
+  speed?: number;
+  /** metres */
+  range?: number;
+  /** seconds */
+  lifetime?: number;
+  capacity?: number;
+  damageType?: string;
+  damagePerShot?: number;
+  /** metres */
+  falloffStart?: number;
+  falloffPerMeter?: number;
+  falloffMinDamage?: number;
+  penetration?: number;
+};
+
+export type WeaponDetails = {
+  damageType?: string;
+  caliber?: string;
+  profile?: WeaponStat[];
+  /** rounds per minute */
+  rateOfFire?: number;
+  magazine?: number;
+  /** seconds */
+  reloadTime?: number;
+  /** kg */
+  mass?: number;
+  attachments?: ItemSlot[];
+  fireModes?: WeaponFireMode[];
+  /** Hip fire. */
+  spread?: WeaponSpread;
+  /** Aiming down sights. */
+  adsSpread?: WeaponSpread;
+  ammunition?: WeaponAmmunition;
+};
+
+export type ResourceMarketSide = "buy" | "sell" | "grey";
+
+export type ResourceMarket = {
+  location: string;
+  /** From the counter's side: it buys, it sells, or grey market. */
+  side: ResourceMarketSide;
+  /** aUEC per unit */
+  price: number;
+  /** Absent = unlimited. */
+  stock?: number;
+};
+
+export type ResourceExtraction = {
+  location: string;
+  method?: string;
+  frequency?: "common" | "occasional" | "risky";
+};
+
+export type ResourceRefining = {
+  process?: string;
+  /** percent */
+  yield?: number;
+  durationSeconds?: number;
+  /** aUEC */
+  cost?: number;
+  outputName?: string;
+};
+
+export type ResourceDetails = {
+  form?: string;
+  volatile?: boolean;
+  unitVolumeScu?: number;
+  /** percent */
+  purityMin?: number;
+  purityMax?: number;
+  markets?: ResourceMarket[];
+  /** Oldest first. */
+  priceHistory?: number[];
+  refining?: ResourceRefining;
+  extraction?: ResourceExtraction[];
+  transportNote?: string;
+  /** ISO date */
+  pricesUpdatedAt?: string;
+};
+
+export type Item = {
+  id: string;
+  slug: string;
+  name: string;
+  kind: ItemKind;
+  description?: string;
+  category: string;
+  subcategory?: string;
+  manufacturer?: string;
+  size?: number;
+  tier?: number;
+  imageUrl?: string;
+  statistics?: ItemStatistics;
+  obtention?: string;
+  blueprintSlugs?: string[];
+  variantGroup?: string;
+  variantName?: string;
+  setId?: string;
+  setName?: string;
+  /** Absent = fiche left to complete. */
+  vehicle?: VehicleDetails;
+  weapon?: WeaponDetails;
+  resource?: ResourceDetails;
+  updatedAt?: string;
+};
+
+/** What a card or a related-objects list needs. */
+export type ItemSummary = Pick<
+  Item,
+  | "id"
+  | "slug"
+  | "name"
+  | "kind"
+  | "category"
+  | "subcategory"
+  | "manufacturer"
+  | "imageUrl"
+  | "tier"
+  | "variantName"
+  | "setName"
+>;
+
+/** A blueprint as an object's fiche lists it. */
+export type ItemBlueprintLink = {
+  slug: string;
+  name: string;
+  category?: string;
+  subcategory?: string;
+  imageUrl?: string;
+  tier?: number;
+  /** Consumed quantity, when the blueprint uses the object as a material. */
+  quantity?: number;
+};
+
+/** A firing statistic scaled to its class: `max` fills the bar. */
+export type WeaponStatScale = WeaponStat & {
+  max: number;
+  average?: number;
+  /** False when no other weapon of the class carries it: nothing to scale. */
+  comparable: boolean;
+};
+
+export type WeaponPeer = {
+  slug: string;
+  name: string;
+  value: number;
+  isCurrent: boolean;
+};
+
+export type ItemDetails = Item & {
+  blueprints: ItemBlueprintLink[];
+  /** Whether the blueprints were inferred from the name rather than declared. */
+  blueprintsInferred: boolean;
+  consumedBy: ItemBlueprintLink[];
+  /** Every variant of the group, this one included. Empty when alone. */
+  variants: ItemSummary[];
+  /** Every piece of the set, this one included. Empty when alone. */
+  setItems: ItemSummary[];
+  hardpoints: ResolvedItemSlot[];
+  components: ResolvedItemSlot[];
+  attachments: ResolvedItemSlot[];
+  weaponProfile: WeaponStatScale[];
+  weaponPeers: WeaponPeer[];
+  /** Vehicles and weapons carrying this object in one of their slots. */
+  mountedOn: ItemSummary[];
+};
+
+export type ItemCategory = {
+  category: string;
+  subcategories: string[];
+};
+
+export type ItemFacets = {
+  categories: ItemCategory[];
+  manufacturers: string[];
+  variantGroups: { id: string; name: string }[];
+  sets: { id: string; name: string }[];
+};
+
+export type ItemPage = {
+  items: ItemSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+/* ------------------------------------------------------------------ */
 /* Missions                                                            */
 /* ------------------------------------------------------------------ */
 
@@ -274,6 +554,7 @@ export type BlueprintOrgMember = {
  */
 export const SEARCH_TYPES = [
   "blueprint",
+  "item",
   "mission",
   "faction",
   "shopItem",

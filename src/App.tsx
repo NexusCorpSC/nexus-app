@@ -3,6 +3,8 @@ import AppLayout from "@/components/layout/app-layout";
 import RequireAuth from "@/components/layout/require-auth";
 import BlueprintsPage from "@/pages/blueprints-page";
 import BlueprintDetailPage from "@/pages/blueprint-detail-page";
+import ItemsPage from "@/pages/items-page";
+import ItemDetailPage from "@/pages/item-detail-page";
 import FactionsPage from "@/pages/factions-page";
 import MissionsPage from "@/pages/missions-page";
 import MissionDetailPage from "@/pages/mission-detail-page";
@@ -38,6 +40,9 @@ export default function App() {
 
         <Route path="blueprints" element={<BlueprintsPage />} />
         <Route path="blueprints/:slug" element={<BlueprintDetailPage />} />
+
+        <Route path="items" element={<ItemsPage />} />
+        <Route path="items/:slug" element={<ItemDetailPage />} />
 
         <Route path="missions" element={<MissionsPage />} />
         <Route path="missions/:missionId" element={<MissionDetailPage />} />

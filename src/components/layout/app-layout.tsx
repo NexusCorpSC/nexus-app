@@ -22,6 +22,7 @@ import {
   LogIn,
   LogOut,
   NotebookPen,
+  Package,
   Rocket,
   Settings as SettingsIcon,
   Star,
@@ -43,6 +44,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { to: "/blueprints", label: "Blueprints", icon: Hammer },
+  { to: "/items", label: "Objets", icon: Package },
   { to: "/missions", label: "Missions", icon: Rocket },
   { to: "/factions", label: "Factions", icon: Flag },
   { to: "/reputations", label: "Réputations", icon: Star, requiresAuth: true },

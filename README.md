@@ -5,7 +5,7 @@ Desktop app for Nexus Tools for Star Citizen.
 Client desktop (Tauri + React) pour [Nexus Tools](https://github.com/NexusCorpSC/nexus-tools),
 la boîte à outils communautaire Star Citizen. L'application expose les
 fonctionnalités de Nexus Tools directement depuis le bureau : blueprints,
-missions, réputations, inventaire et organisations.
+objets du jeu, missions, réputations, inventaire et organisations.
 
 ## Architecture
 
@@ -41,6 +41,7 @@ src-tauri/            binaire Tauri, plugins et permissions
 | Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories`  | non¹            |
 | ↳ mes blueprints | `/api/blueprints/:id/ownership` (POST, DELETE)            | oui             |
 | ↳ dans mon org | `/api/blueprints/:id/org-owners`                            | oui             |
+| Objets        | `/api/items`, `/api/items/:slug`, `…/facets`                 | non             |
 | Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
 | Factions      | `/api/factions`                                              | non             |
 | Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
@@ -52,7 +53,9 @@ src-tauri/            binaire Tauri, plugins et permissions
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
 ³ connecté, ce sont les notes en ligne du compte ; sinon, des notes locales.
-⁴ l'inventaire personnel n'entre dans les résultats qu'une fois connecté.
+⁴ l'inventaire personnel n'entre dans les résultats qu'une fois connecté. Les
+objets du jeu y figurent avec leur type (arme, véhicule, ressource…) et
+s'ouvrent dans l'écran « Objets ».
 ⁵ la feuille elle-même ne quitte jamais la machine ; voir « Feuille de cargo ».
 
 Le site va plus loin que cette application : boutiques, marché, commandes,

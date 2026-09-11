@@ -1,11 +1,17 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { openMainRoute } from "@/lib/main-window";
 import { getApiBaseUrl } from "@/lib/settings";
-import type { SearchResult, SearchType } from "@/types/nexus";
+import {
+  ITEM_KIND_LABELS,
+  type ItemKind,
+  type SearchResult,
+  type SearchType,
+} from "@/types/nexus";
 
 /** What each kind of result is called in the palette. */
 export const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
   blueprint: "Blueprint",
+  item: "Objet",
   mission: "Mission",
   faction: "Faction",
   shopItem: "Article",
@@ -14,6 +20,20 @@ export const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
   cargoShip: "Cargo",
   inventoryItem: "Inventaire",
 };
+
+/**
+ * What to call one result. An in-game object says which kind it is — a
+ * weapon or a ship reads better as such than as a bare «Objet».
+ */
+export function searchResultLabel(result: SearchResult): string {
+  if (result.type === "item") {
+    const kind = result.meta?.kind;
+    if (typeof kind === "string" && kind in ITEM_KIND_LABELS) {
+      return ITEM_KIND_LABELS[kind as ItemKind];
+    }
+  }
+  return SEARCH_TYPE_LABELS[result.type];
+}
 
 /**
  * Website paths this application has a screen of its own for.
@@ -28,6 +48,10 @@ const DESKTOP_SCREENS: { pattern: RegExp; route: (id: string) => string }[] = [
   {
     pattern: /^\/crafting\/blueprints\/([^/?#]+)$/,
     route: (slug) => `/blueprints/${slug}`,
+  },
+  {
+    pattern: /^\/items\/([^/?#]+)$/,
+    route: (slug) => `/items/${slug}`,
   },
   // Before the missions, and `[^/]` in that one, because
   // `/missions/factions/<id>` is a faction and not a mission.

@@ -15,7 +15,7 @@ import {
 import {
   openSearchResult,
   opensInBrowser,
-  SEARCH_TYPE_LABELS,
+  searchResultLabel,
 } from "@/lib/search";
 import {
   objectivesToBulkLines,
@@ -45,9 +45,9 @@ function asQuery(text: string): string {
  * global shortcut. Its window is transparent and frameless, so this component
  * draws the whole surface.
  *
- * It searches everything the site searches — blueprints, missions, factions,
- * items on sale, shops, organizations, cargo ships, and the user's own
- * inventory when signed in — and hands each result to whichever of the two
+ * It searches everything the site searches — blueprints, in-game objects,
+ * missions, factions, items on sale, shops, organizations, cargo ships, and
+ * the user's own inventory when signed in — and hands each result to whichever of the two
  * clients has a screen for it (see `src/lib/search.ts`).
  */
 export default function OverlayPage() {
@@ -283,7 +283,7 @@ export default function OverlayPage() {
                 )}
 
                 <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
-                  {SEARCH_TYPE_LABELS[result.type]}
+                  {searchResultLabel(result)}
                 </span>
               </button>
 

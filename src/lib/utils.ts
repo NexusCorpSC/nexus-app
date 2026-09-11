@@ -40,3 +40,11 @@ export function formatDate(value?: string): string {
     minute: "2-digit",
   });
 }
+
+/** Formats a plain number the French way: `1 150` / `37,5`. */
+export function formatNumber(value?: number): string {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return "—";
+  }
+  return value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+}
