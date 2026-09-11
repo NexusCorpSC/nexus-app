@@ -3,7 +3,7 @@ import { openMainRoute } from "@/lib/main-window";
 import { getApiBaseUrl } from "@/lib/settings";
 import {
   ITEM_KIND_LABELS,
-  type ItemKind,
+  isItemKind,
   type SearchResult,
   type SearchType,
 } from "@/types/nexus";
@@ -28,8 +28,8 @@ export const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
 export function searchResultLabel(result: SearchResult): string {
   if (result.type === "item") {
     const kind = result.meta?.kind;
-    if (typeof kind === "string" && kind in ITEM_KIND_LABELS) {
-      return ITEM_KIND_LABELS[kind as ItemKind];
+    if (typeof kind === "string" && isItemKind(kind)) {
+      return ITEM_KIND_LABELS[kind];
     }
   }
   return SEARCH_TYPE_LABELS[result.type];

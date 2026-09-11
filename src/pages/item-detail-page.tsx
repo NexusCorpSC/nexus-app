@@ -48,7 +48,7 @@ export default function ItemDetailPage() {
 
   async function openOnWeb() {
     const baseUrl = await getApiBaseUrl();
-    await openUrl(`${baseUrl}/items/${slug}`);
+    await openUrl(`${baseUrl}/items/${encodeURIComponent(slug)}`);
   }
 
   if (itemQuery.isPending) return <LoadingState />;
