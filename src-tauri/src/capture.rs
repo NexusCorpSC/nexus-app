@@ -185,7 +185,7 @@ impl Capture {
         // forced opaque: a screenshot carries none, and a zero would blank the
         // bitmap the engine sees.
         let mut pixels = region.into_raw();
-        for pixel in pixels.chunks_exact_mut(4) {
+        for pixel in pixels.as_chunks_mut::<4>().0 {
             pixel.swap(0, 2);
             pixel[3] = 0xFF;
         }
