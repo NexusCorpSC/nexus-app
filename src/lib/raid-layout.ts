@@ -118,6 +118,16 @@ export function movedBy(ids: string[], squadId: string, delta: number): string[]
 /**
  * Dropped onto another squad: the dragged one takes that place, and the rest
  * close up behind it.
+ *
+ * The invariant, stated plainly because the `+ 1` below reads like an
+ * off-by-one and is not: **afterwards the dragged squad sits at the index the
+ * target used to occupy** — in both directions. Dropping the first onto the
+ * third leaves it third; dropping the last onto the first leaves it first.
+ *
+ * That adjustment is what makes a forward drop move anything at all. Without
+ * it, dropping a squad onto its immediate successor reinserts it exactly where
+ * it was: the gesture would do nothing, which is the one outcome a drag must
+ * never have.
  */
 export function movedOnto(
   ids: string[],

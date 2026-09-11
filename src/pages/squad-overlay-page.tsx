@@ -1173,19 +1173,26 @@ function SubSquadHeader({
       <span className="flex-1" />
 
       {/*
-       * Arranging the raid, on hover.
+       * Arranging the raid, on hover — or on focus.
        *
        * Hidden until then because at three columns a header is barely a
        * hundred pixels wide, and these three controls would cost the name.
        * Nobody needs a rank for them: the arrangement is this player's own and
        * goes no further than this window.
+       *
+       * `focus-within` is not decoration: `display: none` takes a button out of
+       * the tab order entirely, so without it these two would be reachable by
+       * pointer only. Focusing the fold button beside them — which is always
+       * there — brings them out, and the tab carries on into them.
        */}
       <span
         className={cn(
           "shrink-0 items-center",
           // Kept on screen for as long as a drag lasts: these controls sharing
           // a row with the thing being dragged must not flicker under it.
-          dragging ? "flex" : "hidden group-hover/head:flex",
+          dragging
+            ? "flex"
+            : "hidden group-hover/head:flex group-focus-within/head:flex",
         )}
       >
         <span
