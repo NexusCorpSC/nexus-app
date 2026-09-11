@@ -530,6 +530,17 @@ function MemberRow({
   const role = roleOf(squad, member.role);
   const down = !member.alive;
 
+  /*
+   * «À terre» emporte «prêt», sur l'écran comme dans la base.
+   *
+   * Le serveur retire le drapeau quand un membre tombe, mais la ligne devance
+   * sa réponse : sans ça, le clic qui met quelqu'un à terre laisse une seconde
+   * de coche verte sur un pseudo rouge barré. Lu ici plutôt que corrigé au
+   * moment du clic pour que ce soit vrai aussi d'une ligne écrite avant que le
+   * serveur ne s'en charge.
+   */
+  const ready = member.ready && member.alive;
+
   return (
     <li
       className={cn(
@@ -575,7 +586,7 @@ function MemberRow({
             "min-w-0 flex-1 truncate text-[13px]",
             down
               ? "text-red-300 line-through decoration-red-300/60"
-              : member.ready
+              : ready
                 ? "text-emerald-300"
                 : "text-nexus-bright",
             isLeader || isSelf ? "font-medium" : null,
@@ -585,14 +596,14 @@ function MemberRow({
         </p>
 
         <RowToggle
-          title={member.ready ? "Prêt" : "Pas prêt"}
+          title={ready ? "Prêt" : "Pas prêt"}
           // A member who is down is not «prêt»: the toggle says so by refusing
           // rather than by hiding, so the row keeps its shape as people fall.
           disabled={!editable || down}
           dimmed={down}
           onClick={() => onPatch({ ready: !member.ready })}
         >
-          {member.ready ? (
+          {ready ? (
             <Check className="size-3.5 text-emerald-300" />
           ) : (
             <X className="size-3.5 text-red-300" />
@@ -602,7 +613,12 @@ function MemberRow({
         <RowToggle
           title={down ? "Éliminé" : "Actif"}
           disabled={!editable}
-          onClick={() => onPatch({ alive: down })}
+          // Tomber retire «prêt» dans le même patch : le serveur le fait de
+          // toute façon, et l'envoyer rend la supposition optimiste cohérente
+          // au lieu de la faire corriger une seconde plus tard.
+          onClick={() =>
+            onPatch(down ? { alive: true } : { alive: false, ready: false })
+          }
         >
           <Skull
             className={cn(
@@ -1894,6 +1910,34 @@ function Popover({
   className?: string;
   children: React.ReactNode;
 }) {
+  // Dans un ref parce que l'appelant passe une fermeture neuve à chaque rendu,
+  // et que la liste est re-rendue à chaque sondage.
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  }, [onClose]);
+
+  /*
+   * Échap referme le popover, et rien d'autre.
+   *
+   * La page a son propre gestionnaire d'Échap, qui ferme la fenêtre : sans
+   * celui-ci, annuler un choix de rôle emporterait l'overlay avec lui. À la
+   * capture sur le document, donc avant le gestionnaire délégué que React
+   * pose sur la racine — que `stopPropagation` n'atteint jamais.
+   */
+  useEffect(() => {
+    function dismiss(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+
+      event.stopPropagation();
+      event.preventDefault();
+      close.current();
+    }
+
+    document.addEventListener("keydown", dismiss, true);
+    return () => document.removeEventListener("keydown", dismiss, true);
+  }, []);
+
   return (
     <>
       <div className="fixed inset-0 z-10" onClick={onClose} />
