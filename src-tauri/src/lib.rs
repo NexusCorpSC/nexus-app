@@ -1,5 +1,6 @@
 mod capture;
 mod diagnostics;
+mod event_feed;
 #[cfg(windows)]
 mod hotkeys;
 mod notifications;
@@ -37,9 +38,12 @@ const NAVIGATE_EVENT: &str = "main://navigate";
 
 /// Tells the squad overlay whether it is on screen, carrying a boolean.
 ///
-/// It polls the API while it is up and stops while it is not; only this side
-/// knows which, since a hidden window and an unfocused one look the same from
-/// the webview.
+/// The squad itself now arrives over the event stream `event_feed` holds,
+/// whatever is on screen; what the overlay still does with this is tell the
+/// user whether the window is live, and what `event_feed` does with it is
+/// limit its polling fallback — against a server without a stream — to the
+/// time the window is up. Only this side knows which, since a hidden window
+/// and an unfocused one look the same from the webview.
 const SQUAD_VISIBILITY_EVENT: &str = "squad://visibility";
 
 /// Carries the three overlays' opacity to every window at once.
@@ -700,6 +704,8 @@ fn announce_squad_visibility(app: &AppHandle) -> Result<(), String> {
         .is_visible()
         .map_err(|e| e.to_string())?;
 
+    event_feed::set_squad_visible(app, visible);
+
     app.emit_to(SQUAD_WINDOW, SQUAD_VISIBILITY_EVENT, visible)
         .map_err(|e| e.to_string())
 }
@@ -1014,6 +1020,7 @@ pub fn run() {
         .manage(notifications::Notifications::default())
         .manage(OverlayOpacityState::default())
         .manage(OverlayLocks::default())
+        .manage(event_feed::EventFeed::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -1038,6 +1045,10 @@ pub fn run() {
             notifications::resize_notifications,
             notifications::hide_notifications,
             notifications::set_notification_corner,
+            event_feed::feed_sync,
+            event_feed::feed_set_squad,
+            event_feed::feed_snapshot,
+            event_feed::feed_status,
         ])
         .on_window_event(|window, event| {
             // Dismiss the search palette when it loses focus, the way a command
@@ -1134,6 +1145,10 @@ pub fn run() {
             // Sleeps until an overlay is locked, then keeps its unlock button
             // reachable through a window that otherwise ignores the mouse.
             watch_overlay_locks(app.handle().clone());
+
+            // Follows the session: one stream to the API for the whole app,
+            // opened once a window reports a session and closed on sign-out.
+            event_feed::install(app.handle());
 
             Ok(())
         })

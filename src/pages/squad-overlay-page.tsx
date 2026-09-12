@@ -107,7 +107,7 @@ const SHEET =
 type Sheet = { kind: "roles"; squadId: string } | { kind: "raid" } | null;
 
 export default function SquadOverlayPage() {
-  const { user, loading: session } = useAuth();
+  const { user, loading: session, refresh } = useAuth();
 
   /**
    * The squad the overlay looks at, or `null` for the one the API picks —
@@ -180,6 +180,13 @@ export default function SquadOverlayPage() {
     }
   }, [current, state.loading, state.memberships]);
 
+  useEffect(() => {
+    // The stream was refused: the stored session is dead. Re-checking it
+    // clears the cookie, which puts this window on its sign-in text and stops
+    // the stream from trying again until someone signs in.
+    if (state.feed === "unauthorized" && user) void refresh();
+  }, [state.feed, user, refresh]);
+
   function leave(squadId: string) {
     squadApi.leave.mutate(squadId, {
       // The answer is what the API picks from what is left, which is what a
@@ -218,6 +225,25 @@ export default function SquadOverlayPage() {
         ) : (
           <Users className="pointer-events-none size-4 shrink-0 text-nexus-accent/70" />
         )}
+
+        {/*
+         * Whether the view is live. Green while the stream (or its fallback)
+         * feeds it, amber while it is being brought back; nothing otherwise —
+         * a window with no session has nothing to be connected to.
+         */}
+        {user && (state.connected || state.feed === "reconnecting") ? (
+          <span
+            className={cn(
+              "pointer-events-none size-1.5 shrink-0 rounded-full",
+              state.connected ? "bg-emerald-400" : "bg-amber-400",
+            )}
+            title={state.connected ? "En direct" : "Reconnexion…"}
+          >
+            <span className="sr-only">
+              {state.connected ? "En direct" : "Reconnexion…"}
+            </span>
+          </span>
+        ) : null}
 
         <Title
           squad={squad}

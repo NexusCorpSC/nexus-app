@@ -792,11 +792,12 @@ export type SquadMembership = {
 };
 
 /**
- * What every squad route answers: where the caller stands, in one object.
+ * What every squad route answers, and what the event stream pushes: where the
+ * caller stands, in one object.
  *
  * `squad` is the one the request named with `?squad=`, or the longest-standing
  * membership when it named none. The raid rides along with it, so the overlay
- * draws every sub-squad from the poll it already makes. `memberships` lists
+ * draws every sub-squad from the one view it receives. `memberships` lists
  * every squad the caller is in, longest-standing first.
  */
 export type SquadView = {
@@ -816,4 +817,39 @@ export type SquadMemberPatch = {
   position?: string;
   role?: string;
   lieutenant?: boolean;
+};
+
+/* ------------------------------------------------------------------ */
+/* Event stream                                                        */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Where the event stream Rust holds to the API stands. Mirrors `FeedStatus`
+ * in `src-tauri/src/event_feed.rs`, string for string.
+ *
+ * - `idle`: no session, nothing to connect with;
+ * - `polling`: the server has no stream to offer (it predates it), and the
+ *   squad is read every few seconds while its overlay is up instead;
+ * - `unauthorized`: the session was refused; stopped until it changes.
+ */
+export type FeedStatus =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "polling"
+  | "unauthorized";
+
+/** Payload of `feed://status`. */
+export type FeedStatusEvent = { status: FeedStatus };
+
+/**
+ * Payload of `squad://view`, and what `feed_snapshot` answers for the squad:
+ * the view, and the squad it was asked for — `null` for the API's pick — so
+ * it lands under the key it belongs to.
+ */
+export type SquadFeedView = {
+  squad: string | null;
+  id: string;
+  view: SquadView;
 };

@@ -6,6 +6,8 @@ import { useAuth } from "@/auth/auth-context";
 import { NoteEditor } from "@/components/note-editor";
 import { ErrorState, LoadingState } from "@/components/ui";
 import { noteQueryKey, readNote } from "@/lib/notes";
+import { useFeedStatus } from "@/hooks/use-feed-status";
+import { useNoteStream } from "@/hooks/use-note-stream";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { useOverlayLocked } from "@/hooks/use-overlay-lock";
@@ -20,9 +22,10 @@ import { cn } from "@/lib/utils";
  * focus — it is dismissed by its shortcut or its close button.
  */
 export default function NotesOverlayPage() {
-  const { user, loading, refresh } = useAuth();
+  const { user, loading } = useAuth();
   const signedIn = Boolean(user);
   const queryClient = useQueryClient();
+  const feed = useFeedStatus();
 
   useTransparentWindow();
 
@@ -43,20 +46,21 @@ export default function NotesOverlayPage() {
     enabled: !loading,
   });
 
+  // Written elsewhere — the main window, the site — the note arrives on its
+  // own, over the stream Rust holds.
+  useNoteStream(signedIn);
+
   // The window is hidden and shown again rather than recreated, so nothing
-  // remounts: without this the overlay would keep showing whatever it read the
-  // first time, ignoring edits made from the main window.
-  //
-  // The session is re-checked along with it. Signing in is broadcast to every
-  // window, so this is a safety net — but what it guards against is showing the
-  // local scratch pad to someone who has an account.
+  // remounts. While the stream is up, every revision has already arrived; when
+  // it is not — lost, or a server without one — the overlay coming back into
+  // focus is the moment to make sure it shows the latest, as it always did.
   useEffect(() => {
-    // One after the other: the session decides which note applies, so a
-    // refetch started alongside would read whichever one was current before.
-    const onFocus = () => void refresh().then(() => refetch());
+    if (feed === "connected") return;
+
+    const onFocus = () => void refetch();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
-  }, [refresh, refetch]);
+  }, [feed, refetch]);
 
   function close() {
     void invoke("close_notes_overlay");

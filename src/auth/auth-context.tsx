@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import * as authApi from "@/lib/api/auth";
@@ -25,6 +26,21 @@ import type { CurrentUser } from "@/types/nexus";
  * scratch pad to a signed-in user.
  */
 const SESSION_EVENT = "auth://session-changed";
+
+/**
+ * Tells Rust the session on record may have changed, so the event stream it
+ * holds to the API follows it: started with a session, stopped without one.
+ *
+ * Rust reads the session from the same store this side writes, but has no
+ * way of knowing when that store has been opened or written — so it is told,
+ * by every window after every check. The call is idempotent; seven windows
+ * saying the same thing costs nothing.
+ */
+function syncFeed() {
+  void invoke("feed_sync").catch((error) => {
+    console.error("cannot sync the event stream with the session", error);
+  });
+}
 
 type AuthState = {
   user: CurrentUser | null;
@@ -61,6 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
+      syncFeed();
     }
   }, []);
 
@@ -95,6 +112,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(signedIn);
       // Authenticated endpoints answered 401 while signed out; drop those.
       await queryClient.invalidateQueries();
+      syncFeed();
       await emit(SESSION_EVENT, getCurrentWindow().label);
     },
     [queryClient],
@@ -104,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.signOut();
     setUser(null);
     queryClient.clear();
+    syncFeed();
     await emit(SESSION_EVENT, getCurrentWindow().label);
   }, [queryClient]);
 

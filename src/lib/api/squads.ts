@@ -29,7 +29,7 @@ function at(path: string, squadId: string | null): string {
  * and older servers still know nothing of memberships, in which case the one
  * squad they answer is the whole list.
  */
-function view(answer: Partial<SquadView>): SquadView {
+export function view(answer: Partial<SquadView>): SquadView {
   const squad = answer.squad ?? null;
 
   return {
