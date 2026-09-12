@@ -227,14 +227,16 @@ function Toast({
 
   // The button's whole job is to say something to the window that asked:
   // this one has no session and no network, that one has both and listens.
+  // Dismissed once the event is out, and only then: a button whose press
+  // went nowhere has to stay pressable.
   const perform = () => {
     if (!action) return;
 
-    void emit(action.event, action.payload ?? null).catch((error) => {
-      console.error("cannot answer the notification", error);
-    });
-
-    onDismiss(id);
+    void emit(action.event, action.payload ?? null)
+      .then(() => onDismiss(id))
+      .catch((error) => {
+        console.error("cannot answer the notification", error);
+      });
   };
 
   // A toast with a route is the only way in while the app is behind the game,

@@ -248,7 +248,6 @@ export async function joinRaid(
   );
 }
 
-/** Whoever commands the lead squad. The announcement is read by every raider. */
 /**
  * «Everybody, say you are ready», to the squad. Whoever commands it.
  * Every member — the asker included — goes back to not ready.
@@ -273,6 +272,7 @@ export async function requestRaidReadyCheck(
   );
 }
 
+/** Whoever commands the lead squad. The announcement is read by every raider. */
 export async function updateRaid(
   squadId: string,
   patch: { name?: string; announcement?: string },

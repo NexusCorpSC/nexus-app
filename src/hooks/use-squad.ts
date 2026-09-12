@@ -58,6 +58,12 @@ const READY_CHECK_EVENT = "squad://ready";
 
 type ReadyCheckAnswer = { squadId: string };
 
+/** The button's payload, as it comes off the wire: checked before it is written. */
+function readyCheckAnswer(payload: unknown): ReadyCheckAnswer | null {
+  const squadId = (payload as { squadId?: unknown } | null)?.squadId;
+  return typeof squadId === "string" && squadId ? { squadId } : null;
+}
+
 /** Shared by every squad mutation, so the poll can tell one is running. */
 const SQUAD_KEY = ["squad"] as const;
 
@@ -571,9 +577,12 @@ export function useSquad(
     let unlisten: UnlistenFn | null = null;
     let gone = false;
 
-    void listen<ReadyCheckAnswer>(READY_CHECK_EVENT, (event) => {
+    void listen<unknown>(READY_CHECK_EVENT, (event) => {
+      const answer = readyCheckAnswer(event.payload);
+      if (!answer) return;
+
       patchMemberRef.current.mutate({
-        squadId: event.payload.squadId,
+        squadId: answer.squadId,
         userId,
         patch: { ready: true },
       });
