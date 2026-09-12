@@ -185,8 +185,14 @@ pub struct Notifications {
 }
 
 impl Notifications {
+    /// Spelled out rather than cast from the discriminant: the array does not
+    /// know the enum's order, and a variant added in the middle must not
+    /// quietly hand one window the other's state.
     fn slot(&self, placement: Placement) -> &Slot {
-        &self.slots[placement as usize]
+        match placement {
+            Placement::Corner => &self.slots[0],
+            Placement::Top => &self.slots[1],
+        }
     }
 }
 
@@ -303,16 +309,16 @@ pub fn resize_notifications(
     let placement = Placement::of(&window)?;
     let anchor = anchor(&app, placement)?;
 
-    // A stack taller than the screen would push its oldest toasts off it.
-    let ceiling = anchor
-        .area
-        .size
-        .height
-        .saturating_sub(to_physical(MARGIN * 2.0, anchor.scale));
+    // Never larger than the work area, margins included: a stack taller than
+    // the screen would push its oldest toasts off it, and one wider than a
+    // narrow screen would be centred past its edges.
+    let margins = to_physical(MARGIN * 2.0, anchor.scale);
+    let widest = anchor.area.size.width.saturating_sub(margins).max(1);
+    let tallest = anchor.area.size.height.saturating_sub(margins).max(1);
 
     let size = PhysicalSize::new(
-        to_physical(width, anchor.scale).max(1),
-        to_physical(height, anchor.scale).clamp(1, ceiling.max(1)),
+        to_physical(width, anchor.scale).clamp(1, widest),
+        to_physical(height, anchor.scale).clamp(1, tallest),
     );
 
     place(&app, placement, &anchor, size)?;
