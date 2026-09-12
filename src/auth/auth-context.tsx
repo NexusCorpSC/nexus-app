@@ -8,12 +8,13 @@ import {
   type ReactNode,
 } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import * as authApi from "@/lib/api/auth";
 import { ApiError } from "@/lib/api-client";
 import { getSessionCookie, setSessionCookie } from "@/lib/settings";
-import type { CurrentUser } from "@/types/nexus";
+import type { CurrentUser, FeedStatusEvent } from "@/types/nexus";
 
 /**
  * Announces a sign-in or a sign-out, carrying the label of the window it
@@ -25,6 +26,35 @@ import type { CurrentUser } from "@/types/nexus";
  * scratch pad to a signed-in user.
  */
 const SESSION_EVENT = "auth://session-changed";
+
+/** Broadcast by Rust whenever the event stream's status changes. */
+const FEED_STATUS_EVENT = "feed://status";
+
+/**
+ * The one window that acts on the stream being refused.
+ *
+ * Every window runs this provider, and the stream is refused once for all of
+ * them: one has to re-check the session and tell the others, and the main
+ * window is the one that always exists — hidden in the tray, perhaps, but
+ * there. Without a designated window, the dead cookie would only be cleared
+ * by whichever window happened to be looking, or never.
+ */
+const SESSION_KEEPER_WINDOW = "main";
+
+/**
+ * Tells Rust the session on record may have changed, so the event stream it
+ * holds to the API follows it: started with a session, stopped without one.
+ *
+ * Rust reads the session from the same store this side writes, but has no
+ * way of knowing when that store has been opened or written — so it is told,
+ * by every window after every check. The call is idempotent; seven windows
+ * saying the same thing costs nothing.
+ */
+function syncFeed() {
+  void invoke("feed_sync").catch((error) => {
+    console.error("cannot sync the event stream with the session", error);
+  });
+}
 
 type AuthState = {
   user: CurrentUser | null;
@@ -61,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
     } finally {
       setLoading(false);
+      syncFeed();
     }
   }, []);
 
@@ -85,6 +116,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
+  // The stream was refused: the stored session is dead, whatever window is
+  // up. Re-checking it clears the cookie (`refresh` does, on a 401), which
+  // stops the stream from trying again until someone signs in; the others are
+  // told, so none of them goes on showing an account that is no longer there.
+  useEffect(() => {
+    const label = getCurrentWindow().label;
+    if (label !== SESSION_KEEPER_WINDOW) return;
+
+    const pending = listen<FeedStatusEvent>(FEED_STATUS_EVENT, (event) => {
+      if (event.payload.status !== "unauthorized") return;
+
+      void refresh().then(() => emit(SESSION_EVENT, label));
+    });
+
+    return () => {
+      void pending.then((unlisten) => unlisten());
+    };
+  }, [refresh]);
+
   const sendOtp = useCallback(async (email: string) => {
     await authApi.sendSignInOtp(email);
   }, []);
@@ -95,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(signedIn);
       // Authenticated endpoints answered 401 while signed out; drop those.
       await queryClient.invalidateQueries();
+      syncFeed();
       await emit(SESSION_EVENT, getCurrentWindow().label);
     },
     [queryClient],
@@ -104,6 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await authApi.signOut();
     setUser(null);
     queryClient.clear();
+    syncFeed();
     await emit(SESSION_EVENT, getCurrentWindow().label);
   }, [queryClient]);
 

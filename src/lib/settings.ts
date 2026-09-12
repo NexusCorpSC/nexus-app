@@ -43,7 +43,11 @@ const KEY_RAID_LAYOUT = "raidLayout";
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
 
-/** Hosts allowed by the `http` capability in `src-tauri/capabilities/default.json`. */
+/**
+ * Hosts allowed by the `http` capability in `src-tauri/capabilities/default.json`.
+ * Copied a third time in `src-tauri/src/event_feed.rs`, whose requests answer
+ * to no capability: the three lists must say the same thing.
+ */
 export const ALLOWED_API_BASE_URLS = [
   "https://tools.services.nexus",
   "http://localhost:3000",

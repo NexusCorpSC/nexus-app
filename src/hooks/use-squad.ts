@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import {
@@ -7,6 +7,7 @@ import {
   useMutation,
   useQuery,
   useQueryClient,
+  type QueryClient,
 } from "@tanstack/react-query";
 import {
   createRaid,
@@ -27,9 +28,13 @@ import {
   updateRaid,
   updateSquadMember,
   updateSquadRole,
+  view as normalizeView,
 } from "@/lib/api/squads";
+import { useFeedStatus } from "@/hooks/use-feed-status";
 import type {
+  FeedStatus,
   Squad,
+  SquadFeedView,
   SquadMemberPatch,
   SquadRoleIcon,
   SquadView,
@@ -37,6 +42,9 @@ import type {
 
 /** Emitted by Rust whenever the squad window is shown or hidden. */
 const SQUAD_VISIBILITY_EVENT = "squad://visibility";
+
+/** Emitted by Rust with every view the event stream delivers for the squad. */
+const SQUAD_VIEW_EVENT = "squad://view";
 
 /** Shared by every squad mutation, so the poll can tell one is running. */
 const SQUAD_KEY = ["squad"] as const;
@@ -52,17 +60,15 @@ function keyFor(current: string | null) {
   return [...SQUAD_KEY, current ?? ""] as const;
 }
 
-/** How often the squad is re-read while the overlay is up. */
-const POLL_INTERVAL = 2_000;
-
 /**
  * Whether the squad overlay is on screen.
  *
  * Asked to Rust rather than worked out here. A hidden window and an unfocused
  * one look identical from the webview, and over a game this one is *always*
- * unfocused — pausing on blur would stop the refresh exactly when it matters.
- * The initial answer is asked for because the window is created hidden at
- * startup, so this code runs long before anyone opens it.
+ * unfocused. The initial answer is asked for because the window is created
+ * hidden at startup, so this code runs long before anyone opens it. The view
+ * itself no longer depends on it — the stream Rust holds runs whatever is on
+ * screen — but the window still says whether it is live.
  */
 export function useSquadOverlayVisible(): boolean {
   const [visible, setVisible] = useState(false);
@@ -130,16 +136,60 @@ function withSquad(
 }
 
 /**
+ * What replaces the cache, unless it is older than the cache.
+ *
+ * The squad's `version` grows with every write. A pushed view that carries a
+ * smaller one for the squad on screen was read before something the screen
+ * already shows — typically our own write's answer, which landed first — and
+ * is dropped. Anything else (equal or newer, no squad, another squad) is the
+ * latest word.
+ */
+function merge(next: SquadView, shown: SquadView | undefined): SquadView {
+  if (
+    shown?.squad &&
+    next.squad &&
+    next.squad.id === shown.squad.id &&
+    next.squad.version < shown.squad.version
+  ) {
+    return shown;
+  }
+
+  return next;
+}
+
+/** A view the stream delivered, put under the key of the squad it was asked for. */
+function applyPush(queryClient: QueryClient, pushed: SquadFeedView) {
+  const next = normalizeView(pushed.view);
+  queryClient.setQueryData<SquadView>(keyFor(pushed.squad), (shown) =>
+    merge(next, shown),
+  );
+}
+
+/**
+ * The first read of a key: what the stream last delivered for that squad, if
+ * Rust has it — the stream is usually up long before this window is — and a
+ * single request otherwise, which is also all an older server can offer.
+ */
+async function hydrate(current: string | null): Promise<SquadView> {
+  const snapshot = await invoke<SquadFeedView | null>("feed_snapshot", {
+    topic: "squad",
+    squad: current,
+  }).catch(() => null);
+
+  return snapshot ? normalizeView(snapshot.view) : getMySquad(current);
+}
+
+/**
  * One mutation of the squad, shown before the server has agreed.
  *
- * Three pieces make a click feel immediate without the poll undoing it:
+ * Three pieces make a click feel immediate without the stream undoing it:
  *
  * 1. whatever request is in flight is cancelled, and the new value goes into
  *    the cache at once;
- * 2. the poll is held off while any squad mutation runs (see `useSquad`) — that
- *    is what stops an answer sent *before* the click from landing *after* it;
+ * 2. pushes are held while any squad mutation runs (see `useSquad`) — that
+ *    is what stops a view read *before* the click from landing *after* it;
  * 3. the API answers with the whole view, so success replaces the guess with
- *    the truth rather than waiting two seconds for it.
+ *    the truth rather than waiting for the push that follows.
  *
  * The answer is the view *of the squad acted on*, which is not always the one
  * on screen: from the raid board, an organiser toggles rows in a squad they
@@ -225,17 +275,25 @@ export interface SquadState {
   memberships: SquadView["memberships"];
   loading: boolean;
   error: unknown;
-  /** True while the window is up, which is also while the squad is polled. */
+  /** True while the window is up. */
   live: boolean;
+  /** Where the stream that feeds this stands. */
+  feed: FeedStatus;
+  /** True while something — the stream, or its fallback — keeps the view fresh. */
+  connected: boolean;
 }
 
 /**
- * The squad, kept as fresh as polling allows.
+ * The squad, kept fresh by the event stream.
+ *
+ * The view arrives from Rust, which holds one stream to the API for the whole
+ * app: a snapshot when it opens, then one every time a squad or raid the
+ * reader depends on is written. Every write answers the whole view too.
  *
  * `enabled` is the session: the overlay is outside the route guard, so it asks
  * for nothing until someone is signed in. `current` is the squad the overlay
  * chose to look at, or `null` for the one the API picks — the only one, for
- * nearly everybody.
+ * nearly everybody; Rust is told, and streams that one.
  *
  * Every squad-scoped mutation takes the squad it acts on: the one on screen
  * for most of them, and any squad the reader is in for the rows of the raid
@@ -244,19 +302,68 @@ export interface SquadState {
 export function useSquad(enabled: boolean, current: string | null) {
   const queryClient = useQueryClient();
   const live = useSquadOverlayVisible();
+  const feed = useFeedStatus();
   const writing = useIsMutating({ mutationKey: SQUAD_KEY }) > 0;
 
   const query = useQuery({
     queryKey: keyFor(current),
-    queryFn: () => getMySquad(current),
+    queryFn: () => hydrate(current),
     enabled,
-    // Nothing is worth keeping: the whole point is what the others just did.
-    staleTime: 0,
-    refetchInterval: live && !writing ? POLL_INTERVAL : false,
+    // The stream is the only thing that refreshes this; nothing goes stale
+    // on its own.
+    staleTime: Infinity,
     // Switching squads must not flash «Chargement…» over the cockpit: the last
     // view stays up until the next one lands.
     placeholderData: keepPreviousData,
   });
+
+  // Which squad to stream. Rust restarts the stream when it changes.
+  useEffect(() => {
+    void invoke("feed_set_squad", { squad: current }).catch((error) => {
+      console.error("cannot choose the squad to stream", error);
+    });
+  }, [current]);
+
+  // Pushes that arrive mid-write are held — the last one wins — and applied
+  // once the write has settled, through the version rule. The listener reads
+  // the flag through a ref: it is installed once, the flag changes often.
+  const writingRef = useRef(writing);
+  const held = useRef<SquadFeedView | null>(null);
+
+  useEffect(() => {
+    writingRef.current = writing;
+
+    if (!writing && held.current) {
+      const pushed = held.current;
+      held.current = null;
+      applyPush(queryClient, pushed);
+    }
+  }, [writing, queryClient]);
+
+  useEffect(() => {
+    let unlisten: UnlistenFn | null = null;
+    let gone = false;
+
+    void listen<SquadFeedView>(SQUAD_VIEW_EVENT, (event) => {
+      if (writingRef.current) {
+        held.current = event.payload;
+        return;
+      }
+      applyPush(queryClient, event.payload);
+    })
+      .then((stop) => {
+        if (gone) stop();
+        else unlisten = stop;
+      })
+      .catch((error) => {
+        console.error("cannot follow the squad stream", error);
+      });
+
+    return () => {
+      gone = true;
+      unlisten?.();
+    };
+  }, [queryClient]);
 
   /**
    * The answer to leaving or starting over is the view the API picks — which
@@ -440,6 +547,8 @@ export function useSquad(enabled: boolean, current: string | null) {
       loading: query.isPending && enabled,
       error: query.error,
       live,
+      feed,
+      connected: feed === "connected" || feed === "polling",
     } satisfies SquadState,
     create,
     join,

@@ -386,7 +386,15 @@ le bloc-notes local à quelqu'un qui vient de se connecter. Une connexion ou une
 déconnexion est donc diffusée à toutes les fenêtres (`auth://session-changed`),
 qui relisent la session du store ; la fenêtre à l'origine du changement ignore sa
 propre diffusion, sinon elle repasserait par son écran de chargement pour rien.
-La superposition revérifie aussi la session quand elle reprend le focus.
+
+Une note écrite ailleurs — la fenêtre principale, le site, un autre appareil —
+arrive par le **flux d'événements** (voir plus bas) : Rust la remet à toutes
+les fenêtres (`note://changed`), et l'éditeur l'adopte, sauf s'il tient un
+brouillon non enregistré ou une sauvegarde en cours — ceux-là ne disparaissent
+pas sous les doigts de l'utilisateur. Sa propre sauvegarde lui revient par le
+même chemin, identique à ce qu'il vient de poser, et ne change rien. Tant que
+le flux n'est pas connecté, la superposition relit la note quand elle reprend
+le focus, comme elle l'a toujours fait.
 
 L'enregistrement est automatique, 1,2 s après la dernière frappe. Les écritures
 peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
@@ -419,6 +427,60 @@ raid, toutes celles dont on est membre se manipulent, pas seulement celle qui
 est affichée. Côté API, chaque route accepte `?squad=<id>` pour dire laquelle
 elle vise ; sans lui, c'est la plus ancienne des appartenances, donc la seule
 pour tout le monde sauf l'organisateur.
+
+La vue elle-même n'est plus demandée toutes les deux secondes : elle arrive par
+le **flux d'événements** (voir plus bas). Un point dans l'en-tête dit où en est
+ce flux — vert, la vue est en direct ; ambre, la connexion se rétablit.
+
+### Flux d'événements
+
+Nexus Tools pousse ce qui change — l'escouade, le bloc-notes, demain les
+notifications — sur **une connexion Server-Sent Events par client**
+(`GET /api/events`, protocole décrit dans le README de nexus-tools). Elle est
+tenue **par Rust** (`src-tauri/src/event_feed.rs`), pas par une webview : une
+fenêtre ne sait rien des autres, et sept fenêtres tenant chacune un flux
+feraient sept sessions vérifiées pour un seul utilisateur. Une seule connexion,
+donc, ouverte **dès qu'une session existe**, quelle que soit la fenêtre visible
+— une notification doit arriver pendant que l'app dort dans la zone de
+notification —, et chaque événement est remis à la fenêtre qui le dessine :
+
+| Événement du serveur | Événement Tauri  | Destinataire                       |
+| -------------------- | ---------------- | ---------------------------------- |
+| `squad.view`         | `squad://view`   | la superposition d'escouade        |
+| `note`               | `note://changed` | toutes les fenêtres                |
+| —                    | `feed://status`  | toutes les fenêtres (état du flux) |
+
+Ce que Rust ne connaît pas, il l'ignore : un sujet peut exister côté serveur
+avant qu'une fenêtre ne l'écoute.
+
+**La session vient du store.** Rust lit le même `settings.json` que le
+frontend (`apiBaseUrl`, `sessionCookie`), sans jamais l'écrire — et il ne sait
+pas quand ce store a été ouvert ou modifié. Chaque fenêtre le lui dit donc
+(`feed_sync`) après chaque vérification de session, et `auth://session-changed`
+lui parvient aussi ; l'appel est idempotent. L'URL est revalidée contre la même
+liste d'hôtes que la capacité `http` impose aux webviews : une requête faite
+d'ici ne répond à aucune capacité, la règle est tenue à la main.
+
+**Ce que la superposition d'escouade en fait.** Elle dit à Rust quelle
+escouade elle regarde (`feed_set_squad`) — une autre escouade, c'est un autre
+flux — et met chaque `squad://view` dans son cache React Query, sous la clé de
+l'escouade pour laquelle il a été demandé. Au montage, elle prend d'abord le
+dernier instantané reçu (`feed_snapshot`), le flux étant en général ouvert bien
+avant elle ; sinon une seule requête. Deux règles tiennent l'ordre entre le
+flux et ses propres écritures : un push reçu pendant qu'une mutation est en vol
+est **retenu** (le dernier gagne) et appliqué une fois la réponse posée ; et un
+push dont `squad.version` est **strictement inférieur** à celui affiché pour la
+même escouade est ignoré — il a été lu avant ce que l'écran montre déjà.
+
+**Reconnexion.** Perdu, le flux revient avec un délai de 1 s doublé jusqu'à
+30 s (±20 %), remis à 1 s après trente secondes de connexion stable ; le `bye`
+que le serveur envoie avant sa propre limite de temps redémarre sans attendre.
+Un **401** arrête tout jusqu'au prochain changement de session — la
+superposition d'escouade revérifie alors la session, ce qui efface le cookie
+mort. Un **404** (serveur d'avant le flux) rabat sur `GET /api/squads` toutes
+les 10 s, seulement tant que la superposition d'escouade est visible, et
+ressaie le flux toutes les cinq minutes. Le journal (`nexus-app.log`) note
+chaque transition, jamais le contenu.
 
 #### Les trois superpositions ont le même en-tête
 

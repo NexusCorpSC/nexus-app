@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/auth/auth-context";
 import { NoteEditor } from "@/components/note-editor";
 import { ErrorState, LoadingState, PageHeader } from "@/components/ui";
+import { useNoteStream } from "@/hooks/use-note-stream";
 import { noteQueryKey, readNote } from "@/lib/notes";
 import {
   DEFAULT_SHORTCUTS,
@@ -32,6 +33,9 @@ export default function NotesPage() {
     // The session decides which note applies, so wait for it to settle.
     enabled: !loading,
   });
+
+  // Written elsewhere — the overlay, the site — the note arrives on its own.
+  useNoteStream(signedIn);
 
   return (
     <div>

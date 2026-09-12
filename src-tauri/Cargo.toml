@@ -31,6 +31,14 @@ serde_json = "1"
 tauri-plugin-global-shortcut = "2.3.2"
 # Self-update from the GitHub releases of this repository.
 tauri-plugin-updater = "2.10.1"
+# The event stream of Nexus Tools is held from Rust (`src/event_feed.rs`), so
+# it needs an HTTP client of its own. The same `reqwest` and the same TLS
+# stack `tauri-plugin-http` already compiles: nothing new goes in the binary
+# but a few features.
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+# `sync` for the cancellation channel, `time` for the backoff, `macros` for
+# `select!` — on the runtime Tauri already runs.
+tokio = { version = "1", features = ["sync", "time", "macros"] }
 
 # Screen capture and OCR are Windows-only, matching the only target platform.
 # `xcap` grabs the monitor pixels; `windows` exposes Windows.Media.Ocr, the OCR

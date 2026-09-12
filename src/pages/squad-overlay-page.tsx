@@ -219,6 +219,25 @@ export default function SquadOverlayPage() {
           <Users className="pointer-events-none size-4 shrink-0 text-nexus-accent/70" />
         )}
 
+        {/*
+         * Whether the view is live. Green while the stream (or its fallback)
+         * feeds it, amber while it is being brought back; nothing otherwise —
+         * a window with no session has nothing to be connected to.
+         */}
+        {user && (state.connected || state.feed === "reconnecting") ? (
+          <span
+            className={cn(
+              "pointer-events-none size-1.5 shrink-0 rounded-full",
+              state.connected ? "bg-emerald-400" : "bg-amber-400",
+            )}
+            title={state.connected ? "En direct" : "Reconnexion…"}
+          >
+            <span className="sr-only">
+              {state.connected ? "En direct" : "Reconnexion…"}
+            </span>
+          </span>
+        ) : null}
+
         <Title
           squad={squad}
           raid={raid}

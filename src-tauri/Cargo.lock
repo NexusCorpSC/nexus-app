@@ -2602,6 +2602,7 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 name = "nexus-app"
 version = "0.13.0"
 dependencies = [
+ "reqwest 0.12.28",
  "serde",
  "serde_json",
  "tauri",
@@ -2611,6 +2612,7 @@ dependencies = [
  "tauri-plugin-opener",
  "tauri-plugin-store",
  "tauri-plugin-updater",
+ "tokio",
  "windows 0.62.2",
  "xcap",
 ]
