@@ -166,11 +166,13 @@ const ANNOUNCEMENT_TIMEOUT_MS = 12_000;
  *
  * The squad's, and the raid's: the two the leader writes for everybody, and
  * the two nobody sees while the overlay is hidden behind the game — which is
- * exactly when the notification window still is. Compared with what was on
- * screen, so the first snapshot after launch and the switch to another squad
- * announce nothing; and an announcement cleared is not one to read. Our own
- * edits never get here: the guess and the answer to the write both land in
- * the cache before the push that echoes them, so the push finds them equal.
+ * exactly when the notification window still is. Compared with what the
+ * cache held for that squad, and an announcement cleared is not one to read.
+ * Our own edits never get here: the guess and the answer to the write both
+ * land in the cache before the push that echoes them, so the push finds them
+ * equal. The first push for a squad — after launch, or after switching to it
+ * — is kept out by the caller: what the cache held for a squad last looked at
+ * an hour ago is not «what was on screen».
  */
 function announceChanges(shown: SquadView, next: SquadView) {
   if (
@@ -202,15 +204,22 @@ function announceChanges(shown: SquadView, next: SquadView) {
   }
 }
 
-/** A view the stream delivered, put under the key of the squad it was asked for. */
-function applyPush(queryClient: QueryClient, pushed: SquadFeedView) {
+/**
+ * A view the stream delivered, put under the key of the squad it was asked
+ * for. `silent` is the first push of a new target: a snapshot, not a change.
+ */
+function applyPush(
+  queryClient: QueryClient,
+  pushed: SquadFeedView,
+  silent: boolean,
+) {
   const key = keyFor(pushed.squad);
   const next = normalizeView(pushed.view);
   const shown = queryClient.getQueryData<SquadView>(key);
   const merged = merge(next, shown);
 
   // Only a view that actually replaces the screen has news in it.
-  if (shown && merged === next) announceChanges(shown, next);
+  if (!silent && shown && merged === next) announceChanges(shown, next);
 
   queryClient.setQueryData<SquadView>(key, merged);
 }
@@ -378,15 +387,20 @@ export function useSquad(enabled: boolean, current: string | null) {
   // once the write has settled, through the version rule. The listener reads
   // the flag through a ref: it is installed once, the flag changes often.
   const writingRef = useRef(writing);
-  const held = useRef<SquadFeedView | null>(null);
+  const held = useRef<{ pushed: SquadFeedView; silent: boolean } | null>(null);
+
+  // The squad the last push was for. A push for another one is the snapshot
+  // that opens a new stream — after a switch, or at launch — and says nothing
+  // about what changed: the cache may hold that squad as it was long ago.
+  const streamed = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
     writingRef.current = writing;
 
     if (!writing && held.current) {
-      const pushed = held.current;
+      const { pushed, silent } = held.current;
       held.current = null;
-      applyPush(queryClient, pushed);
+      applyPush(queryClient, pushed, silent);
     }
   }, [writing, queryClient]);
 
@@ -395,11 +409,14 @@ export function useSquad(enabled: boolean, current: string | null) {
     let gone = false;
 
     void listen<SquadFeedView>(SQUAD_VIEW_EVENT, (event) => {
+      const silent = streamed.current !== event.payload.squad;
+      streamed.current = event.payload.squad;
+
       if (writingRef.current) {
-        held.current = event.payload;
+        held.current = { pushed: event.payload, silent };
         return;
       }
-      applyPush(queryClient, event.payload);
+      applyPush(queryClient, event.payload, silent);
     })
       .then((stop) => {
         if (gone) stop();

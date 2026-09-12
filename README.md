@@ -436,11 +436,13 @@ ce flux — vert, la vue est en direct ; ambre, la connexion se rétablit.
 du raid : ce sont les deux textes que le chef écrit pour tout le monde, et les
 deux que personne ne voit tant que la superposition est cachée derrière le jeu
 — ce qui est justement le moment où la fenêtre de notifications, elle, reste
-visible. La comparaison se fait avec ce que l'écran montrait : le premier
-instantané après le lancement et le passage à une autre escouade n'annoncent
-rien, une annonce effacée non plus, et ses propres modifications ne reviennent
-pas en toast — la supposition optimiste et la réponse de l'écriture sont posées
-dans le cache avant le push qui les répète.
+visible. La comparaison se fait avec ce que l'écran montrait : le premier push
+reçu pour une escouade — au lancement, ou après être passé sur elle — est un
+instantané, pas un changement, et n'annonce rien, même si le cache gardait
+cette escouade telle qu'elle était une heure plus tôt ; une annonce effacée
+n'annonce rien non plus, et ses propres modifications ne reviennent pas en
+toast — la supposition optimiste et la réponse de l'écriture sont posées dans
+le cache avant le push qui les répète.
 
 ### Flux d'événements
 
