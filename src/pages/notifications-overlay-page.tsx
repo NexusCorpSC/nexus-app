@@ -11,7 +11,9 @@ import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { openMainRoute } from "@/lib/main-window";
 import {
+  BANNER_WIDTH,
   DEFAULT_NOTIFICATION_CORNER,
+  MAX_VISIBLE_BANNERS,
   MAX_VISIBLE_NOTIFICATIONS,
   NOTIFICATION_CORNER_EVENT,
   NOTIFICATION_EVENT,
@@ -20,6 +22,7 @@ import {
   type AppNotification,
   type NotificationCorner,
   type NotificationKind,
+  type NotificationPlacement,
 } from "@/lib/notifications";
 import { cn } from "@/lib/utils";
 
@@ -59,14 +62,25 @@ const TONES: Record<NotificationKind, Tone> = {
 };
 
 /**
- * The stack of toasts, in a window Rust keeps pinned to a corner of the screen.
+ * A stack of toasts, in a window Rust keeps pinned to its place on the screen:
+ * a corner, or the top, centred — one window each, this page in both. Rust
+ * tells the two apart by the window that calls it, so the page only has to
+ * know how to look.
  *
  * Nothing is raised from here: notifications come in as events, whoever sent
  * them, so they show up whether the app is in the foreground, minimised or
  * behind a game.
  */
-export default function NotificationsOverlayPage() {
+export default function NotificationsOverlayPage({
+  placement,
+}: {
+  placement: NotificationPlacement;
+}) {
   useTransparentWindow();
+
+  const top = placement === "top";
+  const width = top ? BANNER_WIDTH : NOTIFICATION_WIDTH;
+  const capacity = top ? MAX_VISIBLE_BANNERS : MAX_VISIBLE_NOTIFICATIONS;
 
   const [items, setItems] = useState<AppNotification[]>([]);
   const [corner, setCorner] = useState<NotificationCorner>(
@@ -96,9 +110,7 @@ export default function NotificationsOverlayPage() {
     const register = async () => {
       keep(
         await listen<AppNotification>(NOTIFICATION_EVENT, (event) => {
-          setItems((current) =>
-            [...current, event.payload].slice(-MAX_VISIBLE_NOTIFICATIONS),
-          );
+          setItems((current) => [...current, event.payload].slice(-capacity));
         }),
       );
 
@@ -119,7 +131,7 @@ export default function NotificationsOverlayPage() {
       gone = true;
       for (const unlisten of unlisteners) unlisten();
     };
-  }, []);
+  }, [capacity]);
 
   // The window is kept exactly as tall as the stack. Any surplus would swallow
   // clicks meant for whatever is underneath — usually the game.
@@ -139,7 +151,7 @@ export default function NotificationsOverlayPage() {
       if (height <= 0) return;
 
       void invoke("resize_notifications", {
-        width: NOTIFICATION_WIDTH,
+        width,
         height: Math.ceil(height),
       }).catch((error) => {
         console.error("cannot place the notification overlay", error);
@@ -154,10 +166,16 @@ export default function NotificationsOverlayPage() {
     observer.observe(stack);
 
     return () => observer.disconnect();
-  }, [items]);
+  }, [items, width]);
 
-  const bottom = corner.startsWith("bottom");
-  const right = corner.endsWith("right");
+  // At the top, the stack hangs from the top edge, centred, and slides down
+  // from it; in a corner, it hangs from that corner and slides in from the
+  // side of the screen it is on.
+  const bottom = !top && corner.startsWith("bottom");
+  const right = !top && corner.endsWith("right");
+  const from = top
+    ? { x: "0", y: "-1.5rem" }
+    : { x: right ? "1.5rem" : "-1.5rem", y: "0" };
 
   return (
     <div
@@ -167,14 +185,14 @@ export default function NotificationsOverlayPage() {
         // the stack by Rust — that is what keeps the rest of the screen free.
         "pointer-events-none flex h-screen w-screen overflow-hidden",
         bottom ? "items-end" : "items-start",
-        right ? "justify-end" : "justify-start",
+        top ? "justify-center" : right ? "justify-end" : "justify-start",
       )}
     >
       <div
         ref={stackRef}
-        style={{ width: NOTIFICATION_WIDTH }}
+        style={{ width }}
         className={cn(
-          // Newest nearest the corner the stack hangs from.
+          // Newest nearest the edge the stack hangs from.
           "flex gap-2 p-2",
           bottom ? "flex-col" : "flex-col-reverse",
         )}
@@ -183,7 +201,8 @@ export default function NotificationsOverlayPage() {
           <Toast
             key={item.id}
             notification={item}
-            fromRight={right}
+            large={top}
+            from={from}
             onDismiss={dismiss}
           />
         ))}
@@ -194,11 +213,15 @@ export default function NotificationsOverlayPage() {
 
 function Toast({
   notification,
-  fromRight,
+  large,
+  from,
   onDismiss,
 }: {
   notification: AppNotification;
-  fromRight: boolean;
+  /** Read from across the room: bigger type, more air, a bigger button. */
+  large: boolean;
+  /** Where the toast slides in from, as CSS lengths. */
+  from: { x: string; y: string };
   onDismiss: (id: number) => void;
 }) {
   const [paused, setPaused] = useState(false);
@@ -256,15 +279,28 @@ function Toast({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       // Slides in from the edge of the screen it is hung on.
-      style={{ "--toast-from": fromRight ? "1.5rem" : "-1.5rem" } as CSSProperties}
+      style={
+        { "--toast-from-x": from.x, "--toast-from-y": from.y } as CSSProperties
+      }
       className={cn(
         "nexus-toast pointer-events-auto overflow-hidden rounded-xl border",
         "bg-[#061E30]/95 shadow-2xl shadow-black/40 backdrop-blur-xl",
         tone.border,
       )}
     >
-      <div className="flex items-start gap-2.5 p-3">
-        <Icon className={cn("mt-0.5 size-4 shrink-0", tone.icon)} />
+      <div
+        className={cn(
+          "flex items-start",
+          large ? "gap-3.5 p-4" : "gap-2.5 p-3",
+        )}
+      >
+        <Icon
+          className={cn(
+            "shrink-0",
+            large ? "mt-0.5 size-6" : "mt-0.5 size-4",
+            tone.icon,
+          )}
+        />
 
         {/* A button only when there is somewhere to go: a message that does
             nothing when clicked should not look like it would. */}
@@ -275,10 +311,10 @@ function Toast({
               onClick={act}
               className="block w-full cursor-pointer text-left"
             >
-              <Message title={title} body={body} />
+              <Message title={title} body={body} large={large} />
             </button>
           ) : (
-            <Message title={title} body={body} />
+            <Message title={title} body={body} large={large} />
           )}
 
           {action ? (
@@ -286,8 +322,9 @@ function Toast({
               type="button"
               onClick={perform}
               className={cn(
-                "mt-2 inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium transition",
+                "inline-flex items-center rounded-md border font-medium transition",
                 "border-white/15 bg-white/10 text-slate-100 hover:bg-white/20",
+                large ? "mt-3 px-4 py-1.5 text-sm" : "mt-2 px-2.5 py-1 text-xs",
               )}
             >
               {action.label}
@@ -302,7 +339,7 @@ function Toast({
           className="rounded p-1 text-slate-500 transition hover:bg-white/10 hover:text-slate-200"
         >
           <span className="sr-only">Fermer</span>
-          <X className="size-3.5" />
+          <X className={large ? "size-4" : "size-3.5"} />
         </button>
       </div>
 
@@ -321,12 +358,34 @@ function Toast({
   );
 }
 
-function Message({ title, body }: { title: string; body: string | null }) {
+function Message({
+  title,
+  body,
+  large,
+}: {
+  title: string;
+  body: string | null;
+  large: boolean;
+}) {
   return (
     <>
-      <p className="text-sm font-medium text-slate-100">{title}</p>
+      <p
+        className={cn(
+          "text-slate-100",
+          large ? "text-lg font-semibold" : "text-sm font-medium",
+        )}
+      >
+        {title}
+      </p>
       {body ? (
-        <p className="mt-0.5 whitespace-pre-line break-words text-xs text-slate-400">
+        <p
+          className={cn(
+            "whitespace-pre-line break-words",
+            large
+              ? "mt-1 text-base text-slate-300"
+              : "mt-0.5 text-xs text-slate-400",
+          )}
+        >
           {body}
         </p>
       ) : null}

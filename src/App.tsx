@@ -31,7 +31,14 @@ export default function App() {
       <Route path="overlay" element={<OverlayPage />} />
       <Route path="capture" element={<CapturePage />} />
       <Route path="notes-overlay" element={<NotesOverlayPage />} />
-      <Route path="notifications" element={<NotificationsOverlayPage />} />
+      <Route
+        path="notifications"
+        element={<NotificationsOverlayPage placement="corner" />}
+      />
+      <Route
+        path="banners"
+        element={<NotificationsOverlayPage placement="top" />}
+      />
       <Route path="cargo-overlay" element={<CargoOverlayPage />} />
       <Route path="squad-overlay" element={<SquadOverlayPage />} />
 

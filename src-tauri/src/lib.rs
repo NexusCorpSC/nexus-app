@@ -29,6 +29,8 @@ const NOTES_WINDOW: &str = "notes";
 const CARGO_WINDOW: &str = "cargo";
 const SQUAD_WINDOW: &str = "squad";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
+/// The large, centred notifications: what is asked of the whole squad.
+pub(crate) const BANNERS_WINDOW: &str = "banners";
 
 /// Carries recognised text to the overlay's search bar.
 const SEARCH_EVENT: &str = "overlay://search";

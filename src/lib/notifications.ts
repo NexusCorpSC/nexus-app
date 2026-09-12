@@ -1,8 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 
 /**
- * Notifications are drawn by a window of their own, hung from a corner of the
- * screen (see `src-tauri/src/notifications.rs`).
+ * Notifications are drawn by windows of their own: one hung from a corner of
+ * the screen, one large and centred at its top (see
+ * `src-tauri/src/notifications.rs`).
  *
  * Raising one is therefore a call into Rust rather than a React state update:
  * the window that raises a notification is rarely the window that shows it, and
@@ -10,6 +11,14 @@ import { invoke } from "@tauri-apps/api/core";
  */
 
 export type NotificationKind = "info" | "success" | "warning" | "error";
+
+/**
+ * Where a notification is shown. The corner is for what is worth noticing
+ * without being in the way; the top of the screen, large and centred, is for
+ * what is asked of the whole squad — an announcement, a ready check — and
+ * would go unread in a corner while the game has the eyes.
+ */
+export type NotificationPlacement = "corner" | "top";
 
 /**
  * A button on the toast, and what pressing it does: an event, broadcast to
@@ -36,6 +45,8 @@ export type NotificationInput = {
    * done in is, by construction, not the one showing the toast.
    */
   route?: string;
+  /** The corner unless said otherwise. */
+  placement?: NotificationPlacement;
 };
 
 /** A notification as it reaches the overlay, id assigned by Rust. */
@@ -47,17 +58,24 @@ export type AppNotification = {
   timeoutMs: number | null;
   route: string | null;
   action: NotificationAction | null;
+  placement: NotificationPlacement;
 };
 
 /** Events the overlay listens for; the names are shared with Rust. */
 export const NOTIFICATION_EVENT = "notifications://show";
 export const NOTIFICATION_CORNER_EVENT = "notifications://corner";
 
-/** Width of the stack in logical pixels. Rust sizes the window from it. */
+/** Width of the corner stack in logical pixels. Rust sizes the window from it. */
 export const NOTIFICATION_WIDTH = 340;
 
-/** How many toasts stay on screen at once; older ones make way. */
+/** Width of the top stack: wide enough for an announcement to read as a line. */
+export const BANNER_WIDTH = 560;
+
+/** How many corner toasts stay on screen at once; older ones make way. */
 export const MAX_VISIBLE_NOTIFICATIONS = 4;
+
+/** Fewer at the top: they are large, and they sit over the middle of the game. */
+export const MAX_VISIBLE_BANNERS = 3;
 
 /** Corners, in the spelling `Corner` is deserialised from in Rust. */
 export const NOTIFICATION_CORNERS = [
@@ -99,7 +117,10 @@ export function notify(notification: NotificationInput): Promise<void> {
   return invoke("notify", { notification });
 }
 
-/** Moves the overlay to `corner`. Persisting the choice is `settings.ts`'s. */
+/**
+ * Moves the corner overlay to `corner`. Persisting the choice is
+ * `settings.ts`'s. The top overlay is not concerned: centred is centred.
+ */
 export function applyNotificationCorner(
   corner: NotificationCorner,
 ): Promise<void> {

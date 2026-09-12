@@ -435,19 +435,20 @@ ce flux — vert, la vue est en direct ; ambre, la connexion se rétablit.
 **Ready check.** Le chef d'une escouade ou un de ses lieutenants demande à
 l'escouade de se déclarer prête ; celui qui commande l'escouade meneuse le
 demande à tout le raid. Tout le monde repasse « non prêt » — le demandeur
-compris — et reçoit une notification avec un bouton **Prêt**. Le bouton est
-pressé dans la fenêtre de notifications, qui n'a ni session ni réseau : il
-diffuse `squad://ready`, et la superposition d'escouade, qui a les deux, écrit
-la ligne du lecteur. Le marqueur (`readyCheck`, un identifiant frais) arrive par
+compris — et reçoit une notification avec un bouton **Prêt**, en grand, en haut
+de l'écran au milieu (voir « Notifications »). Le bouton est pressé dans la
+fenêtre des bannières, qui n'a ni session ni réseau : il diffuse
+`squad://ready`, et la superposition d'escouade, qui a les deux, écrit la ligne
+du lecteur. Le marqueur (`readyCheck`, un identifiant frais) arrive par
 le flux d'événements comme le reste de la vue ; un identifiant inconnu, c'est
 une notification. Son propre ready check n'en produit pas : la réponse de
 l'écriture est posée dans le cache avant le push qui la répète.
 
-**Une annonce modifiée part en notification.** Celle de l'escouade comme celle
-du raid : ce sont les deux textes que le chef écrit pour tout le monde, et les
-deux que personne ne voit tant que la superposition est cachée derrière le jeu
-— ce qui est justement le moment où la fenêtre de notifications, elle, reste
-visible. La comparaison se fait avec ce que l'écran montrait : le premier push
+**Une annonce modifiée part en notification**, en grand, en haut de l'écran
+au milieu. Celle de l'escouade comme celle du raid : ce sont les deux textes
+que le chef écrit pour tout le monde, et les deux que personne ne voit tant que
+la superposition est cachée derrière le jeu — ce qui est justement le moment où
+la fenêtre des bannières, elle, reste visible. La comparaison se fait avec ce que l'écran montrait : le premier push
 reçu pour une escouade — au lancement, ou après être passé sur elle — est un
 instantané, pas un changement, et n'annonce rien, même si le cache gardait
 cette escouade telle qu'elle était une heure plus tôt ; une annonce effacée
@@ -530,12 +531,19 @@ réorganise sous lui.
 
 ### Notifications
 
-Les notifications s'affichent dans **une fenêtre à elles**, accrochée à un coin
-de l'écran — en bas à droite par défaut, comme celles de Windows. Le coin se
-choisit dans **Paramètres**, où un exemple part à chaque changement pour montrer
-où il tombe.
+Les notifications s'affichent dans **des fenêtres à elles**, deux :
 
-Une fenêtre séparée plutôt qu'un coin de la fenêtre principale : celle-ci est
+- **Le coin.** Accrochée à un coin de l'écran — en bas à droite par défaut,
+  comme celles de Windows. Le coin se choisit dans **Paramètres**, où un exemple
+  part à chaque changement pour montrer où il tombe. C'est là que va tout ce
+  qui vaut d'être remarqué sans gêner : un échec de capture, une mise à jour.
+- **Le haut de l'écran, au milieu, en grand.** Pour ce qui est demandé à toute
+  l'escouade — une annonce, un ready check — et que personne ne lirait dans un
+  coin pendant que le jeu tient les yeux. Plus large (560 px), plus gros
+  caractères, un bouton plus gros ; trois au plus, la plus récente en haut.
+  Centré est centré : le réglage du coin ne la concerne pas.
+
+Des fenêtres séparées plutôt qu'un coin de la fenêtre principale : celle-ci est
 presque toujours rangée ou minimisée derrière le jeu, et une notification que
 personne ne voit n'en est pas une.
 
@@ -543,13 +551,15 @@ Le partage des rôles :
 
 - **Rust** possède la géométrie (`src-tauri/src/notifications.rs`). Il choisit le
   moniteur, lit sa *zone de travail* — pas l'écran entier, pour que les toasts se
-  posent au-dessus de la barre des tâches et non dessous — et place la fenêtre
-  dans le coin retenu. Le moniteur est celui **sous le curseur**, la règle que
+  posent au-dessus de la barre des tâches et non dessous — et place chaque
+  fenêtre à sa place. Le moniteur est celui **sous le curseur**, la règle que
   suit déjà la capture de zone ; il est figé le temps d'une pile, pour qu'elle ne
   saute pas d'un écran à l'autre en cours de route.
-- **La superposition** (`src/pages/notifications-overlay-page.tsx`) dessine la
-  pile et renvoie sa hauteur : la fenêtre est redimensionnée à chaque changement
-  pour ne jamais couvrir plus que les toasts eux-mêmes.
+- **La superposition** (`src/pages/notifications-overlay-page.tsx`, la même
+  page dans les deux fenêtres) dessine la pile et renvoie sa hauteur : la
+  fenêtre est redimensionnée à chaque changement pour ne jamais couvrir plus
+  que les toasts eux-mêmes. Rust reconnaît la fenêtre qui l'appelle, la page
+  n'a qu'à savoir à quoi ressembler.
 
 Émettre une notification depuis n'importe quelle fenêtre :
 
@@ -557,7 +567,10 @@ Le partage des rôles :
 import { notify } from "@/lib/notifications";
 
 await notify({ kind: "error", title: "Capture impossible", body: raison });
+await notify({ title: "Annonce — Alpha", body: texte, placement: "top" });
 ```
+
+`placement` vaut `corner` par défaut.
 
 L'appel passe par Rust plutôt que par un état React : la fenêtre qui émet n'est
 pratiquement jamais celle qui affiche. Rust en émet aussi directement — un échec
@@ -575,17 +588,18 @@ agit, celle des toasts n'ayant ni session ni réseau. Le ready check d'escouade
 est le premier à s'en servir.
 
 Quatre niveaux — `info`, `success`, `warning`, `error` — qui décident de l'icône,
-de la couleur et de la durée (5 à 10 s). Quatre toasts au maximum à l'écran, le
-plus récent contre le coin. Survoler un toast le retient ; le quitter relance son
+de la couleur et de la durée (5 à 10 s). Quatre toasts au maximum dans le coin,
+le plus récent contre le coin. Survoler un toast le retient ; le quitter relance son
 compte à rebours depuis le début. Un curseur oublié dans ce coin — ce qu'un jeu
 qui tient la souris rend très possible — ne l'épingle pas pour autant : passé
 30 s, il s'en va quoi qu'il arrive.
 
-> Limites connues : la fenêtre ne prend jamais le focus (`focusable: false`), mais
-> elle reste une fenêtre — un clic dans la zone qu'elle occupe lui revient et
-> n'atteint pas ce qu'il y a dessous. D'où le redimensionnement au plus juste.
-> Et comme toute fenêtre en surimpression, elle est invisible d'un jeu en plein
-> écran exclusif ; en plein écran fenêtré, elle s'affiche.
+> Limites connues : les fenêtres ne prennent jamais le focus (`focusable:
+> false`), mais elles restent des fenêtres — un clic dans la zone qu'elles
+> occupent leur revient et n'atteint pas ce qu'il y a dessous. D'où le
+> redimensionnement au plus juste. Et comme toute fenêtre en surimpression,
+> elles sont invisibles d'un jeu en plein écran exclusif ; en plein écran
+> fenêtré, elles s'affichent.
 
 ### Mises à jour
 

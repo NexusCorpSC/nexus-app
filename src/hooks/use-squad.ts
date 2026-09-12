@@ -208,6 +208,7 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
       body: `${squadCheck.requestedBy} demande à tout le monde de se déclarer prêt.`,
       timeoutMs: READY_CHECK_TIMEOUT_MS,
       action,
+      placement: "top",
     });
   }
 
@@ -224,6 +225,7 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
       body: `${raidCheck.requestedBy} demande à tout le raid de se déclarer prêt.`,
       timeoutMs: READY_CHECK_TIMEOUT_MS,
       action,
+      placement: "top",
     });
   }
 }
@@ -253,6 +255,7 @@ function announceChanges(shown: SquadView, next: SquadView) {
       title: `Annonce — ${next.squad.name}`,
       body: next.squad.announcements,
       timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
+      placement: "top",
     });
   }
 
@@ -267,6 +270,7 @@ function announceChanges(shown: SquadView, next: SquadView) {
       title: `Annonce du raid — ${next.raid.name}`,
       body: next.raid.announcement,
       timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
+      placement: "top",
     });
   }
 }
