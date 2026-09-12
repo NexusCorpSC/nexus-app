@@ -31,6 +31,7 @@ import {
   view as normalizeView,
 } from "@/lib/api/squads";
 import { useFeedStatus } from "@/hooks/use-feed-status";
+import { notify } from "@/lib/notifications";
 import type {
   FeedStatus,
   Squad,
@@ -157,12 +158,61 @@ function merge(next: SquadView, shown: SquadView | undefined): SquadView {
   return next;
 }
 
+/** How long an announcement stays up: long enough to read orders. */
+const ANNOUNCEMENT_TIMEOUT_MS = 12_000;
+
+/**
+ * Raises a toast for an announcement the stream just changed.
+ *
+ * The squad's, and the raid's: the two the leader writes for everybody, and
+ * the two nobody sees while the overlay is hidden behind the game — which is
+ * exactly when the notification window still is. Compared with what was on
+ * screen, so the first snapshot after launch and the switch to another squad
+ * announce nothing; and an announcement cleared is not one to read. Our own
+ * edits never get here: the guess and the answer to the write both land in
+ * the cache before the push that echoes them, so the push finds them equal.
+ */
+function announceChanges(shown: SquadView, next: SquadView) {
+  if (
+    next.squad &&
+    shown.squad?.id === next.squad.id &&
+    next.squad.announcements !== shown.squad.announcements &&
+    next.squad.announcements.trim()
+  ) {
+    void notify({
+      kind: "info",
+      title: `Annonce — ${next.squad.name}`,
+      body: next.squad.announcements,
+      timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
+    });
+  }
+
+  if (
+    next.raid &&
+    shown.raid?.id === next.raid.id &&
+    next.raid.announcement !== shown.raid.announcement &&
+    next.raid.announcement.trim()
+  ) {
+    void notify({
+      kind: "info",
+      title: `Annonce du raid — ${next.raid.name}`,
+      body: next.raid.announcement,
+      timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
+    });
+  }
+}
+
 /** A view the stream delivered, put under the key of the squad it was asked for. */
 function applyPush(queryClient: QueryClient, pushed: SquadFeedView) {
+  const key = keyFor(pushed.squad);
   const next = normalizeView(pushed.view);
-  queryClient.setQueryData<SquadView>(keyFor(pushed.squad), (shown) =>
-    merge(next, shown),
-  );
+  const shown = queryClient.getQueryData<SquadView>(key);
+  const merged = merge(next, shown);
+
+  // Only a view that actually replaces the screen has news in it.
+  if (shown && merged === next) announceChanges(shown, next);
+
+  queryClient.setQueryData<SquadView>(key, merged);
 }
 
 /**

@@ -432,6 +432,16 @@ La vue elle-même n'est plus demandée toutes les deux secondes : elle arrive pa
 le **flux d'événements** (voir plus bas). Un point dans l'en-tête dit où en est
 ce flux — vert, la vue est en direct ; ambre, la connexion se rétablit.
 
+**Une annonce modifiée part en notification.** Celle de l'escouade comme celle
+du raid : ce sont les deux textes que le chef écrit pour tout le monde, et les
+deux que personne ne voit tant que la superposition est cachée derrière le jeu
+— ce qui est justement le moment où la fenêtre de notifications, elle, reste
+visible. La comparaison se fait avec ce que l'écran montrait : le premier
+instantané après le lancement et le passage à une autre escouade n'annoncent
+rien, une annonce effacée non plus, et ses propres modifications ne reviennent
+pas en toast — la supposition optimiste et la réponse de l'écriture sont posées
+dans le cache avant le push qui les répète.
+
 ### Flux d'événements
 
 Nexus Tools pousse ce qui change — l'escouade, le bloc-notes, demain les
