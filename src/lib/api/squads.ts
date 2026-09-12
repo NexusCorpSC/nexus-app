@@ -249,6 +249,30 @@ export async function joinRaid(
 }
 
 /** Whoever commands the lead squad. The announcement is read by every raider. */
+/**
+ * «Everybody, say you are ready», to the squad. Whoever commands it.
+ * Every member — the asker included — goes back to not ready.
+ */
+export async function requestReadyCheck(squadId: string): Promise<SquadView> {
+  return view(
+    await apiRequest<Partial<SquadView>>(at("/api/squads/ready-check", squadId), {
+      method: "POST",
+    }),
+  );
+}
+
+/** The same, to every squad of the raid. Whoever commands the lead squad. */
+export async function requestRaidReadyCheck(
+  squadId: string,
+): Promise<SquadView> {
+  return view(
+    await apiRequest<Partial<SquadView>>(
+      at("/api/squads/raid/ready-check", squadId),
+      { method: "POST" },
+    ),
+  );
+}
+
 export async function updateRaid(
   squadId: string,
   patch: { name?: string; announcement?: string },

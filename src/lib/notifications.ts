@@ -11,12 +11,25 @@ import { invoke } from "@tauri-apps/api/core";
 
 export type NotificationKind = "info" | "success" | "warning" | "error";
 
+/**
+ * A button on the toast, and what pressing it does: an event, broadcast to
+ * every window. The overlay that draws the toast has neither the session nor
+ * the network — the window that raised the notification does, and listens.
+ */
+export type NotificationAction = {
+  label: string;
+  event: string;
+  payload?: unknown;
+};
+
 export type NotificationInput = {
   kind?: NotificationKind;
   title: string;
   body?: string;
   /** Overrides the duration the overlay derives from `kind`. */
   timeoutMs?: number;
+  /** A button, for the one thing the notification asks for. */
+  action?: NotificationAction;
   /**
    * Route the main window opens when the toast is clicked. Give one whenever
    * there is something to do about the notification: the window it would be
@@ -33,6 +46,7 @@ export type AppNotification = {
   body: string | null;
   timeoutMs: number | null;
   route: string | null;
+  action: NotificationAction | null;
 };
 
 /** Events the overlay listens for; the names are shared with Rust. */

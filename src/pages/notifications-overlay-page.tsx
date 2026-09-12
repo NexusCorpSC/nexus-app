@@ -6,7 +6,7 @@ import {
   type CSSProperties,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { openMainRoute } from "@/lib/main-window";
@@ -223,7 +223,19 @@ function Toast({
 
   const Icon = ICONS[kind];
   const tone = TONES[kind];
-  const { route } = notification;
+  const { route, action } = notification;
+
+  // The button's whole job is to say something to the window that asked:
+  // this one has no session and no network, that one has both and listens.
+  const perform = () => {
+    if (!action) return;
+
+    void emit(action.event, action.payload ?? null).catch((error) => {
+      console.error("cannot answer the notification", error);
+    });
+
+    onDismiss(id);
+  };
 
   // A toast with a route is the only way in while the app is behind the game,
   // so acting on it dismisses it: the main window now carries the subject.
@@ -266,6 +278,19 @@ function Toast({
           ) : (
             <Message title={title} body={body} />
           )}
+
+          {action ? (
+            <button
+              type="button"
+              onClick={perform}
+              className={cn(
+                "mt-2 inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium transition",
+                "border-white/15 bg-white/10 text-slate-100 hover:bg-white/20",
+              )}
+            >
+              {action.label}
+            </button>
+          ) : null}
         </div>
 
         <button

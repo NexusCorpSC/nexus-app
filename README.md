@@ -432,6 +432,17 @@ La vue elle-même n'est plus demandée toutes les deux secondes : elle arrive pa
 le **flux d'événements** (voir plus bas). Un point dans l'en-tête dit où en est
 ce flux — vert, la vue est en direct ; ambre, la connexion se rétablit.
 
+**Ready check.** Le chef d'une escouade ou un de ses lieutenants demande à
+l'escouade de se déclarer prête ; celui qui commande l'escouade meneuse le
+demande à tout le raid. Tout le monde repasse « non prêt » — le demandeur
+compris — et reçoit une notification avec un bouton **Prêt**. Le bouton est
+pressé dans la fenêtre de notifications, qui n'a ni session ni réseau : il
+diffuse `squad://ready`, et la superposition d'escouade, qui a les deux, écrit
+la ligne du lecteur. Le marqueur (`readyCheck`, un identifiant frais) arrive par
+le flux d'événements comme le reste de la vue ; un identifiant inconnu, c'est
+une notification. Son propre ready check n'en produit pas : la réponse de
+l'écriture est posée dans le cache avant le push qui la répète.
+
 **Une annonce modifiée part en notification.** Celle de l'escouade comme celle
 du raid : ce sont les deux textes que le chef écrit pour tout le monde, et les
 deux que personne ne voit tant que la superposition est cachée derrière le jeu
@@ -556,6 +567,12 @@ fenêtre de sélection est refermée avant l'erreur.
 Une notification levée pendant que la superposition charge encore n'est pas
 perdue : elle est mise de côté (huit au plus) et remise quand elle signale
 qu'elle écoute.
+
+Une notification peut porter **un bouton** (`action` : un libellé et un
+événement, avec sa charge utile). Le presser diffuse l'événement à toutes les
+fenêtres et ferme le toast : c'est la fenêtre qui a levé la notification qui
+agit, celle des toasts n'ayant ni session ni réseau. Le ready check d'escouade
+est le premier à s'en servir.
 
 Quatre niveaux — `info`, `success`, `warning`, `error` — qui décident de l'icône,
 de la couleur et de la durée (5 à 10 s). Quatre toasts au maximum à l'écran, le
