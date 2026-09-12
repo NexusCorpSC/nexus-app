@@ -188,7 +188,16 @@ function useSquadMutation<TVariables>(
         return;
       }
 
-      const shown = current ?? view.squad?.id ?? null;
+      // The squad this key shows: the chosen one, else whatever the API had
+      // picked for it last time — an organiser acting on Bravo from the raid
+      // board while looking at the API's pick must not find the overlay on
+      // Bravo afterwards. Only a key that has never been filled takes the
+      // answer's squad as its own.
+      const shown =
+        current ??
+        queryClient.getQueryData<SquadView>(key)?.squad?.id ??
+        view.squad?.id ??
+        null;
 
       if (!view.squad || view.squad.id === shown) {
         queryClient.setQueryData<SquadView>(key, view);

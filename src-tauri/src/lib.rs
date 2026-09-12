@@ -648,6 +648,8 @@ fn watch_overlay_locks(app: AppHandle) {
                 continue;
             };
 
+            // Asked outside the lock: these two wait on the main thread, and a
+            // command taking the lock there must not have to wait on us.
             let over = match cursor_over_unlock_zone(&window, lock.zone, cursor) {
                 Ok(over) => over,
                 Err(_) => continue,
@@ -658,19 +660,29 @@ fn watch_overlay_locks(app: AppHandle) {
                 continue;
             }
 
-            if let Err(error) = window.set_ignore_cursor_events(ignore) {
-                log(format!(
-                    "cannot change the cursor events of `{label}`: {error}"
-                ));
+            // Decided and applied under the lock, against the entry as it is
+            // now rather than as it was snapshotted: an unlock that landed in
+            // between removed the entry and gave the window the mouse back,
+            // and applying the snapshot's verdict on top would leave a window
+            // nobody watches anymore ignoring every click for good.
+            let state = app.state::<OverlayLocks>();
+            let Ok(mut locks) = state.0.lock() else {
+                continue;
+            };
+
+            let Some(current) = locks.get_mut(&label) else {
+                continue;
+            };
+
+            if current.ignoring == ignore {
                 continue;
             }
 
-            // Recorded only after the window took it, and only if it is still
-            // locked: an unlock that landed meanwhile must not be resurrected.
-            if let Ok(mut locks) = app.state::<OverlayLocks>().0.lock() {
-                if let Some(current) = locks.get_mut(&label) {
-                    current.ignoring = ignore;
-                }
+            match window.set_ignore_cursor_events(ignore) {
+                Ok(()) => current.ignoring = ignore,
+                Err(error) => log(format!(
+                    "cannot change the cursor events of `{label}`: {error}"
+                )),
             }
         }
 
@@ -877,22 +889,21 @@ fn lock_overlay(app: AppHandle, label: String, zone: UnlockZone) -> Result<(), S
 #[tauri::command]
 fn unlock_overlay(app: AppHandle, label: String) -> Result<(), String> {
     let state = app.state::<OverlayLocks>();
-    let removed = state
-        .0
-        .lock()
-        .map_err(|e| e.to_string())?
-        .remove(&label)
-        .is_some();
+    let mut locks = state.0.lock().map_err(|e| e.to_string())?;
 
-    if !removed {
+    if locks.remove(&label).is_none() {
         return Ok(());
     }
 
-    // Whatever the watcher last set: the entry is gone, so it will not touch
-    // this window again, and the window has to end up taking the mouse.
+    // Under the same lock as the removal, so the watcher cannot slip a verdict
+    // of its own between the two: once the entry is gone it will not touch
+    // this window again, and the last word on the window is that it takes
+    // the mouse.
     window(&app, &label)?
         .set_ignore_cursor_events(false)
         .map_err(|e| e.to_string())?;
+
+    drop(locks);
 
     log(format!("overlay `{label}` unlocked"));
     announce_overlay_lock(&app, &label, false)
