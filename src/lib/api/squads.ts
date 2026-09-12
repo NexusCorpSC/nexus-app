@@ -8,23 +8,53 @@ import type {
 /**
  * The caller's squad, and the raid around it.
  *
- * No route takes a squad id: a user belongs to one squad at a time, so there is
- * only ever «mine», resolved from the session — and the raid comes from the
- * squad the same way.
+ * A user is in one squad nearly always, and every route resolves «mine» from
+ * the session. A raid's organiser may be in several — the squads they opened
+ * for the raid, led until somebody takes them over — so every call here says
+ * which squad it means with `?squad=<id>`; `null` leaves the choice to the API,
+ * which picks the longest-standing membership. That is what an ordinary player
+ * gets either way.
  *
  * Every call answers the whole view, which is what lets the overlay show the
  * result of a click without waiting for its next poll.
  */
 
-/** An empty raid pointer is `null`, never absent; older servers omit the key. */
+/** The route, addressed to one squad — or to «mine» when there is only one. */
+function at(path: string, squadId: string | null): string {
+  return squadId ? `${path}?squad=${encodeURIComponent(squadId)}` : path;
+}
+
+/**
+ * An empty raid pointer is `null`, never absent; older servers omit the key —
+ * and older servers still know nothing of memberships, in which case the one
+ * squad they answer is the whole list.
+ */
 function view(answer: Partial<SquadView>): SquadView {
-  return { squad: answer.squad ?? null, raid: answer.raid ?? null };
+  const squad = answer.squad ?? null;
+
+  return {
+    squad,
+    raid: answer.raid ?? null,
+    memberships:
+      answer.memberships ??
+      (squad
+        ? [
+            {
+              id: squad.id,
+              name: squad.name,
+              code: squad.code,
+              raidId: squad.raidId ?? null,
+            },
+          ]
+        : []),
+  };
 }
 
-export async function getMySquad(): Promise<SquadView> {
-  return view(await apiRequest<Partial<SquadView>>("/api/squads"));
+export async function getMySquad(squadId: string | null): Promise<SquadView> {
+  return view(await apiRequest<Partial<SquadView>>(at("/api/squads", squadId)));
 }
 
+/** Starting over: every squad the caller was in is left first. */
 export async function createSquad(name?: string): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>("/api/squads", {
@@ -35,9 +65,12 @@ export async function createSquad(name?: string): Promise<SquadView> {
 }
 
 /** Whoever commands the squad. Everyone else reads the name. */
-export async function renameSquad(name: string): Promise<SquadView> {
+export async function renameSquad(
+  squadId: string,
+  name: string,
+): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads", squadId), {
       method: "PATCH",
       body: { name },
     }),
@@ -54,19 +87,28 @@ export async function joinSquad(code: string): Promise<SquadView> {
   );
 }
 
-export async function leaveSquad(): Promise<SquadView> {
-  await apiRequest<Partial<SquadView>>("/api/squads/leave", { method: "POST" });
-  return { squad: null, raid: null };
+/**
+ * Leaves one squad. The answer is what the caller is still in: nothing, for
+ * almost everyone; the squad they came from, for an organiser leaving one they
+ * opened.
+ */
+export async function leaveSquad(squadId: string): Promise<SquadView> {
+  return view(
+    await apiRequest<Partial<SquadView>>(at("/api/squads/leave", squadId), {
+      method: "POST",
+    }),
+  );
 }
 
 /** Own row, or anyone's when the caller commands the squad. Enforced server-side. */
 export async function updateSquadMember(
+  squadId: string,
   userId: string,
   patch: SquadMemberPatch,
 ): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>(
-      `/api/squads/members/${encodeURIComponent(userId)}`,
+      at(`/api/squads/members/${encodeURIComponent(userId)}`, squadId),
       { method: "PATCH", body: patch },
     ),
   );
@@ -77,10 +119,13 @@ export async function updateSquadMember(
  * themselves: a leader on the way out uses `leaveSquad`, which hands the squad
  * over.
  */
-export async function removeSquadMember(userId: string): Promise<SquadView> {
+export async function removeSquadMember(
+  squadId: string,
+  userId: string,
+): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>(
-      `/api/squads/members/${encodeURIComponent(userId)}`,
+      at(`/api/squads/members/${encodeURIComponent(userId)}`, squadId),
       { method: "DELETE" },
     ),
   );
@@ -92,10 +137,11 @@ export async function removeSquadMember(userId: string): Promise<SquadView> {
  * the squad from whoever appointed them.
  */
 export async function transferSquadLeadership(
+  squadId: string,
   userId: string,
 ): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/leader", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/leader", squadId), {
       method: "PATCH",
       body: { userId },
     }),
@@ -104,13 +150,14 @@ export async function transferSquadLeadership(
 
 /** Whoever commands the squad writes it; everyone else reads it. */
 export async function setSquadAnnouncements(
+  squadId: string,
   announcements: string,
 ): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/announcements", {
-      method: "PATCH",
-      body: { announcements },
-    }),
+    await apiRequest<Partial<SquadView>>(
+      at("/api/squads/announcements", squadId),
+      { method: "PATCH", body: { announcements } },
+    ),
   );
 }
 
@@ -126,11 +173,12 @@ export async function setSquadAnnouncements(
  * name this client cannot draw would leave a hole where the glyph should be.
  */
 export async function createSquadRole(
+  squadId: string,
   label: string,
   icon: SquadRoleIcon,
 ): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/roles", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/roles", squadId), {
       method: "POST",
       body: { label, icon },
     }),
@@ -139,22 +187,26 @@ export async function createSquadRole(
 
 /** Base roles included: «Médic» is a suggestion, not a fact about the squad. */
 export async function updateSquadRole(
+  squadId: string,
   roleId: string,
   patch: { label?: string; icon?: SquadRoleIcon },
 ): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>(
-      `/api/squads/roles/${encodeURIComponent(roleId)}`,
+      at(`/api/squads/roles/${encodeURIComponent(roleId)}`, squadId),
       { method: "PATCH", body: patch },
     ),
   );
 }
 
 /** Never one of the seven the squad started with — the API refuses those. */
-export async function deleteSquadRole(roleId: string): Promise<SquadView> {
+export async function deleteSquadRole(
+  squadId: string,
+  roleId: string,
+): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>(
-      `/api/squads/roles/${encodeURIComponent(roleId)}`,
+      at(`/api/squads/roles/${encodeURIComponent(roleId)}`, squadId),
       { method: "DELETE" },
     ),
   );
@@ -168,22 +220,28 @@ export async function deleteSquadRole(roleId: string): Promise<SquadView> {
  * Several squads under one announcement.
  *
  * Two ranks: commanding your own squad is enough to take it into a raid or out
- * of one, while renaming the raid, writing its announcement and unlinking
- * somebody else's squad take commanding the raid's lead squad.
+ * of one, while renaming the raid, writing its announcement, unlinking somebody
+ * else's squad and opening a new one take commanding the raid's lead squad.
  */
-export async function createRaid(name?: string): Promise<SquadView> {
+export async function createRaid(
+  squadId: string,
+  name?: string,
+): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/raid", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/raid", squadId), {
       method: "POST",
       body: { name },
     }),
   );
 }
 
-/** Links the caller's squad into the raid holding `code`. */
-export async function joinRaid(code: string): Promise<SquadView> {
+/** Links the squad into the raid holding `code`. */
+export async function joinRaid(
+  squadId: string,
+  code: string,
+): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/raid/join", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/raid/join", squadId), {
       method: "POST",
       body: { code },
     }),
@@ -191,12 +249,12 @@ export async function joinRaid(code: string): Promise<SquadView> {
 }
 
 /** Whoever commands the lead squad. The announcement is read by every raider. */
-export async function updateRaid(patch: {
-  name?: string;
-  announcement?: string;
-}): Promise<SquadView> {
+export async function updateRaid(
+  squadId: string,
+  patch: { name?: string; announcement?: string },
+): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/raid", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/raid", squadId), {
       method: "PATCH",
       body: patch,
     }),
@@ -204,24 +262,50 @@ export async function updateRaid(patch: {
 }
 
 /**
- * Takes the caller's squad out of the raid. A departure rather than a
- * dissolution, even from the lead squad: the raid outlives it, the lead passing
- * to the longest-standing squad left.
+ * Takes the squad out of the raid. A departure rather than a dissolution, even
+ * from the lead squad: the raid outlives it, the lead passing to the
+ * longest-standing squad left.
  */
-export async function leaveRaid(): Promise<SquadView> {
+export async function leaveRaid(squadId: string): Promise<SquadView> {
   return view(
-    await apiRequest<Partial<SquadView>>("/api/squads/raid", {
+    await apiRequest<Partial<SquadView>>(at("/api/squads/raid", squadId), {
       method: "DELETE",
     }),
   );
 }
 
 /** Puts another squad out of the raid. Whoever commands the lead squad. */
-export async function unlinkRaidSquad(squadId: string): Promise<SquadView> {
+export async function unlinkRaidSquad(
+  squadId: string,
+  targetSquadId: string,
+): Promise<SquadView> {
   return view(
     await apiRequest<Partial<SquadView>>(
-      `/api/squads/raid/squads/${encodeURIComponent(squadId)}`,
+      at(
+        `/api/squads/raid/squads/${encodeURIComponent(targetSquadId)}`,
+        squadId,
+      ),
       { method: "DELETE" },
+    ),
+  );
+}
+
+/**
+ * Opens another squad in the raid, the caller leading it — and staying in the
+ * one they asked from. Whoever commands the lead squad.
+ *
+ * The answer is still the view of the squad asked from: the new one is in
+ * `raid.squads` and in `memberships`, and switching to it is the overlay's
+ * call.
+ */
+export async function createRaidSquad(
+  squadId: string,
+  name?: string,
+): Promise<SquadView> {
+  return view(
+    await apiRequest<Partial<SquadView>>(
+      at("/api/squads/raid/squads", squadId),
+      { method: "POST", body: { name } },
     ),
   );
 }

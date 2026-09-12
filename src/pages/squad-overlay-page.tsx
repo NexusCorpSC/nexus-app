@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   ArrowLeft,
+  ArrowLeftRight,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  ChevronsUpDown,
   Columns3,
   Copy,
   Crown,
@@ -30,8 +32,10 @@ import {
 import { useAuth } from "@/auth/auth-context";
 import { useSquad } from "@/hooks/use-squad";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { useOverlayMode } from "@/hooks/use-overlay-opacity";
+import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { RoleIcon, roleOf, rolesOf } from "@/components/squad/role-icon";
 import { useRaidLayout } from "@/hooks/use-raid-layout";
 import { columnsLabel, nextColumns } from "@/lib/raid-layout";
@@ -39,6 +43,7 @@ import { overlaySkin } from "@/lib/overlay-opacity";
 import {
   ANNOUNCEMENTS_MAX_LENGTH,
   POSITION_MAX_LENGTH,
+  RAID_MAX_SQUADS,
   RAID_NAME_MAX_LENGTH,
   ROLE_ICON_GROUPS,
   ROLE_LABEL_MAX_LENGTH,
@@ -47,6 +52,7 @@ import {
   type Squad,
   type SquadMember,
   type SquadMemberPatch,
+  type SquadMembership,
   type SquadRoleIcon,
 } from "@/types/nexus";
 import { cn } from "@/lib/utils";
@@ -61,12 +67,21 @@ import { cn } from "@/lib/utils";
  * get a faint tint whichever mode is on: a button nobody can find is not a
  * button.
  *
- * The panel can be brought back from the header button, or from the global
- * shortcut that lines the three overlays up (`src/lib/overlay-opacity.ts`).
+ * The panel can be brought back from the header button — by way of a shade,
+ * for a cockpit too bright for bare text — or from the global shortcut that
+ * lines the three overlays up (`src/lib/overlay-opacity.ts`). The lock beside
+ * it turns the window into a picture the clicks go through.
  *
  * It also carries its own management — create, join by code, leave, roles,
  * raids — because there is no squad screen in the main window. So it has three
  * states: signed out, no squad, and in a squad.
+ *
+ * **One player, usually one squad.** A raid's organiser is the exception: they
+ * open the raid's other squads from its management sheet and lead each until
+ * somebody takes it over, so they are in several at once. The overlay then
+ * looks at one of them — `current` — and offers to switch; and on the raid
+ * board, every squad they are in is theirs to act on, not only the one on
+ * screen.
  *
  * **One line per member, and never two.** The window is 420 pixels of cockpit;
  * everything that is not a name, a role and a state hides behind the `⋯` at the
@@ -88,9 +103,20 @@ const SURFACE =
 const SHEET =
   "absolute inset-0 z-30 flex flex-col rounded-xl border border-white/10 bg-nexus-abyss/[0.98] backdrop-blur-xl";
 
+/** A sheet covers the roster whole; only one at a time. */
+type Sheet = { kind: "roles"; squadId: string } | { kind: "raid" } | null;
+
 export default function SquadOverlayPage() {
   const { user, loading: session } = useAuth();
-  const squadApi = useSquad(Boolean(user));
+
+  /**
+   * The squad the overlay looks at, or `null` for the one the API picks —
+   * the only one, for nearly everybody. Set from the switcher, and dropped
+   * when the squad is left or turns out to be gone.
+   */
+  const [current, setCurrent] = useState<string | null>(null);
+
+  const squadApi = useSquad(Boolean(user), current);
   const { state } = squadApi;
 
   useTransparentWindow();
@@ -98,7 +124,11 @@ export default function SquadOverlayPage() {
   // This one alone starts see-through: it was built that way. The header
   // button brings its panel back, and the global shortcut lines the three
   // overlays up on the same mode.
-  const opaque = useOverlayOpaque("squad");
+  const mode = useOverlayMode("squad");
+
+  // Locked, the window is a picture the clicks go through — all but the one on
+  // the lock itself, which Rust keeps live.
+  const locked = useOverlayLocked("squad");
 
   /**
    * Which of the two rosters is on screen.
@@ -109,13 +139,20 @@ export default function SquadOverlayPage() {
    */
   const [pinned, setPinned] = useState<"squad" | "raid" | null>(null);
 
-  /** A sheet covers the roster whole; only one at a time. */
-  const [sheet, setSheet] = useState<"roles" | "raid" | null>(null);
+  const [sheet, setSheet] = useState<Sheet>(null);
 
   const squad = state.squad ?? null;
   const raid = state.raid ?? null;
 
   const raiding = Boolean(raid) && (pinned ?? "raid") === "raid";
+
+  /** Any squad the view holds rows for: the one on screen, or one of the raid. */
+  function rosterOf(squadId: string): Squad | null {
+    if (squad?.id === squadId) return squad;
+    return raid?.squads.find((sub) => sub.id === squadId) ?? null;
+  }
+
+  const rolesTarget = sheet?.kind === "roles" ? rosterOf(sheet.squadId) : null;
 
   function close() {
     void invoke("close_squad_overlay");
@@ -126,15 +163,38 @@ export default function SquadOverlayPage() {
     // leave the window on an empty view until someone thought to press a button.
     if (!raid && pinned === "raid") setPinned(null);
     if (!squad && sheet) setSheet(null);
-  }, [raid, squad, pinned, sheet]);
+    // The squad whose roles were being edited left the view — put out of the
+    // raid, or left — and the sheet would be editing a ghost.
+    if (sheet?.kind === "roles" && !rolesTarget) setSheet(null);
+  }, [raid, squad, pinned, sheet, rolesTarget]);
+
+  useEffect(() => {
+    // Looking at a squad one is no longer in — left, or removed from — falls
+    // back to the API's pick rather than to an empty window.
+    if (
+      current &&
+      !state.loading &&
+      !state.memberships.some((membership) => membership.id === current)
+    ) {
+      setCurrent(null);
+    }
+  }, [current, state.loading, state.memberships]);
+
+  function leave(squadId: string) {
+    squadApi.leave.mutate(squadId, {
+      // The answer is what the API picks from what is left, which is what a
+      // dropped choice shows.
+      onSuccess: () => setCurrent(null),
+    });
+  }
 
   return (
     <div
       className={cn(
         "relative flex h-screen w-screen flex-col overflow-hidden text-nexus-accent",
         // See-through, this is a shadow behind every glyph; opaque, it is the
-        // same panel the other two overlays wear.
-        overlaySkin(opaque),
+        // same panel the other two overlays wear; shaded, both at once.
+        overlaySkin(mode),
       )}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
@@ -148,8 +208,13 @@ export default function SquadOverlayPage() {
         data-tauri-drag-region
         className="flex shrink-0 cursor-grab items-center gap-1.5 px-3 py-2"
       >
-        {raiding ? (
-          <Flag className="pointer-events-none size-4 shrink-0 text-nexus-accent/70" />
+        {/*
+         * Where the header's icon stood, the switch between the two rosters —
+         * which is what the icon was there to say. With no raid there is
+         * nothing to switch to, and the icon stays.
+         */}
+        {squad && raid ? (
+          <ViewSwitch view={raiding ? "raid" : "squad"} onChange={setPinned} />
         ) : (
           <Users className="pointer-events-none size-4 shrink-0 text-nexus-accent/70" />
         )}
@@ -158,11 +223,14 @@ export default function SquadOverlayPage() {
           squad={squad}
           raid={raid}
           raiding={raiding}
-          onRename={(name) =>
-            raiding
-              ? squadApi.renameRaid.mutate(name)
-              : squadApi.rename.mutate(name)
-          }
+          onRename={(name) => {
+            if (!squad) return;
+            if (raiding) {
+              squadApi.renameRaid.mutate({ squadId: squad.id, name });
+            } else {
+              squadApi.rename.mutate({ squadId: squad.id, name });
+            }
+          }}
           editable={Boolean(
             squad &&
               user &&
@@ -171,25 +239,26 @@ export default function SquadOverlayPage() {
           )}
         />
 
+        {!raiding && squad && state.memberships.length > 1 ? (
+          <SquadSwitcher
+            current={squad.id}
+            memberships={state.memberships}
+            onPick={setCurrent}
+          />
+        ) : null}
+
         {raiding && raid ? <CodeButton code={raid.code} tone="raid" /> : null}
         {!raiding && squad ? <CodeButton code={squad.code} /> : null}
 
-        {squad && raid ? (
-          <IconButton
-            label={raiding ? "Voir mon escouade" : "Voir le raid"}
-            onClick={() => setPinned(raiding ? "squad" : "raid")}
-          >
-            {raiding ? (
-              <Users className="size-4" />
-            ) : (
-              <Flag className="size-4" />
-            )}
-          </IconButton>
-        ) : null}
-
         <OverlayOpacityButton
           label="squad"
-          opaque={opaque}
+          mode={mode}
+          className="text-nexus-accent/70 hover:bg-nexus-abyss/60 hover:text-nexus-bright"
+        />
+
+        <OverlayLockButton
+          label="squad"
+          locked={locked}
           className="text-nexus-accent/70 hover:bg-nexus-abyss/60 hover:text-nexus-bright"
         />
 
@@ -222,8 +291,8 @@ export default function SquadOverlayPage() {
             squad={squad}
             userId={user.id}
             api={squadApi}
-            onCompose={() => setSheet("raid")}
-            onRoles={() => setSheet("roles")}
+            onManageRaid={() => setSheet({ kind: "raid" })}
+            onRoles={(squadId) => setSheet({ kind: "roles", squadId })}
           />
         ) : (
           <SquadBoard
@@ -231,27 +300,34 @@ export default function SquadOverlayPage() {
             raid={raid}
             userId={user.id}
             api={squadApi}
-            onCompose={() => setSheet("raid")}
-            onRoles={() => setSheet("roles")}
+            onManageRaid={() => setSheet({ kind: "raid" })}
+            onRoles={(squadId) => setSheet({ kind: "roles", squadId })}
+            onLeave={() => leave(squad.id)}
           />
         )}
       </div>
 
-      {squad && sheet === "roles" ? (
+      {user && rolesTarget ? (
         <RolesSheet
-          squad={squad}
-          editable={Boolean(user && commandsSquad(squad, user.id))}
+          squad={rolesTarget}
+          editable={commandsSquad(rolesTarget, user.id)}
           api={squadApi}
           onClose={() => setSheet(null)}
         />
       ) : null}
 
-      {squad && sheet === "raid" ? (
+      {user && squad && sheet?.kind === "raid" ? (
         <RaidSheet
           squad={squad}
           raid={raid}
-          editable={Boolean(user && commandsSquad(squad, user.id))}
+          userId={user.id}
+          editable={commandsSquad(squad, user.id)}
           api={squadApi}
+          onSwitch={(squadId) => {
+            setCurrent(squadId);
+            setPinned("squad");
+            setSheet(null);
+          }}
           onClose={() => setSheet(null)}
         />
       ) : null}
@@ -365,15 +441,17 @@ function SquadBoard({
   raid,
   userId,
   api,
-  onCompose,
+  onManageRaid,
   onRoles,
+  onLeave,
 }: {
   squad: Squad;
   raid: Raid | null;
   userId: string;
   api: SquadApi;
-  onCompose: () => void;
-  onRoles: () => void;
+  onManageRaid: () => void;
+  onRoles: (squadId: string) => void;
+  onLeave: () => void;
 }) {
   const commands = commandsSquad(squad, userId);
   const counts = tally([squad]);
@@ -385,7 +463,9 @@ function SquadBoard({
       <Announcement
         value={squad.announcements}
         editable={commands}
-        onCommit={(text) => api.announce.mutate(text)}
+        onCommit={(announcements) =>
+          api.announce.mutate({ squadId: squad.id, announcements })
+        }
         placeholder="Annonce à l'escouade"
       />
 
@@ -398,13 +478,13 @@ function SquadBoard({
       />
 
       <Footer counts={counts}>
-        <OverlayButton onClick={onCompose} title="Raid">
+        <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />
-          {raid ? "Raid" : "Créer un raid"}
+          {raid ? "Gérer le raid" : "Créer un raid"}
         </OverlayButton>
 
         <OverlayButton
-          onClick={() => api.leave.mutate()}
+          onClick={onLeave}
           disabled={api.leave.isPending}
           tone="danger"
         >
@@ -433,9 +513,12 @@ function MemberList({
   userId: string | null;
   commands: boolean;
   api: SquadApi;
-  onRoles: () => void;
+  /** Opens the roles of this squad — the one the row belongs to. */
+  onRoles: (squadId: string) => void;
   indent?: boolean;
 }) {
+  const squadId = squad.id;
+
   return (
     <ul className={cn("min-h-0 flex-1 overflow-y-auto", indent && "flex-none")}>
       {inJoinOrder(squad.members).map((member) => (
@@ -451,7 +534,7 @@ function MemberList({
           commands={commands}
           indent={indent}
           onPatch={(patch) =>
-            api.patchMember.mutate({ userId: member.userId, patch })
+            api.patchMember.mutate({ squadId, userId: member.userId, patch })
           }
           // Nobody is put out of their own squad, and the leader is never
           // removed — they leave, or hand over first.
@@ -459,7 +542,7 @@ function MemberList({
             commands &&
             member.userId !== userId &&
             member.userId !== squad.leaderId
-              ? () => api.removeMember.mutate(member.userId)
+              ? () => api.removeMember.mutate({ squadId, userId: member.userId })
               : undefined
           }
           // The rank is never self-reported, and the leader outranks it. Own
@@ -467,19 +550,20 @@ function MemberList({
           // squad — the same act on themselves as on anyone else.
           onMakeLeader={
             commands && member.userId !== squad.leaderId
-              ? () => api.makeLeader.mutate(member.userId)
+              ? () => api.makeLeader.mutate({ squadId, userId: member.userId })
               : undefined
           }
           onRank={
             commands && member.userId !== squad.leaderId
               ? (lieutenant: boolean) =>
                   api.patchMember.mutate({
+                    squadId,
                     userId: member.userId,
                     patch: { lieutenant },
                   })
               : undefined
           }
-          onRoles={onRoles}
+          onRoles={() => onRoles(squadId)}
         />
       ))}
     </ul>
@@ -864,23 +948,24 @@ function RowMenu({
  * ready, red for down. That is the whole reason the raid view exists: fifteen
  * players do not fit on a cockpit, and fifteen dots do.
  *
- * Only the reader's own squad is interactive. The API refuses a write on
- * anybody else's member, so the rows say so by not offering.
+ * Only the squads the reader is in are interactive — the one on screen, and
+ * for a raid's organiser the ones they opened. The API refuses a write on
+ * anybody else's member, so the other rows say so by not offering.
  */
 function RaidBoard({
   raid,
   squad,
   userId,
   api,
-  onCompose,
+  onManageRaid,
   onRoles,
 }: {
   raid: Raid;
   squad: Squad;
   userId: string;
   api: SquadApi;
-  onCompose: () => void;
-  onRoles: () => void;
+  onManageRaid: () => void;
+  onRoles: (squadId: string) => void;
 }) {
   const commands = commandsSquad(squad, userId);
   const leads = raid.leadSquadId === squad.id && commands;
@@ -918,7 +1003,9 @@ function RaidBoard({
       <RaidBanner
         raid={raid}
         editable={leads}
-        onCommit={(text) => api.announceRaid.mutate(text)}
+        onCommit={(announcement) =>
+          api.announceRaid.mutate({ squadId: squad.id, announcement })
+        }
       />
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -929,7 +1016,9 @@ function RaidBoard({
           }}
         >
           {layout.squads.map((sub) => {
-            const mine = sub.id === squad.id;
+            // Membership, not identity with the squad on screen: an organiser
+            // acts on the squads they opened without switching to them.
+            const mine = sub.members.some((member) => member.userId === userId);
             const open = !folded[sub.id];
 
             return (
@@ -986,7 +1075,7 @@ function RaidBoard({
                   <MemberList
                     squad={sub}
                     userId={mine ? userId : null}
-                    commands={mine && commands}
+                    commands={mine && commandsSquad(sub, userId)}
                     api={api}
                     onRoles={onRoles}
                     indent
@@ -1011,9 +1100,9 @@ function RaidBoard({
           </span>
         </IconButton>
 
-        <OverlayButton onClick={onCompose}>
+        <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />
-          Composer
+          Gérer le raid
         </OverlayButton>
       </Footer>
     </>
@@ -1317,11 +1406,12 @@ function RolesSheet({
 
             if (draft.id) {
               api.editRole.mutate({
+                squadId: squad.id,
                 roleId: draft.id,
                 patch: { label, icon: draft.icon },
               });
             } else {
-              api.addRole.mutate({ label, icon: draft.icon });
+              api.addRole.mutate({ squadId: squad.id, label, icon: draft.icon });
             }
 
             setDraft(null);
@@ -1372,7 +1462,12 @@ function RolesSheet({
                     <button
                       type="button"
                       title={`Supprimer ${role.label}`}
-                      onClick={() => api.removeRole.mutate(role.id)}
+                      onClick={() =>
+                        api.removeRole.mutate({
+                          squadId: squad.id,
+                          roleId: role.id,
+                        })
+                      }
                       className="flex size-5 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
                     >
                       <span className="sr-only">Supprimer {role.label}</span>
@@ -1553,23 +1648,31 @@ function RoleEditor({
 }
 
 /**
- * What the raid is made of: link a squad in by code, start one, put one out.
+ * What the raid is made of: link a squad in by code, start one, put one out —
+ * or open one, empty but for its organiser, for the players still to come.
  *
  * Commanding your own squad is enough to take it in or out. The rest — the
- * name, the unlinking of somebody else's squad — asks for the lead squad, and
- * the buttons simply do not appear otherwise.
+ * name, the unlinking of somebody else's squad, the opening of a new one —
+ * asks for the lead squad, and the buttons simply do not appear otherwise.
+ *
+ * A squad the reader opened is theirs too: its code is shown, and a click
+ * brings the overlay onto it, where it can be renamed, handed over and left.
  */
 function RaidSheet({
   squad,
   raid,
+  userId,
   editable,
   api,
+  onSwitch,
   onClose,
 }: {
   squad: Squad;
   raid: Raid | null;
+  userId: string;
   editable: boolean;
   api: SquadApi;
+  onSwitch: (squadId: string) => void;
   onClose: () => void;
 }) {
   const [code, setCode] = useState("");
@@ -1580,13 +1683,18 @@ function RaidSheet({
   const layout = useRaidLayout(raid);
 
   const error =
-    api.enterRaid.error ?? api.startRaid.error ?? api.unlinkSquad.error;
+    api.enterRaid.error ??
+    api.startRaid.error ??
+    api.unlinkSquad.error ??
+    api.openRaidSquad.error;
+
+  const full = Boolean(raid && raid.squads.length >= RAID_MAX_SQUADS);
 
   return (
     <div className={SHEET}>
       <SheetHeader
         icon={<Flag className="size-4 text-nexus-accent/70" />}
-        title={raid ? "Composer le raid" : "Créer un raid"}
+        title={raid ? "Gérer le raid" : "Créer un raid"}
         onClose={onClose}
       />
 
@@ -1614,53 +1722,108 @@ function RaidSheet({
               </div>
 
               <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto">
-                {layout.squads.map((sub) => (
-                  <li
-                    key={sub.id}
-                    className={cn(
-                      "group flex items-center gap-2 rounded px-2 py-1.5",
-                      SURFACE,
-                    )}
-                  >
-                    <span className="shrink-0 text-xs font-semibold text-nexus-bright">
-                      {sub.name}
-                    </span>
+                {layout.squads.map((sub) => {
+                  const mine = sub.members.some(
+                    (member) => member.userId === userId,
+                  );
 
-                    {raid.leadSquadId === sub.id ? (
-                      <span title="Escouade meneuse">
-                        <Crown className="size-3 shrink-0 text-amber-300" />
-                        <span className="sr-only">Escouade meneuse</span>
-                      </span>
-                    ) : null}
-
-                    <span className="min-w-0 flex-1 truncate text-[11px] text-nexus-accent/60">
-                      {sub.members.length} joueur
-                      {sub.members.length > 1 ? "s" : ""}
-                    </span>
-
-                    {/* Only your own squad's code is yours to hand out. */}
-                    <span className="shrink-0 font-mono text-[10px] tracking-widest text-nexus-accent/40">
-                      {sub.id === squad.id ? sub.code : null}
-                    </span>
-
-                    {leads && sub.id !== squad.id ? (
-                      <button
-                        type="button"
-                        title={`Retirer ${sub.name} du raid`}
-                        onClick={() => api.unlinkSquad.mutate(sub.id)}
-                        className="flex size-5 shrink-0 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
+                  return (
+                    <li
+                      key={sub.id}
+                      className={cn(
+                        "group flex items-center gap-2 rounded px-2 py-1.5",
+                        SURFACE,
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "shrink-0 text-xs font-semibold",
+                          mine ? "text-nexus-bright" : "text-nexus-accent",
+                        )}
                       >
-                        <span className="sr-only">
-                          Retirer {sub.name} du raid
+                        {sub.name}
+                      </span>
+
+                      {raid.leadSquadId === sub.id ? (
+                        <span title="Escouade meneuse">
+                          <Crown className="size-3 shrink-0 text-amber-300" />
+                          <span className="sr-only">Escouade meneuse</span>
                         </span>
-                        <Unlink className="size-3" />
-                      </button>
-                    ) : (
-                      <span className="size-5 shrink-0" />
-                    )}
-                  </li>
-                ))}
+                      ) : null}
+
+                      <span className="min-w-0 flex-1 truncate text-[11px] text-nexus-accent/60">
+                        {sub.members.length} joueur
+                        {sub.members.length > 1 ? "s" : ""}
+                      </span>
+
+                      {/* Only the codes of the squads you are in are yours to
+                          hand out — the one you came from, and the ones you
+                          opened. */}
+                      <span className="shrink-0 font-mono text-[10px] tracking-widest text-nexus-accent/40">
+                        {mine ? sub.code : null}
+                      </span>
+
+                      {mine && sub.id !== squad.id ? (
+                        <button
+                          type="button"
+                          title={`Passer sur ${sub.name}`}
+                          onClick={() => onSwitch(sub.id)}
+                          className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
+                        >
+                          <span className="sr-only">Passer sur {sub.name}</span>
+                          <ArrowLeftRight className="size-3" />
+                        </button>
+                      ) : null}
+
+                      {leads && sub.id !== squad.id ? (
+                        <button
+                          type="button"
+                          title={`Retirer ${sub.name} du raid`}
+                          onClick={() =>
+                            api.unlinkSquad.mutate({
+                              squadId: squad.id,
+                              targetSquadId: sub.id,
+                            })
+                          }
+                          className="flex size-5 shrink-0 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
+                        >
+                          <span className="sr-only">
+                            Retirer {sub.name} du raid
+                          </span>
+                          <Unlink className="size-3" />
+                        </button>
+                      ) : (
+                        <span className="size-5 shrink-0" />
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+
+              {/*
+               * The raid's next squad, before anyone is in it. The organiser
+               * leads it for now; the code goes out, and the lead goes to
+               * whoever it was meant for once they have joined.
+               */}
+              {leads ? (
+                <OverlayButton
+                  className="mt-2 self-start"
+                  onClick={() => api.openRaidSquad.mutate({ squadId: squad.id })}
+                  disabled={api.openRaidSquad.isPending || full}
+                  title={
+                    full
+                      ? `Un raid tient au plus ${RAID_MAX_SQUADS} escouades`
+                      : "Ouvrir une escouade de plus dans le raid"
+                  }
+                >
+                  {api.openRaidSquad.isPending ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Plus className="size-3.5" />
+                  )}
+                  Nouvelle escouade
+                </OverlayButton>
+              ) : null}
             </div>
 
             <div className="shrink-0 space-y-1.5">
@@ -1676,7 +1839,7 @@ function RaidSheet({
                 <OverlayButton
                   tone="danger"
                   onClick={() => {
-                    api.quitRaid.mutate();
+                    api.quitRaid.mutate(squad.id);
                     onClose();
                   }}
                   disabled={api.quitRaid.isPending}
@@ -1690,7 +1853,7 @@ function RaidSheet({
         ) : editable ? (
           <div className="shrink-0 space-y-3">
             <OverlayButton
-              onClick={() => api.startRaid.mutate(undefined)}
+              onClick={() => api.startRaid.mutate({ squadId: squad.id })}
               disabled={api.startRaid.isPending}
             >
               {api.startRaid.isPending ? (
@@ -1706,7 +1869,7 @@ function RaidSheet({
               onSubmit={(event) => {
                 event.preventDefault();
                 const typed = code.trim();
-                if (typed) api.enterRaid.mutate(typed);
+                if (typed) api.enterRaid.mutate({ squadId: squad.id, code: typed });
               }}
             >
               <CodeInput
@@ -2050,6 +2213,137 @@ function Announcement({
 /* ------------------------------------------------------------------ */
 /* Bits and pieces                                                     */
 /* ------------------------------------------------------------------ */
+
+/**
+ * Which roster is on screen: the squad, or the whole raid.
+ *
+ * A segmented switch rather than one button that flips. A lone flag reads as
+ * «this is the raid» to one person and «go to the raid» to the next; two
+ * segments, the lit one being where you are, read the same way to everybody.
+ * The lit segment also spells its name, the other keeps to its glyph: the
+ * header has a title, a code and four buttons to fit beside this.
+ */
+function ViewSwitch({
+  view,
+  onChange,
+}: {
+  view: "squad" | "raid";
+  onChange: (view: "squad" | "raid") => void;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label="Vue"
+      className={cn("flex shrink-0 items-center rounded-md p-px", SURFACE)}
+    >
+      <Segment
+        active={view === "squad"}
+        label="Escouade"
+        onClick={() => onChange("squad")}
+      >
+        <Users className="size-3.5" />
+      </Segment>
+      <Segment
+        active={view === "raid"}
+        label="Raid"
+        onClick={() => onChange("raid")}
+      >
+        <Flag className="size-3.5" />
+      </Segment>
+    </div>
+  );
+}
+
+function Segment({
+  active,
+  label,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "flex h-5 items-center gap-1 rounded px-1.5 text-[10.5px] font-medium transition",
+        active
+          ? "bg-nexus-accent/25 text-nexus-bright"
+          : "text-nexus-accent/55 hover:text-nexus-bright",
+      )}
+    >
+      {children}
+      <span className={active ? undefined : "sr-only"}>{label}</span>
+    </button>
+  );
+}
+
+/**
+ * The squads the reader is in, for the one reader who is in several: the
+ * organiser of a raid, who opened its squads. Picking one brings the overlay
+ * onto it — its name in the title, its rows, its code, its roles.
+ */
+function SquadSwitcher({
+  current,
+  memberships,
+  onPick,
+}: {
+  current: string;
+  memberships: SquadMembership[];
+  onPick: (squadId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <IconButton
+        label="Changer d'escouade"
+        onClick={() => setOpen((was) => !was)}
+      >
+        <ChevronsUpDown className="size-3.5" />
+      </IconButton>
+
+      {open ? (
+        <Popover onClose={() => setOpen(false)} className="left-3 top-9 w-56">
+          <p className="px-2 pb-1 text-[9.5px] font-medium uppercase tracking-wider text-nexus-accent/45">
+            Mes escouades
+          </p>
+
+          {memberships.map((membership) => (
+            <MenuItem
+              key={membership.id}
+              icon={
+                <Users
+                  className={cn(
+                    "size-3",
+                    membership.id === current
+                      ? "text-nexus-bright"
+                      : "text-nexus-accent/60",
+                  )}
+                />
+              }
+              onClick={() => {
+                onPick(membership.id);
+                setOpen(false);
+              }}
+            >
+              <span className="min-w-0 flex-1 truncate">{membership.name}</span>
+              {membership.id === current ? (
+                <Check className="size-3 shrink-0 text-emerald-300" />
+              ) : null}
+            </MenuItem>
+          ))}
+        </Popover>
+      ) : null}
+    </>
+  );
+}
 
 function Footer({
   counts,

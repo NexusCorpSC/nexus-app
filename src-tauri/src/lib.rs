@@ -5,6 +5,7 @@ mod hotkeys;
 mod notifications;
 mod tray;
 
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
@@ -49,21 +50,54 @@ const SQUAD_VISIBILITY_EVENT: &str = "squad://visibility";
 /// selection ignore it; both are momentary, and neither has a panel to drop.
 const OVERLAY_OPACITY_EVENT: &str = "overlay://opacity";
 
-/// Whether each overlay draws its background.
+/// Tells one overlay whether it is locked, carrying a boolean.
 ///
-/// Per window rather than one flag for the three: the cargo sheet is dense text
-/// that wants a surface behind it, while the squad list was built to be read
-/// through a cockpit. One shared flag could only have honoured one of the two
-/// defaults.
+/// Sent to that window alone: a lock is the window's own, set from its header
+/// and undone from the one button the lock leaves live.
+const OVERLAY_LOCK_EVENT: &str = "overlay://lock";
+
+/// How much of the game an overlay lets through.
+///
+/// Mirrors `OVERLAY_MODES` in `src/lib/overlay-opacity.ts`, string for string:
+/// the three names cross the wire as they are.
+#[derive(Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum OverlayMode {
+    /// No surface: the game shows through the text.
+    Clear,
+    /// A faint dark tint behind the window, the game still seen through it.
+    Shaded,
+    /// The panel, a window that stands on its own.
+    Opaque,
+}
+
+impl OverlayMode {
+    /// The order the header button steps through: from nothing to the panel,
+    /// by way of the shade, and round again.
+    fn next(self) -> Self {
+        match self {
+            Self::Clear => Self::Shaded,
+            Self::Shaded => Self::Opaque,
+            Self::Opaque => Self::Clear,
+        }
+    }
+}
+
+/// How each overlay draws its background.
+///
+/// Per window rather than one setting for the three: the cargo sheet is dense
+/// text that wants a surface behind it, while the squad list was built to be
+/// read through a cockpit. One shared setting could only have honoured one of
+/// the two defaults.
 ///
 /// Held here rather than in the windows because the shortcut has to reach all
 /// three at once, including the ones nobody has opened yet — a hidden window
 /// still has to come back up in the mode that was chosen for it.
 #[derive(Clone, Copy, Serialize, Deserialize)]
 struct OverlayOpacity {
-    notes: bool,
-    cargo: bool,
-    squad: bool,
+    notes: OverlayMode,
+    cargo: OverlayMode,
+    squad: OverlayMode,
 }
 
 impl Default for OverlayOpacity {
@@ -71,15 +105,15 @@ impl Default for OverlayOpacity {
         // What each window has always looked like, and what it opens on until
         // the main window hands over the stored choice.
         Self {
-            notes: true,
-            cargo: true,
-            squad: false,
+            notes: OverlayMode::Opaque,
+            cargo: OverlayMode::Opaque,
+            squad: OverlayMode::Clear,
         }
     }
 }
 
 impl OverlayOpacity {
-    fn get(&self, label: &str) -> Option<bool> {
+    fn get(&self, label: &str) -> Option<OverlayMode> {
         match label {
             NOTES_WINDOW => Some(self.notes),
             CARGO_WINDOW => Some(self.cargo),
@@ -88,32 +122,77 @@ impl OverlayOpacity {
         }
     }
 
-    fn flip(&mut self, label: &str) -> Result<(), String> {
-        let flag = match label {
+    /// Steps one overlay to its next mode.
+    fn cycle(&mut self, label: &str) -> Result<(), String> {
+        let mode = match label {
             NOTES_WINDOW => &mut self.notes,
             CARGO_WINDOW => &mut self.cargo,
             SQUAD_WINDOW => &mut self.squad,
             other => return Err(format!("{other} is not an overlay")),
         };
 
-        *flag = !*flag;
+        *mode = mode.next();
         Ok(())
     }
 
-    fn any_opaque(&self) -> bool {
-        self.notes || self.cargo || self.squad
+    /// Whether any of the three still draws something behind its text.
+    fn any_drawn(&self) -> bool {
+        [self.notes, self.cargo, self.squad]
+            .iter()
+            .any(|mode| *mode != OverlayMode::Clear)
     }
 
-    fn set_all(&mut self, opaque: bool) {
-        self.notes = opaque;
-        self.cargo = opaque;
-        self.squad = opaque;
+    fn set_all(&mut self, mode: OverlayMode) {
+        self.notes = mode;
+        self.cargo = mode;
+        self.squad = mode;
     }
 }
 
 /// The live opacity of the three overlays.
 #[derive(Default)]
 struct OverlayOpacityState(Mutex<OverlayOpacity>);
+
+/// Where an overlay's unlock button is, in CSS pixels from the window's top-left
+/// corner — what the webview measures with `getBoundingClientRect`, before the
+/// scale factor, which this side applies.
+#[derive(Clone, Copy, Deserialize)]
+struct UnlockZone {
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+}
+
+/// One locked overlay: the zone its button reported, and what the watcher last
+/// told the window — so it is told again only when the answer changes.
+#[derive(Clone, Copy)]
+struct OverlayLock {
+    zone: UnlockZone,
+    ignoring: bool,
+}
+
+/// The overlays that are locked, by window label.
+///
+/// Locked, an overlay stops taking the mouse: a click on it reaches the game
+/// underneath, which is what one wants of an always-on-top window over a
+/// cockpit. All but one click — the one on the button that unlocks it, which
+/// is the way back. A window that ignores the cursor never sees it again, so
+/// the webview cannot tell when the pointer is over that button; the watcher
+/// started in `setup` does, from here, and hands the window the mouse back for
+/// exactly as long as the pointer is over the zone.
+#[derive(Default)]
+struct OverlayLocks(Mutex<HashMap<String, OverlayLock>>);
+
+/// How often the watcher looks at the cursor while any overlay is locked, and
+/// while none is. Forty milliseconds is under what a hand notices between
+/// reaching the button and the button answering.
+const LOCK_WATCH_TICK: Duration = Duration::from_millis(40);
+const LOCK_WATCH_IDLE: Duration = Duration::from_millis(250);
+
+fn is_overlay(label: &str) -> bool {
+    matches!(label, NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW)
+}
 
 /// Frozen monitor snapshot awaiting a selection: filled when the capture
 /// shortcut fires, taken when the user releases the mouse.
@@ -464,8 +543,8 @@ fn toggle_squad(app: &AppHandle) -> Result<(), String> {
     announce_squad_visibility(app)
 }
 
-/// Takes every overlay to the same mode: see-through if any of them is still
-/// showing a panel, opaque otherwise.
+/// Takes every overlay to the same mode: see-through if any of them still draws
+/// something — a panel or a shade — opaque otherwise.
 ///
 /// «Toggle all» has to mean something when the three disagree, which they
 /// normally do — the squad list opens see-through and the other two do not. One
@@ -474,8 +553,12 @@ fn flip_all_overlay_opacity(app: &AppHandle) -> Result<(), String> {
     let state = app.state::<OverlayOpacityState>();
     let mut opacity = state.0.lock().map_err(|e| e.to_string())?;
 
-    let opaque = !opacity.any_opaque();
-    opacity.set_all(opaque);
+    let mode = if opacity.any_drawn() {
+        OverlayMode::Clear
+    } else {
+        OverlayMode::Opaque
+    };
+    opacity.set_all(mode);
 
     let announced = *opacity;
     // Released before the event goes out: a listener that calls back into this
@@ -485,12 +568,12 @@ fn flip_all_overlay_opacity(app: &AppHandle) -> Result<(), String> {
     announce_overlay_opacity(app, announced)
 }
 
-/// Flips one overlay, leaving the other two as they are.
-fn flip_overlay_opacity(app: &AppHandle, label: &str) -> Result<(), String> {
+/// Steps one overlay to its next mode, leaving the other two as they are.
+fn cycle_overlay_opacity(app: &AppHandle, label: &str) -> Result<(), String> {
     let state = app.state::<OverlayOpacityState>();
     let mut opacity = state.0.lock().map_err(|e| e.to_string())?;
 
-    opacity.flip(label)?;
+    opacity.cycle(label)?;
 
     let announced = *opacity;
     drop(opacity);
@@ -504,6 +587,99 @@ fn flip_overlay_opacity(app: &AppHandle, label: &str) -> Result<(), String> {
 /// to the store — it owns the settings file, as it does for the shortcuts.
 fn announce_overlay_opacity(app: &AppHandle, opacity: OverlayOpacity) -> Result<(), String> {
     app.emit(OVERLAY_OPACITY_EVENT, opacity)
+        .map_err(|e| e.to_string())
+}
+
+/// Whether the cursor is over an overlay's unlock zone, in screen pixels.
+///
+/// The zone comes in CSS pixels from the window's client area; the window's
+/// position and scale factor put it on the screen the cursor is measured on.
+fn cursor_over_unlock_zone(
+    window: &WebviewWindow,
+    zone: UnlockZone,
+    cursor: PhysicalPosition<f64>,
+) -> Result<bool, String> {
+    let origin = window.inner_position().map_err(|e| e.to_string())?;
+    let scale = window.scale_factor().map_err(|e| e.to_string())?;
+
+    let left = f64::from(origin.x) + zone.x * scale;
+    let top = f64::from(origin.y) + zone.y * scale;
+    let right = left + zone.width * scale;
+    let bottom = top + zone.height * scale;
+
+    Ok(cursor.x >= left && cursor.x < right && cursor.y >= top && cursor.y < bottom)
+}
+
+/// Keeps the locked overlays click-through — except under the cursor when it
+/// is over their unlock button.
+///
+/// A thread of its own, for the life of the app: locking is rare, but while an
+/// overlay is locked the only thing that can give it the mouse back is
+/// somebody watching where the mouse is. Each window is told only when the
+/// answer changes, so an idle cursor costs a position query per tick and
+/// nothing else; with nothing locked the thread mostly sleeps.
+fn watch_overlay_locks(app: AppHandle) {
+    std::thread::spawn(move || loop {
+        let locked: Vec<(String, OverlayLock)> = match app.state::<OverlayLocks>().0.lock() {
+            Ok(locks) => locks
+                .iter()
+                .map(|(label, lock)| (label.clone(), *lock))
+                .collect(),
+            Err(_) => Vec::new(),
+        };
+
+        if locked.is_empty() {
+            std::thread::sleep(LOCK_WATCH_IDLE);
+            continue;
+        }
+
+        let cursor = match app.cursor_position() {
+            Ok(cursor) => cursor,
+            // No cursor to speak of — a remote session, a screen going away.
+            // Nothing to decide from; try again next tick.
+            Err(_) => {
+                std::thread::sleep(LOCK_WATCH_TICK);
+                continue;
+            }
+        };
+
+        for (label, lock) in locked {
+            let Ok(window) = window(&app, &label) else {
+                continue;
+            };
+
+            let over = match cursor_over_unlock_zone(&window, lock.zone, cursor) {
+                Ok(over) => over,
+                Err(_) => continue,
+            };
+
+            let ignore = !over;
+            if ignore == lock.ignoring {
+                continue;
+            }
+
+            if let Err(error) = window.set_ignore_cursor_events(ignore) {
+                log(format!(
+                    "cannot change the cursor events of `{label}`: {error}"
+                ));
+                continue;
+            }
+
+            // Recorded only after the window took it, and only if it is still
+            // locked: an unlock that landed meanwhile must not be resurrected.
+            if let Ok(mut locks) = app.state::<OverlayLocks>().0.lock() {
+                if let Some(current) = locks.get_mut(&label) {
+                    current.ignoring = ignore;
+                }
+            }
+        }
+
+        std::thread::sleep(LOCK_WATCH_TICK);
+    });
+}
+
+fn announce_overlay_lock(app: &AppHandle, label: &str, locked: bool) -> Result<(), String> {
+    app.emit_to(label, OVERLAY_LOCK_EVENT, locked)
         .map_err(|e| e.to_string())
 }
 
@@ -616,11 +792,11 @@ fn is_squad_overlay_visible(app: AppHandle) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
-/// Flips one overlay, named by its window label. Called by the button each of
-/// them carries.
+/// Steps one overlay to its next mode, named by its window label. Called by
+/// the button each of them carries.
 #[tauri::command]
 fn toggle_overlay_opacity(app: AppHandle, label: String) -> Result<(), String> {
-    flip_overlay_opacity(&app, &label)
+    cycle_overlay_opacity(&app, &label)
 }
 
 /// Hands over the stored choice at startup, from the main window.
@@ -637,19 +813,101 @@ fn set_overlay_opacity(app: AppHandle, opacity: OverlayOpacity) -> Result<(), St
     announce_overlay_opacity(&app, opacity)
 }
 
-/// Whether the window asking is drawing its panel.
+/// The mode the window asking is drawing in.
 ///
 /// Asked by each overlay as it mounts: they are created hidden at startup, so
 /// their React trees run long before anyone opens them, and the event alone
-/// would leave them showing the default until the first flip.
+/// would leave them showing the default until the first change.
 #[tauri::command]
-fn is_overlay_opaque(app: AppHandle, label: String) -> Result<bool, String> {
+fn overlay_mode(app: AppHandle, label: String) -> Result<OverlayMode, String> {
     app.state::<OverlayOpacityState>()
         .0
         .lock()
         .map_err(|e| e.to_string())?
         .get(&label)
         .ok_or_else(|| format!("{label} is not an overlay"))
+}
+
+/// Locks an overlay, or moves the unlock zone of one already locked.
+///
+/// Called by the lock button with its own rectangle, and again whenever that
+/// rectangle moves — the header reflows when the window is resized. The window
+/// is not made click-through here: the watcher does that on its next tick, from
+/// where the cursor is, which right now is on the button that was just clicked.
+#[tauri::command]
+fn lock_overlay(app: AppHandle, label: String, zone: UnlockZone) -> Result<(), String> {
+    if !is_overlay(&label) {
+        return Err(format!("{label} is not an overlay"));
+    }
+
+    // Declared, whether or not it has a window right now: a zone for a window
+    // that cannot be found is a bug worth an error rather than a silent lock.
+    window(&app, &label)?;
+
+    let state = app.state::<OverlayLocks>();
+    let mut locks = state.0.lock().map_err(|e| e.to_string())?;
+
+    let fresh = !locks.contains_key(&label);
+
+    locks
+        .entry(label.clone())
+        .and_modify(|lock| lock.zone = zone)
+        .or_insert(OverlayLock {
+            zone,
+            // What the window is doing right now: taking the mouse. The
+            // watcher changes it from there.
+            ignoring: false,
+        });
+
+    drop(locks);
+
+    if fresh {
+        log(format!("overlay `{label}` locked"));
+        announce_overlay_lock(&app, &label, true)?;
+    }
+
+    Ok(())
+}
+
+/// Unlocks an overlay: it takes the mouse again, everywhere.
+///
+/// The one command a locked window can still send, since its button is the one
+/// place the watcher keeps live. Idempotent: unlocking a window that was not
+/// locked changes nothing and says so to nobody.
+#[tauri::command]
+fn unlock_overlay(app: AppHandle, label: String) -> Result<(), String> {
+    let state = app.state::<OverlayLocks>();
+    let removed = state
+        .0
+        .lock()
+        .map_err(|e| e.to_string())?
+        .remove(&label)
+        .is_some();
+
+    if !removed {
+        return Ok(());
+    }
+
+    // Whatever the watcher last set: the entry is gone, so it will not touch
+    // this window again, and the window has to end up taking the mouse.
+    window(&app, &label)?
+        .set_ignore_cursor_events(false)
+        .map_err(|e| e.to_string())?;
+
+    log(format!("overlay `{label}` unlocked"));
+    announce_overlay_lock(&app, &label, false)
+}
+
+/// Whether the window asking is locked, asked as it mounts — for the same
+/// reason as its opacity.
+#[tauri::command]
+fn is_overlay_locked(app: AppHandle, label: String) -> Result<bool, String> {
+    Ok(app
+        .state::<OverlayLocks>()
+        .0
+        .lock()
+        .map_err(|e| e.to_string())?
+        .contains_key(&label))
 }
 
 /// Shows the cargo sheet overlay, or hides it. Called from the cargo screen
@@ -744,6 +1002,7 @@ pub fn run() {
         .manage(ShortcutSupport::default())
         .manage(notifications::Notifications::default())
         .manage(OverlayOpacityState::default())
+        .manage(OverlayLocks::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -756,7 +1015,10 @@ pub fn run() {
             is_squad_overlay_visible,
             toggle_overlay_opacity,
             set_overlay_opacity,
-            is_overlay_opaque,
+            overlay_mode,
+            lock_overlay,
+            unlock_overlay,
+            is_overlay_locked,
             open_main_route,
             cancel_capture,
             recognize_selection,
@@ -857,6 +1119,10 @@ pub fn run() {
             }
 
             apply_shortcuts(app.handle(), &ShortcutSettings::default());
+
+            // Sleeps until an overlay is locked, then keeps its unlock button
+            // reachable through a window that otherwise ignores the mouse.
+            watch_overlay_locks(app.handle().clone());
 
             Ok(())
         })

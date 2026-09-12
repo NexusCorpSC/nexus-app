@@ -6,6 +6,9 @@ import {
 } from "@/lib/notifications";
 import {
   DEFAULT_OVERLAY_OPACITY,
+  isOverlayMode,
+  type OverlayLabel,
+  type OverlayMode,
   type OverlayOpacity,
 } from "@/lib/overlay-opacity";
 import {
@@ -146,7 +149,21 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
 }
 
 /**
- * Whether each overlay draws its panel — the only durable copy of it. Rust holds
+ * One stored mode, whatever version wrote it.
+ *
+ * The store used to hold a boolean per overlay — panel or not — before the
+ * shaded mode came between the two. `true` was the panel and `false` the game
+ * seen through, and they still are. Anything else is the window's own default.
+ */
+function storedMode(value: unknown, label: OverlayLabel): OverlayMode {
+  if (isOverlayMode(value)) return value;
+  if (value === true) return "opaque";
+  if (value === false) return "clear";
+  return DEFAULT_OVERLAY_OPACITY[label];
+}
+
+/**
+ * How much each overlay lets through — the only durable copy of it. Rust holds
  * what is in force and is handed this at startup (`src/lib/overlay-opacity.ts`).
  *
  * Read field by field rather than as a whole so that a store written by an older
@@ -155,12 +172,14 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
  */
 export async function getOverlayOpacity(): Promise<OverlayOpacity> {
   const store = await getStore();
-  const stored = await store.get<Partial<OverlayOpacity>>(KEY_OVERLAY_OPACITY);
+  const stored = await store.get<Partial<Record<OverlayLabel, unknown>>>(
+    KEY_OVERLAY_OPACITY,
+  );
 
   return {
-    notes: stored?.notes ?? DEFAULT_OVERLAY_OPACITY.notes,
-    cargo: stored?.cargo ?? DEFAULT_OVERLAY_OPACITY.cargo,
-    squad: stored?.squad ?? DEFAULT_OVERLAY_OPACITY.squad,
+    notes: storedMode(stored?.notes, "notes"),
+    cargo: storedMode(stored?.cargo, "cargo"),
+    squad: storedMode(stored?.squad, "squad"),
   };
 }
 
