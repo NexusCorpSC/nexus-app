@@ -7,8 +7,10 @@ import { NoteEditor } from "@/components/note-editor";
 import { ErrorState, LoadingState } from "@/components/ui";
 import { noteQueryKey, readNote } from "@/lib/notes";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { useOverlayMode } from "@/hooks/use-overlay-opacity";
+import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +28,11 @@ export default function NotesOverlayPage() {
 
   // Its own mode, flipped by the header button — and by the global shortcut,
   // which takes all three overlays to the same one.
-  const opaque = useOverlayOpaque("notes");
+  const mode = useOverlayMode("notes");
+
+  // Locked, the window is a picture the clicks go through — all but the one on
+  // the lock itself, which Rust keeps live.
+  const locked = useOverlayLocked("notes");
 
   const queryKey = noteQueryKey(signedIn);
 
@@ -60,7 +66,7 @@ export default function NotesOverlayPage() {
     <div
       className={cn(
         "flex h-screen w-screen flex-col overflow-hidden",
-        overlaySkin(opaque),
+        overlaySkin(mode),
       )}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
@@ -76,7 +82,7 @@ export default function NotesOverlayPage() {
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
           // The rule separates the header from the body of a panel; with no
           // panel it is just a line drawn across the game.
-          opaque ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-white/10" : null,
         )}
       >
         <NotebookPen className="pointer-events-none size-4 text-slate-400" />
@@ -88,7 +94,8 @@ export default function NotesOverlayPage() {
             local
           </span>
         )}
-        <OverlayOpacityButton label="notes" opaque={opaque} />
+        <OverlayOpacityButton label="notes" mode={mode} />
+        <OverlayLockButton label="notes" locked={locked} />
 
         <button
           type="button"

@@ -26,8 +26,10 @@ import {
 } from "@/components/cargo/sheet-view";
 import { Button, Select } from "@/components/ui";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { useOverlayOpaque } from "@/hooks/use-overlay-opacity";
+import { useOverlayMode } from "@/hooks/use-overlay-opacity";
+import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
+import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +55,11 @@ export default function CargoOverlayPage() {
 
   // Its own mode, flipped by the header button — and by the global shortcut,
   // which takes all three overlays to the same one.
-  const opaque = useOverlayOpaque("cargo");
+  const mode = useOverlayMode("cargo");
+
+  // Locked, the window is a picture the clicks go through — all but the one on
+  // the lock itself, which Rust keeps live.
+  const locked = useOverlayLocked("cargo");
 
   function close() {
     void invoke("close_cargo_overlay");
@@ -70,7 +76,7 @@ export default function CargoOverlayPage() {
     <div
       className={cn(
         "flex h-screen w-screen flex-col overflow-hidden",
-        overlaySkin(opaque),
+        overlaySkin(mode),
       )}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
@@ -89,7 +95,7 @@ export default function CargoOverlayPage() {
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
           // The rule separates the header from the body of a panel; with no
           // panel it is just a line drawn across the game.
-          opaque ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-white/10" : null,
         )}
       >
         <Boxes className="pointer-events-none size-4 text-slate-400" />
@@ -117,7 +123,8 @@ export default function CargoOverlayPage() {
           </button>
         ) : null}
 
-        <OverlayOpacityButton label="cargo" opaque={opaque} />
+        <OverlayOpacityButton label="cargo" mode={mode} />
+        <OverlayLockButton label="cargo" locked={locked} />
 
         <button
           type="button"

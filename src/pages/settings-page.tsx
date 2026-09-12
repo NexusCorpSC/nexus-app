@@ -334,8 +334,9 @@ export default function SettingsPage() {
               }
             />
             <span className="text-xs text-nexus-accent/50">
-              Bascule les trois superpositions entre leur panneau et le jeu vu
-              au travers. Chacune porte aussi le bouton.
+              Efface les trois superpositions d'un coup — le jeu vu au travers
+              — ou leur rend leur panneau. Chacune porte aussi le bouton, qui
+              passe par le fond ombré entre les deux.
             </span>
           </Field>
 

@@ -131,7 +131,7 @@ crate la fonctionnalité `image-png`.
 
 ### Superposition et capture d'écran
 
-Deux raccourcis globaux, enregistrés côté Rust pour rester actifs quand
+Des raccourcis globaux, enregistrés côté Rust pour rester actifs quand
 l'application est minimisée ou n'a pas le focus :
 
 | Raccourci par défaut | Effet                                                      |
@@ -140,6 +140,8 @@ l'application est minimisée ou n'a pas le focus :
 | `Ctrl+Maj+S`         | ouvre la capture de zone, dont le texte alimente la palette |
 | `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition            |
 | `Ctrl+Maj+G`         | affiche ou masque la feuille de cargo en superposition      |
+| `Ctrl+Maj+E`         | affiche ou masque l'escouade en superposition               |
+| `Ctrl+Maj+O`         | efface les trois superpositions, ou leur rend leur panneau  |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
 voulue. Au moins un modificateur est exigé : un raccourci global sans
@@ -390,6 +392,56 @@ L'enregistrement est automatique, 1,2 s après la dernière frappe. Les écritur
 peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
 réponses revenir dans le désordre : seule la requête la plus récente met l'écran
 à jour.
+
+### Escouade
+
+`Ctrl+Maj+E` affiche ou masque l'escouade en superposition : qui est prêt, qui
+est à terre, qui tient quel rôle, et l'annonce du chef — lisible **au travers**
+du cockpit, puisque cette fenêtre-là s'ouvre sans panneau. Tout ce qui touche à
+l'escouade se fait depuis cette fenêtre : la créer, la rejoindre par code, la
+quitter, ses rôles, et le **raid** qui en regroupe plusieurs sous une même
+annonce.
+
+Dans un raid, l'en-tête porte un **commutateur** à deux positions, *Escouade* et
+*Raid*, à la place de l'icône : la position allumée est la vue affichée, ce
+qu'un seul bouton qui basculait ne disait pas. Le bouton **Gérer le raid** ouvre
+la feuille qui le compose : lier une escouade par son code, en retirer une, et
+**en ouvrir une nouvelle**.
+
+Ouvrir une escouade depuis le raid la crée avec son organisateur pour seul
+membre et pour chef — une escouade vide n'existe pas, le dernier à en sortir la
+supprime — **sans le faire sortir de la sienne**. C'est la seule façon d'être
+dans plusieurs escouades à la fois, et elle sert à préparer un raid : Bravo et
+Charlie existent avant qu'on y soit, leurs codes partent, et le commandement
+passe à qui de droit une fois arrivé. La superposition regarde alors *une* de
+ces escouades — un sélecteur à côté du titre change laquelle — et sur la vue de
+raid, toutes celles dont on est membre se manipulent, pas seulement celle qui
+est affichée. Côté API, chaque route accepte `?squad=<id>` pour dire laquelle
+elle vise ; sans lui, c'est la plus ancienne des appartenances, donc la seule
+pour tout le monde sauf l'organisateur.
+
+#### Les trois superpositions ont le même en-tête
+
+Bloc-notes, feuille de cargo et escouade partagent deux boutons, en plus de la
+croix.
+
+**Le fond**, en trois états que le bouton fait défiler : *transparent* — rien
+derrière le texte, qu'une ombre sous chaque lettre garde lisible ; *ombré* — la
+même ombre, plus un léger voile sombre sur toute la fenêtre, pour un cockpit
+trop clair pour du texte nu mais qu'on veut encore voir ; *opaque* — le panneau.
+Chaque fenêtre garde son réglage d'un lancement à l'autre. `Ctrl+Maj+O` passe
+les trois d'un coup au transparent si l'une d'elles dessine encore quelque
+chose, et leur rend leur panneau sinon.
+
+**Le verrou.** Verrouillée, la fenêtre laisse **passer les clics au jeu** :
+elle reste lue, mais plus rien dessus ne réagit — sauf le verrou lui-même, seul
+chemin de retour. Une fenêtre qui ignore la souris ne la voit plus, et ne peut
+donc pas savoir que le curseur est sur son bouton : c'est Rust qui surveille la
+position du curseur tant qu'une superposition est verrouillée, et rend la souris
+à la fenêtre pendant que le pointeur est sur la zone que le bouton a déclarée —
+`set_ignore_cursor_events`, basculé dans un sens puis dans l'autre. Le bouton
+redéclare sa zone quand la fenêtre est redimensionnée, puisque l'en-tête se
+réorganise sous lui.
 
 ### Notifications
 

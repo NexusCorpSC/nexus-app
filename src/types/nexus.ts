@@ -605,6 +605,8 @@ export const POSITION_MAX_LENGTH = 120;
 export const SQUAD_NAME_MAX_LENGTH = 60;
 export const ROLE_LABEL_MAX_LENGTH = 24;
 export const RAID_NAME_MAX_LENGTH = 60;
+/** Six squads of twenty is already more than an overlay can show. */
+export const RAID_MAX_SQUADS = 6;
 
 /**
  * The glyphs a role may wear, and nothing else — mirrored from the API, which
@@ -776,14 +778,31 @@ export type Raid = {
 };
 
 /**
+ * One of the squads the caller is in, as much of it as the switcher needs.
+ *
+ * A player is in one squad nearly always. A raid's organiser who opened the
+ * raid's other squads — and leads each until somebody takes it over — is in
+ * several, and this is how the overlay knows to offer them.
+ */
+export type SquadMembership = {
+  id: string;
+  name: string;
+  code: string;
+  raidId: string | null;
+};
+
+/**
  * What every squad route answers: where the caller stands, in one object.
  *
- * The raid rides along with the squad, so the overlay draws every sub-squad
- * from the poll it already makes.
+ * `squad` is the one the request named with `?squad=`, or the longest-standing
+ * membership when it named none. The raid rides along with it, so the overlay
+ * draws every sub-squad from the poll it already makes. `memberships` lists
+ * every squad the caller is in, longest-standing first.
  */
 export type SquadView = {
   squad: Squad | null;
   raid: Raid | null;
+  memberships: SquadMembership[];
 };
 
 /**
