@@ -113,6 +113,22 @@
         "visible": false,
         "focus": false,
         "focusable": false
+      },
+      {
+        "label": "banners",
+        "title": "Nexus - bannières",
+        "url": "index.html#/banners",
+        "width": 560,
+        "height": 160,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false,
+        "focus": false,
+        "focusable": false
       }
     ],
     "security": {

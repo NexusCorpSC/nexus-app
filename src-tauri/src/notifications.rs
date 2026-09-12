@@ -1,36 +1,75 @@
-//! Toasts shown in a corner of the screen.
+//! Toasts shown over the game: most in a corner of the screen, a few — the
+//! ones that ask something of the whole squad — large, at the top, centred.
 //!
-//! They live in their own always-on-top window rather than inside the main one:
-//! this app spends most of its life minimised behind a game, and a notification
-//! nobody can see is not a notification. The window is sized to whatever the
-//! overlay is showing and moved to the chosen corner, so the rest of the screen
-//! keeps taking clicks — the window covers the toasts and nothing else.
+//! They live in windows of their own rather than inside the main one: this app
+//! spends most of its life minimised behind a game, and a notification nobody
+//! can see is not a notification. Each window is sized to whatever its overlay
+//! is showing and moved to its place, so the rest of the screen keeps taking
+//! clicks — the window covers the toasts and nothing else.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalRect, PhysicalSize};
+use tauri::{
+    AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalRect, PhysicalSize, Window,
+};
 
 use crate::diagnostics::log;
-use crate::{window, NOTIFICATIONS_WINDOW};
+use crate::{window, BANNERS_WINDOW, NOTIFICATIONS_WINDOW};
 
-/// Carries one notification to the overlay.
+/// Carries one notification to the overlay it is placed in.
 const SHOW_EVENT: &str = "notifications://show";
 
-/// Tells the overlay which corner it hangs from, so the stack grows away from
-/// the edge and the toasts slide in from the right side.
+/// Tells the corner overlay which corner it hangs from, so the stack grows
+/// away from the edge and the toasts slide in from the right side.
 const CORNER_EVENT: &str = "notifications://corner";
 
 /// Gap left between the toasts and the edges of the work area, in logical
-/// pixels — the same unit the overlay measures itself in.
+/// pixels — the same unit the overlays measure themselves in.
 const MARGIN: f64 = 16.0;
 
-/// How many notifications are held while the overlay is still loading.
+/// How many notifications are held while an overlay is still loading.
 const MAX_PENDING: usize = 8;
 
-/// Which corner the toasts hang from.
+/// Where a notification is shown.
+///
+/// Two windows, one each: what is asked of the whole squad — an announcement,
+/// a ready check — is not read in a corner while the game has the eyes, so it
+/// goes large and centred at the top of the screen. Everything else stays in
+/// the corner, where it is noticed without being in the way.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "kebab-case")]
+pub enum Placement {
+    #[default]
+    Corner,
+    Top,
+}
+
+impl Placement {
+    const ALL: [Placement; 2] = [Placement::Corner, Placement::Top];
+
+    /// The window that draws this placement.
+    fn window(self) -> &'static str {
+        match self {
+            Placement::Corner => NOTIFICATIONS_WINDOW,
+            Placement::Top => BANNERS_WINDOW,
+        }
+    }
+
+    /// The placement a window draws — the commands below are called by the
+    /// overlays themselves, and which one is calling says where it is.
+    fn of(window: &Window) -> Result<Placement, String> {
+        let label = window.label();
+        Placement::ALL
+            .into_iter()
+            .find(|placement| placement.window() == label)
+            .ok_or_else(|| format!("window `{label}` shows no notifications"))
+    }
+}
+
+/// Which corner the corner toasts hang from.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]
 pub enum Corner {
@@ -96,9 +135,12 @@ pub struct NotificationInput {
     /// A button, for the one thing the notification asks for.
     #[serde(default)]
     action: Option<NotificationAction>,
+    /// The corner unless said otherwise.
+    #[serde(default)]
+    placement: Placement,
 }
 
-/// What the overlay receives.
+/// What an overlay receives.
 ///
 /// The id is assigned here rather than by the caller so that notifications
 /// raised from different windows — each one its own webview — cannot collide.
@@ -112,6 +154,7 @@ struct Notification {
     timeout_ms: Option<u64>,
     route: Option<String>,
     action: Option<NotificationAction>,
+    placement: Placement,
 }
 
 /// The work area a visible stack is placed in.
@@ -125,14 +168,26 @@ struct Anchor {
     scale: f64,
 }
 
+/// What each window keeps for itself.
 #[derive(Default)]
-pub struct Notifications {
-    corner: Mutex<Corner>,
+struct Slot {
     anchor: Mutex<Option<Anchor>>,
     /// Notifications raised before the overlay was listening.
     pending: Mutex<Vec<Notification>>,
     ready: AtomicBool,
+}
+
+#[derive(Default)]
+pub struct Notifications {
+    corner: Mutex<Corner>,
+    slots: [Slot; 2],
     next_id: AtomicU64,
+}
+
+impl Notifications {
+    fn slot(&self, placement: Placement) -> &Slot {
+        &self.slots[placement as usize]
+    }
 }
 
 fn lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>, String> {
@@ -141,7 +196,7 @@ fn lock<T>(mutex: &Mutex<T>) -> Result<MutexGuard<'_, T>, String> {
         .map_err(|_| "notification state is poisoned".to_string())
 }
 
-/// Raises a notification from Rust.
+/// Raises a corner notification from Rust.
 pub(crate) fn push(app: &AppHandle, kind: Kind, title: impl Into<String>, body: Option<String>) {
     deliver(
         app,
@@ -152,6 +207,7 @@ pub(crate) fn push(app: &AppHandle, kind: Kind, title: impl Into<String>, body: 
             timeout_ms: None,
             route: None,
             action: None,
+            placement: Placement::Corner,
         },
     );
 }
@@ -167,14 +223,16 @@ fn deliver(app: &AppHandle, input: NotificationInput) {
         timeout_ms: input.timeout_ms,
         route: input.route,
         action: input.action,
+        placement: input.placement,
     };
 
-    // The overlay is created hidden at startup and loads the same bundle as
+    // The overlays are created hidden at startup and load the same bundle as
     // every other window, so a notification raised in the meantime would be
-    // emitted to nobody. Held instead, and handed over when it says it is
-    // listening.
-    if !state.ready.load(Ordering::Acquire) {
-        match lock(&state.pending) {
+    // emitted to nobody. Held instead, and handed over when the overlay says
+    // it is listening.
+    let slot = state.slot(input.placement);
+    if !slot.ready.load(Ordering::Acquire) {
+        match lock(&slot.pending) {
             Ok(mut pending) => {
                 if pending.len() >= MAX_PENDING {
                     pending.remove(0);
@@ -191,7 +249,7 @@ fn deliver(app: &AppHandle, input: NotificationInput) {
 }
 
 fn emit(app: &AppHandle, notification: &Notification) {
-    if let Err(error) = app.emit_to(NOTIFICATIONS_WINDOW, SHOW_EVENT, notification) {
+    if let Err(error) = app.emit_to(notification.placement.window(), SHOW_EVENT, notification) {
         log(format!(
             "notification `{}` was not delivered: {error}",
             notification.title
@@ -205,16 +263,19 @@ pub fn notify(app: AppHandle, notification: NotificationInput) {
     deliver(&app, notification);
 }
 
-/// Called by the overlay once it is listening.
+/// Called by an overlay once it is listening.
 ///
-/// Answers with the corner it should hang from, and hands over whatever was
-/// raised while it was still loading.
+/// Answers with the corner the corner toasts hang from — the top window has no
+/// use for it — and hands over whatever was raised while the overlay was still
+/// loading.
 #[tauri::command]
-pub fn notifications_ready(app: AppHandle) -> Result<Corner, String> {
+pub fn notifications_ready(app: AppHandle, window: Window) -> Result<Corner, String> {
+    let placement = Placement::of(&window)?;
     let state = app.state::<Notifications>();
-    state.ready.store(true, Ordering::Release);
+    let slot = state.slot(placement);
+    slot.ready.store(true, Ordering::Release);
 
-    let pending = std::mem::take(&mut *lock(&state.pending)?);
+    let pending = std::mem::take(&mut *lock(&slot.pending)?);
     for notification in &pending {
         emit(&app, notification);
     }
@@ -226,15 +287,21 @@ pub fn notifications_ready(app: AppHandle) -> Result<Corner, String> {
     Ok(corner)
 }
 
-/// Sizes the window to the stack the overlay is showing, puts it in the chosen
-/// corner and brings it up.
+/// Sizes the calling window to the stack its overlay is showing, puts it in
+/// its place and brings it up.
 ///
 /// Called on every change to the stack: a window larger than its contents would
 /// swallow clicks meant for whatever is underneath, which here is usually a
 /// game.
 #[tauri::command]
-pub fn resize_notifications(app: AppHandle, width: f64, height: f64) -> Result<(), String> {
-    let anchor = anchor(&app)?;
+pub fn resize_notifications(
+    app: AppHandle,
+    window: Window,
+    width: f64,
+    height: f64,
+) -> Result<(), String> {
+    let placement = Placement::of(&window)?;
+    let anchor = anchor(&app, placement)?;
 
     // A stack taller than the screen would push its oldest toasts off it.
     let ceiling = anchor
@@ -248,30 +315,31 @@ pub fn resize_notifications(app: AppHandle, width: f64, height: f64) -> Result<(
         to_physical(height, anchor.scale).clamp(1, ceiling.max(1)),
     );
 
-    place(&app, &anchor, size)?;
+    place(&app, placement, &anchor, size)?;
 
     // Never focused: taking the foreground from a game to say something would
     // cost more than the notification is worth.
-    window(&app, NOTIFICATIONS_WINDOW)?
+    crate::window(&app, placement.window())?
         .show()
         .map_err(|e| e.to_string())
 }
 
-/// Called when the last toast is gone.
+/// Called by an overlay when its last toast is gone.
 ///
-/// Drops the anchor as well, so the next stack picks the screen the user is on
-/// then rather than the one they were on before.
+/// Drops its anchor as well, so the next stack picks the screen the user is
+/// on then rather than the one they were on before.
 #[tauri::command]
-pub fn hide_notifications(app: AppHandle) -> Result<(), String> {
-    *lock(&app.state::<Notifications>().anchor)? = None;
+pub fn hide_notifications(app: AppHandle, window: Window) -> Result<(), String> {
+    let placement = Placement::of(&window)?;
+    *lock(&app.state::<Notifications>().slot(placement).anchor)? = None;
 
-    window(&app, NOTIFICATIONS_WINDOW)?
+    crate::window(&app, placement.window())?
         .hide()
         .map_err(|e| e.to_string())
 }
 
 /// Applies the corner chosen in Settings. Persisting it stays on the frontend,
-/// which owns the store.
+/// which owns the store. The top window is not concerned: centred is centred.
 #[tauri::command]
 pub fn set_notification_corner(app: AppHandle, corner: Corner) -> Result<(), String> {
     *lock(&app.state::<Notifications>().corner)? = corner;
@@ -284,32 +352,48 @@ pub fn set_notification_corner(app: AppHandle, corner: Corner) -> Result<(), Str
     // legible from Settings.
     let window = window(&app, NOTIFICATIONS_WINDOW)?;
     if window.is_visible().map_err(|e| e.to_string())? {
-        let anchor = anchor(&app)?;
+        let anchor = anchor(&app, Placement::Corner)?;
         let size = window.outer_size().map_err(|e| e.to_string())?;
-        place(&app, &anchor, size)?;
+        place(&app, Placement::Corner, &anchor, size)?;
     }
 
     Ok(())
 }
 
-fn place(app: &AppHandle, anchor: &Anchor, size: PhysicalSize<u32>) -> Result<(), String> {
-    let corner = *lock(&app.state::<Notifications>().corner)?;
+fn place(
+    app: &AppHandle,
+    placement: Placement,
+    anchor: &Anchor,
+    size: PhysicalSize<u32>,
+) -> Result<(), String> {
     let margin = to_physical(MARGIN, anchor.scale) as i32;
     let area = anchor.area;
 
-    let x = if corner.is_right() {
-        area.position.x + area.size.width as i32 - size.width as i32 - margin
-    } else {
-        area.position.x + margin
+    let (x, y) = match placement {
+        Placement::Top => (
+            area.position.x + (area.size.width as i32 - size.width as i32) / 2,
+            area.position.y + margin,
+        ),
+        Placement::Corner => {
+            let corner = *lock(&app.state::<Notifications>().corner)?;
+
+            let x = if corner.is_right() {
+                area.position.x + area.size.width as i32 - size.width as i32 - margin
+            } else {
+                area.position.x + margin
+            };
+
+            let y = if corner.is_bottom() {
+                area.position.y + area.size.height as i32 - size.height as i32 - margin
+            } else {
+                area.position.y + margin
+            };
+
+            (x, y)
+        }
     };
 
-    let y = if corner.is_bottom() {
-        area.position.y + area.size.height as i32 - size.height as i32 - margin
-    } else {
-        area.position.y + margin
-    };
-
-    let window = window(app, NOTIFICATIONS_WINDOW)?;
+    let window = window(app, placement.window())?;
 
     // Sized before it is moved: for a stack that grows downwards from the
     // bottom edge, the position depends on the height it is about to have.
@@ -319,11 +403,13 @@ fn place(app: &AppHandle, anchor: &Anchor, size: PhysicalSize<u32>) -> Result<()
         .map_err(|e| e.to_string())
 }
 
-/// The work area the current stack hangs in, chosen once per stack.
-fn anchor(app: &AppHandle) -> Result<Anchor, String> {
+/// The work area the current stack of a window hangs in, chosen once per
+/// stack.
+fn anchor(app: &AppHandle, placement: Placement) -> Result<Anchor, String> {
     let state = app.state::<Notifications>();
+    let slot = state.slot(placement);
 
-    if let Some(anchor) = *lock(&state.anchor)? {
+    if let Some(anchor) = *lock(&slot.anchor)? {
         return Ok(anchor);
     }
 
@@ -335,7 +421,7 @@ fn anchor(app: &AppHandle) -> Result<Anchor, String> {
         scale: monitor.scale_factor(),
     };
 
-    *lock(&state.anchor)? = Some(anchor);
+    *lock(&slot.anchor)? = Some(anchor);
 
     Ok(anchor)
 }
@@ -358,8 +444,8 @@ fn current_monitor(app: &AppHandle) -> Result<Monitor, String> {
         .ok_or_else(|| "no monitor to show notifications on".to_string())
 }
 
-/// Logical pixels, as the overlay measures them, into the physical ones the
-/// window is sized and placed in.
+/// Logical pixels, as the overlays measure them, into the physical ones the
+/// windows are sized and placed in.
 fn to_physical(logical: f64, scale: f64) -> u32 {
     (logical * scale).round().max(0.0) as u32
 }
