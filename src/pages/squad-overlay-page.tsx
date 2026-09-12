@@ -107,7 +107,7 @@ const SHEET =
 type Sheet = { kind: "roles"; squadId: string } | { kind: "raid" } | null;
 
 export default function SquadOverlayPage() {
-  const { user, loading: session, refresh } = useAuth();
+  const { user, loading: session } = useAuth();
 
   /**
    * The squad the overlay looks at, or `null` for the one the API picks —
@@ -179,13 +179,6 @@ export default function SquadOverlayPage() {
       setCurrent(null);
     }
   }, [current, state.loading, state.memberships]);
-
-  useEffect(() => {
-    // The stream was refused: the stored session is dead. Re-checking it
-    // clears the cookie, which puts this window on its sign-in text and stops
-    // the stream from trying again until someone signs in.
-    if (state.feed === "unauthorized" && user) void refresh();
-  }, [state.feed, user, refresh]);
 
   function leave(squadId: string) {
     squadApi.leave.mutate(squadId, {

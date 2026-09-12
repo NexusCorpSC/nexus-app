@@ -14,7 +14,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import * as authApi from "@/lib/api/auth";
 import { ApiError } from "@/lib/api-client";
 import { getSessionCookie, setSessionCookie } from "@/lib/settings";
-import type { CurrentUser } from "@/types/nexus";
+import type { CurrentUser, FeedStatusEvent } from "@/types/nexus";
 
 /**
  * Announces a sign-in or a sign-out, carrying the label of the window it
@@ -26,6 +26,20 @@ import type { CurrentUser } from "@/types/nexus";
  * scratch pad to a signed-in user.
  */
 const SESSION_EVENT = "auth://session-changed";
+
+/** Broadcast by Rust whenever the event stream's status changes. */
+const FEED_STATUS_EVENT = "feed://status";
+
+/**
+ * The one window that acts on the stream being refused.
+ *
+ * Every window runs this provider, and the stream is refused once for all of
+ * them: one has to re-check the session and tell the others, and the main
+ * window is the one that always exists — hidden in the tray, perhaps, but
+ * there. Without a designated window, the dead cookie would only be cleared
+ * by whichever window happened to be looking, or never.
+ */
+const SESSION_KEEPER_WINDOW = "main";
 
 /**
  * Tells Rust the session on record may have changed, so the event stream it
@@ -95,6 +109,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // re-checking it would flash the loading state for nothing.
       if (event.payload === label) return;
       void refresh();
+    });
+
+    return () => {
+      void pending.then((unlisten) => unlisten());
+    };
+  }, [refresh]);
+
+  // The stream was refused: the stored session is dead, whatever window is
+  // up. Re-checking it clears the cookie (`refresh` does, on a 401), which
+  // stops the stream from trying again until someone signs in; the others are
+  // told, so none of them goes on showing an account that is no longer there.
+  useEffect(() => {
+    const label = getCurrentWindow().label;
+    if (label !== SESSION_KEEPER_WINDOW) return;
+
+    const pending = listen<FeedStatusEvent>(FEED_STATUS_EVENT, (event) => {
+      if (event.payload.status !== "unauthorized") return;
+
+      void refresh().then(() => emit(SESSION_EVENT, label));
     });
 
     return () => {
