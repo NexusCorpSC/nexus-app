@@ -14,6 +14,7 @@ import {
   Crown,
   Flag,
   GripVertical,
+  ListChecks,
   Loader2,
   LogOut,
   Megaphone,
@@ -116,7 +117,7 @@ export default function SquadOverlayPage() {
    */
   const [current, setCurrent] = useState<string | null>(null);
 
-  const squadApi = useSquad(Boolean(user), current);
+  const squadApi = useSquad(Boolean(user), current, user?.id ?? null);
   const { state } = squadApi;
 
   useTransparentWindow();
@@ -497,6 +498,21 @@ function SquadBoard({
       />
 
       <Footer counts={counts}>
+        {commands ? (
+          <OverlayButton
+            onClick={() => api.readyCheck.mutate(squad.id)}
+            disabled={api.readyCheck.isPending}
+            title="Tout le monde repasse « non prêt » et reçoit une notification"
+          >
+            {api.readyCheck.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <ListChecks className="size-3.5" />
+            )}
+            Ready check
+          </OverlayButton>
+        ) : null}
+
         <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />
           {raid ? "Gérer le raid" : "Créer un raid"}
@@ -1118,6 +1134,21 @@ function RaidBoard({
             <span className="text-[11px] tabular-nums">{layout.columns}</span>
           </span>
         </IconButton>
+
+        {leads ? (
+          <OverlayButton
+            onClick={() => api.raidReadyCheck.mutate(squad.id)}
+            disabled={api.raidReadyCheck.isPending}
+            title="Tout le raid repasse « non prêt » et reçoit une notification"
+          >
+            {api.raidReadyCheck.isPending ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <ListChecks className="size-3.5" />
+            )}
+            Ready check
+          </OverlayButton>
+        ) : null}
 
         <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />

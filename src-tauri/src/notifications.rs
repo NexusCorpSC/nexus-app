@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, MutexGuard};
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::{AppHandle, Emitter, Manager, Monitor, PhysicalPosition, PhysicalRect, PhysicalSize};
 
 use crate::diagnostics::log;
@@ -62,6 +63,18 @@ pub enum Kind {
     Error,
 }
 
+/// A button on the toast: pressing it broadcasts `event` with `payload` to
+/// every window, and the one that raised the notification acts on it. The
+/// overlay itself has neither the session nor the network to do anything.
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotificationAction {
+    label: String,
+    event: String,
+    #[serde(default)]
+    payload: Option<Value>,
+}
+
 /// What a caller asks for.
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -80,6 +93,9 @@ pub struct NotificationInput {
     /// acted on in is usually not on screen.
     #[serde(default)]
     route: Option<String>,
+    /// A button, for the one thing the notification asks for.
+    #[serde(default)]
+    action: Option<NotificationAction>,
 }
 
 /// What the overlay receives.
@@ -95,6 +111,7 @@ struct Notification {
     body: Option<String>,
     timeout_ms: Option<u64>,
     route: Option<String>,
+    action: Option<NotificationAction>,
 }
 
 /// The work area a visible stack is placed in.
@@ -134,6 +151,7 @@ pub(crate) fn push(app: &AppHandle, kind: Kind, title: impl Into<String>, body: 
             body,
             timeout_ms: None,
             route: None,
+            action: None,
         },
     );
 }
@@ -148,6 +166,7 @@ fn deliver(app: &AppHandle, input: NotificationInput) {
         body: input.body,
         timeout_ms: input.timeout_ms,
         route: input.route,
+        action: input.action,
     };
 
     // The overlay is created hidden at startup and loads the same bundle as

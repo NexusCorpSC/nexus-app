@@ -22,6 +22,8 @@ import {
   leaveSquad,
   removeSquadMember,
   renameSquad,
+  requestRaidReadyCheck,
+  requestReadyCheck,
   setSquadAnnouncements,
   transferSquadLeadership,
   unlinkRaidSquad,
@@ -46,6 +48,21 @@ const SQUAD_VISIBILITY_EVENT = "squad://visibility";
 
 /** Emitted by Rust with every view the event stream delivers for the squad. */
 const SQUAD_VIEW_EVENT = "squad://view";
+
+/**
+ * Emitted by the «Prêt» button of a ready check notification, carrying the
+ * squad to answer in. The notification window has no session: this window
+ * does, and writes the row.
+ */
+const READY_CHECK_EVENT = "squad://ready";
+
+type ReadyCheckAnswer = { squadId: string };
+
+/** The button's payload, as it comes off the wire: checked before it is written. */
+function readyCheckAnswer(payload: unknown): ReadyCheckAnswer | null {
+  const squadId = (payload as { squadId?: unknown } | null)?.squadId;
+  return typeof squadId === "string" && squadId ? { squadId } : null;
+}
 
 /** Shared by every squad mutation, so the poll can tell one is running. */
 const SQUAD_KEY = ["squad"] as const;
@@ -161,6 +178,56 @@ function merge(next: SquadView, shown: SquadView | undefined): SquadView {
 /** How long an announcement stays up: long enough to read orders. */
 const ANNOUNCEMENT_TIMEOUT_MS = 12_000;
 
+/** A ready check waits for an answer: long enough to notice, not forever. */
+const READY_CHECK_TIMEOUT_MS = 60_000;
+
+/**
+ * Raises a toast for a ready check the stream just brought.
+ *
+ * The squad's own, or the raid's — told apart by where the new id sits. The
+ * toast carries the one answer asked for: a «Prêt» button, whose event this
+ * window turns into a write of the reader's row (see `useSquad`). Our own
+ * request never gets here: its answer lands in the cache before the push
+ * that echoes it, so the push finds the id already known.
+ */
+function noticeReadyChecks(shown: SquadView, next: SquadView) {
+  const squad = next.squad;
+  if (!squad || shown.squad?.id !== squad.id) return;
+
+  const action = {
+    label: "Prêt",
+    event: READY_CHECK_EVENT,
+    payload: { squadId: squad.id } satisfies ReadyCheckAnswer,
+  };
+
+  const squadCheck = squad.readyCheck;
+  if (squadCheck && squadCheck.id !== shown.squad?.readyCheck?.id) {
+    void notify({
+      kind: "warning",
+      title: `Ready check — ${squad.name}`,
+      body: `${squadCheck.requestedBy} demande à tout le monde de se déclarer prêt.`,
+      timeoutMs: READY_CHECK_TIMEOUT_MS,
+      action,
+    });
+  }
+
+  const raidCheck = next.raid?.readyCheck;
+  if (
+    next.raid &&
+    raidCheck &&
+    shown.raid?.id === next.raid.id &&
+    raidCheck.id !== shown.raid.readyCheck?.id
+  ) {
+    void notify({
+      kind: "warning",
+      title: `Ready check du raid — ${next.raid.name}`,
+      body: `${raidCheck.requestedBy} demande à tout le raid de se déclarer prêt.`,
+      timeoutMs: READY_CHECK_TIMEOUT_MS,
+      action,
+    });
+  }
+}
+
 /**
  * Raises a toast for an announcement the stream just changed.
  *
@@ -219,7 +286,10 @@ function applyPush(
   const merged = merge(next, shown);
 
   // Only a view that actually replaces the screen has news in it.
-  if (!silent && shown && merged === next) announceChanges(shown, next);
+  if (!silent && shown && merged === next) {
+    announceChanges(shown, next);
+    noticeReadyChecks(shown, next);
+  }
 
   queryClient.setQueryData<SquadView>(key, merged);
 }
@@ -352,13 +422,18 @@ export interface SquadState {
  * `enabled` is the session: the overlay is outside the route guard, so it asks
  * for nothing until someone is signed in. `current` is the squad the overlay
  * chose to look at, or `null` for the one the API picks — the only one, for
- * nearly everybody; Rust is told, and streams that one.
+ * nearly everybody; Rust is told, and streams that one. `userId` is the
+ * reader, whose own row a ready check notification answers on.
  *
  * Every squad-scoped mutation takes the squad it acts on: the one on screen
  * for most of them, and any squad the reader is in for the rows of the raid
  * board.
  */
-export function useSquad(enabled: boolean, current: string | null) {
+export function useSquad(
+  enabled: boolean,
+  current: string | null,
+  userId: string | null,
+) {
   const queryClient = useQueryClient();
   const live = useSquadOverlayVisible();
   const feed = useFeedStatus();
@@ -489,6 +564,43 @@ export function useSquad(enabled: boolean, current: string | null) {
       })),
   );
 
+  // The «Prêt» button of a ready check notification, pressed in the window
+  // that draws toasts: the answer is written from here, on the reader's row.
+  const patchMemberRef = useRef(patchMember);
+  useEffect(() => {
+    patchMemberRef.current = patchMember;
+  }, [patchMember]);
+
+  useEffect(() => {
+    if (!userId) return;
+
+    let unlisten: UnlistenFn | null = null;
+    let gone = false;
+
+    void listen<unknown>(READY_CHECK_EVENT, (event) => {
+      const answer = readyCheckAnswer(event.payload);
+      if (!answer) return;
+
+      patchMemberRef.current.mutate({
+        squadId: answer.squadId,
+        userId,
+        patch: { ready: true },
+      });
+    })
+      .then((stop) => {
+        if (gone) stop();
+        else unlisten = stop;
+      })
+      .catch((error) => {
+        console.error("cannot follow ready check answers", error);
+      });
+
+    return () => {
+      gone = true;
+      unlisten?.();
+    };
+  }, [userId]);
+
   const removeMember = useSquadMutation(
     current,
     ({ squadId, userId }: { squadId: string; userId: string }) =>
@@ -526,6 +638,17 @@ export function useSquad(enabled: boolean, current: string | null) {
       setSquadAnnouncements(squadId, announcements),
     (view, { squadId, announcements }) =>
       withSquad(view, squadId, (squad) => ({ ...squad, announcements })),
+  );
+
+  /*
+   * Ready checks are not guessed: the id is the server's to mint, and every
+   * row's «prêt» dropping at once is exactly what the answer shows.
+   */
+  const readyCheck = useSquadMutation(current, (squadId: string) =>
+    requestReadyCheck(squadId),
+  );
+  const raidReadyCheck = useSquadMutation(current, (squadId: string) =>
+    requestRaidReadyCheck(squadId),
   );
 
   /*
@@ -625,6 +748,8 @@ export function useSquad(enabled: boolean, current: string | null) {
     removeMember,
     makeLeader,
     announce,
+    readyCheck,
+    raidReadyCheck,
     addRole,
     editRole,
     removeRole,

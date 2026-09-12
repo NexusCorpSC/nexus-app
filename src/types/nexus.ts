@@ -742,6 +742,19 @@ export type SquadMember = {
   lieutenant?: boolean;
 };
 
+/**
+ * «Everybody, say you are ready»: the last one asked of a squad or a raid.
+ *
+ * Asking resets every member's `ready`; a member answers by setting their own
+ * back. A client that sees an id it did not know raises the notification.
+ */
+export type ReadyCheck = {
+  id: string;
+  requestedAt: string;
+  /** Who asked, by name. */
+  requestedBy: string;
+};
+
 export type Squad = {
   id: string;
   name: string;
@@ -754,6 +767,8 @@ export type Squad = {
   roles?: SquadRole[];
   /** The raid this squad was linked into, or `null` when it runs alone. */
   raidId?: string | null;
+  /** Absent from a server older than the feature. */
+  readyCheck?: ReadyCheck | null;
   version: number;
   updatedAt: string;
 };
@@ -772,6 +787,8 @@ export type Raid = {
   code: string;
   announcement: string;
   leadSquadId: string;
+  /** Absent from a server older than the feature. */
+  readyCheck?: ReadyCheck | null;
   updatedAt: string;
   /** Longest-standing first, which is also the order the lead is handed down. */
   squads: Squad[];
