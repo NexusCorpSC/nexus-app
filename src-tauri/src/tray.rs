@@ -40,7 +40,9 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
 
     let menu = Menu::with_items(
         app,
-        &[&search, &capture, &notes, &cargo, &squad, &plan, &separator, &quit],
+        &[
+            &search, &capture, &notes, &cargo, &squad, &plan, &separator, &quit,
+        ],
     )?;
 
     let mut tray = TrayIconBuilder::with_id("nexus-app")
