@@ -559,7 +559,10 @@ Le partage des rôles :
   page dans les deux fenêtres) dessine la pile et renvoie sa hauteur : la
   fenêtre est redimensionnée à chaque changement pour ne jamais couvrir plus
   que les toasts eux-mêmes. Rust reconnaît la fenêtre qui l'appelle, la page
-  n'a qu'à savoir à quoi ressembler.
+  n'a qu'à savoir à quoi ressembler. Chaque fenêtre n'écoute **que ce qui lui
+  est adressé** : l'écoute par défaut de Tauri vise « n'importe quelle cible »
+  et reçoit donc tout, y compris ce que Rust envoie à l'autre fenêtre — une
+  annonce s'afficherait alors en haut *et* dans le coin.
 
 Émettre une notification depuis n'importe quelle fenêtre :
 

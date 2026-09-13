@@ -7,6 +7,7 @@ import {
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { openMainRoute } from "@/lib/main-window";
@@ -95,10 +96,18 @@ export default function NotificationsOverlayPage({
   // Listening is set up before Rust is told this window is ready, because that
   // very call hands over whatever was raised while the bundle was loading.
   //
+  // Every listener is bound to this window: Rust sends each notification to
+  // the one window that draws its placement, but a listener left on the
+  // default target — «any» — is handed every event whatever it was addressed
+  // to, so both overlays would draw both stacks and an announcement would
+  // show at the top *and* in the corner.
+  //
   // Each listener is collected as it comes back rather than awaited as a
   // batch: one of them failing must not strand the one that succeeded, and one
   // coming back after the window went away must not outlive it.
   useEffect(() => {
+    const target = getCurrentWebviewWindow().label;
+
     const unlisteners: UnlistenFn[] = [];
     let gone = false;
 
@@ -109,15 +118,23 @@ export default function NotificationsOverlayPage({
 
     const register = async () => {
       keep(
-        await listen<AppNotification>(NOTIFICATION_EVENT, (event) => {
-          setItems((current) => [...current, event.payload].slice(-capacity));
-        }),
+        await listen<AppNotification>(
+          NOTIFICATION_EVENT,
+          (event) => {
+            setItems((current) => [...current, event.payload].slice(-capacity));
+          },
+          { target },
+        ),
       );
 
       keep(
-        await listen<NotificationCorner>(NOTIFICATION_CORNER_EVENT, (event) => {
-          setCorner(event.payload);
-        }),
+        await listen<NotificationCorner>(
+          NOTIFICATION_CORNER_EVENT,
+          (event) => {
+            setCorner(event.payload);
+          },
+          { target },
+        ),
       );
 
       setCorner(await invoke<NotificationCorner>("notifications_ready"));
