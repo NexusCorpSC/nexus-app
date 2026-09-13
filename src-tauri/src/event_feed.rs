@@ -38,6 +38,11 @@ pub(crate) const SQUAD_VIEW_EVENT: &str = "squad://view";
 /// Carries the note, to every window: the main one and the overlay both edit it.
 pub(crate) const NOTE_CHANGED_EVENT: &str = "note://changed";
 
+/// The plan feed, sent app-wide rather than to the plan window alone: it is a
+/// kilobyte of names and revisions, and any window that ever shows a briefing
+/// should hear it without this having to be changed again.
+pub(crate) const PLAN_FEED_EVENT: &str = "plan://feed";
+
 /// Tells every window where the stream stands, carrying a [`FeedStatus`].
 pub(crate) const FEED_STATUS_EVENT: &str = "feed://status";
 
@@ -66,7 +71,7 @@ const SQUADS_PATH: &str = "/api/squads";
 
 /// What is asked of the stream. Every topic the app draws, whatever is on
 /// screen: the connection is one per client, not one per window.
-const TOPICS: &str = "squad,note";
+const TOPICS: &str = "squad,note,plan";
 
 const BACKOFF_MIN: Duration = Duration::from_secs(1);
 const BACKOFF_MAX: Duration = Duration::from_secs(30);
@@ -113,6 +118,19 @@ pub struct SquadFeedView {
     view: Value,
 }
 
+/// The plan feed, with the squad it was read for.
+///
+/// Which squad a reader is looking at decides whether the plans they see are
+/// their squad's or their raid's, so a feed read for one squad must not be
+/// handed to a window asking about another — the same rule `SquadFeedView`
+/// holds to, and for the same reason.
+#[derive(Clone, Serialize)]
+pub struct PlanFeedView {
+    squad: Option<String>,
+    id: String,
+    view: Value,
+}
+
 /// What a stream is opened for. A change to any of it — another account,
 /// another server, another squad — is another stream.
 #[derive(Clone, PartialEq, Eq)]
@@ -138,6 +156,7 @@ struct FeedState {
     status: FeedStatus,
     last_squad: Option<SquadFeedView>,
     last_note: Option<Value>,
+    last_plan: Option<PlanFeedView>,
     running: Option<Running>,
     /// Counts the streams ever started, so a task that outlived its
     /// cancellation by a moment can tell it is no longer the one.
@@ -236,6 +255,7 @@ pub(crate) fn sync(app: &AppHandle) {
             state.status = FeedStatus::Idle;
             state.last_squad = None;
             state.last_note = None;
+            state.last_plan = None;
             drop(state);
             announce_status(app, FeedStatus::Idle);
             log("event feed: stopped (no session)");
@@ -309,6 +329,22 @@ fn deliver_squad(app: &AppHandle, generation: u64, squad: Option<String>, id: St
     }
 
     let _ = app.emit_to(SQUAD_WINDOW, SQUAD_VIEW_EVENT, payload);
+}
+
+fn deliver_plan(app: &AppHandle, generation: u64, squad: Option<String>, id: String, view: Value) {
+    let payload = PlanFeedView { squad, id, view };
+
+    {
+        let Ok(mut state) = lock(app) else {
+            return;
+        };
+        if !owns(&state, generation) {
+            return;
+        }
+        state.last_plan = Some(payload.clone());
+    }
+
+    let _ = app.emit(PLAN_FEED_EVENT, payload);
 }
 
 fn deliver_note(app: &AppHandle, generation: u64, note: Value) {
@@ -526,6 +562,16 @@ async fn stream_once(
                     Ok(note) => deliver_note(app, generation, note),
                     Err(error) => log(format!("event feed: unreadable note ({error})")),
                 },
+                "plan.feed" => match serde_json::from_str::<Value>(&event.data) {
+                    Ok(view) => deliver_plan(
+                        app,
+                        generation,
+                        target.squad.clone(),
+                        event.id.unwrap_or_default(),
+                        view,
+                    ),
+                    Err(error) => log(format!("event feed: unreadable plan feed ({error})")),
+                },
                 "bye" => return Outcome::Bye,
                 // A topic this build does not draw yet.
                 _ => {}
@@ -710,6 +756,11 @@ pub fn feed_snapshot(
             .filter(|last| last.squad == squad)
             .and_then(|last| serde_json::to_value(last).ok()),
         "note" => state.last_note.clone(),
+        "plan" => state
+            .last_plan
+            .as_ref()
+            .filter(|last| last.squad == squad)
+            .and_then(|last| serde_json::to_value(last).ok()),
         _ => None,
     })
 }

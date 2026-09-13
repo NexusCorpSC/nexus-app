@@ -17,7 +17,7 @@ import {
  * run long before anyone opens them — the event alone would leave them showing
  * the default until the first change.
  *
- * The event carries all three, since the shortcut changes all three; this picks
+ * The event carries them all, since the shortcut changes them all; this picks
  * out the one field that concerns the window it runs in.
  */
 export function useOverlayMode(label: OverlayLabel): OverlayMode {

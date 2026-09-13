@@ -70,7 +70,7 @@ import { cn } from "@/lib/utils";
  *
  * The panel can be brought back from the header button — by way of a shade,
  * for a cockpit too bright for bare text — or from the global shortcut that
- * lines the three overlays up (`src/lib/overlay-opacity.ts`). The lock beside
+ * lines the overlays up (`src/lib/overlay-opacity.ts`). The lock beside
  * it turns the window into a picture the clicks go through.
  *
  * It also carries its own management — create, join by code, leave, roles,

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
  *
  * One window at a time, which is what a button sitting in its header should do.
  * Clearing the whole cockpit at once is the global shortcut's job — it takes
- * the three overlays to the same mode without reaching for any of them.
+ * every overlay to the same mode without reaching for any of them.
  *
  * The glyph is the mode it is *in*, not the one it goes to: a dashed ring for
  * nothing behind the text, a ring for the shade, a filled one for the panel.

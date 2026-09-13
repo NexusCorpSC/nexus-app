@@ -3,10 +3,10 @@ import { invoke } from "@tauri-apps/api/core";
 /**
  * How much of the game each overlay lets through.
  *
- * Per window rather than one setting for the three: the cargo sheet is dense
+ * Per window rather than one setting for all of them: the cargo sheet is dense
  * text that wants a surface behind it, while the squad list was built to be
  * read through a cockpit. The button on a window steps that window through
- * the modes; the global shortcut takes all three to the same one at once.
+ * the modes; the global shortcut takes them all to the same one at once.
  *
  * The live value is held by Rust — the shortcut has to reach windows nobody has
  * opened yet — and this module is only the wire. What each mode *looks* like is
@@ -17,7 +17,7 @@ import { invoke } from "@tauri-apps/api/core";
 export const OVERLAY_OPACITY_EVENT = "overlay://opacity";
 
 /** The window labels this applies to, as declared in `tauri.conf.json`. */
-export type OverlayLabel = "notes" | "cargo" | "squad";
+export type OverlayLabel = "notes" | "cargo" | "squad" | "plan";
 
 /**
  * The three modes, in the order the button steps through them.
@@ -64,6 +64,10 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   notes: "opaque",
   cargo: "opaque",
   squad: "clear",
+  // Opaque, unlike the squad list: that one is names, which read fine over a
+  // cockpit, where a drawing needs a surface — strokes and a lit planet on the
+  // same pixels are neither of them legible.
+  plan: "opaque",
 };
 
 /** Steps one overlay to its next mode. Called by the button that overlay carries. */
