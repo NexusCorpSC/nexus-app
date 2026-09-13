@@ -138,16 +138,38 @@ export function usePlan(
     (feed: PlanFeed) => {
       setPlans(feed.plans);
 
-      // The feed carries no texts, so the plan on screen keeps its own and
-      // takes the summary's revisions — which is what tells the pump below
-      // that somebody drew.
+      // The feed carries no texts, so the plan on screen keeps its own — but it
+      // **must** take the summary's live fields, `rev` and `epoch` above all.
+      // Keeping the loaded phases wholesale is the one mistake that breaks this
+      // quietly: the revisions never move, the pump never notices anybody drew,
+      // and the drawing stops arriving with nothing in any log.
       setPlan((current) => {
         if (!current) return current;
 
         const summary = feed.plans.find((one) => one.id === current.id);
         if (!summary) return current;
 
-        return { ...current, ...summary, phases: current.phases };
+        const known = new Map(current.phases.map((phase) => [phase.id, phase]));
+
+        return {
+          ...current,
+          ...summary,
+          phases: summary.phases.map((live) => {
+            const held = known.get(live.id);
+
+            // A phase somebody just added: on screen at once, its texts filled
+            // in by the next read.
+            return held
+              ? { ...held, ...live }
+              : {
+                  ...live,
+                  objective: "",
+                  points: [],
+                  abort: "",
+                  assignments: [],
+                };
+          }),
+        };
       });
     },
     [],
