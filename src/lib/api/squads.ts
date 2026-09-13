@@ -272,6 +272,20 @@ export async function requestRaidReadyCheck(
   );
 }
 
+/**
+ * The answer to a raid check: ready in every squad of the raid the caller is
+ * in, not only in the one the overlay is showing. Every raider, for themselves.
+ *
+ * A squad check is answered by `updateSquadMember` on the one row it asked for.
+ */
+export async function answerRaidReady(squadId: string): Promise<SquadView> {
+  return view(
+    await apiRequest<Partial<SquadView>>(at("/api/squads/raid/ready", squadId), {
+      method: "POST",
+    }),
+  );
+}
+
 /** Whoever commands the lead squad. The announcement is read by every raider. */
 export async function updateRaid(
   squadId: string,
