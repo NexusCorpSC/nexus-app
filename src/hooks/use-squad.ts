@@ -10,6 +10,7 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import {
+  answerRaidReady,
   createRaid,
   createRaidSquad,
   createSquad,
@@ -51,17 +52,33 @@ const SQUAD_VIEW_EVENT = "squad://view";
 
 /**
  * Emitted by the «Prêt» button of a ready check notification, carrying the
- * squad to answer in. The notification window has no session: this window
- * does, and writes the row.
+ * squad to answer in and what was asked. The notification window has no
+ * session: this window does, and writes the row.
  */
 const READY_CHECK_EVENT = "squad://ready";
 
-type ReadyCheckAnswer = { squadId: string };
+/**
+ * What the button answers.
+ *
+ * `squad` fills the one row the check asked for. `raid` fills every row the
+ * reader holds in the raid — an organiser who runs one squad and fights in
+ * another owes both, and pressing «Prêt» once is the whole point of the
+ * notification.
+ */
+type ReadyCheckScope = "squad" | "raid";
+
+type ReadyCheckAnswer = { squadId: string; scope: ReadyCheckScope };
 
 /** The button's payload, as it comes off the wire: checked before it is written. */
 function readyCheckAnswer(payload: unknown): ReadyCheckAnswer | null {
-  const squadId = (payload as { squadId?: unknown } | null)?.squadId;
-  return typeof squadId === "string" && squadId ? { squadId } : null;
+  const sent = payload as { squadId?: unknown; scope?: unknown } | null;
+  const squadId = sent?.squadId;
+
+  if (typeof squadId !== "string" || !squadId) return null;
+
+  // A payload from a notification raised before the raid answer existed says
+  // nothing: it was a squad answer, and the only kind there was.
+  return { squadId, scope: sent?.scope === "raid" ? "raid" : "squad" };
 }
 
 /** Shared by every squad mutation, so the poll can tell one is running. */
@@ -154,6 +171,32 @@ function withSquad(
 }
 
 /**
+ * The reader marked ready in every squad of the raid that holds a row for them.
+ *
+ * The guess for the answer to a raid check, and the reason it is not `withSquad`
+ * called once: the question was asked of the raid, and a reader who is in two of
+ * its squads — the organiser who runs one and fights in another — is answering
+ * in both. Squads with no row for them are left untouched by the match, which is
+ * also what the server's write does.
+ */
+function withMyRaidRowsReady(view: SquadView, userId: string): SquadView {
+  const answered = (squad: Squad): Squad => ({
+    ...squad,
+    members: squad.members.map((member) =>
+      member.userId === userId ? { ...member, ready: true } : member,
+    ),
+  });
+
+  return {
+    ...view,
+    squad: view.squad ? answered(view.squad) : view.squad,
+    raid: view.raid
+      ? { ...view.raid, squads: view.raid.squads.map(answered) }
+      : null,
+  };
+}
+
+/**
  * What replaces the cache, unless it is older than the cache.
  *
  * The squad's `version` grows with every write. A pushed view that carries a
@@ -186,19 +229,17 @@ const READY_CHECK_TIMEOUT_MS = 60_000;
  *
  * The squad's own, or the raid's — told apart by where the new id sits. The
  * toast carries the one answer asked for: a «Prêt» button, whose event this
- * window turns into a write of the reader's row (see `useSquad`). Our own
+ * window turns into a write of the reader's rows (see `useSquad`). Our own
  * request never gets here: its answer lands in the cache before the push
  * that echoes it, so the push finds the id already known.
+ *
+ * The two buttons do not write the same thing. A squad check asks one squad and
+ * is answered on that row; a raid check asks the raid, and a reader who holds a
+ * row in two of its squads owes an answer in both.
  */
 function noticeReadyChecks(shown: SquadView, next: SquadView) {
   const squad = next.squad;
   if (!squad || shown.squad?.id !== squad.id) return;
-
-  const action = {
-    label: "Prêt",
-    event: READY_CHECK_EVENT,
-    payload: { squadId: squad.id } satisfies ReadyCheckAnswer,
-  };
 
   const squadCheck = squad.readyCheck;
   if (squadCheck && squadCheck.id !== shown.squad?.readyCheck?.id) {
@@ -207,7 +248,14 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
       title: `Ready check — ${squad.name}`,
       body: `${squadCheck.requestedBy} demande à tout le monde de se déclarer prêt.`,
       timeoutMs: READY_CHECK_TIMEOUT_MS,
-      action,
+      action: {
+        label: "Prêt",
+        event: READY_CHECK_EVENT,
+        payload: {
+          squadId: squad.id,
+          scope: "squad",
+        } satisfies ReadyCheckAnswer,
+      },
       placement: "top",
     });
   }
@@ -224,7 +272,14 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
       title: `Ready check du raid — ${next.raid.name}`,
       body: `${raidCheck.requestedBy} demande à tout le raid de se déclarer prêt.`,
       timeoutMs: READY_CHECK_TIMEOUT_MS,
-      action,
+      action: {
+        label: "Prêt",
+        event: READY_CHECK_EVENT,
+        payload: {
+          squadId: squad.id,
+          scope: "raid",
+        } satisfies ReadyCheckAnswer,
+      },
       placement: "top",
     });
   }
@@ -569,11 +624,21 @@ export function useSquad(
   );
 
   // The «Prêt» button of a ready check notification, pressed in the window
-  // that draws toasts: the answer is written from here, on the reader's row.
+  // that draws toasts: the answer is written from here, on the reader's rows.
+  // A squad check takes the one row it asked for; a raid check takes every row
+  // the reader holds in the raid, in a single write the server makes.
+  const answerRaid = useSquadMutation(
+    current,
+    (squadId: string) => answerRaidReady(squadId),
+    (view) => (userId ? withMyRaidRowsReady(view, userId) : view),
+  );
+
   const patchMemberRef = useRef(patchMember);
+  const answerRaidRef = useRef(answerRaid);
   useEffect(() => {
     patchMemberRef.current = patchMember;
-  }, [patchMember]);
+    answerRaidRef.current = answerRaid;
+  }, [patchMember, answerRaid]);
 
   useEffect(() => {
     if (!userId) return;
@@ -584,6 +649,11 @@ export function useSquad(
     void listen<unknown>(READY_CHECK_EVENT, (event) => {
       const answer = readyCheckAnswer(event.payload);
       if (!answer) return;
+
+      if (answer.scope === "raid") {
+        answerRaidRef.current.mutate(answer.squadId);
+        return;
+      }
 
       patchMemberRef.current.mutate({
         squadId: answer.squadId,
