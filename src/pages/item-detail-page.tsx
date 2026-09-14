@@ -473,8 +473,11 @@ function RelatedItems({
 /* Vehicles                                                            */
 /* ------------------------------------------------------------------ */
 
+/** Un plan qui s'affiche comme une image : tout sauf le modèle 3D. */
+type PlanView = Exclude<keyof VehiclePlans, "holo">;
+
 /** Les vues plates d'un plan, dans l'ordre où on les regarde. */
-const PLAN_VIEWS: [key: keyof VehiclePlans, label: string][] = [
+const PLAN_VIEWS: [key: PlanView, label: string][] = [
   ["top", "Dessus"],
   ["side", "Côté"],
   ["front", "Face"],
@@ -497,9 +500,7 @@ function VehiclePlanViews({
   slug: string;
 }) {
   const views = PLAN_VIEWS.filter(([key]) => plans[key]);
-  const [picked, setPicked] = useState<keyof VehiclePlans>(
-    () => views[0]?.[0] ?? "top",
-  );
+  const [picked, setPicked] = useState<PlanView>(() => views[0]?.[0] ?? "top");
   const [failed, setFailed] = useState<string[]>([]);
 
   const current = views.find(([key]) => key === picked) ?? views[0];
@@ -523,6 +524,7 @@ function VehiclePlanViews({
             key={key}
             type="button"
             onClick={() => setPicked(key)}
+            aria-pressed={key === current[0]}
             className={cn(
               "rounded-full border px-2.5 py-0.5 text-xs transition-colors",
               key === current[0]
@@ -557,7 +559,9 @@ function VehiclePlanViews({
             src={url}
             alt={`${name}, vue de ${current[1].toLowerCase()}`}
             className="h-full w-full object-contain p-3"
-            onError={() => setFailed((urls) => [...urls, url])}
+            onError={() =>
+              setFailed((urls) => (urls.includes(url) ? urls : [...urls, url]))
+            }
           />
         )}
 

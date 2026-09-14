@@ -110,7 +110,7 @@ export type ResolvedItemSlot = ItemSlot & {
 /**
  * Les plans du véhicule : vues orthographiques et modèle 3D. Les vues plates
  * s'affichent ici ; le modèle 3D reste le format de la fiche en ligne, que le
- * bouton « Ouvrir sur le site » va chercher.
+ * bouton « Ouvrir sur le web » va chercher.
  */
 export type VehiclePlans = {
   top?: string;
