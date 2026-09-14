@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -8,6 +8,8 @@ import {
   ExternalLink,
   Lock,
   Pencil,
+  Redo2,
+  Undo2,
   X,
 } from "lucide-react";
 
@@ -20,7 +22,7 @@ import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { usePlan } from "@/hooks/use-plan";
 import { useSquad } from "@/hooks/use-squad";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { commitStroke, eraseStroke } from "@/lib/api/plans";
+import { commitStroke, eraseStroke, restoreStroke } from "@/lib/api/plans";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { forStorage } from "@/lib/plan-geometry";
 import { getApiBaseUrl } from "@/lib/settings";
@@ -40,7 +42,22 @@ import { formatClock, phaseStartSec, type PlanStroke } from "@/types/nexus";
  * always-on-top window over a cockpit should be, and why the pen is offered
  * only while it is unlocked. That is not a limitation worked around: a window
  * that took the mouse while locked would be taking it from the game.
+ *
+ * The one correction comes with a way to take it back. `Mark` is this window's
+ * own memory of what it did, this session, to its own traces — never a history
+ * of the plan: erasing leaves a tombstone, so undoing is raising it and the
+ * trace keeps the id it always had.
  */
+
+/** One thing this window did to one phase, and enough to take it back. */
+interface Mark {
+  act: "draw" | "erase";
+  phaseId: string;
+  /** The epoch it happened in. A phase emptied since makes it meaningless. */
+  epoch: number;
+  strokeId: string;
+  stroke: PlanStroke;
+}
 export default function PlanOverlayPage() {
   const { user, loading } = useAuth();
   const userId = user?.id ?? null;
@@ -57,6 +74,11 @@ export default function PlanOverlayPage() {
   const [stepped, setStepped] = useState<string | null>(null);
   const [tool, setTool] = useState<"none" | "pen" | "eraser">("none");
 
+  /** What this window did, and what it has taken back. Never persisted. */
+  const [done, setDone] = useState<Mark[]>([]);
+  const [undone, setUndone] = useState<Mark[]>([]);
+  const [stepping, setStepping] = useState(false);
+
   const { plans, plan, ordered, phase, layer, draw, rub } = usePlan(squadId, {
     phaseId: stepped,
   });
@@ -66,6 +88,14 @@ export default function PlanOverlayPage() {
     phase && userId
       ? (phase.assignments.find((one) => one.userId === userId) ?? null)
       : null;
+
+  const drawable = !locked && phase !== null && !phase.locked;
+
+  const mark = useCallback((held: Mark) => {
+    setDone((current) => [...current, held].slice(-20));
+    // A new gesture is a new future: what was undone is not coming back.
+    setUndone([]);
+  }, []);
 
   const step = useCallback(
     (by: number) => {
@@ -99,6 +129,7 @@ export default function PlanOverlayPage() {
         kind: "pen",
         ink: "squad",
         width: 6,
+        dash: "solid",
         points: stored,
         text: "",
         tokenUserId: "",
@@ -119,11 +150,18 @@ export default function PlanOverlayPage() {
 
         rub(optimistic.id);
         draw(stroke);
+        mark({
+          act: "draw",
+          phaseId: phase.id,
+          epoch: phase.epoch,
+          strokeId: stroke.id,
+          stroke,
+        });
       } catch {
         rub(optimistic.id);
       }
     },
-    [draw, phase, plan, rub, squadId, user?.name, userId],
+    [draw, mark, phase, plan, rub, squadId, user?.name, userId],
   );
 
   const onErase = useCallback(
@@ -137,15 +175,102 @@ export default function PlanOverlayPage() {
 
       try {
         await eraseStroke(plan.id, phase.id, strokeId, squadId);
+
+        // Only your own goes on your stack: the server refuses to bring back
+        // somebody else's, so offering the button would be a lie.
+        if (held.authorId === userId) {
+          mark({
+            act: "erase",
+            phaseId: phase.id,
+            epoch: phase.epoch,
+            strokeId,
+            stroke: held,
+          });
+        }
       } catch {
         draw(held);
       }
     },
-    [draw, layer.strokes, phase, plan, rub, squadId],
+    [draw, layer.strokes, mark, phase, plan, rub, squadId, userId],
+  );
+
+  /**
+   * Whether a mark still describes reality.
+   *
+   * Derived at render rather than cleaned up by a listener: a phase stepped
+   * away from, a phase somebody emptied — the epoch moved — and a trace a
+   * leader took first all make a mark simply stop being eligible, with nothing
+   * to remember to clear.
+   */
+  const present = useMemo(
+    () => new Set(layer.strokes.map((stroke) => stroke.id)),
+    [layer.strokes],
+  );
+
+  const fits = useCallback(
+    (held: Mark | undefined): held is Mark =>
+      Boolean(
+        held &&
+          phase &&
+          held.phaseId === phase.id &&
+          held.epoch === phase.epoch &&
+          (held.act === "draw"
+            ? present.has(held.strokeId)
+            : !present.has(held.strokeId)),
+      ),
+    [phase, present],
+  );
+
+  const canUndo = drawable && !stepping && fits(done[done.length - 1]);
+  const canRedo = drawable && !stepping && fits(undone[undone.length - 1]);
+
+  const walk = useCallback(
+    async (backwards: boolean) => {
+      if (!plan || !phase || !squadId || stepping) return;
+
+      const from = backwards ? done : undone;
+      const held = from[from.length - 1];
+      if (!fits(held)) return;
+
+      // Undoing a `draw` takes it off; undoing an `erase` puts it back. Redo is
+      // the same sentence the other way round.
+      const off = backwards ? held.act === "draw" : held.act === "erase";
+
+      setStepping(true);
+
+      if (off) rub(held.strokeId);
+      else
+        // A trace brought back is the newest thing on the phase: a revision is
+        // what orders a drawing, so it goes on top and the server's answer,
+        // carrying its real one, replaces it.
+        draw({ ...held.stroke, deletedAt: null, rev: Number.MAX_SAFE_INTEGER });
+
+      try {
+        const answer = off
+          ? await eraseStroke(plan.id, held.phaseId, held.strokeId, squadId)
+          : await restoreStroke(plan.id, held.phaseId, held.strokeId, squadId);
+
+        if (!off) draw(answer.stroke);
+
+        setDone((current) =>
+          backwards ? current.slice(0, -1) : [...current, held],
+        );
+        setUndone((current) =>
+          backwards ? [...current, held] : current.slice(0, -1),
+        );
+      } catch {
+        // Refused: the screen goes back, and the mark stays where it was so the
+        // next press is a retry rather than a redo of what did not happen.
+        if (off) draw(held.stroke);
+        else rub(held.strokeId);
+      } finally {
+        setStepping(false);
+      }
+    },
+    [done, draw, fits, phase, plan, rub, squadId, stepping, undone],
   );
 
   const skin = overlaySkin(mode);
-  const drawable = !locked && phase !== null && !phase.locked;
 
   return (
     <div className={cn("flex h-screen flex-col overflow-hidden", skin)}>
@@ -317,6 +442,32 @@ export default function PlanOverlayPage() {
               </span>
             ) : (
               <>
+                <button
+                  type="button"
+                  title="Annuler"
+                  disabled={!canUndo}
+                  onClick={() => void walk(true)}
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded text-nexus-accent/65 hover:text-nexus-soft",
+                    !canUndo && "cursor-default opacity-30 hover:text-nexus-accent/65",
+                  )}
+                >
+                  <Undo2 className="size-3.5" />
+                </button>
+
+                <button
+                  type="button"
+                  title="Rétablir"
+                  disabled={!canRedo}
+                  onClick={() => void walk(false)}
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded text-nexus-accent/65 hover:text-nexus-soft",
+                    !canRedo && "cursor-default opacity-30 hover:text-nexus-accent/65",
+                  )}
+                >
+                  <Redo2 className="size-3.5" />
+                </button>
+
                 <button
                   type="button"
                   title="Trait libre"

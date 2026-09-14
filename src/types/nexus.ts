@@ -882,7 +882,9 @@ export type SquadFeedView = {
  * squad types are. Only the read half: the overlay follows a briefing and
  * shows the drawing, it does not compose one — so the caps, the patch shapes
  * and the draft a commit takes are deliberately absent, and a stroke kind
- * added there needs a line here only if it has to be *drawn*.
+ * added there needs a line here only if it has to be *drawn*. A dash is drawn,
+ * so it is mirrored — but it is never *chosen* here: the overlay carries one
+ * pen and no picker.
  *
  * The split that matters is the same on both sides: the **feed** — names,
  * order, locks and a revision per phase — arrives on `plan://feed`, and the
@@ -914,6 +916,17 @@ export type PlanInk =
   | "sky"
   | "violet"
   | "white";
+
+export type StrokeDash = "solid" | "dashed" | "dotted";
+
+/** The kinds a dash is drawn on; a glyph in dots reads as a rendering fault. */
+export const DASHED_KINDS: readonly StrokeKind[] = [
+  "pen",
+  "line",
+  "arrow",
+  "rect",
+  "ellipse",
+];
 
 export type PlanPresenter = {
   userId: string;
@@ -972,6 +985,8 @@ export type PlanStroke = {
   kind: StrokeKind;
   ink: PlanInk;
   width: number;
+  /** Solid on anything the site drew before dashes existed. */
+  dash: StrokeDash;
   points: number[];
   text: string;
   tokenUserId: string;

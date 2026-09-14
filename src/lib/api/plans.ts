@@ -3,6 +3,7 @@ import type {
   PlanInk,
   PlanStroke,
   PlanView,
+  StrokeDash,
   StrokeDelta,
   StrokeKind,
 } from "@/types/nexus";
@@ -73,6 +74,8 @@ export function commitStroke(
     kind: StrokeKind;
     ink: PlanInk;
     width: number;
+    /** Absent is legal and means solid; the overlay carries no picker. */
+    dash?: StrokeDash;
     points: number[];
     text?: string;
   },
@@ -93,5 +96,27 @@ export function eraseStroke(
   return apiRequest<{ stroke: PlanStroke }>(
     `${PLANS}/${planId}/phases/${phaseId}/strokes/${strokeId}`,
     { method: "DELETE", params: at(squadId) },
+  );
+}
+
+/**
+ * Raises the tombstone: the trace comes back with the id it always had, under a
+ * fresh revision.
+ *
+ * This is the whole of «annuler». An erase leaves the record behind rather than
+ * deleting it, so taking the gesture back is one flag — no second identity for
+ * the same trace, and nothing for the other members to learn: a resurrection
+ * reaches them as a stroke with a new revision that is no longer dead, which
+ * `apply()` already puts back on the map.
+ */
+export function restoreStroke(
+  planId: string,
+  phaseId: string,
+  strokeId: string,
+  squadId: string | null,
+): Promise<{ stroke: PlanStroke }> {
+  return apiRequest<{ stroke: PlanStroke }>(
+    `${PLANS}/${planId}/phases/${phaseId}/strokes/${strokeId}`,
+    { method: "PATCH", params: at(squadId), body: { restore: true } },
   );
 }
