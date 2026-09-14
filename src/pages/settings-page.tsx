@@ -326,6 +326,15 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Plan de vol en superposition">
+            <ShortcutInput
+              value={shortcuts.plan}
+              onChange={(plan) =>
+                setLocalShortcuts((current) => ({ ...current, plan }))
+              }
+            />
+          </Field>
+
           <Field label="Opacité des superpositions">
             <ShortcutInput
               value={shortcuts.opacity}
@@ -334,9 +343,9 @@ export default function SettingsPage() {
               }
             />
             <span className="text-xs text-nexus-accent/50">
-              Efface les trois superpositions d'un coup — le jeu vu au travers
-              — ou leur rend leur panneau. Chacune porte aussi le bouton, qui
-              passe par le fond ombré entre les deux.
+              Efface toutes les superpositions d'un coup — le jeu vu au
+              travers — ou leur rend leur panneau. Chacune porte aussi le
+              bouton, qui passe par le fond ombré entre les deux.
             </span>
           </Field>
 

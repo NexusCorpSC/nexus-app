@@ -870,3 +870,170 @@ export type SquadFeedView = {
   id: string;
   view: SquadView;
 };
+
+/* ------------------------------------------------------------------ */
+/* Plan de vol                                                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The briefing canvas, as the overlay reads it.
+ *
+ * Mirrors the read half of `nexus-tools/types/plan.ts` by hand, the way the
+ * squad types are. Only the read half: the overlay follows a briefing and
+ * shows the drawing, it does not compose one — so the caps, the patch shapes
+ * and the draft a commit takes are deliberately absent, and a stroke kind
+ * added there needs a line here only if it has to be *drawn*.
+ *
+ * The split that matters is the same on both sides: the **feed** — names,
+ * order, locks and a revision per phase — arrives on `plan://feed`, and the
+ * strokes are pulled by delta against those revisions. A revision is published
+ * an instant before the stroke carrying it exists, so a cursor is always the
+ * highest revision actually *handed over*, never the one the feed announces.
+ */
+
+export const PLAN_GRID = 10_000;
+
+export type PlanScope = "squad" | "raid";
+export type DrawPolicy = "all" | "leaders";
+
+export type StrokeKind =
+  | "pen"
+  | "line"
+  | "arrow"
+  | "rect"
+  | "ellipse"
+  | "text"
+  | "token"
+  | "pin";
+
+export type PlanInk =
+  | "squad"
+  | "amber"
+  | "red"
+  | "green"
+  | "sky"
+  | "violet"
+  | "white";
+
+export type PlanPresenter = {
+  userId: string;
+  name: string;
+  phaseId: string;
+  startedAt: string;
+};
+
+export type PlanPhaseSummary = {
+  id: string;
+  order: number;
+  name: string;
+  durationSec: number;
+  locked: boolean;
+  rev: number;
+  epoch: number;
+  strokes: number;
+};
+
+export type PlanSummary = {
+  id: string;
+  scope: PlanScope;
+  ownerId: string;
+  name: string;
+  backgroundUrl: string | null;
+  backgroundW: number;
+  backgroundH: number;
+  drawPolicy: DrawPolicy;
+  presenter: PlanPresenter | null;
+  archivedAt: string | null;
+  version: number;
+  updatedAt: string;
+  phases: PlanPhaseSummary[];
+};
+
+export type PlanAssignment = { userId: string; name: string; task: string };
+
+export type PlanPhase = PlanPhaseSummary & {
+  objective: string;
+  points: string[];
+  abort: string;
+  assignments: PlanAssignment[];
+};
+
+export type Plan = Omit<PlanSummary, "phases"> & { phases: PlanPhase[] };
+
+export type PlanStroke = {
+  id: string;
+  phaseId: string;
+  epoch: number;
+  rev: number;
+  clientId: string;
+  authorId: string;
+  authorName: string;
+  squadId: string;
+  kind: StrokeKind;
+  ink: PlanInk;
+  width: number;
+  points: number[];
+  text: string;
+  tokenUserId: string;
+  deletedAt: string | null;
+  createdAt: string;
+};
+
+export type StrokeDelta = {
+  phaseId: string;
+  epoch: number;
+  rev: number;
+  strokes: PlanStroke[];
+};
+
+export type PlanFeed = {
+  scope: PlanScope;
+  ownerId: string | null;
+  plans: PlanSummary[];
+};
+
+export type PlanView = { feed: PlanFeed; plan: Plan | null };
+
+/** Payload of `plan://feed`, and what `feed_snapshot` answers for `plan`. */
+export type PlanFeedEvent = {
+  squad: string | null;
+  id: string;
+  view: PlanFeed;
+};
+
+/**
+ * When a phase starts, counted from the top of the operation. Durations chain:
+ * correcting one step moves every later T+ with it.
+ */
+export function phaseStartSec(
+  phases: readonly { id: string; durationSec: number }[],
+  phaseId: string,
+): number {
+  let total = 0;
+
+  for (const phase of phases) {
+    if (phase.id === phaseId) break;
+    total += phase.durationSec;
+  }
+
+  return total;
+}
+
+/** `T+06:00`, and `T+1:04:00` once an operation runs past the hour. */
+export function formatClock(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safe / 60) % 60;
+  const hours = Math.floor(safe / 3600);
+  const rest = safe % 60;
+
+  const pad = (value: number) => value.toString().padStart(2, "0");
+
+  return hours > 0
+    ? `T+${hours}:${pad(minutes)}:${pad(rest)}`
+    : `T+${pad(minutes)}:${pad(rest)}`;
+}
+
+/** Phases as the plan reads, whatever order the document stored them in. */
+export function inPlanOrder<T extends { order: number }>(phases: T[]): T[] {
+  return [...phases].sort((a, b) => a.order - b.order);
+}

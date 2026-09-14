@@ -32,6 +32,7 @@ const KEY_SHORTCUT_CAPTURE = "shortcutCapture";
 const KEY_SHORTCUT_NOTES = "shortcutNotes";
 const KEY_SHORTCUT_CARGO = "shortcutCargo";
 const KEY_SHORTCUT_SQUAD = "shortcutSquad";
+const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
@@ -113,6 +114,7 @@ export const DEFAULT_SHORTCUTS = {
   notes: "Ctrl+Shift+KeyN",
   cargo: "Ctrl+Shift+KeyG",
   squad: "Ctrl+Shift+KeyE",
+  plan: "Ctrl+Shift+KeyP",
   opacity: "Ctrl+Shift+KeyO",
 } as const;
 
@@ -136,6 +138,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_CARGO)) ?? DEFAULT_SHORTCUTS.cargo,
     squad:
       (await store.get<string>(KEY_SHORTCUT_SQUAD)) ?? DEFAULT_SHORTCUTS.squad,
+    plan:
+      (await store.get<string>(KEY_SHORTCUT_PLAN)) ?? DEFAULT_SHORTCUTS.plan,
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
@@ -149,6 +153,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_NOTES, shortcuts.notes);
   await store.set(KEY_SHORTCUT_CARGO, shortcuts.cargo);
   await store.set(KEY_SHORTCUT_SQUAD, shortcuts.squad);
+  await store.set(KEY_SHORTCUT_PLAN, shortcuts.plan);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
 }
 
@@ -172,7 +177,7 @@ function storedMode(value: unknown, label: OverlayLabel): OverlayMode {
  *
  * Read field by field rather than as a whole so that a store written by an older
  * version, which knew nothing of this, still yields each window its own default
- * instead of one missing key costing all three.
+ * instead of one missing key costing them all.
  */
 export async function getOverlayOpacity(): Promise<OverlayOpacity> {
   const store = await getStore();
@@ -184,6 +189,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     notes: storedMode(stored?.notes, "notes"),
     cargo: storedMode(stored?.cargo, "cargo"),
     squad: storedMode(stored?.squad, "squad"),
+    plan: storedMode(stored?.plan, "plan"),
   };
 }
 

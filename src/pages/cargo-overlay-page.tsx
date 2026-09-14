@@ -54,7 +54,7 @@ export default function CargoOverlayPage() {
   useTransparentWindow();
 
   // Its own mode, flipped by the header button — and by the global shortcut,
-  // which takes all three overlays to the same one.
+  // which takes every overlay to the same one.
   const mode = useOverlayMode("cargo");
 
   // Locked, the window is a picture the clicks go through — all but the one on

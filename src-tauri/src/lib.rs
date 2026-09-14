@@ -28,6 +28,7 @@ const CAPTURE_WINDOW: &str = "capture";
 const NOTES_WINDOW: &str = "notes";
 const CARGO_WINDOW: &str = "cargo";
 const SQUAD_WINDOW: &str = "squad";
+const PLAN_WINDOW: &str = "plan";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 /// The large, centred notifications: what is asked of the whole squad.
 pub(crate) const BANNERS_WINDOW: &str = "banners";
@@ -48,7 +49,13 @@ const NAVIGATE_EVENT: &str = "main://navigate";
 /// and an unfocused one look the same from the webview.
 const SQUAD_VISIBILITY_EVENT: &str = "squad://visibility";
 
-/// Carries the three overlays' opacity to every window at once.
+/// Told to the plan window for the reason the squad window is told: it pulls
+/// the drawing of the phase on screen, and a hidden window has no business
+/// asking for strokes nobody is looking at. Losing focus is not the same as
+/// being hidden, and over a game this window is always out of focus.
+const PLAN_VISIBILITY_EVENT: &str = "plan://visibility";
+
+/// Carries every overlay's opacity to every window at once.
 ///
 /// Broadcast rather than sent to named windows: each overlay picks its own field
 /// out of it, and the main window listens too because it is the one that writes
@@ -104,6 +111,7 @@ struct OverlayOpacity {
     notes: OverlayMode,
     cargo: OverlayMode,
     squad: OverlayMode,
+    plan: OverlayMode,
 }
 
 impl Default for OverlayOpacity {
@@ -114,6 +122,10 @@ impl Default for OverlayOpacity {
             notes: OverlayMode::Opaque,
             cargo: OverlayMode::Opaque,
             squad: OverlayMode::Clear,
+            // Opaque, unlike the squad list: that one is names, which read
+            // fine over a cockpit, where a drawing needs a surface — strokes
+            // and a lit planet on the same pixels are neither of them legible.
+            plan: OverlayMode::Opaque,
         }
     }
 }
@@ -124,6 +136,7 @@ impl OverlayOpacity {
             NOTES_WINDOW => Some(self.notes),
             CARGO_WINDOW => Some(self.cargo),
             SQUAD_WINDOW => Some(self.squad),
+            PLAN_WINDOW => Some(self.plan),
             _ => None,
         }
     }
@@ -134,6 +147,7 @@ impl OverlayOpacity {
             NOTES_WINDOW => &mut self.notes,
             CARGO_WINDOW => &mut self.cargo,
             SQUAD_WINDOW => &mut self.squad,
+            PLAN_WINDOW => &mut self.plan,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -143,7 +157,7 @@ impl OverlayOpacity {
 
     /// Whether any of the three still draws something behind its text.
     fn any_drawn(&self) -> bool {
-        [self.notes, self.cargo, self.squad]
+        [self.notes, self.cargo, self.squad, self.plan]
             .iter()
             .any(|mode| *mode != OverlayMode::Clear)
     }
@@ -152,10 +166,11 @@ impl OverlayOpacity {
         self.notes = mode;
         self.cargo = mode;
         self.squad = mode;
+        self.plan = mode;
     }
 }
 
-/// The live opacity of the three overlays.
+/// The live opacity of every overlay.
 #[derive(Default)]
 struct OverlayOpacityState(Mutex<OverlayOpacity>);
 
@@ -197,7 +212,10 @@ const LOCK_WATCH_TICK: Duration = Duration::from_millis(40);
 const LOCK_WATCH_IDLE: Duration = Duration::from_millis(250);
 
 fn is_overlay(label: &str) -> bool {
-    matches!(label, NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW)
+    matches!(
+        label,
+        NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW | PLAN_WINDOW
+    )
 }
 
 /// Frozen monitor snapshot awaiting a selection: filled when the capture
@@ -213,6 +231,7 @@ pub(crate) enum Action {
     Notes,
     Cargo,
     Squad,
+    Plan,
     Opacity,
 }
 
@@ -226,6 +245,7 @@ impl Action {
             Action::Notes => "notes",
             Action::Cargo => "cargo",
             Action::Squad => "squad",
+            Action::Plan => "plan",
             Action::Opacity => "opacity",
         }
     }
@@ -266,6 +286,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Notes => toggle_notes_overlay(app),
         Action::Cargo => toggle_overlay(app, CARGO_WINDOW),
         Action::Squad => toggle_squad(app),
+        Action::Plan => toggle_plan(app),
         Action::Opacity => flip_all_overlay_opacity(app),
     };
 
@@ -301,7 +322,7 @@ impl ShortcutSupport {
     }
 }
 
-/// The six combinations, in the format the `global-shortcut` plugin parses.
+/// Every combination, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
     search: String,
@@ -309,6 +330,7 @@ struct ShortcutSettings {
     notes: String,
     cargo: String,
     squad: String,
+    plan: String,
     opacity: String,
 }
 
@@ -320,6 +342,7 @@ impl Default for ShortcutSettings {
             notes: "Ctrl+Shift+KeyN".to_string(),
             cargo: "Ctrl+Shift+KeyG".to_string(),
             squad: "Ctrl+Shift+KeyE".to_string(),
+            plan: "Ctrl+Shift+KeyP".to_string(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
         }
     }
@@ -360,6 +383,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Notes, &requested.notes),
         (Action::Cargo, &requested.cargo),
         (Action::Squad, &requested.squad),
+        (Action::Plan, &requested.plan),
         (Action::Opacity, &requested.opacity),
     ];
 
@@ -549,6 +573,14 @@ fn toggle_squad(app: &AppHandle) -> Result<(), String> {
     announce_squad_visibility(app)
 }
 
+/// The plan overlay, shown or hidden — and told which, for the same reason the
+/// squad overlay is: it pulls the drawing while it is up and must stop when it
+/// is not.
+fn toggle_plan(app: &AppHandle) -> Result<(), String> {
+    toggle_overlay(app, PLAN_WINDOW)?;
+    announce_plan_visibility(app)
+}
+
 /// Takes every overlay to the same mode: see-through if any of them still draws
 /// something — a panel or a shade — opaque otherwise.
 ///
@@ -589,7 +621,7 @@ fn cycle_overlay_opacity(app: &AppHandle, label: &str) -> Result<(), String> {
 
 /// Tells every window what the overlays now look like.
 ///
-/// Broadcast: the three overlays repaint, and the main window writes the choice
+/// Broadcast: every overlay repaints, and the main window writes the choice
 /// to the store — it owns the settings file, as it does for the shortcuts.
 fn announce_overlay_opacity(app: &AppHandle, opacity: OverlayOpacity) -> Result<(), String> {
     app.emit(OVERLAY_OPACITY_EVENT, opacity)
@@ -712,6 +744,15 @@ fn announce_squad_visibility(app: &AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+fn announce_plan_visibility(app: &AppHandle) -> Result<(), String> {
+    let visible = window(app, PLAN_WINDOW)?
+        .is_visible()
+        .map_err(|e| e.to_string())?;
+
+    app.emit_to(PLAN_WINDOW, PLAN_VISIBILITY_EVENT, visible)
+        .map_err(|e| e.to_string())
+}
+
 /// Takes the overlay off screen, then freezes the monitor and offers a selection.
 ///
 /// The palette suggests this very shortcut, so it is usually visible when the
@@ -791,6 +832,28 @@ fn close_cargo_overlay(app: AppHandle) -> Result<(), String> {
 fn close_squad_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, SQUAD_WINDOW)?;
     announce_squad_visibility(&app)
+}
+
+#[tauri::command]
+fn close_plan_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, PLAN_WINDOW)?;
+    announce_plan_visibility(&app)
+}
+
+/// Shows the plan overlay, or hides it. Called from the tray, and reachable
+/// from the shortcut through the same path.
+#[tauri::command]
+fn toggle_plan_overlay(app: AppHandle) -> Result<(), String> {
+    toggle_plan(&app)
+}
+
+/// Whether the plan overlay is on screen right now — asked once by the window
+/// when it mounts, since it is created hidden long before anyone asks to see it.
+#[tauri::command]
+fn is_plan_overlay_visible(app: AppHandle) -> Result<bool, String> {
+    window(&app, PLAN_WINDOW)?
+        .is_visible()
+        .map_err(|e| e.to_string())
 }
 
 /// Shows the squad overlay, or hides it. Called from the tray, and reachable
@@ -1033,6 +1096,9 @@ pub fn run() {
             close_squad_overlay,
             toggle_squad_overlay,
             is_squad_overlay_visible,
+            close_plan_overlay,
+            toggle_plan_overlay,
+            is_plan_overlay_visible,
             toggle_overlay_opacity,
             set_overlay_opacity,
             overlay_mode,

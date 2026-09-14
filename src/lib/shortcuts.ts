@@ -26,5 +26,6 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   notes: "Bloc-notes",
   cargo: "Feuille de cargo",
   squad: "Escouade",
+  plan: "Plan de vol",
   opacity: "Opacité des superpositions",
 };

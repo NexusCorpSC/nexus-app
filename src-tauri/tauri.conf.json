@@ -85,6 +85,22 @@
         "visible": false
       },
       {
+        "label": "plan",
+        "title": "Nexus - plan de vol",
+        "url": "index.html#/plan-overlay",
+        "width": 560,
+        "height": 640,
+        "minWidth": 320,
+        "minHeight": 280,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "capture",
         "title": "Nexus - capture d'ecran",
         "url": "index.html#/capture",
