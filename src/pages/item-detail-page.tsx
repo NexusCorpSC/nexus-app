@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, TriangleAlert } from "lucide-react";
@@ -20,6 +20,7 @@ import {
   type ItemSummary,
   type ResolvedItemSlot,
   type ResourceMarketSide,
+  type VehiclePlans,
   type WeaponSpread,
 } from "@/types/nexus";
 import {
@@ -472,6 +473,104 @@ function RelatedItems({
 /* Vehicles                                                            */
 /* ------------------------------------------------------------------ */
 
+/** Les vues plates d'un plan, dans l'ordre où on les regarde. */
+const PLAN_VIEWS: [key: keyof VehiclePlans, label: string][] = [
+  ["top", "Dessus"],
+  ["side", "Côté"],
+  ["front", "Face"],
+];
+
+/**
+ * Les plans du véhicule : les rendus orthographiques que l'import récupère,
+ * une vue à la fois. Le modèle 3D, lui, reste sur la fiche en ligne — la
+ * fenêtre n'ouvre le réseau que vers l'API de Nexus Tools.
+ */
+function VehiclePlanViews({
+  plans,
+  name,
+  scale,
+  slug,
+}: {
+  plans: VehiclePlans;
+  name: string;
+  scale?: string;
+  slug: string;
+}) {
+  const views = PLAN_VIEWS.filter(([key]) => plans[key]);
+  const [picked, setPicked] = useState<keyof VehiclePlans>(
+    () => views[0]?.[0] ?? "top",
+  );
+  const [failed, setFailed] = useState<string[]>([]);
+
+  const current = views.find(([key]) => key === picked) ?? views[0];
+  if (!current) return null;
+
+  const url = plans[current[0]]!;
+
+  async function openHolo() {
+    const baseUrl = await getApiBaseUrl();
+    await openUrl(`${baseUrl}/items/${encodeURIComponent(slug)}`);
+  }
+
+  return (
+    <Section
+      title="Plans"
+      aside={plans.holo ? undefined : "Rendus orthographiques"}
+    >
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {views.map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            onClick={() => setPicked(key)}
+            className={cn(
+              "rounded-full border px-2.5 py-0.5 text-xs transition-colors",
+              key === current[0]
+                ? "border-nexus-accent/60 bg-nexus-abyss/60 text-nexus-bright"
+                : "border-nexus-accent/15 text-nexus-accent/60 hover:border-nexus-accent/40",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+
+        {plans.holo ? (
+          <button
+            type="button"
+            onClick={() => void openHolo()}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-bright"
+          >
+            Vue 3D sur le site
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        ) : null}
+      </div>
+
+      <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40">
+        {failed.includes(url) ? (
+          <p className="text-xs text-nexus-accent/50">
+            Plan indisponible pour le moment.
+          </p>
+        ) : (
+          <img
+            key={url}
+            src={url}
+            alt={`${name}, vue de ${current[1].toLowerCase()}`}
+            className="h-full w-full object-contain p-3"
+            onError={() => setFailed((urls) => [...urls, url])}
+          />
+        )}
+
+        {scale ? (
+          <p className="pointer-events-none absolute inset-x-0 bottom-2 text-center text-[10px] uppercase tracking-wide text-nexus-accent/40">
+            {scale}
+          </p>
+        ) : null}
+      </div>
+    </Section>
+  );
+}
+
 function VehicleSections({ item }: { item: ItemDetails }) {
   const vehicle = item.vehicle;
   const accent = KIND_ACCENT.vehicle;
@@ -507,6 +606,15 @@ function VehicleSections({ item }: { item: ItemDetails }) {
             ]}
           />
         </Section>
+      ) : null}
+
+      {vehicle.plans ? (
+        <VehiclePlanViews
+          plans={vehicle.plans}
+          name={item.name}
+          scale={dimensions}
+          slug={item.slug}
+        />
       ) : null}
 
       <SlotList

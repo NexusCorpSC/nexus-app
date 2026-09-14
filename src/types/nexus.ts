@@ -107,6 +107,19 @@ export type ResolvedItemSlot = ItemSlot & {
   mounted?: ItemSummary;
 };
 
+/**
+ * Les plans du véhicule : vues orthographiques et modèle 3D. Les vues plates
+ * s'affichent ici ; le modèle 3D reste le format de la fiche en ligne, que le
+ * bouton « Ouvrir sur le site » va chercher.
+ */
+export type VehiclePlans = {
+  top?: string;
+  side?: string;
+  front?: string;
+  /** Modèle glTF, affiché par la fiche web. */
+  holo?: string;
+};
+
 export type VehicleDetails = {
   crew?: number;
   /** m/s */
@@ -123,6 +136,7 @@ export type VehicleDetails = {
   height?: number;
   hardpoints?: ItemSlot[];
   components?: ItemSlot[];
+  plans?: VehiclePlans;
 };
 
 export type WeaponStat = {
