@@ -68,7 +68,15 @@ export default function PlanOverlayPage() {
   const locked = useOverlayLocked("plan");
 
   const { state } = useSquad(true, null, userId);
-  const squadId = state.squad?.id ?? null;
+
+  /**
+   * The squad this member's own traces wear the colours of.
+   *
+   * Not the same question as «which squad are the plans read for» — that one is
+   * the stream's to answer, and `usePlan` takes it from the feed's own tag.
+   * This one is only the ink.
+   */
+  const mySquadId = state.squad?.id ?? null;
 
   /** What the reader chose; everything else is the briefing's own. */
   const [stepped, setStepped] = useState<string | null>(null);
@@ -79,9 +87,8 @@ export default function PlanOverlayPage() {
   const [undone, setUndone] = useState<Mark[]>([]);
   const [stepping, setStepping] = useState(false);
 
-  const { plans, plan, ordered, phase, layer, draw, rub } = usePlan(squadId, {
-    phaseId: stepped,
-  });
+  const { squad: squadId, plans, plan, ordered, phase, layer, draw, rub } =
+    usePlan({ phaseId: stepped });
 
   const presenter = plan?.presenter ?? null;
   const mine =
@@ -110,7 +117,7 @@ export default function PlanOverlayPage() {
 
   const onDraw = useCallback(
     async (points: number[]) => {
-      if (!plan || !phase || !squadId) return;
+      if (!plan || !phase) return;
 
       const stored = forStorage(points);
       const clientId = crypto.randomUUID().replace(/-/g, "");
@@ -125,7 +132,7 @@ export default function PlanOverlayPage() {
         clientId,
         authorId: userId ?? "",
         authorName: user?.name ?? "",
-        squadId,
+        squadId: mySquadId ?? "",
         kind: "pen",
         ink: "squad",
         width: 6,
@@ -161,12 +168,12 @@ export default function PlanOverlayPage() {
         rub(optimistic.id);
       }
     },
-    [draw, mark, phase, plan, rub, squadId, user?.name, userId],
+    [draw, mark, mySquadId, phase, plan, rub, squadId, user?.name, userId],
   );
 
   const onErase = useCallback(
     async (strokeId: string) => {
-      if (!plan || !phase || !squadId) return;
+      if (!plan || !phase) return;
 
       const held = layer.strokes.find((stroke) => stroke.id === strokeId);
       rub(strokeId);
@@ -226,7 +233,7 @@ export default function PlanOverlayPage() {
 
   const walk = useCallback(
     async (backwards: boolean) => {
-      if (!plan || !phase || !squadId || stepping) return;
+      if (!plan || !phase || stepping) return;
 
       const from = backwards ? done : undone;
       const held = from[from.length - 1];
@@ -379,7 +386,7 @@ export default function PlanOverlayPage() {
                   }
                 : null
             }
-            mySquadId={squadId ?? ""}
+            mySquadId={mySquadId ?? ""}
             squad={state.squad ?? null}
             raid={state.raid ?? null}
             drawing={drawable && tool === "pen"}

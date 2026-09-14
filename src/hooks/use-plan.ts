@@ -3,7 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
 import { ApiError } from "@/lib/api-client";
-import { readPlan, readStrokes } from "@/lib/api/plans";
+import { listPlans, readPlan, readStrokes } from "@/lib/api/plans";
 import {
   inPlanOrder,
   type Plan,
@@ -33,6 +33,16 @@ import {
  * Nothing is pulled while the window is hidden. It is created at startup and
  * its React tree runs long before anybody asks to see it — and losing focus is
  * not the same as being hidden, which over a game is the normal state.
+ *
+ * **Which squad is the stream's to say, not this window's.** There is one
+ * stream for the whole app and one squad it is opened for; this window has no
+ * selector of its own, it shows the plans of whatever squad the app is on. So
+ * the squad each feed is tagged with is *adopted* — and used for the HTTP reads
+ * that follow — rather than checked against a value this window worked out on
+ * its own. Filtering on such a value is what left the window saying «aucun plan
+ * de vol» for ever: the stream is opened for a selection, where `null` means
+ * «the API's pick», and comparing that against the id the API in fact picked
+ * never matched.
  */
 
 const PLAN_FEED_EVENT = "plan://feed";
@@ -49,6 +59,12 @@ export interface PlanLayer {
 const EMPTY_LAYER: PlanLayer = { epoch: 0, cursor: 0, strokes: [] };
 
 export interface PlanState {
+  /**
+   * The squad the feed was read for, as the stream tags it — `null` when the
+   * stream left the choice to the API. It is what every read here passes on,
+   * so the window and the stream can never be looking at two different scopes.
+   */
+  squad: string | null;
   /** Every live plan of the scope, as the feed last carried it. */
   plans: PlanSummary[];
   /** The plan on screen, in full — texts and all. */
@@ -79,9 +95,9 @@ export interface PlanState {
  * feed: the plan being briefed, and the phase the presenter is on.
  */
 export function usePlan(
-  squadId: string | null,
   picked: { planId?: string | null; phaseId?: string | null } = {},
 ): PlanState {
+  const [squadId, setSquadId] = useState<string | null>(null);
   const [plans, setPlans] = useState<PlanSummary[]>([]);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [layer, setLayer] = useState<PlanLayer>(EMPTY_LAYER);
@@ -191,22 +207,39 @@ export function usePlan(
     let dropped = false;
     let stop: (() => void) | undefined;
 
+    // Rust only hands back a snapshot taken for the squad it is asked about,
+    // and this window has nothing to ask with until a feed has told it. So it
+    // asks for the stream's default and, failing that, reads the feed over
+    // HTTP — which is also what saves it when the stream connected before this
+    // window existed, or is on a squad chosen in another window.
     void invoke<PlanFeedEvent | null>("feed_snapshot", {
       topic: "plan",
-      squad: squadId,
+      squad: null,
     })
       .then((snapshot) => {
-        if (!dropped && snapshot) takeFeed(snapshot.view);
+        if (dropped) return null;
+
+        if (snapshot) {
+          setSquadId(snapshot.squad);
+          takeFeed(snapshot.view);
+          return null;
+        }
+
+        return listPlans(null).then((view) => {
+          if (!dropped) takeFeed(view.feed);
+        });
       })
       .catch(() => undefined);
 
     void listen<PlanFeedEvent>(PLAN_FEED_EVENT, (event) => {
-      // The payload names the squad it was read for, and that is not decoration:
-      // which squad you are looking at decides whether the plans are the
-      // squad's or the raid's. A feed read for another one is not ours — the
-      // event is app-wide, so another window's stream lands here too.
-      if (dropped || event.payload.squad !== squadId) return;
+      // The payload names the squad it was read for, and that is not
+      // decoration: which squad is being looked at decides whether the plans
+      // are the squad's or the raid's. This window has no squad of its own to
+      // check it against, so it takes the stream's — and every read below goes
+      // out under it.
+      if (dropped) return;
 
+      setSquadId(event.payload.squad);
       takeFeed(event.payload.view);
     }).then((unlisten) => {
       if (dropped) unlisten();
@@ -357,6 +390,7 @@ export function usePlan(
   }, []);
 
   return {
+    squad: squadId,
     plans,
     plan,
     ordered,

@@ -27,6 +27,18 @@ function at(squadId: string | null) {
   return squadId ? { squad: squadId } : undefined;
 }
 
+/**
+ * Every live plan of the caller's scope.
+ *
+ * The stream carries this too, and usually first — but only to a window that
+ * can name the squad the stream is on, and a window with no selector of its own
+ * cannot. So this is how the overlay opens: one read that resolves the scope
+ * the same way the stream does, `null` and all.
+ */
+export function listPlans(squadId: string | null): Promise<PlanView> {
+  return apiRequest<PlanView>(PLANS, { params: at(squadId) });
+}
+
 export function readPlan(
   planId: string,
   squadId: string | null,
