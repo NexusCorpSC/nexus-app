@@ -89,7 +89,19 @@ export function usePlan(
   const [loading, setLoading] = useState(true);
 
   const gone = useRef(false);
-  const pumping = useRef(false);
+
+  /**
+   * The plan and phase the one live layer belongs to, and the pump that owns
+   * it.
+   *
+   * An overlay holds a single layer rather than one per phase, so a read still
+   * in flight when the reader steps on would pour the old phase's strokes into
+   * the new phase's empty layer. The pump carries the key it started for and
+   * checks it after every await; a pump for another key may start at once,
+   * because the stale one is about to notice and stop.
+   */
+  const pumping = useRef<string | null>(null);
+  const showing = useRef("");
   const layerRef = useRef(layer);
 
   useEffect(() => {
@@ -189,7 +201,13 @@ export function usePlan(
       .catch(() => undefined);
 
     void listen<PlanFeedEvent>(PLAN_FEED_EVENT, (event) => {
-      if (!dropped) takeFeed(event.payload.view);
+      // The payload names the squad it was read for, and that is not decoration:
+      // which squad you are looking at decides whether the plans are the
+      // squad's or the raid's. A feed read for another one is not ours — the
+      // event is app-wide, so another window's stream lands here too.
+      if (dropped || event.payload.squad !== squadId) return;
+
+      takeFeed(event.payload.view);
     }).then((unlisten) => {
       if (dropped) unlisten();
       else stop = unlisten;
@@ -240,20 +258,27 @@ export function usePlan(
 
   /** A phase switched is a different drawing; the layer starts empty. */
   useEffect(() => {
+    showing.current = `${planId ?? ""}:${phaseId ?? ""}`;
     layerRef.current = EMPTY_LAYER;
     setLayer(EMPTY_LAYER);
   }, [phaseId, planId]);
 
   const pump = useCallback(async () => {
-    if (!planId || !phaseId || pumping.current) return;
-    pumping.current = true;
+    if (!planId || !phaseId) return;
+
+    const key = `${planId}:${phaseId}`;
+    if (pumping.current === key) return;
+    pumping.current = key;
+
+    /** Still the layer on screen? A stale pump writes nowhere. */
+    const current = () => !gone.current && showing.current === key;
 
     let cursor = layerRef.current.cursor;
     let epoch = layerRef.current.epoch;
 
     try {
       for (let attempt = 0; attempt <= RETRIES.length; attempt += 1) {
-        if (gone.current) return;
+        if (!current()) return;
 
         let delta;
 
@@ -264,14 +289,14 @@ export function usePlan(
           if (error instanceof ApiError && error.status === 409) {
             cursor = 0;
             epoch = epochOf(error) ?? epoch + 1;
-            if (!gone.current) setLayer({ ...EMPTY_LAYER, epoch });
+            if (current()) setLayer({ ...EMPTY_LAYER, epoch });
             continue;
           }
 
           return;
         }
 
-        if (gone.current) return;
+        if (!current()) return;
 
         setLayer((current) => apply(current, delta));
 
@@ -292,14 +317,15 @@ export function usePlan(
 
       // Given up on: a revision published for a stroke whose insert died. One
       // trace lost beats a phase that never catches up again.
-      if (!gone.current) {
+      if (current()) {
         setLayer((current) => ({
           ...current,
           cursor: Math.max(current.cursor, cursor),
         }));
       }
     } finally {
-      pumping.current = false;
+      // Only if nobody started a newer one in the meantime.
+      if (pumping.current === key) pumping.current = null;
     }
   }, [phaseId, planId, squadId]);
 

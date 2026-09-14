@@ -201,6 +201,10 @@ const Trace = memo(function Trace({
   const erase = onErase
     ? {
         onPointerDown: (event: React.PointerEvent) => {
+          // The primary button only, as the pen is: a right-click is a menu
+          // somebody asked for, not a trace they meant to lose.
+          if (event.button !== 0) return;
+
           event.stopPropagation();
           onErase(stroke.id);
         },

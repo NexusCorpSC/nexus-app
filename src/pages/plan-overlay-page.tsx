@@ -85,8 +85,8 @@ export default function PlanOverlayPage() {
       const stored = forStorage(points);
       const clientId = crypto.randomUUID().replace(/-/g, "");
 
-      // On screen before the round trip. The delta brings the stored stroke
-      // back under its own id, and the optimistic one is rubbed out with it.
+      // On screen before the round trip, under an id of its own — the server
+      // mints the real one, so the commit's answer is what replaces it.
       const optimistic: PlanStroke = {
         id: `local-${clientId}`,
         phaseId: phase.id,
@@ -109,13 +109,16 @@ export default function PlanOverlayPage() {
       draw(optimistic);
 
       try {
-        await commitStroke(plan.id, phase.id, squadId, {
+        const { stroke } = await commitStroke(plan.id, phase.id, squadId, {
           clientId,
           kind: "pen",
           ink: "squad",
           width: 6,
           points: stored,
         });
+
+        rub(optimistic.id);
+        draw(stroke);
       } catch {
         rub(optimistic.id);
       }
@@ -331,7 +334,7 @@ export default function PlanOverlayPage() {
 
                 <button
                   type="button"
-                  title="Gomme — vos traits seulement"
+                  title="Gomme — vos traits, et ceux des autres si vous menez le plan"
                   aria-pressed={tool === "eraser"}
                   onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
                   className={cn(

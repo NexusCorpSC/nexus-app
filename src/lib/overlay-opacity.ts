@@ -13,7 +13,7 @@ import { invoke } from "@tauri-apps/api/core";
  * `overlaySkin` below; the React side is in `use-overlay-opacity.ts`.
  */
 
-/** Emitted by Rust to every window whenever any of the three changes. */
+/** Emitted by Rust to every window whenever any overlay changes. */
 export const OVERLAY_OPACITY_EVENT = "overlay://opacity";
 
 /** The window labels this applies to, as declared in `tauri.conf.json`. */

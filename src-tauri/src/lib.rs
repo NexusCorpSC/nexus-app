@@ -322,7 +322,7 @@ impl ShortcutSupport {
     }
 }
 
-/// The six combinations, in the format the `global-shortcut` plugin parses.
+/// Every combination, in the format the `global-shortcut` plugin parses.
 #[derive(Debug, Deserialize)]
 struct ShortcutSettings {
     search: String,
@@ -330,6 +330,7 @@ struct ShortcutSettings {
     notes: String,
     cargo: String,
     squad: String,
+    plan: String,
     opacity: String,
 }
 
@@ -341,6 +342,7 @@ impl Default for ShortcutSettings {
             notes: "Ctrl+Shift+KeyN".to_string(),
             cargo: "Ctrl+Shift+KeyG".to_string(),
             squad: "Ctrl+Shift+KeyE".to_string(),
+            plan: "Ctrl+Shift+KeyP".to_string(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
         }
     }
@@ -381,6 +383,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Notes, &requested.notes),
         (Action::Cargo, &requested.cargo),
         (Action::Squad, &requested.squad),
+        (Action::Plan, &requested.plan),
         (Action::Opacity, &requested.opacity),
     ];
 
