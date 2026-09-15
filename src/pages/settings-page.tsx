@@ -335,6 +335,19 @@ export default function SettingsPage() {
             />
           </Field>
 
+          <Field label="Carte en superposition">
+            <ShortcutInput
+              value={shortcuts.map}
+              onChange={(map) =>
+                setLocalShortcuts((current) => ({ ...current, map }))
+              }
+            />
+            <span className="text-xs text-nexus-accent/50">
+              Affiche la carte épinglée depuis la fiche d'un lieu, ou choisie
+              dans la fenêtre elle-même.
+            </span>
+          </Field>
+
           <Field label="Opacité des superpositions">
             <ShortcutInput
               value={shortcuts.opacity}

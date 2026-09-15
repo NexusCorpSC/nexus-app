@@ -29,6 +29,13 @@ const NOTES_WINDOW: &str = "notes";
 const CARGO_WINDOW: &str = "cargo";
 const SQUAD_WINDOW: &str = "squad";
 const PLAN_WINDOW: &str = "plan";
+/// The map of a place, over the game.
+///
+/// `map` and not `plan`: the site calls a surveyed place a *plan*, but that
+/// word is taken here by the squad's flight plan — a canvas of strokes, not an
+/// image. The label stays English like its neighbours; the user reads
+/// «Carte».
+const MAP_WINDOW: &str = "map";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 /// The large, centred notifications: what is asked of the whole squad.
 pub(crate) const BANNERS_WINDOW: &str = "banners";
@@ -112,6 +119,7 @@ struct OverlayOpacity {
     cargo: OverlayMode,
     squad: OverlayMode,
     plan: OverlayMode,
+    map: OverlayMode,
 }
 
 impl Default for OverlayOpacity {
@@ -126,6 +134,9 @@ impl Default for OverlayOpacity {
             // fine over a cockpit, where a drawing needs a surface — strokes
             // and a lit planet on the same pixels are neither of them legible.
             plan: OverlayMode::Opaque,
+            // Opaque for the reason the plan is: a surveyed floor plan read
+            // over a lit cockpit is two drawings on the same pixels.
+            map: OverlayMode::Opaque,
         }
     }
 }
@@ -137,6 +148,7 @@ impl OverlayOpacity {
             CARGO_WINDOW => Some(self.cargo),
             SQUAD_WINDOW => Some(self.squad),
             PLAN_WINDOW => Some(self.plan),
+            MAP_WINDOW => Some(self.map),
             _ => None,
         }
     }
@@ -148,6 +160,7 @@ impl OverlayOpacity {
             CARGO_WINDOW => &mut self.cargo,
             SQUAD_WINDOW => &mut self.squad,
             PLAN_WINDOW => &mut self.plan,
+            MAP_WINDOW => &mut self.map,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -155,9 +168,9 @@ impl OverlayOpacity {
         Ok(())
     }
 
-    /// Whether any of the three still draws something behind its text.
+    /// Whether any of them still draws something behind its text.
     fn any_drawn(&self) -> bool {
-        [self.notes, self.cargo, self.squad, self.plan]
+        [self.notes, self.cargo, self.squad, self.plan, self.map]
             .iter()
             .any(|mode| *mode != OverlayMode::Clear)
     }
@@ -167,6 +180,7 @@ impl OverlayOpacity {
         self.cargo = mode;
         self.squad = mode;
         self.plan = mode;
+        self.map = mode;
     }
 }
 
@@ -214,7 +228,7 @@ const LOCK_WATCH_IDLE: Duration = Duration::from_millis(250);
 fn is_overlay(label: &str) -> bool {
     matches!(
         label,
-        NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW | PLAN_WINDOW
+        NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW | PLAN_WINDOW | MAP_WINDOW
     )
 }
 
@@ -232,6 +246,7 @@ pub(crate) enum Action {
     Cargo,
     Squad,
     Plan,
+    Map,
     Opacity,
 }
 
@@ -246,6 +261,7 @@ impl Action {
             Action::Cargo => "cargo",
             Action::Squad => "squad",
             Action::Plan => "plan",
+            Action::Map => "map",
             Action::Opacity => "opacity",
         }
     }
@@ -287,6 +303,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Cargo => toggle_overlay(app, CARGO_WINDOW),
         Action::Squad => toggle_squad(app),
         Action::Plan => toggle_plan(app),
+        Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Opacity => flip_all_overlay_opacity(app),
     };
 
@@ -331,6 +348,7 @@ struct ShortcutSettings {
     cargo: String,
     squad: String,
     plan: String,
+    map: String,
     opacity: String,
 }
 
@@ -343,6 +361,7 @@ impl Default for ShortcutSettings {
             cargo: "Ctrl+Shift+KeyG".to_string(),
             squad: "Ctrl+Shift+KeyE".to_string(),
             plan: "Ctrl+Shift+KeyP".to_string(),
+            map: "Ctrl+Shift+KeyM".to_string(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
         }
     }
@@ -384,6 +403,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Cargo, &requested.cargo),
         (Action::Squad, &requested.squad),
         (Action::Plan, &requested.plan),
+        (Action::Map, &requested.map),
         (Action::Opacity, &requested.opacity),
     ];
 
@@ -875,6 +895,25 @@ fn is_squad_overlay_visible(app: AppHandle) -> Result<bool, String> {
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn close_map_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, MAP_WINDOW)
+}
+
+/// Brings the map overlay up — shown, never hidden.
+///
+/// Called by the pin button on a place's page, which promises to show the map:
+/// a toggle there would put the window away for whoever already had it open.
+/// Putting it away is the shortcut's job, and the tray's.
+///
+/// No visibility event to go with it, unlike the squad and plan windows: this
+/// one asks for a place once and keeps the answer. There is nothing running
+/// here that a hidden window would have to be told to stop.
+#[tauri::command]
+fn open_map_overlay(app: AppHandle) -> Result<(), String> {
+    show_window(&app, MAP_WINDOW)
+}
+
 /// Steps one overlay to its next mode, named by its window label. Called by
 /// the button each of them carries.
 #[tauri::command]
@@ -1099,6 +1138,8 @@ pub fn run() {
             close_plan_overlay,
             toggle_plan_overlay,
             is_plan_overlay_visible,
+            close_map_overlay,
+            open_map_overlay,
             toggle_overlay_opacity,
             set_overlay_opacity,
             overlay_mode,

@@ -33,10 +33,12 @@ const KEY_SHORTCUT_NOTES = "shortcutNotes";
 const KEY_SHORTCUT_CARGO = "shortcutCargo";
 const KEY_SHORTCUT_SQUAD = "shortcutSquad";
 const KEY_SHORTCUT_PLAN = "shortcutPlan";
+const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
+const KEY_PINNED_MAP = "pinnedMap";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
@@ -115,6 +117,7 @@ export const DEFAULT_SHORTCUTS = {
   cargo: "Ctrl+Shift+KeyG",
   squad: "Ctrl+Shift+KeyE",
   plan: "Ctrl+Shift+KeyP",
+  map: "Ctrl+Shift+KeyM",
   opacity: "Ctrl+Shift+KeyO",
 } as const;
 
@@ -140,6 +143,7 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_SQUAD)) ?? DEFAULT_SHORTCUTS.squad,
     plan:
       (await store.get<string>(KEY_SHORTCUT_PLAN)) ?? DEFAULT_SHORTCUTS.plan,
+    map: (await store.get<string>(KEY_SHORTCUT_MAP)) ?? DEFAULT_SHORTCUTS.map,
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
@@ -154,6 +158,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_CARGO, shortcuts.cargo);
   await store.set(KEY_SHORTCUT_SQUAD, shortcuts.squad);
   await store.set(KEY_SHORTCUT_PLAN, shortcuts.plan);
+  await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
 }
 
@@ -190,6 +195,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     cargo: storedMode(stored?.cargo, "cargo"),
     squad: storedMode(stored?.squad, "squad"),
     plan: storedMode(stored?.plan, "plan"),
+    map: storedMode(stored?.map, "map"),
   };
 }
 
@@ -286,6 +292,25 @@ export async function setStoredCargoSheet(sheet: unknown): Promise<void> {
 
   if (sheet === null) await store.delete(KEY_CARGO_SHEET);
   else await store.set(KEY_CARGO_SHEET, sheet);
+}
+
+/**
+ * The place whose map the Carte overlay shows, kept as a slug.
+ *
+ * Stored rather than held in memory because the overlay is created at startup
+ * and outlives any navigation: closing it and reopening it mid-drop should show
+ * the same map, not an empty window.
+ */
+export async function getPinnedMap(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(KEY_PINNED_MAP)) ?? null;
+}
+
+export async function setPinnedMap(slug: string | null): Promise<void> {
+  const store = await getStore();
+
+  if (slug === null) await store.delete(KEY_PINNED_MAP);
+  else await store.set(KEY_PINNED_MAP, slug);
 }
 
 /**
