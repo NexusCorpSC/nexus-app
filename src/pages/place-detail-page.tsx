@@ -4,7 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ArrowLeft, ExternalLink, Map as MapIcon, Pin } from "lucide-react";
 import { getPlace } from "@/lib/api/places";
-import { pinMap, readPinnedMap, showMapOverlay } from "@/lib/pinned-map";
+import {
+  onPinnedMapChange,
+  pinMap,
+  readPinnedMap,
+  showMapOverlay,
+} from "@/lib/pinned-map";
 import { getApiBaseUrl } from "@/lib/settings";
 import { MapLegend, MapView } from "@/components/place/map-view";
 import { PlaceCard, PlaceTypeBadge } from "@/components/place-card";
@@ -217,13 +222,23 @@ function MapsSection({
   const [activeId, setActiveId] = useState<string | null>(plans[0]?.id ?? null);
   const [pinned, setPinned] = useState<string | null>(null);
 
+  // Lu puis suivi : l'overlay a son propre sélecteur, et une épingle posée
+  // là-bas laisserait sinon ce bouton annoncer le contraire de la vérité.
   useEffect(() => {
     let alive = true;
-    void readPinnedMap().then((slug) => {
-      if (alive) setPinned(slug);
-    });
+
+    function refresh() {
+      void readPinnedMap().then((slug) => {
+        if (alive) setPinned(slug);
+      });
+    }
+
+    refresh();
+    const pending = onPinnedMapChange(refresh);
+
     return () => {
       alive = false;
+      void pending.then((stop) => stop()).catch(() => {});
     };
   }, []);
 

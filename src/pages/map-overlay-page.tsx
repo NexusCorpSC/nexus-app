@@ -85,7 +85,13 @@ export default function MapOverlayPage() {
   // la première carte de lui-même, sans effet à écrire ni à nettoyer.
   const active = plans.find((plan) => plan.id === activeId) ?? plans[0];
 
-  // Verrouiller referme le sélecteur : la fenêtre ne répond plus au clavier.
+  // Verrouiller referme le sélecteur pour de bon. Le dériver de `locked`
+  // seulement le cacherait : il reviendrait au déverrouillage, alors qu'on
+  // avait verrouillé pour rendre la fenêtre au jeu.
+  useEffect(() => {
+    if (locked) setPicking(false);
+  }, [locked]);
+
   const open = picking && !locked;
 
   function close() {

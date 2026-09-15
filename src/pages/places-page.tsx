@@ -6,6 +6,7 @@ import { PlaceCard } from "@/components/place-card";
 import {
   PLACE_SERVICE_LABELS,
   PLACE_TYPE_LABELS,
+  PLACE_TYPES,
   isPlaceService,
   type PlaceService,
   type PlaceType,
@@ -22,8 +23,12 @@ import {
   Select,
 } from "@/components/ui";
 
+/**
+ * `value in PLACE_TYPE_LABELS` dirait oui à `toString` : la chaîne des
+ * prototypes en fait partie. On interroge la liste, comme `isPlaceService`.
+ */
 function isPlaceType(value: string): value is PlaceType {
-  return value in PLACE_TYPE_LABELS;
+  return (PLACE_TYPES as readonly string[]).includes(value);
 }
 
 /**

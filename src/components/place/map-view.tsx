@@ -130,9 +130,9 @@ export function MapView({
                   if (opens) onOpenTarget(marker.targetSlug!);
                 }}
                 className={cn(
-                  // La cible de touche fait 44 px quel que soit le zoom, sans
-                  // que la pastille elle-même grossisse.
-                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 before:absolute before:-inset-3 before:content-['']",
+                  // La cible de touche fait 44 px à l'écran quel que soit le
+                  // zoom, sans que la pastille elle-même grossisse.
+                  "absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 before:absolute before:-inset-[var(--hit)] before:content-['']",
                   marker.id === selected && "ring-2 ring-white/70",
                 )}
                 style={{
@@ -142,9 +142,14 @@ export function MapView({
                   // pendant que la carte grandit sous elle.
                   width: `${14 / view.scale}px`,
                   height: `${14 / view.scale}px`,
+                  // Le halo de touche aussi, sinon il enfle avec le zoom et
+                  // finit par avaler le déplacement de la carte. 14 px de
+                  // pastille et 15 de chaque côté font les 44 promis.
+                  "--hit": `${15 / view.scale}px`,
                   borderColor: accent,
                   backgroundColor: `${accent}55`,
-                }}
+                  // La propriété personnalisée n'est pas dans `CSSProperties`.
+                } as React.CSSProperties}
               >
                 <span className="sr-only">
                   {markerLabel(marker, targets)}
