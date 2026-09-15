@@ -284,8 +284,24 @@ export function usePlan(
 
   const ordered = plan ? inPlanOrder(plan.phases) : [];
 
+  /**
+   * Chaque candidat est vérifié contre les phases du plan avant d'être retenu.
+   *
+   * Un identifiant qui ne désigne plus rien — une phase supprimée sous les
+   * pieds du lecteur, ou un présentateur resté sur elle — donnerait sinon une
+   * fenêtre vide alors que le plan a toujours des phases. On retombe donc sur
+   * le candidat suivant.
+   *
+   * C'est bien l'**identifiant** qu'on résout, et non l'objet : le pompage des
+   * traces et la clé de la couche s'appuient sur `phaseId`. Retenir un id mort
+   * tout en affichant une autre phase ferait tirer le dessin de la disparue
+   * sous le nom de la vivante.
+   */
   const phaseId =
-    picked.phaseId ?? plan?.presenter?.phaseId ?? ordered[0]?.id ?? null;
+    [picked.phaseId, plan?.presenter?.phaseId, ordered[0]?.id].find(
+      (candidate): candidate is string =>
+        !!candidate && ordered.some((one) => one.id === candidate),
+    ) ?? null;
 
   const phase = ordered.find((one) => one.id === phaseId) ?? null;
 

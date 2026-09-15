@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import {
@@ -7,8 +7,10 @@ import {
   Eraser,
   ExternalLink,
   Lock,
+  MoreHorizontal,
   Pencil,
   Redo2,
+  Trash2,
   Undo2,
   X,
 } from "lucide-react";
@@ -22,8 +24,15 @@ import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { usePlan } from "@/hooks/use-plan";
 import { useSquad } from "@/hooks/use-squad";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { commitStroke, eraseStroke, restoreStroke } from "@/lib/api/plans";
+import {
+  clearPhase,
+  commitStroke,
+  eraseStroke,
+  removePhase,
+  restoreStroke,
+} from "@/lib/api/plans";
 import { overlaySkin } from "@/lib/overlay-opacity";
+import { commandsSquad, governsPlan, leadsRaid } from "@/lib/squad-rank";
 import { forStorage } from "@/lib/plan-geometry";
 import { getApiBaseUrl } from "@/lib/settings";
 import { cn } from "@/lib/utils";
@@ -87,8 +96,22 @@ export default function PlanOverlayPage() {
   const [undone, setUndone] = useState<Mark[]>([]);
   const [stepping, setStepping] = useState(false);
 
-  const { squad: squadId, plans, plan, ordered, phase, layer, draw, rub } =
-    usePlan({ phaseId: stepped });
+  /** Le tiroir des actions de phase, et ce qu'un refus a répondu. */
+  const [acting, setActing] = useState(false);
+  const [working, setWorking] = useState(false);
+  const [refused, setRefused] = useState<string | null>(null);
+
+  const {
+    squad: squadId,
+    plans,
+    plan,
+    ordered,
+    phase,
+    layer,
+    draw,
+    rub,
+    refresh,
+  } = usePlan({ phaseId: stepped });
 
   const presenter = plan?.presenter ?? null;
   const mine =
@@ -97,6 +120,71 @@ export default function PlanOverlayPage() {
       : null;
 
   const drawable = !locked && phase !== null && !phase.locked;
+
+  /**
+   * Qui tient ce plan, au sens où l'API l'entend.
+   *
+   * Une politesse, pas une règle : le serveur refuse de toute façon. Mais
+   * offrir un bouton qui sera refusé n'est pas mieux que de le cacher, et une
+   * phase supprimée par mégarde ne se récupère pas.
+   */
+  const governs =
+    plan && userId
+      ? governsPlan(plan.scope, {
+          commands: state.squad ? commandsSquad(state.squad, userId) : false,
+          leads: leadsRaid(state.raid ?? null, userId),
+        })
+      : false;
+
+  // Verrouiller referme le tiroir pour de bon : la fenêtre ne prend plus la
+  // souris, et il reviendrait ouvert au déverrouillage.
+  useEffect(() => {
+    if (locked) {
+      setActing(false);
+      setRefused(null);
+    }
+  }, [locked]);
+
+  /**
+   * Défaire une phase — la vider, ou l'ôter du plan.
+   *
+   * Ni l'une ni l'autre ne se reprend : c'est pourquoi chaque bouton demande
+   * deux fois, et pourquoi le refus du serveur est montré ici plutôt qu'avalé.
+   * Les deux piles de marques repartent à zéro — elles désignent des traces que
+   * plus rien ne porte.
+   */
+  const actOnPhase = useCallback(
+    async (act: "clear" | "remove") => {
+      if (!plan || !phase || working) return;
+
+      setWorking(true);
+      setRefused(null);
+
+      try {
+        if (act === "clear") {
+          await clearPhase(plan.id, phase.id, squadId);
+        } else {
+          await removePhase(plan.id, phase.id, squadId);
+          // La phase visée n'existe plus : y rester laisserait la fenêtre sur
+          // un identifiant que le plan ne connaît plus, donc sur du vide. On
+          // rend le choix au briefing, qui retombe sur la phase menée.
+          setStepped(null);
+        }
+
+        setDone([]);
+        setUndone([]);
+        setActing(false);
+        refresh();
+      } catch (error) {
+        setRefused(
+          error instanceof Error ? error.message : "Le serveur a refusé.",
+        );
+      } finally {
+        setWorking(false);
+      }
+    },
+    [phase, plan, refresh, squadId, working],
+  );
 
   const mark = useCallback((held: Mark) => {
     setDone((current) => [...current, held].slice(-20));
@@ -373,7 +461,68 @@ export default function PlanOverlayPage() {
             >
               <ChevronRight className="size-4" />
             </button>
+
+            {governs && !locked ? (
+              <button
+                type="button"
+                title="Actions de la phase"
+                aria-pressed={acting}
+                onClick={() => {
+                  setActing(!acting);
+                  setRefused(null);
+                }}
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-lg border border-nexus-accent/25",
+                  acting
+                    ? "bg-nexus-accent/20 text-nexus-soft"
+                    : "text-nexus-accent/75 hover:text-nexus-soft",
+                )}
+              >
+                <span className="sr-only">Actions de la phase</span>
+                <MoreHorizontal className="size-4" />
+              </button>
+            ) : null}
           </div>
+
+          {/*
+            Deux gestes qu'on ne reprend pas. Ils vivent ici plutôt que dans la
+            barre d'outils : le stylo disparaît sur une phase figée, alors que
+            supprimer une phase figée reste permis — geler protège un dessin,
+            pas l'existence de la phase. C'est la règle du serveur, suivie et
+            non réinventée.
+          */}
+          {acting && governs && !locked ? (
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5 px-2 pb-1.5">
+              <PhaseAction
+                icon={<Eraser className="size-3.5" />}
+                label="Vider"
+                confirmLabel="Effacer tous les traits ?"
+                disabled={working || phase.locked}
+                reason={phase.locked ? "Phase figée" : undefined}
+                onConfirm={() => void actOnPhase("clear")}
+              />
+
+              {ordered.length > 1 ? (
+                <PhaseAction
+                  icon={<Trash2 className="size-3.5" />}
+                  label="Supprimer"
+                  confirmLabel="Supprimer la phase ?"
+                  disabled={working}
+                  onConfirm={() => void actOnPhase("remove")}
+                />
+              ) : (
+                <span className="text-[11px] text-nexus-accent/50">
+                  Un plan garde au moins une phase.
+                </span>
+              )}
+
+              {refused ? (
+                <span className="w-full text-[11px] text-red-300">
+                  {refused}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
 
           <PlanCanvas
             strokes={layer.strokes}
@@ -510,5 +659,85 @@ export default function PlanOverlayPage() {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * Un bouton qui demande deux fois.
+ *
+ * Même idiome que la clôture d'une feuille de cargo : le bouton devient sa
+ * propre confirmation, sur place. Pas de fenêtre modale — au-dessus d'un jeu,
+ * une boîte qui prend le clavier est pire que le geste qu'elle protège — et
+ * pas de second clic au même endroit non plus : le libellé change, donc la
+ * cible aussi.
+ *
+ * Armé, il le reste jusqu'au clic ou à l'annulation. Le désarmer à la perte du
+ * focus serait tentant, mais cette fenêtre vit au-dessus d'un jeu : elle perd
+ * le focus sans arrêt, et la confirmation se refermerait toute seule avant
+ * qu'on ait pu la viser.
+ */
+function PhaseAction({
+  icon,
+  label,
+  confirmLabel,
+  disabled,
+  reason,
+  onConfirm,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  confirmLabel: string;
+  disabled?: boolean;
+  /** Pourquoi c'est indisponible, quand ça l'est. */
+  reason?: string;
+  onConfirm: () => void;
+}) {
+  const [asking, setAsking] = useState(false);
+
+  if (disabled) {
+    return (
+      <span
+        title={reason}
+        className="flex cursor-default items-center gap-1.5 rounded border border-nexus-accent/15 px-2 py-1 text-[11px] text-nexus-accent/40"
+      >
+        {icon}
+        {reason ?? label}
+      </span>
+    );
+  }
+
+  if (!asking) {
+    return (
+      <button
+        type="button"
+        onClick={() => setAsking(true)}
+        className="flex items-center gap-1.5 rounded border border-nexus-accent/25 px-2 py-1 text-[11px] text-nexus-accent/85 transition-colors hover:border-red-400/50 hover:text-red-300"
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-1">
+      <button
+        type="button"
+        onClick={onConfirm}
+        className="flex items-center gap-1.5 rounded border border-red-400/50 bg-red-500/15 px-2 py-1 text-[11px] font-medium text-red-200"
+      >
+        {icon}
+        {confirmLabel}
+      </button>
+      <button
+        type="button"
+        title="Annuler"
+        onClick={() => setAsking(false)}
+        className="rounded p-1 text-nexus-accent/65 hover:text-nexus-soft"
+      >
+        <span className="sr-only">Annuler</span>
+        <X className="size-3" />
+      </button>
+    </span>
   );
 }

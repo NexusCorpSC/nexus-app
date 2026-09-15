@@ -13,8 +13,12 @@ import type {
  *
  * The overlay reads, and draws a little. Following a briefing and correcting a
  * line over the cockpit is what it is for; composing a plan is not, and there
- * is a button to the site for that. So this is the read half of the API plus
- * the two writes a pen needs, and no more.
+ * is a button to the site for that. So this is the read half of the API, the
+ * writes a pen needs — and the two that undo a phase rather than compose one:
+ * emptying it, and removing it. Both belong to whoever runs the plan, and both
+ * are what somebody mid-drop reaches for when a leg of the operation is
+ * scrapped; sending them to the site would mean alt-tabbing out of the game to
+ * delete something.
  *
  * `squadId` says which of the caller's squads is meant — it decides whether the
  * plans they see are their squad's or their raid's — and `null` leaves the
@@ -131,4 +135,42 @@ export function restoreStroke(
     `${PLANS}/${planId}/phases/${phaseId}/strokes/${strokeId}`,
     { method: "PATCH", params: at(squadId), body: { restore: true } },
   );
+}
+
+/**
+ * Empties a phase of every trace, the plan and its texts untouched.
+ *
+ * Not an eraser used quickly: the server bumps the phase's epoch, which is what
+ * tells every other client that what they hold is gone rather than merely old.
+ * Refused on a frozen phase — freezing is there to protect a drawing — and
+ * refused to anyone who does not run the plan.
+ */
+export function clearPhase(
+  planId: string,
+  phaseId: string,
+  squadId: string | null,
+): Promise<PlanView> {
+  return apiRequest<PlanView>(`${PLANS}/${planId}/phases/${phaseId}/strokes`, {
+    method: "DELETE",
+    params: at(squadId),
+  });
+}
+
+/**
+ * Takes a phase off the plan, its strokes with it.
+ *
+ * **409 when it is the last one**: a plan keeps at least one phase, a canvas
+ * with none having nowhere to draw. Freezing does not protect against this —
+ * it guards the drawing, not the phase's existence — which is the server's
+ * rule, mirrored here rather than invented.
+ */
+export function removePhase(
+  planId: string,
+  phaseId: string,
+  squadId: string | null,
+): Promise<PlanView> {
+  return apiRequest<PlanView>(`${PLANS}/${planId}/phases/${phaseId}`, {
+    method: "DELETE",
+    params: at(squadId),
+  });
 }
