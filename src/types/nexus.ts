@@ -569,6 +569,7 @@ export type BlueprintOrgMember = {
 export const SEARCH_TYPES = [
   "blueprint",
   "item",
+  "place",
   "mission",
   "faction",
   "shopItem",
@@ -1066,3 +1067,171 @@ export function formatClock(seconds: number): string {
 export function inPlanOrder<T extends { order: number }>(phases: T[]): T[] {
   return [...phases].sort((a, b) => a.order - b.order);
 }
+
+// ─── Lieux ────────────────────────────────────────────────────────────────────
+
+/**
+ * Le catalogue des lieux du 'verse, tel que le site le sert.
+ *
+ * Attention au mot : sur le site, le relevé d'un lieu s'appelle un **plan**.
+ * Ici, « plan » est déjà pris par le plan de vol d'une escouade — un canevas
+ * de traits, pas une image. Côté application on parle donc de **carte**, et la
+ * frontière est nette : `PlacePlan` est ce que l'API renvoie, `carte` est ce
+ * que l'interface montre.
+ */
+export const PLACE_TYPES = [
+  "star",
+  "planet",
+  "moon",
+  "city",
+  "station",
+  "outpost",
+  "spaceport",
+  "district",
+  "building",
+  "shop",
+] as const;
+
+export type PlaceType = (typeof PLACE_TYPES)[number];
+
+export const PLACE_TYPE_LABELS: Record<PlaceType, string> = {
+  star: "Système",
+  planet: "Planète",
+  moon: "Lune",
+  city: "Ville",
+  station: "Station",
+  outpost: "Avant-poste",
+  spaceport: "Spatioport",
+  district: "Quartier",
+  building: "Bâtiment",
+  shop: "Magasin",
+};
+
+export const PLACE_SERVICES = [
+  "asop",
+  "restock",
+  "medical",
+  "armory",
+  "cargo",
+  "refinery",
+  "rental",
+  "habitation",
+  "crafting",
+  "missions",
+  "transit",
+  "hangar",
+] as const;
+
+export type PlaceService = (typeof PLACE_SERVICES)[number];
+
+export const PLACE_SERVICE_LABELS: Record<PlaceService, string> = {
+  asop: "Terminal ASOP",
+  restock: "Réapprovisionnement",
+  medical: "Médical",
+  armory: "Armurerie",
+  cargo: "Fret",
+  refinery: "Raffinerie",
+  rental: "Location",
+  habitation: "Habitation",
+  crafting: "Fabrication",
+  missions: "Missions",
+  transit: "Transit",
+  hangar: "Hangar",
+};
+
+export function isPlaceService(value: string): value is PlaceService {
+  return (PLACE_SERVICES as readonly string[]).includes(value);
+}
+
+/**
+ * Un repère posé sur une carte. Il porte soit un service, soit un autre lieu —
+ * jamais les deux. Sa couleur se déduit du type du lieu visé, elle n'est pas
+ * stockée.
+ */
+export type PlacePlanMarker = {
+  id: string;
+  /** Fraction de l'image, origine en haut à gauche. Entre 0 et 1. */
+  x: number;
+  y: number;
+  service?: PlaceService;
+  targetSlug?: string;
+  label?: string;
+  note?: string;
+};
+
+export type PlacePlanOrigin = { slug: string; name: string; planId: string };
+
+export type PlacePlan = {
+  id: string;
+  name: string;
+  note?: string;
+  imageUrl: string;
+  /** Taille naturelle de l'image : elle donne le rapport d'aspect du cadre. */
+  imageWidth: number;
+  imageHeight: number;
+  markers: PlacePlanMarker[];
+  /** Présent quand le lieu emprunte cette carte à un voisin. */
+  borrowedFrom?: PlacePlanOrigin;
+};
+
+export type PlaceSummary = {
+  id: string;
+  slug: string;
+  name: string;
+  type: PlaceType;
+  imageUrl?: string;
+  services?: PlaceService[];
+  shopCategory?: string;
+  parentSlug?: string;
+  parentName?: string;
+  depth?: number;
+  systemSlug?: string;
+  systemName?: string;
+  bodySlug?: string;
+  bodyName?: string;
+  childCount?: number;
+  shopCount?: number;
+  planCount?: number;
+};
+
+export type PlaceAncestor = { slug: string; name: string; type: PlaceType };
+
+export type PlaceDetails = PlaceSummary & {
+  description?: string;
+  plans?: PlacePlan[];
+  /** De la racine au parent direct, dans cet ordre. */
+  ancestors: PlaceAncestor[];
+  children: PlaceSummary[];
+  /** Les magasins de tout le sous-arbre, pas seulement les enfants directs. */
+  shops: PlaceSummary[];
+  /** Les lieux que les repères ouvrent, résolus une fois pour toutes. */
+  planTargets: PlaceSummary[];
+};
+
+export type PlaceListResponse = {
+  places: PlaceSummary[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export type PlaceFacetCount = { value: string; count: number };
+
+export type PlaceFacets = {
+  types: PlaceFacetCount[];
+  systems: { slug: string; name: string }[];
+  bodies: { slug: string; name: string; systemSlug?: string }[];
+  services: PlaceFacetCount[];
+};
+
+/** Ce que l'overlay demande : la carte d'un lieu, et de quoi la lire. */
+export type PlacePlansResponse = {
+  slug: string;
+  name: string;
+  type: PlaceType;
+  ancestorSlugs: string[];
+  ancestors: PlaceAncestor[];
+  plans: PlacePlan[];
+  targets: PlaceSummary[];
+};

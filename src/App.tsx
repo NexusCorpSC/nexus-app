@@ -5,6 +5,8 @@ import BlueprintsPage from "@/pages/blueprints-page";
 import BlueprintDetailPage from "@/pages/blueprint-detail-page";
 import ItemsPage from "@/pages/items-page";
 import ItemDetailPage from "@/pages/item-detail-page";
+import PlacesPage from "@/pages/places-page";
+import PlaceDetailPage from "@/pages/place-detail-page";
 import FactionsPage from "@/pages/factions-page";
 import MissionsPage from "@/pages/missions-page";
 import MissionDetailPage from "@/pages/mission-detail-page";
@@ -23,6 +25,7 @@ import CargoPage from "@/pages/cargo-page";
 import CargoOverlayPage from "@/pages/cargo-overlay-page";
 import SquadOverlayPage from "@/pages/squad-overlay-page";
 import PlanOverlayPage from "@/pages/plan-overlay-page";
+import MapOverlayPage from "@/pages/map-overlay-page";
 
 export default function App() {
   return (
@@ -43,6 +46,7 @@ export default function App() {
       <Route path="cargo-overlay" element={<CargoOverlayPage />} />
       <Route path="squad-overlay" element={<SquadOverlayPage />} />
       <Route path="plan-overlay" element={<PlanOverlayPage />} />
+      <Route path="map-overlay" element={<MapOverlayPage />} />
 
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/blueprints" replace />} />
@@ -52,6 +56,9 @@ export default function App() {
 
         <Route path="items" element={<ItemsPage />} />
         <Route path="items/:slug" element={<ItemDetailPage />} />
+
+        <Route path="places" element={<PlacesPage />} />
+        <Route path="places/:slug" element={<PlaceDetailPage />} />
 
         <Route path="missions" element={<MissionsPage />} />
         <Route path="missions/:missionId" element={<MissionDetailPage />} />

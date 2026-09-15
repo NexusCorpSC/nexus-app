@@ -101,6 +101,22 @@
         "visible": false
       },
       {
+        "label": "map",
+        "title": "Nexus - carte",
+        "url": "index.html#/map-overlay",
+        "width": 620,
+        "height": 640,
+        "minWidth": 320,
+        "minHeight": 260,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
         "label": "capture",
         "title": "Nexus - capture d'ecran",
         "url": "index.html#/capture",

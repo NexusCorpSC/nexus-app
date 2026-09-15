@@ -25,6 +25,7 @@ const NOTES_ITEM: &str = "tray-notes";
 const CARGO_ITEM: &str = "tray-cargo";
 const SQUAD_ITEM: &str = "tray-squad";
 const PLAN_ITEM: &str = "tray-plan";
+const MAP_ITEM: &str = "tray-map";
 const QUIT_ITEM: &str = "tray-quit";
 
 /// Adds the icon for as long as the app runs.
@@ -35,13 +36,14 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
     let cargo = MenuItem::with_id(app, CARGO_ITEM, "Feuille de cargo", true, None::<&str>)?;
     let squad = MenuItem::with_id(app, SQUAD_ITEM, "Escouade", true, None::<&str>)?;
     let plan = MenuItem::with_id(app, PLAN_ITEM, "Plan de vol", true, None::<&str>)?;
+    let map = MenuItem::with_id(app, MAP_ITEM, "Carte", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, QUIT_ITEM, "Quitter Nexus App", true, None::<&str>)?;
 
     let menu = Menu::with_items(
         app,
         &[
-            &search, &capture, &notes, &cargo, &squad, &plan, &separator, &quit,
+            &search, &capture, &notes, &cargo, &squad, &plan, &map, &separator, &quit,
         ],
     )?;
 
@@ -92,6 +94,7 @@ fn on_menu(app: &AppHandle, item: &str) {
         CARGO_ITEM => Action::Cargo,
         SQUAD_ITEM => Action::Squad,
         PLAN_ITEM => Action::Plan,
+        MAP_ITEM => Action::Map,
         QUIT_ITEM => {
             log("quitting from the tray");
             // Closes every window and ends the process, which is the only way

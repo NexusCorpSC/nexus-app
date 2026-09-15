@@ -27,5 +27,6 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   cargo: "Feuille de cargo",
   squad: "Escouade",
   plan: "Plan de vol",
+  map: "Carte",
   opacity: "Opacité des superpositions",
 };

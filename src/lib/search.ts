@@ -12,6 +12,7 @@ import {
 export const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
   blueprint: "Blueprint",
   item: "Objet",
+  place: "Lieu",
   mission: "Mission",
   faction: "Faction",
   shopItem: "Article",
@@ -52,6 +53,12 @@ const DESKTOP_SCREENS: { pattern: RegExp; route: (id: string) => string }[] = [
   {
     pattern: /^\/items\/([^/?#]+)$/,
     route: (slug) => `/items/${slug}`,
+  },
+  // Le site sert les lieux sous `/lieux` ; l'application les montre sous
+  // `/places`, comme le reste de ses routes.
+  {
+    pattern: /^\/lieux\/([^/?#]+)$/,
+    route: (slug) => `/places/${slug}`,
   },
   // Before the missions, and `[^/]` in that one, because
   // `/missions/factions/<id>` is a faction and not a mission.
