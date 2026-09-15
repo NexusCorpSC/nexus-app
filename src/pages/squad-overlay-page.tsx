@@ -41,6 +41,7 @@ import { RoleIcon, roleOf, rolesOf } from "@/components/squad/role-icon";
 import { useRaidLayout } from "@/hooks/use-raid-layout";
 import { columnsLabel, nextColumns } from "@/lib/raid-layout";
 import { overlaySkin } from "@/lib/overlay-opacity";
+import { commandsSquad } from "@/lib/squad-rank";
 import {
   ANNOUNCEMENTS_MAX_LENGTH,
   POSITION_MAX_LENGTH,
@@ -356,23 +357,6 @@ export default function SquadOverlayPage() {
 }
 
 type SquadApi = ReturnType<typeof useSquad>;
-
-/*
- * The one question the whole screen turns on, and the same one the API asks:
- * the leader and the lieutenants they appointed have identical powers, so
- * nothing below tells them apart.
- *
- * Disabling a button is a courtesy, not a rule — every one of these acts is
- * refused server-side too.
- */
-function commandsSquad(squad: Squad, userId: string): boolean {
-  return (
-    squad.leaderId === userId ||
-    squad.members.some(
-      (member) => member.userId === userId && member.lieutenant,
-    )
-  );
-}
 
 /** Longest-standing first, which is also the order of succession. */
 function inJoinOrder(members: SquadMember[]): SquadMember[] {
