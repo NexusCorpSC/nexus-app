@@ -1144,9 +1144,17 @@ export function isPlaceService(value: string): value is PlaceService {
 }
 
 /**
- * Un repère posé sur une carte. Il porte **une seule** de trois choses : un
- * service, un autre lieu, ou un symbole — ce dernier pour ce qui n'est ni l'un
- * ni l'autre : une caisse à fouiller, une caméra, une clé de sécurité.
+ * Un repère posé sur une carte : un service, un autre lieu, ou un symbole — ce
+ * dernier pour ce qui n'est ni l'un ni l'autre : une caisse à fouiller, une
+ * caméra, une clé de sécurité.
+ *
+ * Le site n'en garde qu'un des trois par repère, et rejette celui qui n'en a
+ * aucun. **Ce type ne l'exprime pas, et c'est voulu** : il décrit ce qui arrive
+ * par l'API, pas ce que l'API promet. Une union fermée le rendrait plus strict
+ * que sa source et refuserait la première réponse un peu inattendue, là où un
+ * champ de trop se lit sans rien casser. L'exclusivité se vérifie donc à
+ * l'écriture, côté site, jamais ici — le code de lecture ci-dessous prend les
+ * trois cas dans l'ordre, et a un dernier recours.
  *
  * Le miroir s'arrête au champ. L'app ne dessine pas les symboles : sa copie du
  * modèle est partielle à dessein — elle porte l'emprise et l'aperçu, pas la
@@ -1154,7 +1162,9 @@ export function isPlaceService(value: string): value is PlaceService {
  * rien apporter. Un repère à symbole s'y affiche donc comme il le faisait
  * jusqu'ici, sous son étiquette.
  *
- * Sa couleur se déduit du type du lieu visé, elle n'est pas stockée.
+ * Sa couleur n'est pas stockée : elle se déduit du type du lieu visé, et
+ * retombe sur la teinte neutre pour tout le reste — un service, un symbole, ou
+ * un lieu que la page n'a pas chargé.
  */
 export type PlacePlanMarker = {
   id: string;
