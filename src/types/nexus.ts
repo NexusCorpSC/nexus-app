@@ -1161,18 +1161,74 @@ export type PlacePlanMarker = {
 
 export type PlacePlanOrigin = { slug: string; name: string; planId: string };
 
-export type PlacePlan = {
+/**
+ * Une carte, et ses deux natures — miroir de `types/places.ts` côté site.
+ *
+ * Une carte **image** est un relevé téléversé ; une carte **dessinée** est une
+ * géométrie relevée pièce par pièce dans le back-office, pour les lieux dont
+ * personne n'a jamais publié de plan.
+ *
+ * L'overlay ne dessine pas de géométrie : il affiche l'aperçu rastérisé que le
+ * site produit à l'enregistrement. D'où `planImage()`, qui rend l'image d'une
+ * carte quelle que soit sa nature — et `null` pour un relevé dessiné dont
+ * l'aperçu n'a pas encore abouti, cas où il n'y a rien à montrer plutôt qu'une
+ * image cassée.
+ */
+type PlacePlanBase = {
   id: string;
   name: string;
   note?: string;
-  imageUrl: string;
-  /** Taille naturelle de l'image : elle donne le rapport d'aspect du cadre. */
-  imageWidth: number;
-  imageHeight: number;
   markers: PlacePlanMarker[];
   /** Présent quand le lieu emprunte cette carte à un voisin. */
   borrowedFrom?: PlacePlanOrigin;
 };
+
+export type ImagePlacePlan = PlacePlanBase & {
+  /** Absent sur les cartes écrites avant les relevés dessinés : c'est une image. */
+  kind?: "image";
+  imageUrl: string;
+  /** Taille naturelle de l'image : elle donne le rapport d'aspect du cadre. */
+  imageWidth: number;
+  imageHeight: number;
+};
+
+export type PlanPreview = { url: string; width: number; height: number };
+
+/**
+ * Miroir partiel, comme celui du plan de vol : seulement de quoi *afficher*.
+ *
+ * L'emprise et les niveaux sont là parce que le cadre en a besoin quand
+ * l'aperçu manque ; la géométrie des pièces, elle, ne l'est pas — l'overlay ne
+ * la dessine pas, et la recopier obligerait à la tenir à jour pour rien.
+ */
+export type DrawnPlacePlan = PlacePlanBase & {
+  kind: "drawn";
+  widthCm: number;
+  heightCm: number;
+  preview?: PlanPreview;
+};
+
+export type PlacePlan = ImagePlacePlan | DrawnPlacePlan;
+
+export function isDrawnPlan(plan: PlacePlan): plan is DrawnPlacePlan {
+  return (
+    plan.kind === "drawn" &&
+    // L'emprise donne ses proportions au cadre quand l'aperçu manque : absente,
+    // elle rend un `aspectRatio` de `NaN / NaN` et le cadre s'effondre.
+    Number.isFinite(plan.widthCm) &&
+    plan.widthCm > 0 &&
+    Number.isFinite(plan.heightCm) &&
+    plan.heightCm > 0
+  );
+}
+
+/** L'image d'une carte, quelle que soit sa nature — ou rien. */
+export function planImage(plan: PlacePlan): PlanPreview | null {
+  if (isDrawnPlan(plan)) return plan.preview ?? null;
+  return plan.imageUrl
+    ? { url: plan.imageUrl, width: plan.imageWidth, height: plan.imageHeight }
+    : null;
+}
 
 export type PlaceSummary = {
   id: string;
