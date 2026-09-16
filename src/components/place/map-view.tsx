@@ -3,7 +3,9 @@ import { Maximize2, ZoomIn, ZoomOut } from "lucide-react";
 import { PLACE_ACCENT } from "@/components/place-card";
 import { useImageViewport } from "@/hooks/use-image-viewport";
 import {
+  isDrawnPlan,
   PLACE_SERVICE_LABELS,
+  planImage,
   type PlacePlan,
   type PlacePlanMarker,
   type PlaceSummary,
@@ -78,6 +80,17 @@ export function MapView({
   const [selected, setSelected] = useState<string | null>(null);
 
   const active = plan.markers.find((marker) => marker.id === selected);
+  /**
+   * L'image de la carte, et les proportions du cadre. Un relevé dessiné dont
+   * l'aperçu n'a pas abouti n'a pas d'image : on garde son emprise, pour que
+   * les repères — qui sont des fractions — tombent quand même au bon endroit.
+   */
+  const image = planImage(plan);
+  const frame = image
+    ? { width: image.width, height: image.height }
+    : isDrawnPlan(plan)
+      ? { width: plan.widthCm, height: plan.heightCm }
+      : { width: 16, height: 9 };
 
   return (
     <div
@@ -103,16 +116,18 @@ export function MapView({
           ref={imageRef}
           className="relative max-h-full max-w-full"
           style={{
-            aspectRatio: `${plan.imageWidth} / ${plan.imageHeight}`,
+            aspectRatio: `${frame.width} / ${frame.height}`,
             height: "100%",
           }}
         >
-          <img
-            src={plan.imageUrl}
-            alt={plan.name}
-            draggable={false}
-            className="h-full w-full select-none object-contain"
-          />
+          {image ? (
+            <img
+              src={image.url}
+              alt={plan.name}
+              draggable={false}
+              className="h-full w-full select-none object-contain"
+            />
+          ) : null}
 
           {plan.markers.map((marker) => {
             const accent = markerAccent(marker, targets);
