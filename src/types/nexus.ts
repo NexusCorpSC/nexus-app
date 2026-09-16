@@ -1211,7 +1211,15 @@ export type DrawnPlacePlan = PlacePlanBase & {
 export type PlacePlan = ImagePlacePlan | DrawnPlacePlan;
 
 export function isDrawnPlan(plan: PlacePlan): plan is DrawnPlacePlan {
-  return plan.kind === "drawn";
+  return (
+    plan.kind === "drawn" &&
+    // L'emprise donne ses proportions au cadre quand l'aperçu manque : absente,
+    // elle rend un `aspectRatio` de `NaN / NaN` et le cadre s'effondre.
+    Number.isFinite(plan.widthCm) &&
+    plan.widthCm > 0 &&
+    Number.isFinite(plan.heightCm) &&
+    plan.heightCm > 0
+  );
 }
 
 /** L'image d'une carte, quelle que soit sa nature — ou rien. */
