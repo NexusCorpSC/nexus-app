@@ -1144,9 +1144,17 @@ export function isPlaceService(value: string): value is PlaceService {
 }
 
 /**
- * Un repère posé sur une carte. Il porte soit un service, soit un autre lieu —
- * jamais les deux. Sa couleur se déduit du type du lieu visé, elle n'est pas
- * stockée.
+ * Un repère posé sur une carte. Il porte **une seule** de trois choses : un
+ * service, un autre lieu, ou un symbole — ce dernier pour ce qui n'est ni l'un
+ * ni l'autre : une caisse à fouiller, une caméra, une clé de sécurité.
+ *
+ * Le miroir s'arrête au champ. L'app ne dessine pas les symboles : sa copie du
+ * modèle est partielle à dessein — elle porte l'emprise et l'aperçu, pas la
+ * géométrie — et y porter la table des tracés la ferait diverger du site sans
+ * rien apporter. Un repère à symbole s'y affiche donc comme il le faisait
+ * jusqu'ici, sous son étiquette.
+ *
+ * Sa couleur se déduit du type du lieu visé, elle n'est pas stockée.
  */
 export type PlacePlanMarker = {
   id: string;
@@ -1155,6 +1163,8 @@ export type PlacePlanMarker = {
   y: number;
   service?: PlaceService;
   targetSlug?: string;
+  /** Le nom du dessin, quand le repère ne désigne ni service ni lieu. */
+  glyph?: string;
   label?: string;
   note?: string;
 };
