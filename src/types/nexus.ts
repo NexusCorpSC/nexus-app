@@ -1211,7 +1211,7 @@ export type DrawnPlacePlan = PlacePlanBase & {
 export type PlacePlan = ImagePlacePlan | DrawnPlacePlan;
 
 export function isDrawnPlan(plan: PlacePlan): plan is DrawnPlacePlan {
-  return (plan as DrawnPlacePlan).kind === "drawn";
+  return plan.kind === "drawn";
 }
 
 /** L'image d'une carte, quelle que soit sa nature — ou rien. */
