@@ -444,7 +444,7 @@ le flux d'événements comme le reste de la vue ; un identifiant inconnu, c'est
 une notification. Son propre ready check n'en produit pas : la réponse de
 l'écriture est posée dans le cache avant le push qui la répète.
 
-**Une annonce modifiée part en notification**, en grand, en haut de l'écran
+**Une annonce envoyée part en notification**, en grand, en haut de l'écran
 au milieu. Celle de l'escouade comme celle du raid : ce sont les deux textes
 que le chef écrit pour tout le monde, et les deux que personne ne voit tant que
 la superposition est cachée derrière le jeu — ce qui est justement le moment où
@@ -455,6 +455,29 @@ cette escouade telle qu'elle était une heure plus tôt ; une annonce effacée
 n'annonce rien non plus, et ses propres modifications ne reviennent pas en
 toast — la supposition optimiste et la réponse de l'écriture sont posées dans
 le cache avant le push qui les répète.
+
+**Une annonce part quand on l'envoie**, pas pendant qu'on l'écrit : Entrée ou
+**Envoyer**, Maj+Entrée pour aller à la ligne, Échap ou **Annuler** pour la
+laisser telle qu'elle était. Enregistrée à chaque pause de la frappe, elle
+partait en autant de notifications — « RDV », « RDV Grim », « RDV Grim Hex ».
+Une fois envoyée, la cloche à côté la **renvoie** telle quelle : le serveur
+horodate chaque envoi (`announcedAt`), et c'est ce tampon, pas le texte, que
+la superposition compare — un même texte envoyé deux fois sonne deux fois.
+Face à un serveur qui ne l'horodate pas encore, seul le texte compte, et
+renvoyer ne sonne pas.
+
+Sur la vue de raid, l'annonce de chaque escouade s'affiche sous son nom, et
+celles qu'on commande s'y écrivent sans passer par la vue d'escouade. Le chef
+d'une escouade passe la main depuis le `⋯` d'une ligne, **Passer chef**.
+
+Les menus d'une ligne (rôle, `⋯`) s'ouvrent par-dessus la fenêtre entière, pas
+dans la liste qui les porte : sur la vue de raid, chaque escouade est sa
+propre liste, et le menu du dernier membre s'ouvrait sous son bord, coupé.
+
+**Glisser une escouade** d'une place à l'autre sur la vue de raid demande
+`"dragDropEnabled": false` sur la fenêtre `squad` (`tauri.conf.json`) : sous
+Windows, le glisser-déposer de fichiers que Tauri intercepte par défaut
+confisque les événements HTML5 de la webview, et rien ne se déposait jamais.
 
 ### Flux d'événements
 

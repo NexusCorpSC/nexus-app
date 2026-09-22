@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import {
   ArrowLeft,
   ArrowLeftRight,
+  BellRing,
   Check,
   ChevronDown,
   ChevronLeft,
@@ -21,6 +23,7 @@ import {
   MoreHorizontal,
   Pencil,
   Plus,
+  Send,
   Shield,
   Skull,
   Tag,
@@ -651,6 +654,8 @@ function MemberRow({
   const [picking, setPicking] = useState(false);
   const [menu, setMenu] = useState(false);
   const [editingPosition, setEditingPosition] = useState(false);
+  const roleButton = useRef<HTMLButtonElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   const role = roleOf(squad, member.role);
   const down = !member.alive;
@@ -689,6 +694,7 @@ function MemberRow({
         </span>
 
         <button
+          ref={roleButton}
           type="button"
           title={role ? `Rôle : ${role.label}` : "Aucun rôle"}
           disabled={!editable}
@@ -755,6 +761,7 @@ function MemberRow({
 
         {editable ? (
           <button
+            ref={menuButton}
             type="button"
             title="Actions"
             onClick={() => setMenu((open) => !open)}
@@ -793,6 +800,7 @@ function MemberRow({
 
       {picking ? (
         <RolePicker
+          anchor={roleButton}
           squad={squad}
           current={member.role}
           onPick={(roleId) => {
@@ -810,6 +818,7 @@ function MemberRow({
 
       {menu ? (
         <RowMenu
+          anchor={menuButton}
           member={member}
           onClose={() => setMenu(false)}
           onPosition={() => setEditingPosition(true)}
@@ -826,6 +835,7 @@ function MemberRow({
 
 /** The squad's roles, two to a row, and the way into the list that holds them. */
 function RolePicker({
+  anchor,
   squad,
   current,
   onPick,
@@ -833,6 +843,7 @@ function RolePicker({
   onClose,
   canManage,
 }: {
+  anchor: React.RefObject<HTMLElement | null>;
   squad: Squad;
   current: string | undefined;
   onPick: (roleId: string) => void;
@@ -843,7 +854,7 @@ function RolePicker({
   const roles = rolesOf(squad);
 
   return (
-    <Popover onClose={onClose} className="left-3 top-6 w-64">
+    <Popover anchor={anchor} onClose={onClose} className="w-64">
       <div className="grid grid-cols-2 gap-0.5">
         <RoleChip
           label="Aucun"
@@ -906,6 +917,7 @@ function RoleChip({
 
 /** Everything a row can do that is not worth a pixel of its own. */
 function RowMenu({
+  anchor,
   member,
   onClose,
   onPosition,
@@ -913,6 +925,7 @@ function RowMenu({
   onMakeLeader,
   onRemove,
 }: {
+  anchor: React.RefObject<HTMLElement | null>;
   member: SquadMember;
   onClose: () => void;
   onPosition: () => void;
@@ -921,7 +934,7 @@ function RowMenu({
   onRemove?: () => void;
 }) {
   return (
-    <Popover onClose={onClose} className="right-1 top-6 w-48">
+    <Popover anchor={anchor} align="end" onClose={onClose} className="w-48">
       <MenuItem
         icon={<Pencil className="size-3 text-nexus-accent/60" />}
         onClick={() => {
@@ -1100,11 +1113,21 @@ function RaidBoard({
                   }
                 />
 
-                {sub.announcements ? (
-                  <p className="truncate pl-[26px] text-[10.5px] text-nexus-accent/55">
-                    {sub.announcements}
-                  </p>
-                ) : null}
+                {/*
+                 * Every squad's message, read by the whole raid; written here
+                 * by whoever commands that squad, without switching to it.
+                 */}
+                <div className="pl-[22px]">
+                  <Announcement
+                    value={sub.announcements}
+                    editable={mine && commandsSquad(sub, userId)}
+                    onCommit={(announcements) =>
+                      api.announce.mutate({ squadId: sub.id, announcements })
+                    }
+                    placeholder={`Annonce à ${sub.name}`}
+                    compact
+                  />
+                </div>
 
                 {open ? (
                   <MemberList
@@ -2182,43 +2205,101 @@ function PositionField({
   );
 }
 
-/** Text until someone writes it: a field with nothing in it is noise over a game. */
+/**
+ * Text until someone writes it: a field with nothing in it is noise over a game.
+ *
+ * Sent on a gesture, never as it is typed. Every write reaches every overlay of
+ * the squad — or of the raid — as a notification, so a text committed each
+ * time the typing paused arrived as a string of toasts, «RDV», «RDV Grim»,
+ * «RDV Grim Hex», before the sentence was even finished. Entrée or « Envoyer »
+ * sends, Maj+Entrée goes to the line, Échap or « Annuler » drops the draft.
+ *
+ * Once sent, « Renvoyer » sends the same words again: the server stamps every
+ * send, so everybody gets the notification a second time — for whoever was
+ * looking elsewhere the first.
+ */
 function Announcement({
   value,
   editable,
   onCommit,
   placeholder,
   icon,
+  compact = false,
 }: {
   value: string;
   editable: boolean;
   onCommit: (value: string) => void;
   placeholder: string;
   icon?: React.ReactNode;
+  /** A squad's line on the raid board: smaller, and kept to two lines. */
+  compact?: boolean;
 }) {
-  const [editing, setEditing] = useState(false);
-  const field = useTypedField(value, onCommit);
+  /** `null` while nobody is writing. */
+  const [draft, setDraft] = useState<string | null>(null);
+  const [resent, setResent] = useState(false);
 
-  if (editing && editable) {
+  useEffect(() => {
+    if (!resent) return;
+    const timer = setTimeout(() => setResent(false), 1_500);
+    return () => clearTimeout(timer);
+  }, [resent]);
+
+  const size = compact ? "text-[10.5px]" : "text-[11.5px]";
+
+  if (draft !== null && editable) {
+    const cancel = () => setDraft(null);
+    const send = () => {
+      setDraft(null);
+      // Unchanged is not a send: « Renvoyer » is there for that, on purpose.
+      if (draft !== value) onCommit(draft);
+    };
+
     return (
-      <textarea
-        aria-label={placeholder}
-        value={field.draft}
-        maxLength={ANNOUNCEMENTS_MAX_LENGTH}
-        rows={2}
-        autoFocus
-        onChange={(event) => field.type(event.target.value)}
-        onBlur={() => {
-          field.flush();
-          setEditing(false);
+      <form
+        className="flex shrink-0 flex-col gap-1"
+        onSubmit={(event) => {
+          event.preventDefault();
+          send();
         }}
-        placeholder={placeholder}
-        className={cn(
-          "shrink-0 resize-none rounded px-2 py-1 text-[11.5px] leading-relaxed",
-          SURFACE,
-          "text-nexus-soft placeholder:text-nexus-accent/40",
-        )}
-      />
+      >
+        <textarea
+          aria-label={placeholder}
+          value={draft}
+          maxLength={ANNOUNCEMENTS_MAX_LENGTH}
+          rows={2}
+          autoFocus
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              send();
+            }
+            if (event.key === "Escape") {
+              // The draft, not the window: the page closes on Échap otherwise.
+              event.preventDefault();
+              event.stopPropagation();
+              cancel();
+            }
+          }}
+          placeholder={placeholder}
+          className={cn(
+            "resize-none rounded px-2 py-1 leading-relaxed",
+            size,
+            SURFACE,
+            "text-nexus-soft placeholder:text-nexus-accent/40",
+          )}
+        />
+
+        <div className="flex items-center justify-end gap-1">
+          <OverlayButton type="button" onClick={cancel}>
+            Annuler
+          </OverlayButton>
+          <OverlayButton type="submit" title="Envoyer (Entrée)">
+            <Send className="size-3.5" />
+            Envoyer
+          </OverlayButton>
+        </div>
+      </form>
     );
   }
 
@@ -2231,7 +2312,9 @@ function Announcement({
       )}
       <span
         className={cn(
-          "min-w-0 flex-1 whitespace-pre-wrap text-left text-[11.5px] leading-relaxed",
+          "min-w-0 flex-1 whitespace-pre-wrap text-left leading-relaxed",
+          size,
+          compact && "line-clamp-2",
           value ? "text-nexus-soft" : "text-nexus-accent/40",
         )}
       >
@@ -2242,21 +2325,46 @@ function Announcement({
 
   if (!editable) {
     return (
-      <div className="flex shrink-0 items-start gap-1.5 px-1 py-0.5">
+      <div
+        title={compact ? value : undefined}
+        className="flex shrink-0 items-start gap-1.5 px-1 py-0.5"
+      >
         {body}
       </div>
     );
   }
 
   return (
-    <button
-      type="button"
-      title={placeholder}
-      onClick={() => setEditing(true)}
-      className="flex shrink-0 items-start gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-nexus-accent/10"
-    >
-      {body}
-    </button>
+    <div className="flex shrink-0 items-start gap-0.5">
+      <button
+        type="button"
+        title={value ? `${value}\n\nCliquer pour modifier` : placeholder}
+        onClick={() => setDraft(value)}
+        className="flex min-w-0 flex-1 items-start gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-nexus-accent/10"
+      >
+        {body}
+        <Pencil className="mt-0.5 size-3 shrink-0 text-nexus-accent/40" />
+      </button>
+
+      {value.trim() ? (
+        <button
+          type="button"
+          title="Renvoyer la notification à tous"
+          onClick={() => {
+            onCommit(value);
+            setResent(true);
+          }}
+          className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/60 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
+        >
+          <span className="sr-only">Renvoyer la notification à tous</span>
+          {resent ? (
+            <Check className="size-3 text-emerald-300" />
+          ) : (
+            <BellRing className="size-3" />
+          )}
+        </button>
+      ) : null}
+    </div>
   );
 }
 
@@ -2349,18 +2457,25 @@ function SquadSwitcher({
   onPick: (squadId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const anchor = useRef<HTMLSpanElement>(null);
 
   return (
     <>
-      <IconButton
-        label="Changer d'escouade"
-        onClick={() => setOpen((was) => !was)}
-      >
-        <ChevronsUpDown className="size-3.5" />
-      </IconButton>
+      <span ref={anchor} className="shrink-0">
+        <IconButton
+          label="Changer d'escouade"
+          onClick={() => setOpen((was) => !was)}
+        >
+          <ChevronsUpDown className="size-3.5" />
+        </IconButton>
+      </span>
 
       {open ? (
-        <Popover onClose={() => setOpen(false)} className="left-3 top-9 w-56">
+        <Popover
+          anchor={anchor}
+          onClose={() => setOpen(false)}
+          className="w-56"
+        >
           <p className="px-2 pb-1 text-[9.5px] font-medium uppercase tracking-wider text-nexus-accent/45">
             Mes escouades
           </p>
@@ -2427,12 +2542,24 @@ function Footer({
  * The backdrop is what makes a click anywhere else dismiss the thing, which is
  * the only behaviour anyone expects from a menu — and over a game, the only one
  * that does not leave a popover stranded on the cockpit.
+ *
+ * Portalled to the body and placed against its anchor, not hung inside the
+ * row: a row lives in a list that scrolls, and on the raid board in a list per
+ * squad, so a panel positioned inside one was cut off by the list's own edge —
+ * the `⋯` of the last member of a squad opened onto nothing. Below the anchor
+ * when there is room, above it when there is not, and never out of the window.
  */
 function Popover({
+  anchor,
+  align = "start",
   onClose,
   className,
   children,
 }: {
+  /** What the panel hangs off. */
+  anchor: React.RefObject<HTMLElement | null>;
+  /** Which edge of the anchor the panel lines up with. */
+  align?: "start" | "end";
   onClose: () => void;
   className?: string;
   children: React.ReactNode;
@@ -2443,6 +2570,52 @@ function Popover({
   useEffect(() => {
     close.current = onClose;
   }, [onClose]);
+
+  const panel = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{
+    top: number;
+    left: number;
+    maxHeight: number;
+  } | null>(null);
+
+  /*
+   * Mesuré avant de peindre : le panneau est rendu une première fois invisible,
+   * à sa taille réelle, et placé dans la foulée — sans quoi il clignoterait en
+   * haut à gauche le temps d'une image.
+   */
+  useLayoutEffect(() => {
+    function position() {
+      const from = anchor.current?.getBoundingClientRect();
+      const own = panel.current;
+      if (!from || !own) return;
+
+      const margin = 4;
+      const width = own.offsetWidth;
+      const height = own.scrollHeight;
+      const room = window.innerHeight - 2 * margin;
+
+      const left = Math.min(
+        Math.max(align === "end" ? from.right - width : from.left, margin),
+        window.innerWidth - width - margin,
+      );
+
+      const below = from.bottom + 2;
+      const above = from.top - 2 - height;
+      const top =
+        below + height <= window.innerHeight - margin
+          ? below
+          : above >= margin
+            ? above
+            : // Taller than either side: pinned to the top, and it scrolls.
+              margin;
+
+      setPlace({ top, left: Math.max(left, margin), maxHeight: room });
+    }
+
+    position();
+    window.addEventListener("resize", position);
+    return () => window.removeEventListener("resize", position);
+  }, [anchor, align]);
 
   /*
    * Échap referme le popover, et rien d'autre.
@@ -2465,18 +2638,25 @@ function Popover({
     return () => document.removeEventListener("keydown", dismiss, true);
   }, []);
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-10" onClick={onClose} />
+      <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
+        ref={panel}
+        style={
+          place
+            ? { top: place.top, left: place.left, maxHeight: place.maxHeight }
+            : { top: 0, left: 0, visibility: "hidden" }
+        }
         className={cn(
-          "absolute z-20 rounded-lg border border-nexus-accent/25 bg-nexus-deep p-1.5 shadow-xl shadow-black/50",
+          "fixed z-50 overflow-y-auto rounded-lg border border-nexus-accent/25 bg-nexus-deep p-1.5 text-nexus-accent shadow-xl shadow-black/50",
           className,
         )}
       >
         {children}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }
 
