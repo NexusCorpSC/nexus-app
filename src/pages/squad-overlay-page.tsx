@@ -2609,12 +2609,31 @@ function Popover({
             : // Taller than either side: pinned to the top, and it scrolls.
               margin;
 
-      setPlace({ top, left: Math.max(left, margin), maxHeight: room });
+      const next = { top, left: Math.max(left, margin), maxHeight: room };
+      setPlace((was) =>
+        was &&
+        was.top === next.top &&
+        was.left === next.left &&
+        was.maxHeight === next.maxHeight
+          ? was
+          : next,
+      );
     }
 
-    position();
-    window.addEventListener("resize", position);
-    return () => window.removeEventListener("resize", position);
+    /*
+     * Suivi à chaque image tant que le panneau est ouvert, pas seulement au
+     * redimensionnement : sa ligne peut bouger sous lui — une liste qui défile,
+     * un membre qui arrive ou part au-dessus par le flux — et un panneau hors
+     * de la liste ne la suit pas tout seul. Une lecture de rectangle par image,
+     * et un rendu seulement quand la place change.
+     */
+    let frame = 0;
+    const follow = () => {
+      position();
+      frame = requestAnimationFrame(follow);
+    };
+    follow();
+    return () => cancelAnimationFrame(frame);
   }, [anchor, align]);
 
   /*
