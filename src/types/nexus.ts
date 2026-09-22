@@ -777,6 +777,12 @@ export type Squad = {
   code: string;
   leaderId: string;
   announcements: string;
+  /**
+   * When the announcements were last sent — every send, the same words
+   * included, which is what « Renvoyer » is. Absent from a server older than
+   * the feature, which leaves only the text to compare.
+   */
+  announcedAt?: string | null;
   members: SquadMember[];
   /** Absent from a squad older than the feature; read as the seven base ones. */
   roles?: SquadRole[];
@@ -801,6 +807,8 @@ export type Raid = {
   name: string;
   code: string;
   announcement: string;
+  /** As `Squad.announcedAt`, for the raid's announcement. */
+  announcedAt?: string | null;
   leadSquadId: string;
   /** Absent from a server older than the feature. */
   readyCheck?: ReadyCheck | null;

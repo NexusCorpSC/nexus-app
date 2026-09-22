@@ -286,24 +286,43 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
 }
 
 /**
- * Raises a toast for an announcement the stream just changed.
+ * Whether an announcement was sent between two views of the same squad or raid.
+ *
+ * A send, not a change of text: the server stamps `announcedAt` on each one,
+ * so « Renvoyer » — the same words sent again — rings everybody a second
+ * time. A server older than the stamp leaves only the text to compare. An
+ * announcement cleared is not one to read either way.
+ */
+function announced(
+  shown: { text: string; at?: string | null },
+  next: { text: string; at?: string | null },
+): boolean {
+  if (!next.text.trim()) return false;
+  if (next.at != null || shown.at != null) return next.at !== shown.at;
+  return next.text !== shown.text;
+}
+
+/**
+ * Raises a toast for an announcement the stream just delivered.
  *
  * The squad's, and the raid's: the two the leader writes for everybody, and
  * the two nobody sees while the overlay is hidden behind the game — which is
  * exactly when the notification window still is. Compared with what the
- * cache held for that squad, and an announcement cleared is not one to read.
- * Our own edits never get here: the guess and the answer to the write both
- * land in the cache before the push that echoes them, so the push finds them
- * equal. The first push for a squad — after launch, or after switching to it
- * — is kept out by the caller: what the cache held for a squad last looked at
- * an hour ago is not «what was on screen».
+ * cache held for that squad.
+ * Our own sends never get here: the answer to the write lands in the cache
+ * before the push that echoes it, so the push finds the same stamp. The first
+ * push for a squad — after launch, or after switching to it — is kept out by
+ * the caller: what the cache held for a squad last looked at an hour ago is
+ * not «what was on screen».
  */
 function announceChanges(shown: SquadView, next: SquadView) {
   if (
     next.squad &&
     shown.squad?.id === next.squad.id &&
-    next.squad.announcements !== shown.squad.announcements &&
-    next.squad.announcements.trim()
+    announced(
+      { text: shown.squad.announcements, at: shown.squad.announcedAt },
+      { text: next.squad.announcements, at: next.squad.announcedAt },
+    )
   ) {
     void notify({
       kind: "info",
@@ -317,8 +336,10 @@ function announceChanges(shown: SquadView, next: SquadView) {
   if (
     next.raid &&
     shown.raid?.id === next.raid.id &&
-    next.raid.announcement !== shown.raid.announcement &&
-    next.raid.announcement.trim()
+    announced(
+      { text: shown.raid.announcement, at: shown.raid.announcedAt },
+      { text: next.raid.announcement, at: next.raid.announcedAt },
+    )
   ) {
     void notify({
       kind: "info",
