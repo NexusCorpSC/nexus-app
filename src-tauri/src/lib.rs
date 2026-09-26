@@ -5,6 +5,7 @@ mod event_feed;
 #[cfg(windows)]
 mod hotkeys;
 mod notifications;
+mod radial;
 mod tray;
 
 use std::collections::HashMap;
@@ -249,6 +250,8 @@ pub(crate) enum Action {
     Plan,
     Map,
     Opacity,
+    /// Held rather than fired: see `radial.rs`.
+    Radial,
 }
 
 impl Action {
@@ -264,6 +267,7 @@ impl Action {
             Action::Plan => "plan",
             Action::Map => "map",
             Action::Opacity => "opacity",
+            Action::Radial => "radial",
         }
     }
 }
@@ -306,6 +310,9 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Plan => toggle_plan(app),
         Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Opacity => flip_all_overlay_opacity(app),
+        // Never routed here by the shortcut paths, which open and close the
+        // menu themselves; opening it is the least surprising answer anyway.
+        Action::Radial => radial::press(app),
     };
 
     if let Err(error) = outcome {
@@ -351,6 +358,13 @@ struct ShortcutSettings {
     plan: String,
     map: String,
     opacity: String,
+    /// Missing from what a frontend older than the menu sends.
+    #[serde(default = "default_radial_shortcut")]
+    radial: String,
+}
+
+fn default_radial_shortcut() -> String {
+    "Alt+KeyV".to_string()
 }
 
 impl Default for ShortcutSettings {
@@ -364,6 +378,7 @@ impl Default for ShortcutSettings {
             plan: "Ctrl+Shift+KeyP".to_string(),
             map: "Ctrl+Shift+KeyM".to_string(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
+            radial: default_radial_shortcut(),
         }
     }
 }
@@ -406,6 +421,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Plan, &requested.plan),
         (Action::Map, &requested.map),
         (Action::Opacity, &requested.opacity),
+        (Action::Radial, &requested.radial),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -429,6 +445,14 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
             }),
         }
     }
+
+    // The menu shows its combination while it is up.
+    radial::set_accelerator(
+        bound
+            .iter()
+            .any(|(action, _)| *action == Action::Radial)
+            .then(|| requested.radial.clone()),
+    );
 
     // Watched whatever the system has to say about them: this is the path that
     // still works with Star Citizen in the foreground.
@@ -822,6 +846,13 @@ fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Starts a region capture from the radial menu — what the capture shortcut
+/// does, picked from the menu instead.
+#[tauri::command]
+fn radial_capture(app: AppHandle) -> Result<(), String> {
+    start_capture(&app)
+}
+
 #[tauri::command]
 fn open_search_overlay(app: AppHandle) -> Result<(), String> {
     show_window(&app, OVERLAY_WINDOW)
@@ -1151,6 +1182,7 @@ pub fn run() {
             open_main_route,
             cancel_capture,
             recognize_selection,
+            radial_capture,
             notifications::notify,
             notifications::notifications_ready,
             notifications::resize_notifications,
@@ -1225,17 +1257,31 @@ pub fn run() {
             // the user the app — Settings can rebind them.
             let plugin = tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
-                    // Both edges are reported; act on the key going down.
-                    if event.state != ShortcutState::Pressed {
-                        return;
-                    }
-
                     let action = app.state::<Shortcuts>().0.lock().ok().and_then(|bound| {
                         bound
                             .iter()
                             .find(|(_, candidate)| candidate == shortcut)
                             .map(|(action, _)| *action)
                     });
+
+                    // The radial menu is held: up on the key going down, gone
+                    // on the key going up.
+                    if action == Some(Action::Radial) {
+                        match event.state {
+                            ShortcutState::Pressed => {
+                                if let Err(error) = radial::press(app) {
+                                    log(format!("radial menu failed: {error}"));
+                                }
+                            }
+                            ShortcutState::Released => radial::release(app),
+                        }
+                        return;
+                    }
+
+                    // Both edges are reported; act on the key going down.
+                    if event.state != ShortcutState::Pressed {
+                        return;
+                    }
 
                     if let Some(action) = action {
                         trigger(app, action, "hotkey");

@@ -132,6 +132,22 @@
         "visible": false
       },
       {
+        "label": "radial",
+        "title": "Nexus - menu radial",
+        "url": "index.html#/radial",
+        "width": 500,
+        "height": 480,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false,
+        "focus": false,
+        "focusable": false
+      },
+      {
         "label": "notifications",
         "title": "Nexus - notifications",
         "url": "index.html#/notifications",

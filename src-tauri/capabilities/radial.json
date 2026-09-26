@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "radial",
+  "description": "Radial menu. It draws the sectors and hands the choice on: squad actions go to the squad window, which holds the session, and capture to the app's own command. So it gets neither network nor storage access.",
+  "windows": ["radial"],
+  "permissions": ["core:default"]
+}

@@ -29,4 +29,5 @@ export const SHORTCUT_LABELS: Record<ShortcutAction, string> = {
   plan: "Plan de vol",
   map: "Carte",
   opacity: "Opacité des superpositions",
+  radial: "Menu radial rapide",
 };

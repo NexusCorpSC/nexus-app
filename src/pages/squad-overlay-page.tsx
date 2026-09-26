@@ -35,6 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
+import { useRadialBridge } from "@/hooks/use-radial-bridge";
 import { useSquad } from "@/hooks/use-squad";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
@@ -126,6 +127,10 @@ export default function SquadOverlayPage() {
     notifies: true,
   });
   const { state } = squadApi;
+
+  // The radial menu reads the reader's row from here and writes through here:
+  // this window has the session, and lives as long as the app.
+  useRadialBridge(state.squad, user?.id ?? null, squadApi.patchMember);
 
   useTransparentWindow();
 

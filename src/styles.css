@@ -110,3 +110,22 @@ label {
 ::-webkit-scrollbar-thumb:hover {
   background-color: color-mix(in srgb, var(--color-nexus-accent) 35%, transparent);
 }
+
+/*
+ * Radial menu: it pops rather than slides — it is up for as long as a key is
+ * held, often under a second, and must be readable from the first frame.
+ */
+@keyframes nexus-radial-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.nexus-radial {
+  animation: nexus-radial-in 90ms ease-out both;
+}

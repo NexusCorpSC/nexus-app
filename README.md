@@ -142,6 +142,7 @@ l'application est minimisée ou n'a pas le focus :
 | `Ctrl+Maj+G`         | affiche ou masque la feuille de cargo en superposition      |
 | `Ctrl+Maj+E`         | affiche ou masque l'escouade en superposition               |
 | `Ctrl+Maj+O`         | efface les trois superpositions, ou leur rend leur panneau  |
+| `Alt+V` (maintenu)   | affiche le menu radial rapide tant qu'il est maintenu       |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
 voulue. Au moins un modificateur est exigé : un raccourci global sans
@@ -478,6 +479,47 @@ propre liste, et le menu du dernier membre s'ouvrait sous son bord, coupé.
 `"dragDropEnabled": false` sur la fenêtre `squad` (`tauri.conf.json`) : sous
 Windows, le glisser-déposer de fichiers que Tauri intercepte par défaut
 confisque les événements HTML5 de la webview, et rien ne se déposait jamais.
+
+### Menu radial rapide
+
+Maintenir `Alt+V` affiche un menu radial au centre de l'écran où se trouve le
+curseur ; le relâcher lance l'action du secteur visé :
+
+| Secteur                 | Position      | Proposé                                  |
+| ----------------------- | ------------- | ---------------------------------------- |
+| READY / NOT READY       | haut gauche   | dans une escouade, grisé si éliminé      |
+| Éliminé / Actif         | haut droite   | dans une escouade                        |
+| Capture de zone         | bas           | toujours — le même geste qu'en escouade  |
+
+Relâcher au centre, sur un secteur grisé, ou appuyer sur Échap annule.
+
+**Viser sans curseur.** En jeu le curseur est verrouillé et caché : le menu se
+vise au *mouvement* de la souris, pas à sa position. Pendant qu'il est affiché,
+l'écouteur Raw Input (`src-tauri/src/hotkeys.rs`) lit aussi la souris, focus ou
+pas, et chaque déplacement pousse un pointeur depuis le centre ; il bute sur le
+bord du cercle, si bien que changer d'avis coûte toujours le même petit coup de
+poignet. La souris n'est écoutée que menu ouvert — son flux, jusqu'à plusieurs
+milliers de rapports par seconde, réveillerait sinon le thread pour rien. Hors
+Windows, le trajet du curseur depuis l'appui en tient lieu.
+
+**Ni focus, ni clic.** La fenêtre (`radial`) ne peut pas prendre le focus et
+laisse passer la souris : le jeu garde le clavier et la souris pendant tout le
+geste. En contrepartie, comme pour les raccourcis, le jeu reçoit aussi les
+frappes — Échap compris.
+
+**Relâcher, de façon certaine.** Le relâchement arrive par Raw Input et par le
+plugin, mais une touche relâchée pendant un changement d'application peut
+échapper aux deux ; le menu interroge donc aussi l'état du clavier à chaque
+image et se ferme dès que la combinaison n'est plus tenue. Un menu resté ouvert
+sans personne pour le tenir resterait sinon au-dessus du jeu.
+
+**Qui fait quoi** (`src-tauri/src/radial.rs`, `src/pages/radial-overlay-page.tsx`) :
+Rust ouvre, déplace le pointeur et ferme ; la page dessine et décide du
+secteur. Elle n'a ni session ni réseau : ce qu'elle sait de l'escouade, c'est la
+fenêtre Escouade qui le lui dit (`useRadialBridge`), et c'est à elle qu'elle
+rend les deux actions d'escouade — écrites par la même mutation que les boutons
+de la ligne de membre, donc affichées aussitôt et confirmées par une
+notification. La capture passe par la commande du raccourci de capture.
 
 ### Flux d'événements
 
