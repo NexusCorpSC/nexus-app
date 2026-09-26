@@ -354,11 +354,14 @@ function announceChanges(shown: SquadView, next: SquadView) {
 /**
  * A view the stream delivered, put under the key of the squad it was asked
  * for. `silent` is the first push of a new target: a snapshot, not a change.
+ * `notifies` says whether this window is the one that rings for it (see
+ * `useSquad`).
  */
 function applyPush(
   queryClient: QueryClient,
   pushed: SquadFeedView,
   silent: boolean,
+  notifies: boolean,
 ) {
   const key = keyFor(pushed.squad);
   const next = normalizeView(pushed.view);
@@ -366,7 +369,7 @@ function applyPush(
   const merged = merge(next, shown);
 
   // Only a view that actually replaces the screen has news in it.
-  if (!silent && shown && merged === next) {
+  if (notifies && !silent && shown && merged === next) {
     announceChanges(shown, next);
     noticeReadyChecks(shown, next);
   }
@@ -508,11 +511,18 @@ export interface SquadState {
  * Every squad-scoped mutation takes the squad it acts on: the one on screen
  * for most of them, and any squad the reader is in for the rows of the raid
  * board.
+ *
+ * `notifies` is for one window only. Every window that reads the squad hears
+ * the same broadcast push; were each to raise its toasts — announcements,
+ * ready checks — and answer the «Prêt» button, the reader would get every one
+ * twice, and answer twice. The squad overlay is the one: it lives as long as
+ * the app, hidden or not.
  */
 export function useSquad(
   enabled: boolean,
   current: string | null,
   userId: string | null,
+  { notifies = false }: { notifies?: boolean } = {},
 ) {
   const queryClient = useQueryClient();
   const live = useSquadOverlayVisible();
@@ -555,9 +565,9 @@ export function useSquad(
     if (!writing && held.current) {
       const { pushed, silent } = held.current;
       held.current = null;
-      applyPush(queryClient, pushed, silent);
+      applyPush(queryClient, pushed, silent, notifies);
     }
-  }, [writing, queryClient]);
+  }, [writing, queryClient, notifies]);
 
   useEffect(() => {
     let unlisten: UnlistenFn | null = null;
@@ -571,7 +581,7 @@ export function useSquad(
         held.current = { pushed: event.payload, silent };
         return;
       }
-      applyPush(queryClient, event.payload, silent);
+      applyPush(queryClient, event.payload, silent, notifies);
     })
       .then((stop) => {
         if (gone) stop();
@@ -585,7 +595,7 @@ export function useSquad(
       gone = true;
       unlisten?.();
     };
-  }, [queryClient]);
+  }, [queryClient, notifies]);
 
   /**
    * The answer to leaving or starting over is the view the API picks — which
@@ -662,7 +672,8 @@ export function useSquad(
   }, [patchMember, answerRaid]);
 
   useEffect(() => {
-    if (!userId) return;
+    // Only the window that raised the toast answers it.
+    if (!userId || !notifies) return;
 
     let unlisten: UnlistenFn | null = null;
     let gone = false;
@@ -694,7 +705,7 @@ export function useSquad(
       gone = true;
       unlisten?.();
     };
-  }, [userId]);
+  }, [userId, notifies]);
 
   const removeMember = useSquadMutation(
     current,
