@@ -1,3 +1,4 @@
+mod browser_auth;
 mod capture;
 mod diagnostics;
 mod event_feed;
@@ -1125,6 +1126,7 @@ pub fn run() {
         .manage(OverlayOpacityState::default())
         .manage(OverlayLocks::default())
         .manage(event_feed::EventFeed::default())
+        .manage(browser_auth::BrowserSignIn::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -1158,6 +1160,8 @@ pub fn run() {
             event_feed::feed_set_squad,
             event_feed::feed_snapshot,
             event_feed::feed_status,
+            browser_auth::browser_sign_in,
+            browser_auth::cancel_browser_sign_in,
         ])
         .on_window_event(|window, event| {
             // Dismiss the search palette when it loses focus, the way a command

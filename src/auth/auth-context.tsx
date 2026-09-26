@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -60,8 +61,17 @@ type AuthState = {
   user: CurrentUser | null;
   /** True until the persisted session has been checked on startup. */
   loading: boolean;
-  sendOtp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, otp: string) => Promise<void>;
+  /** True while the browser is out signing the user in on Nexus Tools. */
+  signingIn: boolean;
+  /** Why the last attempt failed, until the next one. */
+  signInError: string | null;
+  /**
+   * Signs in on Nexus Tools, in the browser. Never rejects: a failure lands in
+   * `signInError`, and an attempt cancelled or replaced says nothing at all.
+   */
+  signIn: () => Promise<void>;
+  /** Gives up on the attempt under way. */
+  cancelSignIn: () => Promise<void>;
   signOut: () => Promise<void>;
   /** Re-checks the stored session, e.g. after the API URL changed. */
   refresh: () => Promise<void>;
@@ -72,7 +82,15 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  /**
+   * The attempt whose answer counts. A new one — or a cancel — makes the one
+   * before it stale: Rust ends it with an error nobody needs to see.
+   */
+  const attempt = useRef(0);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -135,21 +153,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refresh]);
 
-  const sendOtp = useCallback(async (email: string) => {
-    await authApi.sendSignInOtp(email);
-  }, []);
+  const signIn = useCallback(async () => {
+    const mine = ++attempt.current;
+    setSigningIn(true);
+    setSignInError(null);
 
-  const verifyOtp = useCallback(
-    async (email: string, otp: string) => {
-      const signedIn = await authApi.verifySignInOtp(email, otp);
+    try {
+      const signedIn = await authApi.signInWithBrowser();
+      if (mine !== attempt.current) return;
+
       setUser(signedIn);
       // Authenticated endpoints answered 401 while signed out; drop those.
       await queryClient.invalidateQueries();
       syncFeed();
       await emit(SESSION_EVENT, getCurrentWindow().label);
-    },
-    [queryClient],
-  );
+    } catch (error) {
+      if (mine !== attempt.current) return;
+      console.error("cannot sign in", error);
+      setSignInError(
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "La connexion a échoué.",
+      );
+    } finally {
+      if (mine === attempt.current) setSigningIn(false);
+    }
+  }, [queryClient]);
+
+  const cancelSignIn = useCallback(async () => {
+    attempt.current++;
+    setSigningIn(false);
+    await authApi.cancelBrowserSignIn();
+  }, []);
 
   const signOut = useCallback(async () => {
     await authApi.signOut();
@@ -160,8 +197,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   const value = useMemo<AuthState>(
-    () => ({ user, loading, sendOtp, verifyOtp, signOut, refresh }),
-    [user, loading, sendOtp, verifyOtp, signOut, refresh],
+    () => ({
+      user,
+      loading,
+      signingIn,
+      signInError,
+      signIn,
+      cancelSignIn,
+      signOut,
+      refresh,
+    }),
+    [
+      user,
+      loading,
+      signingIn,
+      signInError,
+      signIn,
+      cancelSignIn,
+      signOut,
+      refresh,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
