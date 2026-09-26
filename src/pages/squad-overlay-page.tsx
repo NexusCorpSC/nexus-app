@@ -2837,7 +2837,13 @@ function SignedOut() {
         Connectez-vous pour créer une escouade ou en rejoindre une.
       </p>
 
-      <OverlayButton onClick={() => void openMainRoute("/login")}>
+      <OverlayButton
+        onClick={() => {
+          void openMainRoute("/login").catch((error) => {
+            console.error("cannot open the main window", error);
+          });
+        }}
+      >
         <LogIn className="size-3.5" />
         Se connecter
       </OverlayButton>
