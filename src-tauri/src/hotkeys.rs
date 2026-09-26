@@ -12,6 +12,10 @@
 //! combination too. That costs nothing in practice — this path only ever fires
 //! where `RegisterHotKey` did not, which is exactly where the game was already
 //! receiving the keys.
+//!
+//! The radial menu adds the mouse, and only while it is up: over a game the
+//! cursor is locked, so the menu is steered by the mouse's raw movement, which
+//! is reported the same way and for the same reason — whatever has focus.
 
 use std::ffi::c_void;
 use std::mem::size_of;
@@ -24,23 +28,25 @@ use windows::core::w;
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetAsyncKeyState, VK_CONTROL, VK_LWIN, VK_MENU, VK_RWIN, VK_SHIFT,
+    GetAsyncKeyState, VK_CONTROL, VK_ESCAPE, VK_LCONTROL, VK_LMENU, VK_LSHIFT, VK_LWIN, VK_MENU,
+    VK_RCONTROL, VK_RMENU, VK_RSHIFT, VK_RWIN, VK_SHIFT,
 };
 use windows::Win32::UI::Input::{
     GetRawInputData, RegisterRawInputDevices, HRAWINPUT, RAWINPUT, RAWINPUTDEVICE, RAWINPUTHEADER,
-    RIDEV_INPUTSINK, RID_INPUT,
+    RIDEV_INPUTSINK, RIDEV_REMOVE, RID_INPUT, RIM_TYPEKEYBOARD, RIM_TYPEMOUSE,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, RegisterClassW, HWND_MESSAGE,
-    MSG, WINDOW_EX_STYLE, WINDOW_STYLE, WM_INPUT, WNDCLASSW,
+    CreateWindowExW, DefWindowProcW, DispatchMessageW, GetMessageW, PostMessageW, RegisterClassW,
+    HWND_MESSAGE, MSG, WINDOW_EX_STYLE, WINDOW_STYLE, WM_APP, WM_INPUT, WNDCLASSW,
 };
 
 use crate::diagnostics::log;
-use crate::{trigger, Action};
+use crate::{radial, trigger, Action};
 
 /// Keyboard, as the HID usage tables spell it.
 const HID_USAGE_PAGE_GENERIC: u16 = 0x01;
 const HID_USAGE_GENERIC_KEYBOARD: u16 = 0x06;
+const HID_USAGE_GENERIC_MOUSE: u16 = 0x02;
 
 /// Set in `RAWKEYBOARD::Flags` when the key is going up rather than down.
 const RI_KEY_BREAK_FLAG: u16 = 0x01;
@@ -48,12 +54,27 @@ const RI_KEY_BREAK_FLAG: u16 = 0x01;
 /// Reported for the fake key that precedes some extended sequences.
 const FAKE_VKEY: u16 = 0xFF;
 
+/// Set in `RAWMOUSE::usFlags` when the mouse reports where it is rather than
+/// how far it moved — a tablet, a remote desktop. Such reports say nothing
+/// about a flick, and are left out.
+const MOUSE_MOVE_ABSOLUTE: u16 = 0x01;
+
+/// Posted to the listener's window to start (`wparam` 1) or stop (0) watching
+/// the mouse. Raw input devices are registered for a window, and the window is
+/// the listener thread's; asking that thread to do it keeps the registration
+/// next to the window it names.
+const WATCH_MOUSE_MESSAGE: u32 = WM_APP + 1;
+
 /// The combinations to watch for, as virtual key codes: what `Shortcut` holds is
 /// a physical `Code`, and raw input reports virtual keys.
 static BINDINGS: Mutex<Vec<Binding>> = Mutex::new(Vec::new());
 
 /// Set once the listener is running, so the callback can reach the app.
 static APP: OnceLock<AppHandle> = OnceLock::new();
+
+/// The listener's window, once it exists, so other threads can post to it.
+/// Held as an integer: a window handle is not `Send`, its value is.
+static LISTENER: OnceLock<isize> = OnceLock::new();
 
 struct Binding {
     action: Action,
@@ -143,6 +164,8 @@ fn listen() -> windows::core::Result<()> {
             None,
         )?;
 
+        let _ = LISTENER.set(window.0 as isize);
+
         // `RIDEV_INPUTSINK` is the whole point: deliver keystrokes to this
         // window even though it never has focus — it is not even on screen.
         let devices = [RAWINPUTDEVICE {
@@ -175,6 +198,10 @@ unsafe extern "system" fn window_proc(
         on_input(lparam);
     }
 
+    if message == WATCH_MOUSE_MESSAGE {
+        register_mouse(window, wparam.0 != 0);
+    }
+
     // Called for WM_INPUT too: the system needs it to release the input data.
     unsafe { DefWindowProcW(window, message, wparam, lparam) }
 }
@@ -197,10 +224,49 @@ fn on_input(lparam: LPARAM) {
         return;
     }
 
+    if raw.header.dwType == RIM_TYPEMOUSE.0 {
+        let mouse = unsafe { raw.data.mouse };
+        if mouse.usFlags.0 & MOUSE_MOVE_ABSOLUTE == 0 {
+            radial::nudge(f64::from(mouse.lLastX), f64::from(mouse.lLastY));
+        }
+        return;
+    }
+
+    if raw.header.dwType != RIM_TYPEKEYBOARD.0 {
+        return;
+    }
+
     let keyboard = unsafe { raw.data.keyboard };
 
-    // Key going up, or the placeholder that precedes some extended sequences.
-    if keyboard.Flags & RI_KEY_BREAK_FLAG != 0 || keyboard.VKey == FAKE_VKEY {
+    // The placeholder that precedes some extended sequences.
+    if keyboard.VKey == FAKE_VKEY {
+        return;
+    }
+
+    let up = keyboard.Flags & RI_KEY_BREAK_FLAG != 0;
+
+    let Some(app) = APP.get() else {
+        return;
+    };
+
+    // While the menu is up, letting go of any key of its combination closes it
+    // on the sector under the pointer, and Escape calls it off. The watcher in
+    // `radial.rs` would notice the release a frame later; this is the fast way.
+    if radial::is_open() {
+        if !up && keyboard.VKey == VK_ESCAPE.0 {
+            let handle = app.clone();
+            let _ = app.run_on_main_thread(move || radial::cancel(&handle));
+            return;
+        }
+
+        if up && releases_radial(keyboard.VKey) {
+            let handle = app.clone();
+            let _ = app.run_on_main_thread(move || radial::release(&handle));
+            return;
+        }
+    }
+
+    if up {
         return;
     }
 
@@ -208,9 +274,18 @@ fn on_input(lparam: LPARAM) {
         return;
     };
 
-    let Some(app) = APP.get() else {
+    // Held, not fired: the menu stays up until the keys are let go, so the
+    // debounce of `trigger` — meant for a press that fires once — is no place
+    // for it. Opening an open menu does nothing, which covers auto-repeat.
+    if action == Action::Radial {
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Err(error) = radial::press(&handle) {
+                log(format!("radial menu failed: {error}"));
+            }
+        });
         return;
-    };
+    }
 
     // Auto-repeat sends this many times a second, and `RegisterHotKey` may
     // report the same combination right after: `trigger` drops the repeats.
@@ -227,6 +302,102 @@ fn matching_action(key: u16) -> Option<Action> {
         .iter()
         .find(|binding| binding.key == key && binding.modifiers == pressed)
         .map(|binding| binding.action)
+}
+
+/// Starts or stops watching the mouse, from any thread.
+///
+/// Watched only while the radial menu is up: reported at the mouse's own rate,
+/// up to thousands of times a second, the stream would otherwise wake this
+/// thread for nothing the whole time the app runs.
+pub fn watch_mouse(on: bool) {
+    let Some(window) = LISTENER.get() else {
+        return;
+    };
+
+    let posted = unsafe {
+        PostMessageW(
+            Some(HWND(*window as *mut c_void)),
+            WATCH_MOUSE_MESSAGE,
+            WPARAM(usize::from(on)),
+            LPARAM(0),
+        )
+    };
+
+    if let Err(error) = posted {
+        log(format!(
+            "cannot ask the raw input listener about the mouse: {error}"
+        ));
+    }
+}
+
+/// Registers the mouse for the listener's window, or removes it. Runs on the
+/// listener thread, which owns the window.
+fn register_mouse(window: HWND, on: bool) {
+    let device = if on {
+        RAWINPUTDEVICE {
+            usUsagePage: HID_USAGE_PAGE_GENERIC,
+            usUsage: HID_USAGE_GENERIC_MOUSE,
+            dwFlags: RIDEV_INPUTSINK,
+            hwndTarget: window,
+        }
+    } else {
+        // Removal names no window: the system insists on it.
+        RAWINPUTDEVICE {
+            usUsagePage: HID_USAGE_PAGE_GENERIC,
+            usUsage: HID_USAGE_GENERIC_MOUSE,
+            dwFlags: RIDEV_REMOVE,
+            hwndTarget: HWND::default(),
+        }
+    };
+
+    let registered =
+        unsafe { RegisterRawInputDevices(&[device], size_of::<RAWINPUTDEVICE>() as u32) };
+
+    // Losing it costs the menu its pointer, not the menu: it still opens, and
+    // letting go in the centre still calls it off.
+    if let Err(error) = registered {
+        log(format!("raw input cannot watch the mouse: {error}"));
+    }
+}
+
+/// Whether the radial menu's combination is still held — every key of it.
+pub fn radial_held() -> bool {
+    let Some((key, modifiers)) = radial_binding() else {
+        return false;
+    };
+
+    is_down(key) && held_modifiers().contains(modifiers)
+}
+
+/// Whether a key going up is one of the radial menu's combination.
+fn releases_radial(key: u16) -> bool {
+    let Some((bound, modifiers)) = radial_binding() else {
+        return false;
+    };
+
+    if key == bound {
+        return true;
+    }
+
+    // Raw input names a modifier by its generic key or by its side, depending
+    // on the keyboard and the driver: both are taken.
+    (modifiers.contains(Modifiers::ALT) && [VK_MENU, VK_LMENU, VK_RMENU].iter().any(|k| k.0 == key))
+        || (modifiers.contains(Modifiers::CONTROL)
+            && [VK_CONTROL, VK_LCONTROL, VK_RCONTROL]
+                .iter()
+                .any(|k| k.0 == key))
+        || (modifiers.contains(Modifiers::SHIFT)
+            && [VK_SHIFT, VK_LSHIFT, VK_RSHIFT].iter().any(|k| k.0 == key))
+        || (modifiers.contains(Modifiers::SUPER) && [VK_LWIN, VK_RWIN].iter().any(|k| k.0 == key))
+}
+
+fn radial_binding() -> Option<(u16, Modifiers)> {
+    let bindings = BINDINGS.lock().ok()?;
+
+    bindings
+        .iter()
+        .find(|binding| binding.action == Action::Radial)
+        .map(|binding| (binding.key, binding.modifiers))
 }
 
 /// The modifiers held right now. Read from the keyboard state rather than

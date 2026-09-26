@@ -5,6 +5,7 @@ mod event_feed;
 #[cfg(windows)]
 mod hotkeys;
 mod notifications;
+mod radial;
 mod tray;
 
 use std::collections::HashMap;
@@ -249,6 +250,9 @@ pub(crate) enum Action {
     Plan,
     Map,
     Opacity,
+    Lock,
+    /// Held rather than fired: see `radial.rs`.
+    Radial,
 }
 
 impl Action {
@@ -264,6 +268,8 @@ impl Action {
             Action::Plan => "plan",
             Action::Map => "map",
             Action::Opacity => "opacity",
+            Action::Lock => "lock",
+            Action::Radial => "radial",
         }
     }
 }
@@ -306,6 +312,10 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Plan => toggle_plan(app),
         Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Opacity => flip_all_overlay_opacity(app),
+        Action::Lock => flip_all_overlay_locks(app),
+        // Never routed here by the shortcut paths, which open and close the
+        // menu themselves; opening it is the least surprising answer anyway.
+        Action::Radial => radial::press(app),
     };
 
     if let Err(error) = outcome {
@@ -351,6 +361,20 @@ struct ShortcutSettings {
     plan: String,
     map: String,
     opacity: String,
+    /// Missing from what a frontend older than the shortcut sends.
+    #[serde(default = "default_lock_shortcut")]
+    lock: String,
+    /// Missing from what a frontend older than the menu sends.
+    #[serde(default = "default_radial_shortcut")]
+    radial: String,
+}
+
+fn default_lock_shortcut() -> String {
+    "Ctrl+Shift+KeyL".to_string()
+}
+
+fn default_radial_shortcut() -> String {
+    "Alt+KeyV".to_string()
 }
 
 impl Default for ShortcutSettings {
@@ -364,6 +388,8 @@ impl Default for ShortcutSettings {
             plan: "Ctrl+Shift+KeyP".to_string(),
             map: "Ctrl+Shift+KeyM".to_string(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
+            lock: default_lock_shortcut(),
+            radial: default_radial_shortcut(),
         }
     }
 }
@@ -406,6 +432,8 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Plan, &requested.plan),
         (Action::Map, &requested.map),
         (Action::Opacity, &requested.opacity),
+        (Action::Lock, &requested.lock),
+        (Action::Radial, &requested.radial),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -429,6 +457,14 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
             }),
         }
     }
+
+    // The menu shows its combination while it is up.
+    radial::set_accelerator(
+        bound
+            .iter()
+            .any(|(action, _)| *action == Action::Radial)
+            .then(|| requested.radial.clone()),
+    );
 
     // Watched whatever the system has to say about them: this is the path that
     // still works with Star Citizen in the foreground.
@@ -822,6 +858,20 @@ fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Starts a region capture from the radial menu — what the capture shortcut
+/// does, picked from the menu instead.
+#[tauri::command]
+fn radial_capture(app: AppHandle) -> Result<(), String> {
+    start_capture(&app)
+}
+
+/// Locks the overlays on screen, or unlocks them all, from the radial menu —
+/// what the lock shortcut does.
+#[tauri::command]
+fn radial_toggle_lock(app: AppHandle) -> Result<(), String> {
+    flip_all_overlay_locks(&app)
+}
+
 #[tauri::command]
 fn open_search_overlay(app: AppHandle) -> Result<(), String> {
     show_window(&app, OVERLAY_WINDOW)
@@ -959,13 +1009,19 @@ fn overlay_mode(app: AppHandle, label: String) -> Result<OverlayMode, String> {
 /// where the cursor is, which right now is on the button that was just clicked.
 #[tauri::command]
 fn lock_overlay(app: AppHandle, label: String, zone: UnlockZone) -> Result<(), String> {
+    lock(&app, &label, zone)
+}
+
+fn lock(app: &AppHandle, label: &str, zone: UnlockZone) -> Result<(), String> {
+    let label = label.to_string();
+
     if !is_overlay(&label) {
         return Err(format!("{label} is not an overlay"));
     }
 
     // Declared, whether or not it has a window right now: a zone for a window
     // that cannot be found is a bug worth an error rather than a silent lock.
-    window(&app, &label)?;
+    window(app, &label)?;
 
     let state = app.state::<OverlayLocks>();
     let mut locks = state.0.lock().map_err(|e| e.to_string())?;
@@ -986,7 +1042,7 @@ fn lock_overlay(app: AppHandle, label: String, zone: UnlockZone) -> Result<(), S
 
     if fresh {
         log(format!("overlay `{label}` locked"));
-        announce_overlay_lock(&app, &label, true)?;
+        announce_overlay_lock(app, &label, true)?;
     }
 
     Ok(())
@@ -999,6 +1055,11 @@ fn lock_overlay(app: AppHandle, label: String, zone: UnlockZone) -> Result<(), S
 /// locked changes nothing and says so to nobody.
 #[tauri::command]
 fn unlock_overlay(app: AppHandle, label: String) -> Result<(), String> {
+    unlock(&app, &label)
+}
+
+fn unlock(app: &AppHandle, label: &str) -> Result<(), String> {
+    let label = label.to_string();
     let state = app.state::<OverlayLocks>();
     let mut locks = state.0.lock().map_err(|e| e.to_string())?;
 
@@ -1010,14 +1071,78 @@ fn unlock_overlay(app: AppHandle, label: String) -> Result<(), String> {
     // of its own between the two: once the entry is gone it will not touch
     // this window again, and the last word on the window is that it takes
     // the mouse.
-    window(&app, &label)?
+    window(app, &label)?
         .set_ignore_cursor_events(false)
         .map_err(|e| e.to_string())?;
 
     drop(locks);
 
     log(format!("overlay `{label}` unlocked"));
-    announce_overlay_lock(&app, &label, false)
+    announce_overlay_lock(app, &label, false)
+}
+
+/// The shortcut: unlocks every overlay if any is locked, locks every overlay on
+/// screen otherwise.
+///
+/// «Toggle all» has to mean something when they disagree, as the opacity
+/// shortcut does: one press frees the mouse wherever it was caught, the next
+/// turns everything on screen back into a picture. Hidden overlays are left as
+/// they are — nobody asked to lock what they cannot see.
+///
+/// Rust does not know where each unlock button is: the zone starts empty, and
+/// the window, told it is locked, reports the real one straight away (its
+/// button does it on every lock). Until then nothing in it takes the mouse,
+/// which is what a lock is.
+fn flip_all_overlay_locks(app: &AppHandle) -> Result<(), String> {
+    let locked: Vec<String> = app
+        .state::<OverlayLocks>()
+        .0
+        .lock()
+        .map_err(|e| e.to_string())?
+        .keys()
+        .cloned()
+        .collect();
+
+    if !locked.is_empty() {
+        for label in locked {
+            unlock(app, &label)?;
+        }
+        return Ok(());
+    }
+
+    let empty = UnlockZone {
+        x: 0.0,
+        y: 0.0,
+        width: 0.0,
+        height: 0.0,
+    };
+
+    for label in [
+        NOTES_WINDOW,
+        CARGO_WINDOW,
+        SQUAD_WINDOW,
+        PLAN_WINDOW,
+        MAP_WINDOW,
+    ] {
+        let visible = window(app, label)?
+            .is_visible()
+            .map_err(|e| e.to_string())?;
+
+        if visible {
+            lock(app, label, empty)?;
+        }
+    }
+
+    Ok(())
+}
+
+/// Whether any overlay is locked, for the radial menu's lock sector.
+pub(crate) fn any_overlay_locked(app: &AppHandle) -> bool {
+    app.state::<OverlayLocks>()
+        .0
+        .lock()
+        .map(|locks| !locks.is_empty())
+        .unwrap_or(false)
 }
 
 /// Whether the window asking is locked, asked as it mounts — for the same
@@ -1151,6 +1276,8 @@ pub fn run() {
             open_main_route,
             cancel_capture,
             recognize_selection,
+            radial_capture,
+            radial_toggle_lock,
             notifications::notify,
             notifications::notifications_ready,
             notifications::resize_notifications,
@@ -1225,17 +1352,31 @@ pub fn run() {
             // the user the app — Settings can rebind them.
             let plugin = tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
-                    // Both edges are reported; act on the key going down.
-                    if event.state != ShortcutState::Pressed {
-                        return;
-                    }
-
                     let action = app.state::<Shortcuts>().0.lock().ok().and_then(|bound| {
                         bound
                             .iter()
                             .find(|(_, candidate)| candidate == shortcut)
                             .map(|(action, _)| *action)
                     });
+
+                    // The radial menu is held: up on the key going down, gone
+                    // on the key going up.
+                    if action == Some(Action::Radial) {
+                        match event.state {
+                            ShortcutState::Pressed => {
+                                if let Err(error) = radial::press(app) {
+                                    log(format!("radial menu failed: {error}"));
+                                }
+                            }
+                            ShortcutState::Released => radial::release(app),
+                        }
+                        return;
+                    }
+
+                    // Both edges are reported; act on the key going down.
+                    if event.state != ShortcutState::Pressed {
+                        return;
+                    }
 
                     if let Some(action) = action {
                         trigger(app, action, "hotkey");

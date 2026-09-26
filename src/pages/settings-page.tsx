@@ -362,6 +362,36 @@ export default function SettingsPage() {
             </span>
           </Field>
 
+          <Field label="Verrouillage des superpositions">
+            <ShortcutInput
+              value={shortcuts.lock}
+              onChange={(lock) =>
+                setLocalShortcuts((current) => ({ ...current, lock }))
+              }
+            />
+            <span className="text-xs text-nexus-accent/50">
+              Verrouille toutes les superpositions affichées — les clics passent
+              au jeu — ou, si l'une l'est déjà, les déverrouille toutes. Le menu
+              radial n'est pas concerné : il reste utilisable.
+            </span>
+          </Field>
+
+          <Field label="Menu radial rapide (maintenir)">
+            <ShortcutInput
+              value={shortcuts.radial}
+              onChange={(radial) =>
+                setLocalShortcuts((current) => ({ ...current, radial }))
+              }
+            />
+            <span className="text-xs text-nexus-accent/50">
+              Maintenez la combinaison pour afficher le menu au centre de
+              l'écran, donnez un coup de souris vers une action, puis relâchez
+              pour la lancer. Relâcher sans bouger, ou Échap, annule. READY et
+              Éliminé/Actif n'y figurent que dans une escouade ; le verrouillage
+              et la capture de zone, toujours.
+            </span>
+          </Field>
+
           <div className="flex items-center gap-3">
             <Button type="submit" size="sm">
               Appliquer

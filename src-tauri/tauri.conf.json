@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nexus App",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "identifier": "services.nexus.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -130,6 +130,22 @@
         "skipTaskbar": true,
         "shadow": false,
         "visible": false
+      },
+      {
+        "label": "radial",
+        "title": "Nexus - menu radial",
+        "url": "index.html#/radial",
+        "width": 500,
+        "height": 480,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false,
+        "focus": false,
+        "focusable": false
       },
       {
         "label": "notifications",

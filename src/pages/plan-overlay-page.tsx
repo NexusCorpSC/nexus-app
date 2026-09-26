@@ -283,19 +283,23 @@ export default function PlanOverlayPage() {
     <div className={cn("flex h-screen flex-col overflow-hidden", skin)}>
       <header
         data-tauri-drag-region
-        className="flex h-10 shrink-0 items-center gap-1.5 px-2"
+        className="flex h-10 shrink-0 cursor-grab items-center gap-1.5 px-2"
       >
-        <span className="min-w-0 truncate text-[13px] font-semibold text-nexus-soft">
+        {/*
+         * Only the header itself starts a drag, not what is drawn in it: every
+         * piece of text in the way is let through to it, the buttons are not.
+         */}
+        <span className="pointer-events-none min-w-0 truncate text-[13px] font-semibold text-nexus-soft">
           {plan?.name ?? "Plan de vol"}
         </span>
 
         {phase ? (
-          <span className="shrink-0 rounded bg-amber-300/15 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-amber-300">
+          <span className="pointer-events-none shrink-0 rounded bg-amber-300/15 px-1.5 py-0.5 font-mono text-[10px] tracking-wider text-amber-300">
             {formatClock(phaseStartSec(ordered, phase.id))}
           </span>
         ) : null}
 
-        <span className="flex-1" />
+        <span className="pointer-events-none flex-1" />
 
         {plan ? (
           <button
