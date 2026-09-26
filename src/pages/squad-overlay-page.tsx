@@ -18,6 +18,7 @@ import {
   GripVertical,
   ListChecks,
   Loader2,
+  LogIn,
   LogOut,
   Megaphone,
   MoreHorizontal,
@@ -59,6 +60,7 @@ import {
   type SquadMembership,
   type SquadRoleIcon,
 } from "@/types/nexus";
+import { openMainRoute } from "@/lib/main-window";
 import { cn } from "@/lib/utils";
 
 /**
@@ -120,7 +122,10 @@ export default function SquadOverlayPage() {
    */
   const [current, setCurrent] = useState<string | null>(null);
 
-  const squadApi = useSquad(Boolean(user), current, user?.id ?? null);
+  // The one window that rings for the squad: see `useSquad`.
+  const squadApi = useSquad(Boolean(user), current, user?.id ?? null, {
+    notifies: true,
+  });
   const { state } = squadApi;
 
   useTransparentWindow();
@@ -294,10 +299,7 @@ export default function SquadOverlayPage() {
         {session ? (
           <p className="text-xs text-nexus-accent/70">Session…</p>
         ) : !user ? (
-          <p className="text-xs text-nexus-accent/80">
-            Connectez-vous dans la fenêtre principale pour créer une escouade ou
-            en rejoindre une.
-          </p>
+          <SignedOut />
         ) : state.loading ? (
           <p className="text-xs text-nexus-accent/70">Chargement…</p>
         ) : !squad ? (
@@ -2820,6 +2822,32 @@ function IconButton({
       <span className="sr-only">{label}</span>
       {children}
     </button>
+  );
+}
+
+/**
+ * Signed out: the way to the login page. It lives in the main window — this
+ * one has no room for it, and is usually floating over the game — so the button
+ * brings that window up on it.
+ */
+function SignedOut() {
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-nexus-accent/80">
+        Connectez-vous pour créer une escouade ou en rejoindre une.
+      </p>
+
+      <OverlayButton
+        onClick={() => {
+          void openMainRoute("/login").catch((error) => {
+            console.error("cannot open the main window", error);
+          });
+        }}
+      >
+        <LogIn className="size-3.5" />
+        Se connecter
+      </OverlayButton>
+    </div>
   );
 }
 
