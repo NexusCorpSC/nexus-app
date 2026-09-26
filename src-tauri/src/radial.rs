@@ -25,7 +25,8 @@ use crate::window;
 /// Window label declared in `tauri.conf.json`.
 pub(crate) const RADIAL_WINDOW: &str = "radial";
 
-/// The menu came up, carrying the combination that holds it open.
+/// The menu came up, carrying the combination that holds it open and whether
+/// any overlay is locked — the lock sector says which way it will go.
 const OPEN_EVENT: &str = "radial://open";
 
 /// Where the pointer is, as a vector from the centre whose length is 1 at the
@@ -81,6 +82,7 @@ struct Pointer {
 #[derive(Clone, Serialize)]
 struct Opened {
     accelerator: Option<String>,
+    locked: bool,
 }
 
 /// Records the combination bound to the menu, for the hint it shows.
@@ -118,8 +120,17 @@ pub(crate) fn press(app: &AppHandle) -> Result<(), String> {
 
     // Told before it is shown, so the first frame is already the fresh menu
     // rather than whatever the last one was left on.
-    app.emit_to(RADIAL_WINDOW, OPEN_EVENT, Opened { accelerator })
-        .map_err(|e| e.to_string())?;
+    let locked = crate::any_overlay_locked(app);
+
+    app.emit_to(
+        RADIAL_WINDOW,
+        OPEN_EVENT,
+        Opened {
+            accelerator,
+            locked,
+        },
+    )
+    .map_err(|e| e.to_string())?;
 
     if let Err(error) = show(app) {
         if let Ok(mut hold) = HOLD.lock() {

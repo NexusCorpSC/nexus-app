@@ -142,6 +142,7 @@ l'application est minimisée ou n'a pas le focus :
 | `Ctrl+Maj+G`         | affiche ou masque la feuille de cargo en superposition      |
 | `Ctrl+Maj+E`         | affiche ou masque l'escouade en superposition               |
 | `Ctrl+Maj+O`         | efface les trois superpositions, ou leur rend leur panneau  |
+| `Ctrl+Maj+L`         | verrouille les superpositions affichées, ou les déverrouille |
 | `Alt+V` (maintenu)   | affiche le menu radial rapide tant qu'il est maintenu       |
 
 Ils se redéfinissent dans **Paramètres**, en appuyant sur la combinaison
@@ -485,11 +486,17 @@ confisque les événements HTML5 de la webview, et rien ne se déposait jamais.
 Maintenir `Alt+V` affiche un menu radial au centre de l'écran où se trouve le
 curseur ; le relâcher lance l'action du secteur visé :
 
-| Secteur                 | Position      | Proposé                                  |
-| ----------------------- | ------------- | ---------------------------------------- |
-| READY / NOT READY       | haut gauche   | dans une escouade, grisé si éliminé      |
-| Éliminé / Actif         | haut droite   | dans une escouade                        |
-| Capture de zone         | bas           | toujours — le même geste qu'en escouade  |
+| Secteur                     | Position    | Proposé                             |
+| --------------------------- | ----------- | ----------------------------------- |
+| READY / NOT READY           | haut gauche | dans une escouade, grisé si éliminé |
+| Éliminé / Actif             | haut droite | dans une escouade                   |
+| Verrouiller / Déverrouiller | bas droite  | toujours — comme `Ctrl+Maj+L`       |
+| Capture de zone             | bas gauche  | toujours — comme `Ctrl+Maj+S`       |
+
+Verrou et capture gardent leur place hors escouade : le geste est le même dans
+les deux cas. Le menu est une fenêtre à part, jamais verrouillée : il reste
+utilisable par-dessus des superpositions verrouillées, y compris pour les
+déverrouiller.
 
 Relâcher au centre, sur un secteur grisé, ou appuyer sur Échap annule.
 

@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { Check, HeartPulse, ScanText, Skull, X } from "lucide-react";
+import {
+  Check,
+  HeartPulse,
+  Lock,
+  LockOpen,
+  ScanText,
+  Skull,
+  X,
+} from "lucide-react";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { formatShortcut } from "@/lib/settings";
 import {
@@ -13,6 +21,7 @@ import {
   RADIAL_SQUAD_EVENT,
   RADIAL_SQUAD_REQUEST_EVENT,
   SECTOR_ANGLES,
+  SECTOR_HALF_WIDTH,
   SQUAD_WINDOW,
   sectorAt,
   type RadialOpened,
@@ -44,8 +53,8 @@ function polar(angle: number, radius: number) {
 
 /** One sector of the ring, as an SVG path, from its middle angle. */
 function wedge(middle: number): string {
-  const from = middle - 60 + GAP;
-  const to = middle + 60 - GAP;
+  const from = middle - SECTOR_HALF_WIDTH + GAP;
+  const to = middle + SECTOR_HALF_WIDTH - GAP;
   const a = polar(from, OUTER);
   const b = polar(to, OUTER);
   const c = polar(to, INNER);
@@ -71,12 +80,15 @@ function labelAt(sector: RadialSector) {
  * Rust shows it, moves its pointer and hides it (`src-tauri/src/radial.rs`);
  * this draws it and acts on the sector the pointer was in when the keys were
  * let go. Squad actions go to the squad window, which has the session — see
- * `useRadialBridge` — and capture to the command the capture shortcut runs.
+ * `useRadialBridge` — and lock and capture to the commands their shortcuts
+ * run. The menu is its own window and never locked, so it stays usable over
+ * locked overlays — including to unlock them.
  */
 export default function RadialOverlayPage() {
   const [squad, setSquad] = useState<RadialSquad | null>(null);
   const [pointer, setPointer] = useState<RadialPointer>(CENTRED);
   const [accelerator, setAccelerator] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
   // Bumped on every opening, so the entrance plays again.
   const [opening, setOpening] = useState(0);
 
@@ -108,6 +120,7 @@ export default function RadialOverlayPage() {
     follow<RadialOpened>(RADIAL_OPEN_EVENT, (opened) => {
       setPointer(CENTRED);
       setAccelerator(opened?.accelerator ?? null);
+      setLocked(Boolean(opened?.locked));
       setOpening((count) => count + 1);
     });
 
@@ -144,7 +157,7 @@ export default function RadialOverlayPage() {
     y: CENTRE + pointer.y * scale,
   };
 
-  const hub = hubText(hovered, squad);
+  const hub = hubText(hovered, squad, locked);
 
   return (
     <div
@@ -232,7 +245,7 @@ export default function RadialOverlayPage() {
               )}
               <span
                 className={cn(
-                  "text-[15px] font-bold tracking-wider",
+                  "text-[13px] font-bold tracking-wider",
                   squad.ready ? "text-red-300" : "text-emerald-300",
                 )}
               >
@@ -255,7 +268,7 @@ export default function RadialOverlayPage() {
               )}
               <span
                 className={cn(
-                  "text-[15px] font-bold tracking-wider",
+                  "text-[13px] font-bold tracking-wider",
                   down ? "text-emerald-300" : "text-red-300",
                 )}
               >
@@ -268,9 +281,23 @@ export default function RadialOverlayPage() {
           </>
         ) : null}
 
+        <SectorLabel sector="lock">
+          {locked ? (
+            <LockOpen className="size-6 text-amber-200" />
+          ) : (
+            <Lock className="size-6 text-amber-200" />
+          )}
+          <span className="text-[13px] font-bold tracking-wider text-amber-200">
+            {locked ? "DÉVERROUILLER" : "VERROUILLER"}
+          </span>
+          <span className="text-[11px] text-nexus-accent/60">
+            {locked ? "Superpositions verrouillées" : "Superpositions"}
+          </span>
+        </SectorLabel>
+
         <SectorLabel sector="capture">
           <ScanText className="size-6 text-nexus-accent" />
-          <span className="text-[15px] font-bold tracking-wider">CAPTURE</span>
+          <span className="text-[13px] font-bold tracking-wider">CAPTURE</span>
           <span className="text-[11px] text-nexus-accent/60">
             Capture de zone
           </span>
@@ -334,7 +361,7 @@ function SectorLabel({
         "absolute flex flex-col items-center gap-1 text-center",
         dimmed && "opacity-40",
       )}
-      style={{ left: x - 70, top: y - 36, width: 140 }}
+      style={{ left: x - 60, top: y - 34, width: 120 }}
     >
       {children}
     </div>
@@ -343,15 +370,16 @@ function SectorLabel({
 
 /**
  * The sectors on offer. Squad actions only for someone with a row in a squad;
- * capture always.
+ * lock and capture always.
  */
 function offeredSectors(squad: RadialSquad | null): RadialSector[] {
-  return squad ? ["ready", "alive", "capture"] : ["capture"];
+  return squad ? ["ready", "alive", "lock", "capture"] : ["lock", "capture"];
 }
 
 function hubText(
   hovered: RadialSector | null,
   squad: RadialSquad | null,
+  locked: boolean,
 ): { title: string; detail: string } {
   const down = squad ? !squad.alive : false;
 
@@ -368,6 +396,13 @@ function hubText(
       return down
         ? { title: "Revenir actif", detail: "Relâche pour valider" }
         : { title: "Me déclarer éliminé", detail: "Retire aussi READY" };
+    case "lock":
+      return locked
+        ? {
+            title: "Déverrouiller",
+            detail: "Les fenêtres reprennent les clics",
+          }
+        : { title: "Verrouiller", detail: "Les clics passent au jeu" };
     case "capture":
       return { title: "Capture de zone", detail: "Relâche pour lancer" };
     default:
@@ -378,6 +413,13 @@ function hubText(
 /** Does what the sector under the released pointer stands for. */
 function act(released: RadialPointer, squad: RadialSquad | null) {
   const sector = sectorAt(released, offeredSectors(squad));
+
+  if (sector === "lock") {
+    void invoke("radial_toggle_lock").catch((error) => {
+      console.error("cannot toggle the overlay locks from the menu", error);
+    });
+    return;
+  }
 
   if (sector === "capture") {
     void invoke("radial_capture").catch((error) => {

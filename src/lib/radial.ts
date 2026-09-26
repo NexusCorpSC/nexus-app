@@ -33,7 +33,11 @@ export const RADIAL_SQUAD_REQUEST_EVENT = "radial://squad-request";
 /** Menu → squad window: flip one of the reader's two states. */
 export const RADIAL_SQUAD_ACTION_EVENT = "radial://squad-action";
 
-export type RadialOpened = { accelerator: string | null };
+export type RadialOpened = {
+  accelerator: string | null;
+  /** Whether any overlay is locked: the lock sector unlocks them all if so. */
+  locked: boolean;
+};
 
 /** A vector from the centre, 1 long at the rim; `y` grows downwards. */
 export type RadialPointer = { x: number; y: number };
@@ -54,22 +58,24 @@ export type RadialSquadAction = {
   squadId: string;
 };
 
-export type RadialSector = "ready" | "alive" | "capture";
+export type RadialSector = "ready" | "alive" | "lock" | "capture";
 
 /**
  * Where each sector sits, as the angle of its middle, clockwise from the top.
  *
- * Fixed whatever is shown: outside a squad only capture is there, but still at
- * the bottom, so the flick that captures is the same in and out of a squad.
+ * Fixed whatever is shown: outside a squad the two squad sectors are gone, but
+ * lock and capture stay where they were, so the flick for each is the same in
+ * and out of a squad.
  */
 export const SECTOR_ANGLES: Record<RadialSector, number> = {
-  ready: 300,
-  alive: 60,
-  capture: 180,
+  ready: 315,
+  alive: 45,
+  lock: 135,
+  capture: 225,
 };
 
-/** Each sector's half-width, in degrees: three of them make the circle. */
-const SECTOR_HALF_WIDTH = 60;
+/** Each sector's half-width, in degrees: four of them make the circle. */
+export const SECTOR_HALF_WIDTH = 45;
 
 /**
  * Below this, the pointer is in the centre and picks nothing: a hand resting

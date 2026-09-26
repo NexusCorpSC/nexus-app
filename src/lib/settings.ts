@@ -35,6 +35,7 @@ const KEY_SHORTCUT_SQUAD = "shortcutSquad";
 const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
+const KEY_SHORTCUT_LOCK = "shortcutLock";
 const KEY_SHORTCUT_RADIAL = "shortcutRadial";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
@@ -120,6 +121,7 @@ export const DEFAULT_SHORTCUTS = {
   plan: "Ctrl+Shift+KeyP",
   map: "Ctrl+Shift+KeyM",
   opacity: "Ctrl+Shift+KeyO",
+  lock: "Ctrl+Shift+KeyL",
   // Held, not pressed: the radial menu stays up while it is down.
   radial: "Alt+KeyV",
 } as const;
@@ -150,6 +152,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
+    lock:
+      (await store.get<string>(KEY_SHORTCUT_LOCK)) ?? DEFAULT_SHORTCUTS.lock,
     radial:
       (await store.get<string>(KEY_SHORTCUT_RADIAL)) ??
       DEFAULT_SHORTCUTS.radial,
@@ -166,6 +170,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_PLAN, shortcuts.plan);
   await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
+  await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
   await store.set(KEY_SHORTCUT_RADIAL, shortcuts.radial);
 }
 
