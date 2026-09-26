@@ -26,7 +26,7 @@ src/
     api-client.ts     couche HTTP (plugin-http, cookie de session, erreurs)
     api/              un module par domaine (blueprints, missions, reps, …)
     settings.ts       store persistant : URL de l'API + cookie de session
-  auth/               contexte de session (OTP e-mail better-auth)
+  auth/               contexte de session (connexion via Nexus Tools)
   components/         layout + primitives d'UI
   pages/              un écran par fonctionnalité
   types/nexus.ts      types miroir des réponses de l'API
@@ -702,13 +702,23 @@ brouillon, personne ne se voit proposer la mise à jour.
 
 ### Authentification
 
-La connexion utilise le flux **OTP par e-mail** de better-auth : c'est le seul
-fournisseur qui fonctionne sans redirection navigateur. Le cookie `Set-Cookie`
-renvoyé à la connexion est persisté tel quel, ce qui évite de deviner le nom du
-cookie (better-auth le préfixe `__Secure-` en HTTPS).
+La connexion se fait **sur Nexus Tools, dans le navigateur** (redirection
+loopback, RFC 8252) :
 
-> Discord OAuth n'est pas encore géré : il faudrait un listener sur une URL de
-> redirection loopback. Voir « Suites possibles ».
+1. « Se connecter » ouvre `/desktop/connect` sur le site, avec un `state` et
+   l'empreinte d'un secret que l'application garde (PKCE, RFC 7636) ;
+   `src-tauri/src/browser_auth.rs` y ajoute le port de la boucle locale sur
+   lequel il écoute.
+2. Déjà connecté sur le site, le navigateur revient aussitôt ; sinon le site
+   demande la connexion — e-mail, Discord ou passkey — puis revient.
+3. Le site renvoie le navigateur vers `http://127.0.0.1:<port>/callback` avec un
+   code à usage unique (deux minutes).
+4. L'application l'échange, avec le secret, contre une session à elle
+   (`POST /api/auth/desktop/exchange`) : se déconnecter de l'une ne déconnecte
+   pas l'autre.
+
+Le cookie `Set-Cookie` renvoyé par l'échange est persisté tel quel, ce qui évite
+de deviner le nom du cookie (better-auth le préfixe `__Secure-` en HTTPS).
 
 ## Développement
 
@@ -892,7 +902,6 @@ WEBKIT_DISABLE_COMPOSITING_MODE=1 WEBKIT_DISABLE_DMABUF_RENDERER=1 npm run tauri
 
 ## Suites possibles
 
-- Connexion Discord OAuth via une redirection loopback.
 - Écrans marketplace (`/shopping`) et industrie (cargo, raffinage).
 - Cache hors-ligne persistant : le cache React Query est aujourd'hui en mémoire.
 - Mises à jour automatiques (`tauri-plugin-updater`).

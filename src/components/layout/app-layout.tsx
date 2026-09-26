@@ -60,7 +60,7 @@ const NAV_ITEMS: NavItem[] = [
 const NAVIGATE_EVENT = "main://navigate";
 
 export default function AppLayout() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, signIn } = useAuth();
   const navigate = useNavigate();
 
   // Only the main window looks: the check is per application, not per window,
@@ -215,13 +215,19 @@ export default function AppLayout() {
               </button>
             </div>
           ) : (
-            <NavLink
-              to="/login"
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
+            <button
+              type="button"
+              onClick={() => {
+                // The login page says what is going on while the browser is
+                // out, and why it failed if it does.
+                navigate("/login");
+                void signIn();
+              }}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
             >
               <LogIn className="h-4 w-4" />
               Se connecter
-            </NavLink>
+            </button>
           )}
         </div>
       </aside>

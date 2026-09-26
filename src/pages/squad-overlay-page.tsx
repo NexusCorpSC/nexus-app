@@ -60,7 +60,6 @@ import {
   type SquadMembership,
   type SquadRoleIcon,
 } from "@/types/nexus";
-import { openMainRoute } from "@/lib/main-window";
 import { cn } from "@/lib/utils";
 
 /**
@@ -2826,27 +2825,40 @@ function IconButton({
 }
 
 /**
- * Signed out: the way to the login page. It lives in the main window — this
- * one has no room for it, and is usually floating over the game — so the button
- * brings that window up on it.
+ * Signed out: the way to sign in, on Nexus Tools in the browser. The session
+ * that comes back is broadcast to every window, this one included.
  */
 function SignedOut() {
+  const { signingIn, signInError, signIn, cancelSignIn } = useAuth();
+
   return (
     <div className="space-y-3">
       <p className="text-xs text-nexus-accent/80">
-        Connectez-vous pour créer une escouade ou en rejoindre une.
+        {signingIn
+          ? "Terminez la connexion dans votre navigateur."
+          : "Connectez-vous pour créer une escouade ou en rejoindre une."}
       </p>
 
-      <OverlayButton
-        onClick={() => {
-          void openMainRoute("/login").catch((error) => {
-            console.error("cannot open the main window", error);
-          });
-        }}
-      >
-        <LogIn className="size-3.5" />
-        Se connecter
-      </OverlayButton>
+      <div className="flex items-center gap-1.5">
+        <OverlayButton onClick={() => void signIn()}>
+          {signingIn ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <LogIn className="size-3.5" />
+          )}
+          {signingIn ? "Rouvrir le navigateur" : "Se connecter"}
+        </OverlayButton>
+
+        {signingIn ? (
+          <OverlayButton onClick={() => void cancelSignIn()}>
+            Annuler
+          </OverlayButton>
+        ) : null}
+      </div>
+
+      {signInError ? (
+        <p className="text-xs text-red-300">{signInError}</p>
+      ) : null}
     </div>
   );
 }
