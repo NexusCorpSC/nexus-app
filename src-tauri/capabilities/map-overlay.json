@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "map-overlay",
+  "description": "Map overlay. Like the squad and plan ones it has no decorations, so its header doubles as the title bar and the webview has to be allowed to drag the window — `core:default` does not cover that. The rest — the API for the places, the store for the pinned map, the events that say it changed — comes from `default`, whose window list it joins.",
+  "windows": ["map"],
+  "permissions": ["core:window:allow-start-dragging"]
+}
