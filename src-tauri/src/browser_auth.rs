@@ -69,7 +69,10 @@ pub async fn browser_sign_in(
 ) -> Result<BrowserCallback, String> {
     let mut url = Url::parse(&url).map_err(|e| e.to_string())?;
     if url.scheme() != "https" && url.scheme() != "http" {
-        return Err(format!("{} is not a web page", url.scheme()));
+        return Err(format!(
+            "Adresse de connexion invalide : seules http et https sont acceptées, pas {}.",
+            url.scheme()
+        ));
     }
 
     let listener = TcpListener::bind(("127.0.0.1", 0))

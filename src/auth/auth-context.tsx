@@ -160,7 +160,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const signedIn = await authApi.signInWithBrowser();
-      if (mine !== attempt.current) return;
+
+      // Signed in, whatever happened meanwhile: the session is stored by now,
+      // and a cancel or a newer attempt that arrived during the exchange
+      // cannot take it back. It wins over them — the newer one, still waiting
+      // on the browser, is ended.
+      if (mine !== attempt.current) {
+        attempt.current++;
+        setSigningIn(false);
+        void authApi.cancelBrowserSignIn().catch(() => {});
+      }
 
       setUser(signedIn);
       // Authenticated endpoints answered 401 while signed out; drop those.
@@ -185,7 +194,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const cancelSignIn = useCallback(async () => {
     attempt.current++;
     setSigningIn(false);
-    await authApi.cancelBrowserSignIn();
+    // Best effort: an attempt Rust no longer holds has nothing to end.
+    await authApi.cancelBrowserSignIn().catch((error) => {
+      console.error("cannot cancel the sign-in", error);
+    });
   }, []);
 
   const signOut = useCallback(async () => {
