@@ -19,9 +19,11 @@ import type { MemberPresence } from "@/types/nexus";
 /** Often enough to see a teammate arrive, rare enough to cost nothing. */
 const PRESENCE_REFRESH_MS = 30_000;
 
-/** «1 h 20», from an ISO date. */
+/** «1 h 20», from an ISO date; floored, since it says how long so far. */
 function elapsed(since: string, now: number): string {
-  const minutes = Math.max(0, Math.round((now - Date.parse(since)) / 60_000));
+  const start = Date.parse(since);
+  if (Number.isNaN(start)) return "";
+  const minutes = Math.max(0, Math.floor((now - start) / 60_000));
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;

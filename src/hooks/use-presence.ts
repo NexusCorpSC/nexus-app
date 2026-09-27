@@ -58,20 +58,34 @@ export function usePresenceRenewal(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
 
-    const timer = setInterval(() => {
-      void getMyPresence()
-        .then((current) => {
-          if (!current.playing) {
-            queryClient.setQueryData(MY_PRESENCE_KEY, current);
-            return;
-          }
-          return declarePlaying(current.activity).then((renewed) =>
-            queryClient.setQueryData(MY_PRESENCE_KEY, renewed),
-          );
-        })
-        .catch((error) => console.error("cannot renew the presence", error));
-    }, RENEW_EVERY_MS);
+    // Signing out clears the cache and turns this off; an answer still on its
+    // way must not put the old account's presence back in. One renewal at a
+    // time, too: a slow network must not stack them up.
+    let cancelled = false;
+    let running = false;
 
-    return () => clearInterval(timer);
+    const renew = async () => {
+      if (running) return;
+      running = true;
+      try {
+        const current = await getMyPresence();
+        if (cancelled) return;
+        const next = current.playing
+          ? await declarePlaying(current.activity)
+          : current;
+        if (!cancelled) queryClient.setQueryData(MY_PRESENCE_KEY, next);
+      } catch (error) {
+        console.error("cannot renew the presence", error);
+      } finally {
+        running = false;
+      }
+    };
+
+    const timer = setInterval(() => void renew(), RENEW_EVERY_MS);
+
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [enabled, queryClient]);
 }

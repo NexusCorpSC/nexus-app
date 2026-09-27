@@ -28,7 +28,9 @@ export function PresenceForm({
   const [activity, setActivity] = useState("");
   const listId = useId();
 
-  // The field follows the stored activity until the reader starts typing.
+  // The field follows the stored activity when it changes — declared from the
+  // site, say. A refresh bringing back the same activity changes nothing: the
+  // dependency is the string, compared by value.
   useEffect(() => {
     setActivity(presence?.activity ?? "");
   }, [presence?.activity]);
