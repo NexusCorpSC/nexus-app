@@ -7,6 +7,7 @@ import {
 } from "react";
 import { MapPin, Minus, Plus, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { displayUnit, toDisplayQty } from "@/lib/units";
 import type { Location } from "@/types/nexus";
 
 /** What the inventory cards need, personal and shared alike. */
@@ -45,11 +46,13 @@ export function locationKey(item: InventoryDisplayItem) {
  * The same thing held at the same place, in the same unit: one card. Each
  * quality stays its own lot inside it — Sadaryx at 688, 510 and 256 is one
  * card of three lots, not three cards that look alike. The same grouping as
- * the web inventory.
+ * the web inventory. Units of one measure count as one: lots in cSCU and in
+ * SCU make one card, shown in SCU.
  */
 export type ItemGroup<T> = {
   key: string;
   name: string;
+  /** The unit shown: each lot's quantity is converted to it. */
   unit?: string;
   /** Best quality first. */
   lots: T[];
@@ -101,15 +104,17 @@ export function groupInventory<T extends InventoryDisplayItem>(
       };
       sections.set(key, section);
     }
-    if (item.unit?.trim().toLowerCase() === "scu") section.scu += item.quantity;
+    const { unit } = displayUnit(item.unit);
+    const quantity = toDisplayQty(item.quantity, item.unit);
+    if (unit === "SCU") section.scu += quantity;
 
-    const groupKey = `${item.name.trim().toLowerCase()}|${(item.unit ?? "").trim().toLowerCase()}`;
+    const groupKey = `${item.name.trim().toLowerCase()}|${(unit ?? "").toLowerCase()}`;
     let group = section.groups.find((g) => g.key === groupKey);
     if (!group) {
       group = {
         key: groupKey,
         name: item.name,
-        unit: item.unit,
+        unit,
         lots: [],
         total: 0,
         updatedAt: 0,
@@ -117,7 +122,7 @@ export function groupInventory<T extends InventoryDisplayItem>(
       section.groups.push(group);
     }
     group.lots.push(item);
-    group.total = roundQty(group.total + item.quantity);
+    group.total = roundQty(group.total + quantity);
     group.updatedAt = Math.max(group.updatedAt, timestamp(item.updatedAt));
   }
 
@@ -330,7 +335,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
               </span>
               {multi ? (
                 <span className="font-mono text-[13px] font-semibold text-nexus-bright tabular-nums">
-                  ×{formatQuantity(lot.quantity)}
+                  ×{formatQuantity(toDisplayQty(lot.quantity, lot.unit))}
                 </span>
               ) : null}
             </>

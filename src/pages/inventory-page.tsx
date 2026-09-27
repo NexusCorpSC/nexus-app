@@ -11,6 +11,7 @@ import {
   setInventoryItemOrgVisible,
 } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
+import { fromDisplayQty, toDisplayQty } from "@/lib/units";
 import {
   Button,
   Card,
@@ -284,23 +285,26 @@ export default function InventoryPage() {
                   {lot.reserved !== undefined ? (
                     <span
                       className="flex items-center gap-1 text-xs text-amber-300"
-                      title={`${number.format(lot.reserved)} réservés dans un colis en attente`}
+                      title={`${number.format(toDisplayQty(lot.reserved, lot.unit))} réservés dans un colis en attente`}
                     >
                       <Send className="size-3.5" aria-hidden />
                       <span className="sr-only">
-                        {number.format(lot.reserved)} réservés dans un colis en
-                        attente
+                        {number.format(toDisplayQty(lot.reserved, lot.unit))}{" "}
+                        réservés dans un colis en attente
                       </span>
                     </span>
                   ) : null}
                   {packaged.has(lot.id) ? (
                     <span
                       className="flex items-center gap-1 text-xs text-nexus-accent"
-                      title={`${number.format(packaged.get(lot.id) ?? 0)} dans le colis`}
+                      title={`${number.format(toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit))} dans le colis`}
                     >
                       <Package className="size-3.5" aria-hidden />
                       <span className="sr-only">
-                        {number.format(packaged.get(lot.id) ?? 0)} dans le colis
+                        {number.format(
+                          toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit),
+                        )}{" "}
+                        dans le colis
                       </span>
                     </span>
                   ) : null}
@@ -312,19 +316,31 @@ export default function InventoryPage() {
                     mode="remove"
                     disabled={adjustMutation.isPending}
                     onSubmit={(amount) =>
-                      adjustMutation.mutate({ id: lot.id, delta: -amount })
+                      adjustMutation.mutate({
+                        id: lot.id,
+                        delta: -fromDisplayQty(amount, lot.unit),
+                      })
                     }
                   />
                   <AdjustQuantityButton
                     mode="add"
                     disabled={adjustMutation.isPending}
                     onSubmit={(amount) =>
-                      adjustMutation.mutate({ id: lot.id, delta: amount })
+                      adjustMutation.mutate({
+                        id: lot.id,
+                        delta: fromDisplayQty(amount, lot.unit),
+                      })
                     }
                   />
                 </>
               )}
               renderFooter={(group, active) => {
+                // Typed in the unit the card shows; the parcel counts in the
+                // lot's own.
+                const available = toDisplayQty(
+                  availableOf(active),
+                  active.unit,
+                );
                 const allVisible = group.lots.every((lot) => lot.orgVisible);
                 const someVisible = group.lots.some((lot) => lot.orgVisible);
                 return (
@@ -344,14 +360,19 @@ export default function InventoryPage() {
                       mode="add"
                       label="Ajouter au colis"
                       icon={Package}
-                      max={availableOf(active)}
+                      max={available}
                       maxMessage={
                         active.reserved !== undefined
-                          ? `Seuls ${number.format(availableOf(active))} sont disponibles : le reste est réservé.`
-                          : `Au plus ${number.format(active.quantity)}`
+                          ? `Seuls ${number.format(available)} sont disponibles : le reste est réservé.`
+                          : `Au plus ${number.format(toDisplayQty(active.quantity, active.unit))}`
                       }
-                      disabled={availableOf(active) <= 0}
-                      onSubmit={(amount) => addToPackage(active, amount)}
+                      disabled={available <= 0}
+                      onSubmit={(amount) =>
+                        addToPackage(
+                          active,
+                          fromDisplayQty(amount, active.unit),
+                        )
+                      }
                     />
                     <DeleteIconButton
                       itemName={
