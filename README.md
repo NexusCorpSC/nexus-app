@@ -56,6 +56,7 @@ contrairement au raccourci qui bascule.
 | Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
 | Inventaire    | `/api/inventory/items`, `/api/inventory/locations`           | oui             |
 | Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                       | partiellement²  |
+| ↳ en jeu      | `/api/orgs/:id/presence`, `/api/me/presence` (GET, PUT, DELETE) | oui          |
 | Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
 | Bloc-notes    | `/api/notes`                                                 | non³            |
 
@@ -411,6 +412,20 @@ L'enregistrement est automatique, 1,2 s après la dernière frappe. Les écritur
 peuvent se chevaucher (minuterie, bouton, fermeture de la fenêtre) et les
 réponses revenir dans le désordre : seule la requête la plus récente met l'écran
 à jour.
+
+### En jeu
+
+Chacun déclare lui-même qu'il joue, et s'il le souhaite ce qu'il fait — rien
+ne le devine. Depuis le pied du menu : le statut sous le pseudo (« En jeu ·
+Minage », ou « Hors jeu ») ouvre la déclaration, avec des suggestions
+d'activité et un champ libre. La page d'une organisation montre ses membres en
+jeu, leur activité et depuis combien de temps, relue toutes les 30 secondes.
+
+C'est la même déclaration que sur le site : faite ici, elle s'y voit, et
+inversement. Elle s'éteint d'elle-même au bout de quatre heures, pour que
+quelqu'un qui ferme le jeu sans le dire ne reste pas « en jeu » ; la fenêtre
+principale la renouvelle toutes les 20 minutes tant qu'elle tourne. Seuls les
+membres d'une organisation voient qui y joue, même quand elle est publique.
 
 ### Escouade
 

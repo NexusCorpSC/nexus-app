@@ -22,7 +22,6 @@ import {
   Hammer,
   House,
   LogIn,
-  LogOut,
   Map as MapIcon,
   MapPin,
   NotebookPen,
@@ -36,6 +35,8 @@ import {
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
+import { usePresenceRenewal } from "@/hooks/use-presence";
+import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
@@ -120,6 +121,9 @@ export default function AppLayout() {
   // Only the main window looks: the check is per application, not per window,
   // and this is the one that can show what to do about it.
   useUpdateWatcher();
+
+  // A declaration of playing stays alive while this window does.
+  usePresenceRenewal(Boolean(user));
 
   // A blueprint added from the search palette is added in another window, so
   // the screens here have to be told: the query client never refetches on
@@ -282,34 +286,14 @@ export default function AppLayout() {
           </div>
         </nav>
 
-        <div className="flex items-center gap-2.5 border-t border-nexus-accent/8 px-3.5 py-3">
+        <div className="relative flex items-center gap-2.5 border-t border-nexus-accent/8 px-3.5 py-3">
           {loading ? (
             <div className="flex flex-1 items-center gap-2 text-sm text-nexus-dim">
               <Spinner />
               Session…
             </div>
           ) : user ? (
-            <>
-              <div className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-nexus-panel text-xs font-semibold text-nexus-accent">
-                {user.name.slice(0, 1).toUpperCase()}
-              </div>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span
-                  className="truncate text-[13px] font-medium text-nexus-white"
-                  title={user.name}
-                >
-                  {user.name}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => void signOut()}
-                  className="flex items-center gap-1 text-left text-[11px] text-nexus-dim transition-colors hover:text-nexus-accent"
-                >
-                  <LogOut className="size-3" />
-                  Se déconnecter
-                </button>
-              </div>
-            </>
+            <SessionMenu name={user.name} onSignOut={() => void signOut()} />
           ) : (
             <button
               type="button"

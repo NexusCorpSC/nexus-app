@@ -1319,3 +1319,50 @@ export type PlacePlansResponse = {
   plans: PlacePlan[];
   targets: PlaceSummary[];
 };
+
+/* ------------------------------------------------------------------ */
+/* Presence                                                            */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Whether one is playing, self-declared, and doing what — mirrors
+ * `types/presence.ts` on Nexus Tools. A declaration lapses on its own after
+ * `PRESENCE_TTL_HOURS`; this app renews it for as long as it runs.
+ */
+export const PRESENCE_ACTIVITY_MAX_LENGTH = 80;
+
+export const PRESENCE_ACTIVITY_SUGGESTIONS = [
+  "Minage",
+  "Commerce",
+  "Transport",
+  "Chasse de primes",
+  "Combat",
+  "Exploration",
+  "Récupération",
+  "Industrie",
+  "Missions",
+  "Course",
+  "Social",
+] as const;
+
+export type MyPresence = {
+  playing: boolean;
+  activity: string | null;
+  since: string | null;
+  expiresAt: string | null;
+};
+
+export type MemberPresence = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  rank: string | null;
+  activity: string | null;
+  since: string;
+};
+
+export type OrgPresence = {
+  orgId: string;
+  playing: MemberPresence[];
+  memberCount: number;
+};
