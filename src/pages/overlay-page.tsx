@@ -21,6 +21,12 @@ import {
   objectivesToBulkLines,
   parseMissionText,
 } from "@/lib/mission-objectives";
+import {
+  isWorkOrder,
+  parseWorkOrderText,
+  workOrderImportRoute,
+} from "@/lib/refinery-work-order";
+import { openMainRoute } from "@/lib/main-window";
 import { CargoCaptureImport } from "@/components/cargo/capture-import";
 import { BlueprintQuickAdd } from "@/components/blueprint-ownership-buttons";
 import { useAuth } from "@/auth/auth-context";
@@ -100,7 +106,8 @@ export default function OverlayPage() {
   }, []);
 
   // Text recognised from a screen capture lands straight in the search bar —
-  // unless it reads as an in-game mission log, which is cargo, not a search.
+  // unless it reads as an in-game mission log, which is cargo, or as a
+  // completed refinery work order, which goes to the inventory's bulk add.
   useEffect(() => {
     const pending = listen<string>(SEARCH_EVENT, (event) => {
       const mission = parseMissionText(event.payload);
@@ -111,6 +118,22 @@ export default function OverlayPage() {
           lines: objectivesToBulkLines(mission.objectives),
           ignored: mission.ignored.length,
         }));
+        return;
+      }
+
+      const workOrder = parseWorkOrderText(event.payload);
+
+      if (isWorkOrder(workOrder)) {
+        // The lots need a place, and checking against the capture: that is a
+        // table's work, not the palette's, so the main window takes over.
+        // The palette is put away first, so the main window comes up in
+        // front rather than under it.
+        setCargo(null);
+        void invoke("close_search_overlay")
+          .then(() => openMainRoute(workOrderImportRoute(workOrder)))
+          .catch((cause) => {
+            console.error("cannot open the bulk add", cause);
+          });
         return;
       }
 
