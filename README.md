@@ -35,6 +35,15 @@ src-tauri/            binaire Tauri, plugins et permissions
 
 ### Fonctionnalités
 
+La fenêtre s'ouvre sur l'**accueil** : les superpositions à lancer avant le jeu
+(recherche, escouade, carte, plan de vol, bloc-notes, cargo), chacune avec son
+raccourci, l'état de l'escouade, le début du bloc-notes et l'accès à la base de
+données. Le menu range les écrans en deux groupes — *Base de données* et *Mon
+espace* — et garde en bas deux boutons qui affichent les superpositions
+Escouade et Carte. Ces boutons, comme les tuiles de l'accueil, passent par la
+commande `show_overlay` : ils affichent la fenêtre, jamais ne la masquent,
+contrairement au raccourci qui bascule.
+
 | Écran         | Endpoints                                                   | Session requise |
 | ------------- | ----------------------------------------------------------- | --------------- |
 | Recherche     | `/api/search`                                                | non⁴            |
@@ -411,6 +420,9 @@ du cockpit, puisque cette fenêtre-là s'ouvre sans panneau. Tout ce qui touche 
 l'escouade se fait depuis cette fenêtre : la créer, la rejoindre par code, la
 quitter, ses rôles, et le **raid** qui en regroupe plusieurs sous une même
 annonce.
+
+Dès qu'il y a une escouade, l'en-tête porte aussi un bouton qui affiche le
+**plan de vol** de l'escouade.
 
 Dans un raid, l'en-tête porte un **commutateur** à deux positions, *Escouade* et
 *Raid*, à la place de l'icône : la position allumée est la vue affichée, ce

@@ -1,21 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { listMissionFactions, listMissions } from "@/lib/api/missions";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
-  Badge,
-  Card,
   EmptyState,
   ErrorState,
-  Field,
-  Input,
   LoadingState,
   PageHeader,
   Pagination,
-  Select,
+  SearchField,
+  Toolbar,
+  ToolbarSelect,
+  ToolbarToggle,
 } from "@/components/ui";
-import { formatUEC } from "@/lib/utils";
+import { MissionCard } from "@/components/missions/mission-card";
 
 export default function MissionsPage() {
   const [search, setSearch] = useState("");
@@ -43,10 +41,13 @@ export default function MissionsPage() {
     placeholderData: keepPreviousData,
   });
 
+  // Any filter change invalidates the current page number.
   function updateFilter(apply: () => void) {
     apply();
     setPage(1);
   }
+
+  const data = missionsQuery.data;
 
   return (
     <>
@@ -55,48 +56,42 @@ export default function MissionsPage() {
         description="Parcourez les missions, leurs factions et les blueprints qu'elles débloquent."
       />
 
-      <Card className="mb-6 p-4">
-        <div className="grid items-end gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Recherche">
-            <Input
-              value={search}
-              placeholder="Titre ou description…"
-              onChange={(event) =>
-                updateFilter(() => setSearch(event.target.value))
-              }
-            />
-          </Field>
-
-          <Field label="Faction">
-            <Select
-              value={factionId}
-              onChange={(event) =>
-                updateFilter(() => setFactionId(event.target.value))
-              }
-            >
-              <option value="">Toutes</option>
-              {factionsQuery.data?.map((faction) => (
-                <option key={faction._id} value={faction._id}>
-                  {faction.name}
-                  {faction.missionCount ? ` (${faction.missionCount})` : ""}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
-          <label className="flex items-center gap-2 pb-2 text-sm text-nexus-accent/75">
-            <input
-              type="checkbox"
-              checked={hasBlueprints}
-              onChange={(event) =>
-                updateFilter(() => setHasBlueprints(event.target.checked))
-              }
-              className="h-4 w-4 rounded border-nexus-accent/30 bg-nexus-abyss accent-nexus-accent"
-            />
-            Avec blueprints uniquement
-          </label>
-        </div>
-      </Card>
+      <Toolbar>
+        <SearchField
+          label="Rechercher une mission"
+          placeholder="Titre ou description…"
+          value={search}
+          onChange={(event) =>
+            updateFilter(() => setSearch(event.target.value))
+          }
+        />
+        <ToolbarSelect
+          label="Faction"
+          value={factionId}
+          onChange={(event) =>
+            updateFilter(() => setFactionId(event.target.value))
+          }
+        >
+          <option value="">Toutes</option>
+          {factionsQuery.data?.map((faction) => (
+            <option key={faction._id} value={faction._id}>
+              {faction.name}
+              {faction.missionCount ? ` (${faction.missionCount})` : ""}
+            </option>
+          ))}
+        </ToolbarSelect>
+        <ToolbarToggle
+          label="Avec blueprints"
+          checked={hasBlueprints}
+          onChange={(checked) => updateFilter(() => setHasBlueprints(checked))}
+        />
+        {data && data.total > 0 ? (
+          <span className="ml-auto text-xs text-nexus-dim">
+            {data.missions.length} sur {data.total.toLocaleString("fr-FR")}{" "}
+            mission{data.total > 1 ? "s" : ""}
+          </span>
+        ) : null}
+      </Toolbar>
 
       {missionsQuery.isPending ? (
         <LoadingState />
@@ -112,53 +107,20 @@ export default function MissionsPage() {
         />
       ) : (
         <>
-          <p className="mb-3 text-xs text-nexus-accent/50">
-            {missionsQuery.data.total} mission
-            {missionsQuery.data.total > 1 ? "s" : ""}
-          </p>
-
-          <div className="space-y-3">
-            {missionsQuery.data.missions.map((mission) => (
-              <Link key={mission._id} to={`/missions/${mission._id}`}>
-                <Card className="p-4 transition-colors hover:border-nexus-accent/40">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium text-nexus-bright">
-                        {mission.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-nexus-accent/50">
-                        {mission.faction?.name ?? "Faction inconnue"}
-                        {mission.missionType ? ` · ${mission.missionType}` : ""}
-                      </p>
-                    </div>
-
-                    <div className="flex shrink-0 items-center gap-2">
-                      {mission.illegal ? (
-                        <Badge tone="warning">Illégale</Badge>
-                      ) : null}
-                      {mission.blueprintDetails?.length ? (
-                        <Badge>
-                          {mission.blueprintDetails.length} blueprint
-                          {mission.blueprintDetails.length > 1 ? "s" : ""}
-                        </Badge>
-                      ) : null}
-                    </div>
-                  </div>
-
-                  {mission.description ? (
-                    <p className="mt-2 line-clamp-2 text-xs text-nexus-accent/65">
-                      {mission.description}
-                    </p>
-                  ) : null}
-
-                  {mission.rewardUEC ? (
-                    <p className="mt-2 text-[11px] text-nexus-accent/45">
-                      Récompense : {formatUEC(mission.rewardUEC)}
-                    </p>
-                  ) : null}
-                </Card>
-              </Link>
-            ))}
+          {/* Dim the previous page while the next one loads, rather than
+              flashing a spinner over a grid the user is reading. */}
+          <div
+            className={
+              missionsQuery.isPlaceholderData
+                ? "opacity-60 transition-opacity"
+                : "transition-opacity"
+            }
+          >
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {missionsQuery.data.missions.map((mission) => (
+                <MissionCard key={mission._id} mission={mission} />
+              ))}
+            </div>
           </div>
 
           <Pagination

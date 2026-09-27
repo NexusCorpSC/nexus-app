@@ -1,4 +1,6 @@
+import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+import { LoadingState } from "@/components/ui";
 import AppLayout from "@/components/layout/app-layout";
 import RequireAuth from "@/components/layout/require-auth";
 import BlueprintsPage from "@/pages/blueprints-page";
@@ -15,10 +17,13 @@ import InventoryPage from "@/pages/inventory-page";
 import OrgsPage from "@/pages/orgs-page";
 import OrgInventoryPage from "@/pages/org-inventory-page";
 import SettingsPage from "@/pages/settings-page";
+import HomePage from "@/pages/home-page";
 import LoginPage from "@/pages/login-page";
 import OverlayPage from "@/pages/overlay-page";
 import CapturePage from "@/pages/capture-page";
-import NotesPage from "@/pages/notes-page";
+// Loaded on first visit: the rich text editor weighs more than the rest of
+// the app put together, and most sessions never open this screen.
+const NotesPage = lazy(() => import("@/pages/notes-page"));
 import NotesOverlayPage from "@/pages/notes-overlay-page";
 import NotificationsOverlayPage from "@/pages/notifications-overlay-page";
 import CargoPage from "@/pages/cargo-page";
@@ -51,7 +56,9 @@ export default function App() {
       <Route path="radial" element={<RadialOverlayPage />} />
 
       <Route element={<AppLayout />}>
-        <Route index element={<Navigate to="/blueprints" replace />} />
+        <Route index element={<Navigate to="/home" replace />} />
+
+        <Route path="home" element={<HomePage />} />
 
         <Route path="blueprints" element={<BlueprintsPage />} />
         <Route path="blueprints/:slug" element={<BlueprintDetailPage />} />
@@ -71,7 +78,14 @@ export default function App() {
 
         <Route path="cargo" element={<CargoPage />} />
         <Route path="orgs" element={<OrgsPage />} />
-        <Route path="notes" element={<NotesPage />} />
+        <Route
+          path="notes"
+          element={
+            <Suspense fallback={<LoadingState />}>
+              <NotesPage />
+            </Suspense>
+          }
+        />
 
         <Route element={<RequireAuth />}>
           <Route path="reputations" element={<ReputationsPage />} />
@@ -82,7 +96,7 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="login" element={<LoginPage />} />
 
-        <Route path="*" element={<Navigate to="/blueprints" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>
   );

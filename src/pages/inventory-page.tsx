@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   createInventoryItem,
   deleteInventoryItem,
@@ -12,22 +12,40 @@ import { useDebounced } from "@/hooks/use-debounced";
 import {
   Button,
   Card,
+  Chip,
   EmptyState,
   ErrorState,
   Field,
   Input,
   LoadingState,
   PageHeader,
+  SearchField,
   Select,
+  Toolbar,
+  ToolbarSelect,
+  ViewToggle,
 } from "@/components/ui";
-import { formatDate } from "@/lib/utils";
-import type { InventoryItemInput } from "@/types/nexus";
+import {
+  DeleteIconButton,
+  INVENTORY_SORT_OPTIONS,
+  InventoryGrid,
+  InventoryList,
+  OrgVisibleCheckbox,
+  groupByLocation,
+  locationKey,
+  sortInventoryItems,
+  useStoredViewMode,
+  type InventorySort,
+} from "@/components/inventory/inventory-items";
+import type { InventoryItem, InventoryItemInput } from "@/types/nexus";
 
 export default function InventoryPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
+  const [sort, setSort] = useState<InventorySort>("updated");
+  const [view, setView] = useStoredViewMode("nexus.inventory.view");
   const [showForm, setShowForm] = useState(false);
 
   const query = useDebounced(search);
@@ -38,14 +56,24 @@ export default function InventoryPage() {
     staleTime: 10 * 60_000,
   });
 
+  // Every location is fetched at once so the chips can show their counts;
+  // the location filter is applied here rather than by the API.
   const itemsQuery = useQuery({
-    queryKey: ["inventory-items", query, locationFilter],
-    queryFn: () =>
-      listInventoryItems({
-        query: query || undefined,
-        locationId: locationFilter || undefined,
-      }),
+    queryKey: ["inventory-items", query],
+    queryFn: () => listInventoryItems({ query: query || undefined }),
   });
+
+  const locationGroups = useMemo(
+    () => groupByLocation(itemsQuery.data ?? []),
+    [itemsQuery.data],
+  );
+
+  const visibleItems = useMemo(() => {
+    const items = (itemsQuery.data ?? []).filter(
+      (item) => !locationFilter || locationKey(item) === locationFilter,
+    );
+    return sortInventoryItems(items, sort);
+  }, [itemsQuery.data, locationFilter, sort]);
 
   function invalidateItems() {
     return queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
@@ -73,14 +101,39 @@ export default function InventoryPage() {
   const mutationError =
     createMutation.error ?? deleteMutation.error ?? toggleVisibilityMutation.error;
 
+  function renderOrgToggle(item: InventoryItem, compact = false) {
+    return (
+      <OrgVisibleCheckbox
+        compact={compact}
+        checked={item.orgVisible}
+        disabled={toggleVisibilityMutation.isPending}
+        onChange={(orgVisible) =>
+          toggleVisibilityMutation.mutate({ id: item.id, orgVisible })
+        }
+      />
+    );
+  }
+
+  function renderDelete(item: InventoryItem) {
+    return (
+      <DeleteIconButton
+        itemName={item.name}
+        disabled={deleteMutation.isPending}
+        onClick={() => deleteMutation.mutate(item.id)}
+      />
+    );
+  }
+
+  const totalCount = itemsQuery.data?.length ?? 0;
+
   return (
     <>
       <PageHeader
         title="Inventaire"
         description="Vos ressources, par lieu de stockage."
         actions={
-          <Button size="sm" onClick={() => setShowForm((open) => !open)}>
-            <Plus className="h-3.5 w-3.5" />
+          <Button onClick={() => setShowForm((open) => !open)}>
+            <Plus className="size-4" />
             Ajouter
           </Button>
         }
@@ -105,30 +158,50 @@ export default function InventoryPage() {
         />
       ) : null}
 
-      <Card className="mb-6 p-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Recherche">
-            <Input
-              value={search}
-              placeholder="Nom de la ressource…"
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </Field>
-          <Field label="Lieu">
-            <Select
-              value={locationFilter}
-              onChange={(event) => setLocationFilter(event.target.value)}
+      <Toolbar className="mb-3">
+        <SearchField
+          label="Rechercher une ressource"
+          value={search}
+          placeholder="Nom de la ressource…"
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <ToolbarSelect
+          label="Tri"
+          value={sort}
+          onChange={(event) => setSort(event.target.value as InventorySort)}
+        >
+          {INVENTORY_SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </ToolbarSelect>
+        <ViewToggle value={view} onChange={setView} />
+      </Toolbar>
+
+      {totalCount > 0 ? (
+        <div
+          role="group"
+          aria-label="Filtrer par lieu"
+          className="mb-6 flex flex-wrap gap-2"
+        >
+          <Chip
+            active={locationFilter === ""}
+            onClick={() => setLocationFilter("")}
+          >
+            Tous · {totalCount}
+          </Chip>
+          {locationGroups.map((group) => (
+            <Chip
+              key={group.key}
+              active={locationFilter === group.key}
+              onClick={() => setLocationFilter(group.key)}
             >
-              <option value="">Tous</option>
-              {locationsQuery.data?.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+              {group.name} · {group.items.length}
+            </Chip>
+          ))}
         </div>
-      </Card>
+      ) : null}
 
       {itemsQuery.isPending ? (
         <LoadingState />
@@ -137,64 +210,38 @@ export default function InventoryPage() {
           error={itemsQuery.error}
           onRetry={() => void itemsQuery.refetch()}
         />
-      ) : itemsQuery.data.length === 0 ? (
-        <EmptyState
-          title="Inventaire vide"
-          description="Ajoutez une première ressource pour la retrouver depuis le bureau."
+      ) : visibleItems.length === 0 ? (
+        query || locationFilter ? (
+          <EmptyState
+            title="Aucune ressource trouvée"
+            description="Essayez un autre nom ou un autre lieu."
+          />
+        ) : (
+          <EmptyState
+            title="Inventaire vide"
+            description="Ajoutez une première ressource pour la retrouver depuis le bureau."
+          />
+        )
+      ) : view === "grid" ? (
+        <InventoryGrid
+          items={visibleItems}
+          renderFooter={(item) => (
+            <>
+              {renderOrgToggle(item)}
+              {renderDelete(item)}
+            </>
+          )}
         />
       ) : (
-        <div className="space-y-2">
-          {itemsQuery.data.map((item) => (
-            <Card key={item.id} className="flex items-center gap-4 p-4">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-nexus-bright">
-                  {item.name}
-                </p>
-                <p className="mt-0.5 text-xs text-nexus-accent/50">
-                  {item.location?.name ?? "Lieu inconnu"}
-                  {item.quality != null ? ` · qualité ${item.quality}` : ""}
-                  {` · maj ${formatDate(item.updatedAt)}`}
-                </p>
-              </div>
-
-              <div className="shrink-0 text-right">
-                <p className="text-sm text-nexus-bright">
-                  {item.quantity.toLocaleString("fr-FR")}
-                  {item.unit ? ` ${item.unit}` : ""}
-                </p>
-              </div>
-
-              <label
-                className="flex shrink-0 items-center gap-1.5 text-[11px] text-nexus-accent/60"
-                title="Rendre visible aux membres de vos organisations"
-              >
-                <input
-                  type="checkbox"
-                  checked={item.orgVisible}
-                  disabled={toggleVisibilityMutation.isPending}
-                  onChange={(event) =>
-                    toggleVisibilityMutation.mutate({
-                      id: item.id,
-                      orgVisible: event.target.checked,
-                    })
-                  }
-                  className="h-3.5 w-3.5 rounded border-nexus-accent/30 bg-nexus-abyss accent-nexus-accent"
-                />
-                Org
-              </label>
-
-              <Button
-                variant="danger"
-                size="sm"
-                aria-label={`Supprimer ${item.name}`}
-                disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate(item.id)}
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </Card>
-          ))}
-        </div>
+        <InventoryList
+          items={visibleItems}
+          renderActions={(item) => (
+            <>
+              {renderOrgToggle(item, true)}
+              {renderDelete(item)}
+            </>
+          )}
+        />
       )}
     </>
   );

@@ -3,22 +3,17 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { listItemFacets, listItems } from "@/lib/api/items";
 import { useDebounced } from "@/hooks/use-debounced";
 import { ItemCard } from "@/components/item-card";
+import { ITEM_KIND_LABELS, ITEM_KINDS, type ItemKind } from "@/types/nexus";
 import {
-  ITEM_KIND_LABELS,
-  ITEM_KINDS,
-  isItemKind,
-  type ItemKind,
-} from "@/types/nexus";
-import {
-  Card,
+  Chip,
   EmptyState,
   ErrorState,
-  Field,
-  Input,
   LoadingState,
   PageHeader,
   Pagination,
-  Select,
+  SearchField,
+  Toolbar,
+  ToolbarSelect,
 } from "@/components/ui";
 
 /**
@@ -73,94 +68,88 @@ export default function ItemsPage() {
     <>
       <PageHeader
         title="Objets"
-        description="Tout ce qui existe en jeu : objets, armes, véhicules et ressources, avec leurs variantes, leurs ensembles et les blueprints qui les fabriquent."
+        description="Tout ce qui existe en jeu : objets, armes, véhicules et ressources."
       />
 
-      <Card className="mb-6 p-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Field label="Recherche" className="sm:col-span-2 lg:col-span-1">
-            <Input
-              value={search}
-              placeholder="Nom, fabricant, variante…"
-              onChange={(event) =>
-                updateFilter(() => setSearch(event.target.value))
-              }
-            />
-          </Field>
+      <Toolbar className="mb-3">
+        <SearchField
+          label="Rechercher un objet"
+          value={search}
+          placeholder="Nom, fabricant, variante…"
+          onChange={(event) =>
+            updateFilter(() => setSearch(event.target.value))
+          }
+        />
 
-          <Field label="Type">
-            <Select
-              value={kind}
-              onChange={(event) =>
-                updateFilter(() => {
-                  const value = event.target.value;
-                  setKind(isItemKind(value) ? value : "");
-                })
-              }
-            >
-              <option value="">Tous</option>
-              {ITEM_KINDS.map((value) => (
-                <option key={value} value={value}>
-                  {ITEM_KIND_LABELS[value]}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <ToolbarSelect
+          label="Catégorie"
+          value={category}
+          onChange={(event) =>
+            updateFilter(() => {
+              setCategory(event.target.value);
+              setSubcategory("");
+            })
+          }
+        >
+          <option value="">Toutes</option>
+          {facetsQuery.data?.categories.map((c) => (
+            <option key={c.category} value={c.category}>
+              {c.category}
+            </option>
+          ))}
+        </ToolbarSelect>
 
-          <Field label="Catégorie">
-            <Select
-              value={category}
-              onChange={(event) =>
-                updateFilter(() => {
-                  setCategory(event.target.value);
-                  setSubcategory("");
-                })
-              }
-            >
-              <option value="">Toutes</option>
-              {facetsQuery.data?.categories.map((c) => (
-                <option key={c.category} value={c.category}>
-                  {c.category}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        {subcategories.length ? (
+          <ToolbarSelect
+            label="Sous-catégorie"
+            value={subcategory}
+            onChange={(event) =>
+              updateFilter(() => setSubcategory(event.target.value))
+            }
+          >
+            <option value="">Toutes</option>
+            {subcategories.map((sub) => (
+              <option key={sub} value={sub}>
+                {sub}
+              </option>
+            ))}
+          </ToolbarSelect>
+        ) : null}
 
-          <Field label="Sous-catégorie">
-            <Select
-              value={subcategory}
-              disabled={!subcategories.length}
-              onChange={(event) =>
-                updateFilter(() => setSubcategory(event.target.value))
-              }
-            >
-              <option value="">Toutes</option>
-              {subcategories.map((sub) => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <ToolbarSelect
+          label="Fabricant"
+          value={manufacturer}
+          disabled={!facetsQuery.data?.manufacturers.length}
+          onChange={(event) =>
+            updateFilter(() => setManufacturer(event.target.value))
+          }
+        >
+          <option value="">Tous</option>
+          {facetsQuery.data?.manufacturers.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </ToolbarSelect>
+      </Toolbar>
 
-          <Field label="Fabricant">
-            <Select
-              value={manufacturer}
-              disabled={!facetsQuery.data?.manufacturers.length}
-              onChange={(event) =>
-                updateFilter(() => setManufacturer(event.target.value))
-              }
-            >
-              <option value="">Tous</option>
-              {facetsQuery.data?.manufacturers.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
-      </Card>
+      <div className="mb-5 flex flex-wrap gap-2">
+        <Chip
+          active={kind === ""}
+          onClick={() => updateFilter(() => setKind(""))}
+        >
+          Tous
+        </Chip>
+        {ITEM_KINDS.map((value) => (
+          <Chip
+            key={value}
+            active={kind === value}
+            onClick={() => updateFilter(() => setKind(value))}
+          >
+            {ITEM_KIND_LABELS[value]}
+          </Chip>
+        ))}
+      </div>
 
       {itemsQuery.isPending ? (
         <LoadingState />
@@ -176,12 +165,12 @@ export default function ItemsPage() {
         />
       ) : (
         <>
-          <p className="mb-3 text-xs text-nexus-accent/50">
+          <p className="mb-3 text-xs text-nexus-dim">
             {itemsQuery.data.total} résultat
             {itemsQuery.data.total > 1 ? "s" : ""}
           </p>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {itemsQuery.data.items.map((item) => (
               <ItemCard key={item.id} item={item} />
             ))}

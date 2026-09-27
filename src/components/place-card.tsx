@@ -125,52 +125,95 @@ function placeHoldings(place: PlaceSummary): string {
 }
 
 /**
- * Un lieu dans une grille ou une liste. `current` marque celui dont la fiche
- * est ouverte : montré comme les autres, mais pas en lien vers lui-même.
+ * Un lieu dans une grille (`tile`, l'image en haut) ou une liste (`row`,
+ * l'image à côté). `current` marque celui dont la fiche est ouverte : montré
+ * comme les autres, mais pas en lien vers lui-même.
+ *
+ * La vignette est partagée avec l'overlay de la carte : son allure par défaut
+ * reste la sienne, on ne la retouche ici que par `className`.
  */
 export function PlaceCard({
   place,
   current = false,
   trailing,
+  layout = "tile",
 }: {
   place: PlaceSummary;
   current?: boolean;
   trailing?: ReactNode;
+  layout?: "tile" | "row";
 }) {
   const trail = placeTrail(place);
   const holdings = placeHoldings(place);
+  const detail = place.shopCategory || holdings;
 
-  const content = (
-    <Card
-      className={cn(
-        "flex h-full items-center gap-3 p-3",
-        current
-          ? "border-nexus-accent/40"
-          : "transition-colors hover:border-nexus-accent/40",
-      )}
-    >
-      <PlaceThumbnail place={place} className="h-14 w-14" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="truncate font-medium text-nexus-bright">{place.name}</p>
-          <PlaceTypeBadge type={place.type} />
+  const content =
+    layout === "tile" ? (
+      <Card
+        className={cn(
+          "flex h-full flex-col overflow-hidden",
+          current
+            ? "border-nexus-accent/35"
+            : "transition-colors hover:border-nexus-accent/35",
+        )}
+      >
+        <PlaceThumbnail
+          place={place}
+          className="h-26 w-full rounded-none bg-[#08243a]"
+        />
+        <div className="flex min-w-0 flex-1 flex-col p-3.5">
+          <p
+            className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
+            style={{ color: `${PLACE_ACCENT[place.type]}cc` }}
+          >
+            {PLACE_TYPE_LABELS[place.type]}
+          </p>
+          <p
+            className="mt-1 truncate text-sm font-semibold text-nexus-white"
+            title={place.name}
+          >
+            {place.name}
+          </p>
+          {trail ? (
+            <p className="mt-0.5 truncate text-xs text-nexus-muted">{trail}</p>
+          ) : null}
+          {detail || trailing ? (
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="truncate text-xs text-nexus-dim">{detail}</p>
+              {trailing}
+            </div>
+          ) : null}
         </div>
-        {trail ? (
-          <p className="mt-0.5 truncate text-xs text-nexus-accent/50">{trail}</p>
-        ) : null}
-        {place.shopCategory ? (
-          <p className="mt-0.5 truncate text-xs text-nexus-accent/70">
-            {place.shopCategory}
-          </p>
-        ) : holdings ? (
-          <p className="mt-0.5 truncate text-xs text-nexus-accent/70">
-            {holdings}
-          </p>
-        ) : null}
-      </div>
-      {trailing}
-    </Card>
-  );
+      </Card>
+    ) : (
+      <Card
+        className={cn(
+          "flex h-full items-center gap-3 p-3",
+          current
+            ? "border-nexus-accent/35"
+            : "transition-colors hover:border-nexus-accent/35",
+        )}
+      >
+        <PlaceThumbnail place={place} className="h-14 w-14 bg-[#08243a]" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="truncate text-sm font-semibold text-nexus-white">
+              {place.name}
+            </p>
+            <PlaceTypeBadge type={place.type} />
+          </div>
+          {trail ? (
+            <p className="mt-0.5 truncate text-xs text-nexus-dim">{trail}</p>
+          ) : null}
+          {detail ? (
+            <p className="mt-0.5 truncate text-xs text-nexus-muted">
+              {detail}
+            </p>
+          ) : null}
+        </div>
+        {trailing}
+      </Card>
+    );
 
   if (current) return <div className="h-full">{content}</div>;
 

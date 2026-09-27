@@ -31,6 +31,7 @@ import {
   Trash2,
   Unlink,
   UserMinus,
+  Route as RouteIcon,
   Users,
   X,
 } from "lucide-react";
@@ -62,6 +63,7 @@ import {
   type SquadRoleIcon,
 } from "@/types/nexus";
 import { cn } from "@/lib/utils";
+import { showOverlay } from "@/lib/windows";
 
 /**
  * The squad, over the game.
@@ -281,6 +283,20 @@ export default function SquadOverlayPage() {
 
         {raiding && raid ? <CodeButton code={raid.code} tone="raid" /> : null}
         {!raiding && squad ? <CodeButton code={squad.code} /> : null}
+
+        {/* The squad's flight plan, one click from the roster it is drawn for. */}
+        {squad ? (
+          <IconButton
+            label="Ouvrir le plan de vol"
+            onClick={() =>
+              void showOverlay("plan").catch((error) =>
+                console.error("cannot open the flight plan", error),
+              )
+            }
+          >
+            <RouteIcon className="size-4" />
+          </IconButton>
+        ) : null}
 
         <OverlayOpacityButton
           label="squad"

@@ -21,9 +21,11 @@ import {
 import {
   Button,
   Card,
+  Chip,
   ErrorState,
   LoadingState,
   PageHeader,
+  SectionTitle,
 } from "@/components/ui";
 
 /**
@@ -66,7 +68,7 @@ export default function PlaceDetailPage() {
     <>
       <Link
         to="/places"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-accent"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Retour aux lieux
@@ -76,7 +78,11 @@ export default function PlaceDetailPage() {
         title={place.name}
         description={place.shopCategory}
         actions={
-          <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void openOnWeb()}
+          >
             <ExternalLink className="h-3.5 w-3.5" />
             Ouvrir sur le web
           </Button>
@@ -91,7 +97,7 @@ export default function PlaceDetailPage() {
 
           {place.description ? (
             <Section title="Description">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-accent/75">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-muted">
                 {place.description}
               </p>
             </Section>
@@ -106,7 +112,7 @@ export default function PlaceDetailPage() {
             >
               <div className="grid gap-2 sm:grid-cols-2">
                 {place.children.map((child) => (
-                  <PlaceCard key={child.id} place={child} />
+                  <PlaceCard key={child.id} place={child} layout="row" />
                 ))}
               </div>
             </Section>
@@ -118,7 +124,7 @@ export default function PlaceDetailPage() {
                   magasins de Lorville se tiennent dans ses quartiers. */}
               <div className="grid gap-2 sm:grid-cols-2">
                 {place.shops.map((shop) => (
-                  <PlaceCard key={shop.id} place={shop} />
+                  <PlaceCard key={shop.id} place={shop} layout="row" />
                 ))}
               </div>
             </Section>
@@ -127,7 +133,7 @@ export default function PlaceDetailPage() {
 
         <div className="space-y-4">
           <Section title="Fiche">
-            <dl className="space-y-2 text-sm">
+            <dl className="divide-y divide-nexus-accent/8 text-sm">
               <Row label="Type">
                 <PlaceTypeBadge type={place.type} />
               </Row>
@@ -145,7 +151,7 @@ export default function PlaceDetailPage() {
 
           <Section title="Services" aside={services.length ? undefined : "—"}>
             {services.length === 0 ? (
-              <p className="text-xs text-nexus-accent/50">
+              <p className="text-xs text-nexus-dim">
                 Aucun service relevé pour l'instant.
               </p>
             ) : (
@@ -153,7 +159,7 @@ export default function PlaceDetailPage() {
                 {services.map((service) => (
                   <li
                     key={service}
-                    className="rounded-full border border-nexus-accent/20 bg-white/5 px-2.5 py-1 text-xs text-nexus-accent/80"
+                    className="rounded-full bg-nexus-accent/10 px-2.5 py-1 text-xs text-nexus-bright"
                   >
                     {PLACE_SERVICE_LABELS[service]}
                   </li>
@@ -172,7 +178,7 @@ function Trail({ place }: { place: PlaceDetails }) {
   if (place.ancestors.length === 0) return null;
 
   return (
-    <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-nexus-accent/50">
+    <nav className="mb-4 flex flex-wrap items-center gap-1 text-xs text-nexus-dim">
       {place.ancestors.map((ancestor) => (
         <span key={ancestor.slug} className="flex items-center gap-1">
           <Link
@@ -184,7 +190,7 @@ function Trail({ place }: { place: PlaceDetails }) {
           <span aria-hidden>›</span>
         </span>
       ))}
-      <span className="text-nexus-accent/70">{place.name}</span>
+      <span className="text-nexus-muted">{place.name}</span>
     </nav>
   );
 }
@@ -245,7 +251,7 @@ function MapsSection({
   if (plans.length === 0) {
     return (
       <Section title="Cartes">
-        <p className="text-xs text-nexus-accent/50">
+        <p className="text-xs text-nexus-dim">
           Ce lieu n'a pas encore été relevé.
         </p>
       </Section>
@@ -263,18 +269,13 @@ function MapsSection({
       {plans.length > 1 ? (
         <div className="mb-3 flex flex-wrap gap-1.5">
           {plans.map((plan) => (
-            <button
+            <Chip
               key={plan.id}
-              type="button"
+              active={plan.id === active.id}
               onClick={() => setActiveId(plan.id)}
-              className={
-                plan.id === active.id
-                  ? "rounded-md border border-nexus-accent/40 bg-white/5 px-2.5 py-1 text-xs text-nexus-bright"
-                  : "rounded-md border border-nexus-accent/15 px-2.5 py-1 text-xs text-nexus-accent/60 transition-colors hover:border-nexus-accent/30"
-              }
             >
               {plan.name}
-            </button>
+            </Chip>
           ))}
         </div>
       ) : null}
@@ -286,14 +287,14 @@ function MapsSection({
       />
 
       {active.borrowedFrom ? (
-        <p className="mt-2 text-xs text-nexus-accent/50">
+        <p className="mt-2 text-xs text-nexus-dim">
           Carte empruntée à {active.borrowedFrom.name}.
         </p>
       ) : null}
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={() => {
             const next = isPinned ? null : place.slug;
@@ -319,7 +320,7 @@ function MapsSection({
         </Button>
       </div>
 
-      <div className="mt-3 border-t border-nexus-accent/10 pt-3">
+      <div className="mt-3 border-t border-nexus-accent/8 pt-3">
         <MapLegend plan={active} targets={place.planTargets} />
       </div>
     </Section>
@@ -337,12 +338,7 @@ function Section({
 }) {
   return (
     <Card className="p-5">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-nexus-bright">{title}</h2>
-        {aside ? (
-          <span className="text-xs text-nexus-accent/50">{aside}</span>
-        ) : null}
-      </div>
+      <SectionTitle aside={aside}>{title}</SectionTitle>
       {children}
     </Card>
   );
@@ -350,9 +346,9 @@ function Section({
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt className="text-xs text-nexus-accent/50">{label}</dt>
-      <dd className="text-right text-nexus-accent/80">{children}</dd>
+    <div className="flex items-center justify-between gap-3 py-2 first:pt-0 last:pb-0">
+      <dt className="text-xs text-nexus-dim">{label}</dt>
+      <dd className="text-right text-nexus-white">{children}</dd>
     </div>
   );
 }

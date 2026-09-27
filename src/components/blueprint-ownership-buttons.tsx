@@ -100,7 +100,7 @@ export function BlueprintRemoveButton({
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="sm"
       disabled={remove.isPending}
       title={

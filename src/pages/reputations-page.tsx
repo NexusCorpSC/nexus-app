@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getPlayerReputations,
@@ -11,13 +12,39 @@ import {
   ErrorState,
   LoadingState,
   PageHeader,
-  Select,
+  SearchField,
+  Segmented,
   Spinner,
+  Toolbar,
 } from "@/components/ui";
-import type { PlayerReputations, RepFaction } from "@/types/nexus";
+import {
+  FactionRepCard,
+  isFactionStarted,
+} from "@/components/reputations/faction-rep-card";
+import type { RepFaction } from "@/types/nexus";
+
+type Progress = "all" | "started";
+
+/** Lowercase and strip accents, so "securite" finds "Sécurité". */
+function fold(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+}
+
+function matchesSearch(faction: RepFaction, needle: string): boolean {
+  if (!needle) return true;
+  return (
+    fold(faction.name).includes(needle) ||
+    faction.careers.some((career) => fold(career.name).includes(needle))
+  );
+}
 
 export default function ReputationsPage() {
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [progress, setProgress] = useState<Progress>("all");
 
   const factionsQuery = useQuery({
     queryKey: ["rep-factions"],
@@ -38,6 +65,19 @@ export default function ReputationsPage() {
       queryClient.setQueryData(["player-reputations"], reputations);
     },
   });
+
+  // The faction list is small and already loaded, so filtering stays
+  // client-side: instant, and no endpoint needs a search parameter.
+  const visibleFactions = useMemo(() => {
+    const factions = factionsQuery.data ?? [];
+    const reputations = reputationsQuery.data ?? {};
+    const needle = fold(search.trim());
+    return factions.filter(
+      (faction) =>
+        matchesSearch(faction, needle) &&
+        (progress === "all" || isFactionStarted(faction, reputations)),
+    );
+  }, [factionsQuery.data, reputationsQuery.data, search, progress]);
 
   if (factionsQuery.isPending || reputationsQuery.isPending) {
     return <LoadingState />;
@@ -63,12 +103,13 @@ export default function ReputationsPage() {
 
   const factions = factionsQuery.data;
   const reputations = reputationsQuery.data;
+  const count = visibleFactions.length;
 
   return (
     <>
       <PageHeader
         title="Réputations"
-        description="Suivez votre standing et vos niveaux de carrière auprès de chaque faction."
+        description="Votre standing et vos niveaux de carrière auprès de chaque faction."
         actions={mutation.isPending ? <Spinner /> : undefined}
       />
 
@@ -85,109 +126,52 @@ export default function ReputationsPage() {
       {factions.length === 0 ? (
         <EmptyState title="Aucune faction configurée" />
       ) : (
-        <div className="space-y-4">
-          {factions.map((faction) => (
-            <FactionCard
-              key={faction.name}
-              faction={faction}
-              reputations={reputations}
-              disabled={mutation.isPending}
-              onChange={(update) => mutation.mutate(update)}
+        <>
+          <Toolbar>
+            <SearchField
+              label="Rechercher une faction ou une carrière"
+              placeholder="Faction ou carrière…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
             />
-          ))}
-        </div>
+            <Segmented
+              label="Progression"
+              value={progress}
+              onChange={setProgress}
+              options={[
+                { value: "all", label: "Toutes" },
+                { value: "started", label: "Commencées" },
+              ]}
+            />
+            <span className="ml-auto text-xs text-nexus-dim">
+              {count} faction{count > 1 ? "s" : ""}
+            </span>
+          </Toolbar>
+
+          {count === 0 ? (
+            <EmptyState
+              title="Aucune faction ne correspond"
+              description={
+                progress === "started"
+                  ? "Élargissez la recherche ou affichez toutes les factions."
+                  : "Essayez un autre nom de faction ou de carrière."
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-3.5 md:grid-cols-2 xl:grid-cols-3">
+              {visibleFactions.map((faction) => (
+                <FactionRepCard
+                  key={faction.name}
+                  faction={faction}
+                  reputations={reputations}
+                  disabled={mutation.isPending}
+                  onChange={(update) => mutation.mutate(update)}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </>
-  );
-}
-
-function FactionCard({
-  faction,
-  reputations,
-  disabled,
-  onChange,
-}: {
-  faction: RepFaction;
-  reputations: PlayerReputations;
-  disabled: boolean;
-  onChange: (update: ReputationUpdate) => void;
-}) {
-  const playerFaction = reputations[faction.name];
-  const standing = playerFaction?.standing ?? faction.defaultStanding;
-
-  return (
-    <Card className="p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold text-nexus-bright">
-          {faction.name}
-        </h2>
-
-        <label className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-wide text-nexus-accent/50">
-            Standing
-          </span>
-          <Select
-            className="w-44"
-            value={standing}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange({
-                factionName: faction.name,
-                standing: event.target.value,
-              })
-            }
-          >
-            {faction.standings.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </Select>
-        </label>
-      </div>
-
-      {faction.careers.length === 0 ? (
-        <p className="text-xs text-nexus-accent/50">
-          Aucune carrière pour cette faction.
-        </p>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
-          {faction.careers.map((career) => {
-            const currentLevel =
-              playerFaction?.careers?.[career.name]?.level ??
-              career.levels.find((level) => level.isDefault) ??
-              career.levels[0];
-
-            return (
-              <label
-                key={career.name}
-                className="rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 p-3"
-              >
-                <span className="mb-1.5 block text-xs font-medium text-nexus-bright/85">
-                  {career.name}
-                </span>
-                <Select
-                  value={currentLevel?.name ?? ""}
-                  disabled={disabled}
-                  onChange={(event) =>
-                    onChange({
-                      factionName: faction.name,
-                      careerName: career.name,
-                      levelName: event.target.value,
-                    })
-                  }
-                >
-                  {career.levels.map((level) => (
-                    <option key={level.name} value={level.name}>
-                      {level.name}
-                    </option>
-                  ))}
-                </Select>
-              </label>
-            );
-          })}
-        </div>
-      )}
-    </Card>
   );
 }

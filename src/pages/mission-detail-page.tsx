@@ -1,14 +1,15 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Box, Share2 } from "lucide-react";
 import { getMission } from "@/lib/api/missions";
 import {
-  Badge,
   Card,
   ErrorState,
   LoadingState,
   PageHeader,
+  SectionTitle,
 } from "@/components/ui";
+import { IllegalPill } from "@/components/missions/mission-card";
 import { formatUEC } from "@/lib/utils";
 
 export default function MissionDetailPage() {
@@ -32,101 +33,123 @@ export default function MissionDetailPage() {
   }
 
   const mission = missionQuery.data;
+  const blueprints = mission.blueprintDetails ?? [];
+
+  const details: { label: string; value: string; className?: string }[] = [
+    { label: "Faction", value: mission.faction?.name ?? "—" },
+    { label: "Catégorie", value: mission.category ?? "—" },
+    { label: "Type", value: mission.missionType ?? "—" },
+    {
+      label: "Récompense",
+      value: formatUEC(mission.rewardUEC),
+      // Same amber as the grid card, so the reward is recognised at a glance.
+      className: mission.rewardUEC ? "text-right font-semibold text-amber-300" : undefined,
+    },
+  ];
 
   return (
     <>
       <Link
         to="/missions"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-accent"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
       >
-        <ArrowLeft className="h-3.5 w-3.5" />
+        <ArrowLeft className="size-3.5" />
         Retour aux missions
       </Link>
 
+      {mission.missionType ? (
+        <p className="mb-1 text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+          {mission.missionType}
+        </p>
+      ) : null}
       <PageHeader
         title={mission.title}
         description={mission.faction?.name}
         actions={
-          <div className="flex gap-2">
-            {mission.illegal ? <Badge tone="warning">Illégale</Badge> : null}
-            {mission.canBeShared ? <Badge>Partageable</Badge> : null}
-          </div>
+          mission.illegal || mission.canBeShared ? (
+            <>
+              {mission.illegal ? <IllegalPill /> : null}
+              {mission.canBeShared ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                  <Share2 className="size-3" />
+                  Partageable
+                </span>
+              ) : null}
+            </>
+          ) : undefined
         }
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2">
           {mission.description ? (
             <Card className="p-5">
-              <h2 className="mb-2 text-sm font-semibold text-nexus-bright">
-                Briefing
-              </h2>
-              <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-accent/75">
+              <SectionTitle>Briefing</SectionTitle>
+              <p className="text-sm leading-relaxed whitespace-pre-line text-nexus-muted">
                 {mission.description}
               </p>
             </Card>
           ) : null}
 
-          <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
+          <section>
+            <SectionTitle
+              aside={
+                blueprints.length
+                  ? `${blueprints.length} blueprint${blueprints.length > 1 ? "s" : ""}`
+                  : undefined
+              }
+            >
               Blueprints débloqués
-            </h2>
+            </SectionTitle>
 
-            {mission.blueprintDetails?.length ? (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {mission.blueprintDetails.map((blueprint) => (
+            {blueprints.length ? (
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+                {blueprints.map((blueprint) => (
                   <Link
                     key={blueprint._id}
                     to={`/blueprints/${blueprint.slug}`}
-                    className="rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 p-3 transition-colors hover:border-nexus-accent/35"
+                    className="flex items-start gap-2.5 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
                   >
-                    <p className="text-sm text-nexus-bright">{blueprint.name}</p>
-                    {blueprint.category ? (
-                      <p className="mt-0.5 text-[11px] text-nexus-accent/50">
-                        {blueprint.category}
-                        {blueprint.subcategory
-                          ? ` · ${blueprint.subcategory}`
-                          : ""}
+                    <Box className="mt-0.5 size-4 shrink-0 text-violet-300" />
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-[13px] font-medium text-nexus-white">
+                        {blueprint.name}
                       </p>
-                    ) : null}
+                      {blueprint.category ? (
+                        <p className="mt-0.5 truncate text-[11px] text-nexus-dim">
+                          {blueprint.category}
+                          {blueprint.subcategory
+                            ? ` · ${blueprint.subcategory}`
+                            : ""}
+                        </p>
+                      ) : null}
+                    </div>
                   </Link>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-nexus-accent/50">
-                Cette mission ne débloque aucun blueprint.
-              </p>
+              <Card className="p-4">
+                <p className="text-xs text-nexus-dim">
+                  Cette mission ne débloque aucun blueprint.
+                </p>
+              </Card>
             )}
-          </Card>
+          </section>
         </div>
 
         <Card className="h-fit p-5">
-          <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
-            Détails
-          </h2>
-          <dl className="space-y-2 text-xs">
-            <div className="flex justify-between gap-3">
-              <dt className="text-nexus-accent/50">Faction</dt>
-              <dd className="text-nexus-bright/85">
-                {mission.faction?.name ?? "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-nexus-accent/50">Catégorie</dt>
-              <dd className="text-nexus-bright/85">{mission.category ?? "—"}</dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-nexus-accent/50">Type</dt>
-              <dd className="text-nexus-bright/85">
-                {mission.missionType ?? "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt className="text-nexus-accent/50">Récompense</dt>
-              <dd className="text-nexus-bright/85">
-                {formatUEC(mission.rewardUEC)}
-              </dd>
-            </div>
+          <SectionTitle>Détails</SectionTitle>
+          <dl className="space-y-2.5 text-[13px]">
+            {details.map((detail) => (
+              <div key={detail.label} className="flex justify-between gap-3">
+                <dt className="text-nexus-dim">{detail.label}</dt>
+                <dd
+                  className={detail.className ?? "text-right text-nexus-white"}
+                >
+                  {detail.value}
+                </dd>
+              </div>
+            ))}
           </dl>
         </Card>
       </div>

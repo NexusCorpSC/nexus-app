@@ -4,7 +4,13 @@ import { Users } from "lucide-react";
 import { listBlueprintOrgOwners } from "@/lib/api/blueprints";
 import { listOrganizations } from "@/lib/api/orgs";
 import { useAuth } from "@/auth/auth-context";
-import { Card, ErrorState, Select, Spinner } from "@/components/ui";
+import {
+  Card,
+  ErrorState,
+  SectionTitle,
+  Select,
+  Spinner,
+} from "@/components/ui";
 
 /**
  * Who, among the members of one of your organizations, already owns this
@@ -37,7 +43,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
   if (!user) {
     return (
       <Section>
-        <p className="text-xs text-nexus-accent/60">
+        <p className="text-xs text-nexus-dim">
           Connectez-vous pour voir qui, dans vos organisations, possède ce
           blueprint.
         </p>
@@ -70,7 +76,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
   if (organizations.length === 0) {
     return (
       <Section>
-        <p className="text-xs text-nexus-accent/60">
+        <p className="text-xs text-nexus-dim">
           Vous n'appartenez à aucune organisation.
         </p>
       </Section>
@@ -101,7 +107,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
           onRetry={() => void ownersQuery.refetch()}
         />
       ) : ownersQuery.data.length === 0 ? (
-        <p className="text-xs text-nexus-accent/60">
+        <p className="text-xs text-nexus-dim">
           Personne ne le possède dans cette organisation.
         </p>
       ) : (
@@ -109,7 +115,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
           {ownersQuery.data.map((member) => (
             <li
               key={member.userId}
-              className="flex items-center gap-2 text-xs text-nexus-bright/85"
+              className="flex items-center gap-2 text-xs text-nexus-white"
             >
               <span className="size-1.5 shrink-0 rounded-full bg-emerald-400/70" />
               <span className="truncate">{member.name}</span>
@@ -124,10 +130,12 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
 function Section({ children }: { children: React.ReactNode }) {
   return (
     <Card className="p-5">
-      <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-nexus-bright">
-        <Users className="h-3.5 w-3.5 text-nexus-accent/60" />
-        Dans mon organisation
-      </h2>
+      <SectionTitle>
+        <span className="flex items-center gap-2">
+          <Users className="h-3.5 w-3.5 text-nexus-dim" />
+          Dans mon organisation
+        </span>
+      </SectionTitle>
       {children}
     </Card>
   );

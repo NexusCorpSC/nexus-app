@@ -5,6 +5,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "@/App";
 import { AuthProvider } from "@/auth/auth-context";
 import { ApiError } from "@/lib/api-client";
+// Bundled rather than fetched: the CSP allows no font host, and the app has to
+// look the same offline.
+import "@fontsource/ibm-plex-sans/400.css";
+import "@fontsource/ibm-plex-sans/500.css";
+import "@fontsource/ibm-plex-sans/600.css";
+import "@fontsource/chakra-petch/500.css";
+import "@fontsource/chakra-petch/600.css";
+import "@fontsource/chakra-petch/700.css";
+import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/jetbrains-mono/500.css";
 import "@/styles.css";
 
 const queryClient = new QueryClient({

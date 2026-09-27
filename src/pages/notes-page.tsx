@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/auth/auth-context";
-import { NoteEditor } from "@/components/note-editor";
-import { ErrorState, LoadingState, PageHeader } from "@/components/ui";
+import { Layers } from "lucide-react";
+import { NoteWorkspace } from "@/components/notes/note-workspace";
+import {
+  Button,
+  ErrorState,
+  Kbd,
+  LoadingState,
+  PageHeader,
+} from "@/components/ui";
 import { useNoteStream } from "@/hooks/use-note-stream";
 import { noteQueryKey, readNote } from "@/lib/notes";
 import {
@@ -11,6 +18,7 @@ import {
   getShortcuts,
   type Shortcuts,
 } from "@/lib/settings";
+import { showOverlay } from "@/lib/windows";
 
 export default function NotesPage() {
   const { user, loading } = useAuth();
@@ -46,23 +54,37 @@ export default function NotesPage() {
             ? "Vos notes en ligne, partagées avec le site Nexus Tools."
             : "Notes enregistrées sur cet ordinateur. Connectez-vous pour les retrouver sur le site et vos autres appareils."
         }
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() =>
+                void showOverlay("notes").catch((error) =>
+                  console.error("cannot open the notes overlay", error),
+                )
+              }
+            >
+              <Layers className="size-4" />
+              Afficher par-dessus le jeu
+            </Button>
+            <Kbd>{formatShortcut(shortcuts.notes)}</Kbd>
+          </>
+        }
       />
-
-      <p className="mb-4 text-xs text-nexus-accent/50">
-        {formatShortcut(shortcuts.notes)} affiche ces notes en superposition,
-        par-dessus le jeu.
-      </p>
 
       {loading || isPending ? (
         <LoadingState />
       ) : error ? (
         <ErrorState error={error} onRetry={() => void refetch()} />
       ) : (
-        <NoteEditor
+        <NoteWorkspace
           key={queryKey.join(":")}
           note={data}
           signedIn={signedIn}
-          className="h-[32rem]"
+          // The page's padding and header above, the rest of the window for
+          // the note.
+          className="h-[calc(100vh-10.5rem)] min-h-96"
           onSaved={(note) => queryClient.setQueryData(queryKey, note)}
         />
       )}

@@ -7,7 +7,7 @@ import { NOTE_CONTENT_MAX_LENGTH, type Note } from "@/types/nexus";
 /** Delay before edits are persisted on their own. */
 const AUTOSAVE_DELAY_MS = 1200;
 
-type SaveStatus = "idle" | "saving" | "saved" | "error";
+export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 type NoteEditorProps = {
   /**
@@ -36,21 +36,37 @@ function formatUpdatedAt(iso: string | null): string | null {
   })}`;
 }
 
+export type NoteAutosave = {
+  /** The text being edited, saved or not. */
+  content: string;
+  setContent: (content: string) => void;
+  /** Whether `content` differs from the last revision written. */
+  isDirty: boolean;
+  status: SaveStatus;
+  error: string | null;
+  /** What the status line says: unsaved, saving, failed or when it was saved. */
+  statusLabel: string | null;
+  /** Writes `content` now, without waiting for the autosave. */
+  saveNow: () => void;
+};
+
 /**
- * Free-form scratch pad with autosave.
+ * The autosave behind every note editor: keeps the text being edited, writes it
+ * a moment after the last change, and follows the revisions stored elsewhere.
  *
  * Saves overlap — the timer, the button and the flush on unmount can all be in
  * flight at once — and the API may answer out of order, so only the most recent
  * request is allowed to move the UI.
  */
-export function NoteEditor({
+export function useNoteAutosave({
   note,
   signedIn,
-  autoFocus = false,
-  className,
-  textareaClassName,
   onSaved,
-}: NoteEditorProps) {
+}: {
+  note: Note;
+  signedIn: boolean;
+  onSaved?: (note: Note) => void;
+}): NoteAutosave {
   const [saved, setSaved] = useState(note);
   const [content, setContent] = useState(note.content);
   const [status, setStatus] = useState<SaveStatus>("idle");
@@ -167,6 +183,32 @@ export function NoteEditor({
         ? "Échec de l'enregistrement"
         : formatUpdatedAt(saved.updatedAt);
 
+  return {
+    content,
+    setContent,
+    isDirty,
+    status,
+    error,
+    statusLabel,
+    saveNow: () => void save(content),
+  };
+}
+
+/**
+ * Free-form scratch pad with autosave, as a plain textarea — the overlay's
+ * editor, where there is no room for a toolbar.
+ */
+export function NoteEditor({
+  note,
+  signedIn,
+  autoFocus = false,
+  className,
+  textareaClassName,
+  onSaved,
+}: NoteEditorProps) {
+  const { content, setContent, isDirty, status, error, statusLabel, saveNow } =
+    useNoteAutosave({ note, signedIn, onSaved });
+
   return (
     <div className={cn("flex min-h-0 flex-col gap-2", className)}>
       <textarea
@@ -196,7 +238,7 @@ export function NoteEditor({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => void save(content)}
+            onClick={saveNow}
             disabled={!isDirty || status === "saving"}
           >
             Enregistrer

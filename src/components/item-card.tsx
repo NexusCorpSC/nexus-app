@@ -71,7 +71,7 @@ export function ItemThumbnail({
         />
       ) : (
         <Icon
-          className="h-5 w-5"
+          className="size-6"
           style={{ color: `${KIND_ACCENT[item.kind]}99` }}
         />
       )}
@@ -100,17 +100,20 @@ export function ItemHeroImage({
 }
 
 /**
- * A catalogue object in a grid or a related-objects list. `current` marks the
- * one whose fiche is open: shown like the others, but not a link to itself.
+ * A catalogue object in a grid (`tile`, picture on top) or a related-objects
+ * list (`row`, picture beside). `current` marks the one whose fiche is open:
+ * shown like the others, but not a link to itself.
  */
 export function ItemCard({
   item,
   current = false,
   trailing,
+  layout = "tile",
 }: {
   item: ItemSummary;
   current?: boolean;
   trailing?: ReactNode;
+  layout?: "tile" | "row";
 }) {
   const subtitle = [item.category, item.subcategory]
     .filter(Boolean)
@@ -121,35 +124,75 @@ export function ItemCard({
       ? `Ensemble : ${item.setName}`
       : item.manufacturer;
 
-  const content = (
-    <Card
-      className={cn(
-        "flex h-full items-center gap-3 p-3",
-        current
-          ? "border-nexus-accent/40"
-          : "transition-colors hover:border-nexus-accent/40",
-      )}
-    >
-      <ItemThumbnail item={item} className="h-14 w-14" />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
-          <p className="truncate font-medium text-nexus-bright">{item.name}</p>
-          <KindBadge kind={item.kind} />
+  const content =
+    layout === "tile" ? (
+      <Card
+        className={cn(
+          "flex h-full flex-col overflow-hidden",
+          current
+            ? "border-nexus-accent/35"
+            : "transition-colors hover:border-nexus-accent/35",
+        )}
+      >
+        <ItemThumbnail
+          item={item}
+          className="h-26 w-full rounded-none bg-[#08243a]"
+        />
+        <div className="flex min-w-0 flex-1 flex-col p-3.5">
+          <p
+            className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
+            style={{ color: `${KIND_ACCENT[item.kind]}cc` }}
+          >
+            {ITEM_KIND_LABELS[item.kind]}
+            {subtitle ? (
+              <span className="text-sky-300/60"> · {subtitle}</span>
+            ) : null}
+          </p>
+          <p
+            className="mt-1 truncate text-sm font-semibold text-nexus-white"
+            title={item.name}
+          >
+            {item.name}
+          </p>
+          {detail || trailing ? (
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="truncate text-xs text-nexus-dim">{detail}</p>
+              {trailing}
+            </div>
+          ) : null}
         </div>
-        {subtitle ? (
-          <p className="mt-0.5 truncate text-xs text-nexus-accent/50">
-            {subtitle}
-          </p>
-        ) : null}
-        {detail ? (
-          <p className="mt-0.5 truncate text-xs text-nexus-accent/70">
-            {detail}
-          </p>
-        ) : null}
-      </div>
-      {trailing}
-    </Card>
-  );
+      </Card>
+    ) : (
+      <Card
+        className={cn(
+          "flex h-full items-center gap-3 p-3",
+          current
+            ? "border-nexus-accent/35"
+            : "transition-colors hover:border-nexus-accent/35",
+        )}
+      >
+        <ItemThumbnail item={item} className="h-14 w-14 bg-[#08243a]" />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="truncate text-sm font-semibold text-nexus-white">
+              {item.name}
+            </p>
+            <KindBadge kind={item.kind} />
+          </div>
+          {subtitle ? (
+            <p className="mt-0.5 truncate text-xs text-nexus-dim">
+              {subtitle}
+            </p>
+          ) : null}
+          {detail ? (
+            <p className="mt-0.5 truncate text-xs text-nexus-muted">
+              {detail}
+            </p>
+          ) : null}
+        </div>
+        {trailing}
+      </Card>
+    );
 
   if (current) {
     return <div className="h-full">{content}</div>;

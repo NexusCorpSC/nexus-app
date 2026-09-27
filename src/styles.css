@@ -11,6 +11,23 @@
   --color-nexus-accent: #9ed0ff;
   --color-nexus-bright: #c9e4ff;
   --color-nexus-soft: #cce7ff;
+
+  /*
+   * The main window's surfaces and text, from darkest to brightest: the rail
+   * the menu sits on, the cards laid over the page, then the text shades —
+   * `white` for titles, `muted` for descriptions, `dim` for what only needs
+   * to be findable.
+   */
+  --color-nexus-night: #041827;
+  --color-nexus-card: #0a2a42;
+  --color-nexus-white: #e6f2ff;
+  --color-nexus-muted: #7e9fb7;
+  --color-nexus-dim: #6f90a8;
+
+  /* Plex for reading, Chakra Petch for titles and labels, JetBrains Mono for keys. */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
 }
 
 :root {
@@ -27,13 +44,7 @@ body {
   margin: 0;
   background-color: var(--color-nexus-abyss);
   color: var(--color-nexus-bright);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -128,4 +139,124 @@ label {
 
 .nexus-radial {
   animation: nexus-radial-in 90ms ease-out both;
+}
+
+/*
+ * Notes page — rich text preview (src/components/notes/rich-note-editor.tsx).
+ * Tiptap renders plain HTML elements that Tailwind's reset has stripped of
+ * every default, so the look of a note is restored here, for the dark theme.
+ */
+.nexus-rich-note {
+  min-height: 100%;
+  padding: 20px 24px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.65;
+  color: #d7e9fb;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.nexus-rich-note[contenteditable="false"] {
+  cursor: default;
+}
+
+.nexus-rich-note > * + * {
+  margin-top: 0.75em;
+}
+
+.nexus-rich-note :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--color-nexus-white);
+}
+
+.nexus-rich-note h1 {
+  font-size: 1.6em;
+}
+
+.nexus-rich-note h2 {
+  font-size: 1.3em;
+}
+
+.nexus-rich-note h3 {
+  font-size: 1.12em;
+}
+
+.nexus-rich-note :is(h1, h2, h3, h4, h5, h6):not(:first-child) {
+  margin-top: 1.3em;
+}
+
+.nexus-rich-note strong {
+  font-weight: 700;
+  color: var(--color-nexus-white);
+}
+
+.nexus-rich-note a {
+  color: var(--color-nexus-accent);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-nexus-accent) 45%, transparent);
+  text-underline-offset: 2px;
+}
+
+.nexus-rich-note :is(ul, ol) {
+  padding-left: 1.4em;
+}
+
+.nexus-rich-note ul {
+  list-style: disc;
+}
+
+.nexus-rich-note ol {
+  list-style: decimal;
+}
+
+.nexus-rich-note li::marker {
+  color: var(--color-nexus-accent);
+}
+
+.nexus-rich-note li > p + * {
+  margin-top: 0.25em;
+}
+
+.nexus-rich-note li + li {
+  margin-top: 0.2em;
+}
+
+.nexus-rich-note code {
+  font-family: var(--font-mono);
+  font-size: 0.87em;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background-color: color-mix(in srgb, var(--color-nexus-accent) 10%, transparent);
+  color: var(--color-nexus-bright);
+}
+
+.nexus-rich-note pre {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background-color: var(--color-nexus-abyss);
+  overflow-x: auto;
+}
+
+.nexus-rich-note pre code {
+  padding: 0;
+  background: none;
+}
+
+.nexus-rich-note blockquote {
+  padding-left: 1em;
+  border-left: 2px solid color-mix(in srgb, var(--color-nexus-accent) 35%, transparent);
+  color: var(--color-nexus-muted);
+}
+
+.nexus-rich-note hr {
+  border: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-nexus-accent) 18%, transparent);
+  margin: 1.5em 0;
+}
+
+.nexus-rich-note s {
+  color: var(--color-nexus-muted);
 }

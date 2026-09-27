@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -10,12 +11,12 @@ import {
 } from "@/components/blueprint-ownership-buttons";
 import { getApiBaseUrl } from "@/lib/settings";
 import {
-  Badge,
   Button,
   Card,
   ErrorState,
   LoadingState,
   PageHeader,
+  SectionTitle,
 } from "@/components/ui";
 import { formatDuration } from "@/lib/utils";
 
@@ -46,11 +47,16 @@ export default function BlueprintDetailPage() {
 
   const blueprint = blueprintQuery.data;
 
+  const craftingTime = blueprint.craftingTime ?? blueprint.recipe?.craftingTime;
+  const statistics = blueprint.statistics
+    ? Object.entries(blueprint.statistics)
+    : [];
+
   return (
     <>
       <Link
         to="/blueprints"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-accent"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Retour aux blueprints
@@ -72,7 +78,11 @@ export default function BlueprintDetailPage() {
               <BlueprintRemoveButton blueprintId={blueprint.id} />
             ) : null}
 
-            <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void openOnWeb()}
+            >
               <ExternalLink className="h-3.5 w-3.5" />
               Ouvrir sur le web
             </Button>
@@ -80,42 +90,70 @@ export default function BlueprintDetailPage() {
         }
       />
 
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <FactTile label="Fabrication" value={formatDuration(craftingTime)} />
+        {blueprint.tier !== undefined ? (
+          <FactTile label="Tier" value={blueprint.tier} />
+        ) : null}
+        {blueprint.owned !== undefined ? (
+          <FactTile
+            label="Possession"
+            value={
+              blueprint.owned ? (
+                <span className="text-emerald-300">Possédé</span>
+              ) : (
+                "Non possédé"
+              )
+            }
+          />
+        ) : null}
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          {blueprint.description ? (
-            <Card className="p-5">
-              <h2 className="mb-2 text-sm font-semibold text-nexus-bright">
-                Description
-              </h2>
-              <p className="text-sm leading-relaxed text-nexus-accent/75">
-                {blueprint.description}
-              </p>
+          {blueprint.imageUrl || blueprint.description ? (
+            <Card className="overflow-hidden">
+              {blueprint.imageUrl ? (
+                <div className="h-48 bg-[#08243a]">
+                  <img
+                    src={blueprint.imageUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : null}
+              {blueprint.description ? (
+                <div className="p-5">
+                  <SectionTitle>Description</SectionTitle>
+                  <p className="text-sm leading-relaxed text-nexus-muted">
+                    {blueprint.description}
+                  </p>
+                </div>
+              ) : null}
             </Card>
           ) : null}
 
           <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
-              Recette
-            </h2>
+            <SectionTitle>Recette</SectionTitle>
 
             {blueprint.recipe?.components?.length ? (
-              <ul className="space-y-3">
+              <ul className="divide-y divide-nexus-accent/8">
                 {blueprint.recipe.components.map((component, index) => (
                   <li
                     key={`${component.name}-${index}`}
-                    className="rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 p-3"
+                    className="py-3 first:pt-0 last:pb-0"
                   >
-                    <p className="text-sm font-medium text-nexus-bright">
+                    <p className="text-sm font-semibold text-nexus-white">
                       {component.name}
                     </p>
                     <ul className="mt-1.5 space-y-1">
                       {component.options.map((option, optionIndex) => (
                         <li
                           key={`${option.name}-${optionIndex}`}
-                          className="flex items-center justify-between text-xs text-nexus-accent/70"
+                          className="flex items-center justify-between gap-3 text-xs text-nexus-muted"
                         >
                           <span>{option.name}</span>
-                          <span className="text-nexus-accent/50">
+                          <span className="font-mono text-nexus-dim">
                             ×{option.quantity}
                             {option.minQuality
                               ? ` · qualité ≥ ${option.minQuality}`
@@ -128,7 +166,7 @@ export default function BlueprintDetailPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-nexus-accent/50">
+              <p className="text-xs text-nexus-dim">
                 Aucune recette renseignée pour ce blueprint.
               </p>
             )}
@@ -136,49 +174,17 @@ export default function BlueprintDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
-              Fiche
-            </h2>
-            <dl className="space-y-2 text-xs">
-              <div className="flex justify-between gap-3">
-                <dt className="text-nexus-accent/50">Temps de fabrication</dt>
-                <dd className="text-nexus-bright/85">
-                  {formatDuration(
-                    blueprint.craftingTime ?? blueprint.recipe?.craftingTime,
-                  )}
-                </dd>
-              </div>
-              {blueprint.tier !== undefined ? (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-nexus-accent/50">Tier</dt>
-                  <dd className="text-nexus-bright/85">{blueprint.tier}</dd>
-                </div>
-              ) : null}
-              {blueprint.owned !== undefined ? (
-                <div className="flex justify-between gap-3">
-                  <dt className="text-nexus-accent/50">Possession</dt>
-                  <dd>
-                    <Badge tone={blueprint.owned ? "success" : "default"}>
-                      {blueprint.owned ? "Possédé" : "Non possédé"}
-                    </Badge>
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
-          </Card>
-
-          {blueprint.statistics &&
-          Object.keys(blueprint.statistics).length > 0 ? (
+          {statistics.length > 0 ? (
             <Card className="p-5">
-              <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
-                Statistiques
-              </h2>
-              <dl className="space-y-2 text-xs">
-                {Object.entries(blueprint.statistics).map(([name, stat]) => (
-                  <div key={name} className="flex justify-between gap-3">
-                    <dt className="text-nexus-accent/50">{name}</dt>
-                    <dd className="text-nexus-bright/85">
+              <SectionTitle>Statistiques</SectionTitle>
+              <dl className="divide-y divide-nexus-accent/8 text-xs">
+                {statistics.map(([name, stat]) => (
+                  <div
+                    key={name}
+                    className="flex justify-between gap-3 py-2 first:pt-0 last:pb-0"
+                  >
+                    <dt className="text-nexus-dim">{name}</dt>
+                    <dd className="text-nexus-white">
                       {stat.value}
                       {stat.unit ? ` ${stat.unit}` : ""}
                     </dd>
@@ -190,10 +196,8 @@ export default function BlueprintDetailPage() {
 
           {blueprint.obtention ? (
             <Card className="p-5">
-              <h2 className="mb-2 text-sm font-semibold text-nexus-bright">
-                Obtention
-              </h2>
-              <p className="text-xs leading-relaxed text-nexus-accent/70">
+              <SectionTitle>Obtention</SectionTitle>
+              <p className="text-xs leading-relaxed text-nexus-muted">
                 {blueprint.obtention}
               </p>
             </Card>
@@ -203,5 +207,17 @@ export default function BlueprintDetailPage() {
         </div>
       </div>
     </>
+  );
+}
+
+/** One key fact of the blueprint: a small label over its value. */
+function FactTile({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <Card className="px-3.5 py-3">
+      <p className="text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-semibold text-nexus-white">{value}</p>
+    </Card>
   );
 }

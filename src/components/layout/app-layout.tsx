@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import {
+  formatShortcut,
   getNotificationCorner,
   getOverlayOpacity,
   getShortcuts,
@@ -15,16 +16,19 @@ import {
   type OverlayOpacity,
 } from "@/lib/overlay-opacity";
 import {
-  Boxes,
+  Archive,
   Container,
   Flag,
   Hammer,
+  House,
   LogIn,
   LogOut,
+  Map as MapIcon,
   MapPin,
   NotebookPen,
   Package,
   Rocket,
+  Search,
   Settings as SettingsIcon,
   Star,
   Users,
@@ -34,6 +38,7 @@ import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { cn } from "@/lib/utils";
+import { showOverlay, type OverlayLabel } from "@/lib/windows";
 
 type NavItem = {
   to: string;
@@ -43,18 +48,67 @@ type NavItem = {
   requiresAuth?: boolean;
 };
 
-const NAV_ITEMS: NavItem[] = [
-  { to: "/blueprints", label: "Blueprints", icon: Hammer },
-  { to: "/items", label: "Objets", icon: Package },
-  { to: "/places", label: "Lieux", icon: MapPin },
-  { to: "/missions", label: "Missions", icon: Rocket },
-  { to: "/factions", label: "Factions", icon: Flag },
-  { to: "/reputations", label: "Réputations", icon: Star, requiresAuth: true },
-  { to: "/inventory", label: "Inventaire", icon: Boxes, requiresAuth: true },
-  { to: "/cargo", label: "Cargo", icon: Container },
-  { to: "/orgs", label: "Organisations", icon: Users },
-  { to: "/notes", label: "Bloc-notes", icon: NotebookPen },
+type NavGroup = { title: string | null; items: NavItem[] };
+
+/**
+ * The menu, in the order a session goes: the home page, then what the game
+ * is made of, then what is the reader's own.
+ */
+const NAV_GROUPS: NavGroup[] = [
+  { title: null, items: [{ to: "/home", label: "Accueil", icon: House }] },
+  {
+    title: "Base de données",
+    items: [
+      { to: "/blueprints", label: "Blueprints", icon: Hammer },
+      { to: "/items", label: "Objets", icon: Package },
+      { to: "/places", label: "Lieux", icon: MapPin },
+      { to: "/missions", label: "Missions", icon: Rocket },
+      { to: "/factions", label: "Factions", icon: Flag },
+    ],
+  },
+  {
+    title: "Mon espace",
+    items: [
+      {
+        to: "/inventory",
+        label: "Inventaire",
+        icon: Archive,
+        requiresAuth: true,
+      },
+      {
+        to: "/reputations",
+        label: "Réputations",
+        icon: Star,
+        requiresAuth: true,
+      },
+      { to: "/notes", label: "Bloc-notes", icon: NotebookPen },
+      { to: "/cargo", label: "Cargo", icon: Container },
+      { to: "/orgs", label: "Organisations", icon: Users },
+    ],
+  },
 ];
+
+/** The two overlays the menu opens directly: the ones used in every session. */
+const MENU_OVERLAYS: { label: OverlayLabel; title: string; icon: typeof Hammer }[] =
+  [
+    { label: "squad", title: "Escouade", icon: Users },
+    { label: "map", title: "Carte", icon: MapIcon },
+  ];
+
+function open(label: OverlayLabel) {
+  void showOverlay(label).catch((error) =>
+    console.error(`cannot open the ${label} overlay`, error),
+  );
+}
+
+function navClass({ isActive }: { isActive: boolean }) {
+  return cn(
+    "flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
+    isActive
+      ? "bg-nexus-accent/13 font-medium text-nexus-white"
+      : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
+  );
+}
 
 /** Route requests sent by the overlay when a search result is picked. */
 const NAVIGATE_EVENT = "main://navigate";
@@ -84,9 +138,14 @@ export default function AppLayout() {
   // Rust binds the defaults at startup; the stored combinations replace them as
   // soon as the main window can read the settings store. Rejections are not
   // raised here — Settings lists them, where they can be acted on.
+  const [searchShortcut, setSearchShortcut] = useState<string | null>(null);
+
   useEffect(() => {
     void getShortcuts()
-      .then(applyShortcuts)
+      .then((shortcuts) => {
+        setSearchShortcut(formatShortcut(shortcuts.search));
+        return applyShortcuts(shortcuts);
+      })
       .catch((error) => console.error("cannot apply shortcuts", error));
   }, []);
 
@@ -144,96 +203,147 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-nexus-accent/10 bg-nexus-deep/40">
-        <div className="px-5 py-6">
-          <p className="text-lg font-bold tracking-tight text-nexus-bright">
-            Nexus
-          </p>
-          <p className="text-[11px] uppercase tracking-widest text-nexus-accent/40">
-            Star Citizen Tools
-          </p>
+      <aside className="flex w-58 shrink-0 flex-col border-r border-nexus-accent/8 bg-nexus-night">
+        <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3.5">
+          <div className="flex size-7.5 items-center justify-center rounded-lg bg-nexus-accent font-display text-base font-bold text-nexus-abyss">
+            N
+          </div>
+          <div className="flex flex-col">
+            <span className="font-display text-[17px] leading-tight font-bold tracking-[0.06em] text-nexus-white">
+              NEXUS
+            </span>
+            <span className="text-[10px] tracking-[0.14em] text-nexus-dim uppercase">
+              Star Citizen Tools
+            </span>
+          </div>
         </div>
 
-        <nav className="flex-1 space-y-1 px-3">
-          {NAV_ITEMS.filter((item) => !item.requiresAuth || user).map(
-            ({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                    isActive
-                      ? "bg-nexus-accent/15 text-nexus-bright"
-                      : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
-                  )
-                }
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </NavLink>
-            ),
-          )}
+        <div className="px-3 pb-2.5">
+          <button
+            type="button"
+            onClick={() => open("overlay")}
+            className="flex h-9 w-full items-center gap-2 rounded-lg border border-nexus-accent/12 bg-nexus-accent/6 px-2.5 text-[13px] text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:text-nexus-bright"
+          >
+            <Search className="size-4" />
+            <span className="flex-1 text-left">Rechercher…</span>
+            {searchShortcut ? (
+              <span className="font-mono text-[10px] text-nexus-dim">
+                {searchShortcut}
+              </span>
+            ) : null}
+          </button>
+        </div>
+
+        <nav
+          aria-label="Navigation principale"
+          className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-3 py-1"
+        >
+          {NAV_GROUPS.map((group) => {
+            const items = group.items.filter(
+              (item) => !item.requiresAuth || user,
+            );
+            if (items.length === 0) return null;
+
+            return (
+              <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
+                {group.title ? (
+                  <p className="px-2.5 pb-1 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
+                    {group.title}
+                  </p>
+                ) : null}
+                {items.map(({ to, label, icon: Icon }) => (
+                  <NavLink key={to} to={to} className={navClass}>
+                    <Icon className="size-4" />
+                    {label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
+
+          <div className="flex flex-col gap-1.5">
+            <p className="px-2.5 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
+              En jeu
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {MENU_OVERLAYS.map(({ label, title, icon: Icon }) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => open(label)}
+                  title={`Afficher la superposition ${title}`}
+                  className="flex h-13 flex-col items-center justify-center gap-1 rounded-lg border border-nexus-accent/14 bg-nexus-accent/7 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/12"
+                >
+                  <Icon className="size-4 text-nexus-accent" />
+                  {title}
+                </button>
+              ))}
+            </div>
+          </div>
         </nav>
 
-        <div className="space-y-1 border-t border-nexus-accent/10 p-3">
-          <NavLink
-            to="/settings"
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                isActive
-                  ? "bg-nexus-accent/15 text-nexus-bright"
-                  : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
-              )
-            }
-          >
-            <SettingsIcon className="h-4 w-4" />
-            Paramètres
-          </NavLink>
-
+        <div className="flex items-center gap-2.5 border-t border-nexus-accent/8 px-3.5 py-3">
           {loading ? (
-            <div className="flex items-center gap-3 px-3 py-2 text-sm text-nexus-accent/50">
+            <div className="flex flex-1 items-center gap-2 text-sm text-nexus-dim">
               <Spinner />
               Session…
             </div>
           ) : user ? (
-            <div className="rounded-lg px-3 py-2">
-              <p
-                className="truncate text-sm text-nexus-bright"
-                title={user.name}
-              >
-                {user.name}
-              </p>
-              <button
-                type="button"
-                onClick={() => void signOut()}
-                className="mt-1 flex items-center gap-1.5 text-xs text-nexus-accent/50 transition-colors hover:text-nexus-accent"
-              >
-                <LogOut className="h-3 w-3" />
-                Se déconnecter
-              </button>
-            </div>
+            <>
+              <div className="flex size-7.5 shrink-0 items-center justify-center rounded-full bg-nexus-panel text-xs font-semibold text-nexus-accent">
+                {user.name.slice(0, 1).toUpperCase()}
+              </div>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span
+                  className="truncate text-[13px] font-medium text-nexus-white"
+                  title={user.name}
+                >
+                  {user.name}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="flex items-center gap-1 text-left text-[11px] text-nexus-dim transition-colors hover:text-nexus-accent"
+                >
+                  <LogOut className="size-3" />
+                  Se déconnecter
+                </button>
+              </div>
+            </>
           ) : (
             <button
               type="button"
               onClick={() => {
-                // The login page says what is going on while the browser is
-                // out, and why it failed if it does.
                 navigate("/login");
                 void signIn();
               }}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
+              className="flex h-8 flex-1 items-center gap-2 rounded-lg px-2 text-[13px] text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
             >
-              <LogIn className="h-4 w-4" />
+              <LogIn className="size-4" />
               Se connecter
             </button>
           )}
+
+          <NavLink
+            to="/settings"
+            aria-label="Paramètres"
+            title="Paramètres"
+            className={({ isActive }) =>
+              cn(
+                "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+                isActive
+                  ? "bg-nexus-accent/13 text-nexus-white"
+                  : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
+              )
+            }
+          >
+            <SettingsIcon className="size-4" />
+          </NavLink>
         </div>
       </aside>
 
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-8 py-8">
+        <div className="mx-auto max-w-6xl px-10 py-8">
           <Outlet />
         </div>
       </main>

@@ -4,7 +4,14 @@ import type {
   ReactNode,
   SelectHTMLAttributes,
 } from "react";
-import { AlertTriangle, Loader2, SearchX } from "lucide-react";
+import {
+  AlertTriangle,
+  LayoutGrid,
+  List,
+  Loader2,
+  Search,
+  SearchX,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -12,13 +19,16 @@ import { cn } from "@/lib/utils";
 /* ------------------------------------------------------------------ */
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost" | "danger";
+  variant?: "primary" | "outline" | "ghost" | "danger";
   size?: "sm" | "md";
 };
 
 const BUTTON_VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
+  // The one action a screen is for: solid, so it is found at a glance.
   primary:
-    "bg-nexus-accent/15 text-nexus-accent border-nexus-accent/40 hover:bg-nexus-accent/25",
+    "bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
+  outline:
+    "bg-transparent text-nexus-bright border-nexus-accent/25 hover:border-nexus-accent/45 hover:bg-nexus-accent/8",
   ghost:
     "bg-transparent text-nexus-accent/80 border-transparent hover:bg-nexus-accent/10 hover:text-nexus-accent",
   danger:
@@ -34,10 +44,10 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg border font-medium transition-colors",
+        "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border font-medium transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        size === "sm" ? "px-2.5 py-1.5 text-xs" : "px-4 py-2 text-sm",
+        size === "sm" ? "h-8 px-3 text-xs" : "h-9.5 px-4 text-[13px]",
         BUTTON_VARIANTS[variant],
         className,
       )}
@@ -51,8 +61,8 @@ export function Button({
 /* ------------------------------------------------------------------ */
 
 const FIELD_CLASSES =
-  "w-full rounded-lg border border-nexus-accent/20 bg-nexus-abyss/60 px-3 py-2 text-sm text-nexus-bright " +
-  "placeholder:text-nexus-accent/35 focus:border-nexus-accent/50 focus:outline-none";
+  "w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white " +
+  "placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none";
 
 export function Input({
   className,
@@ -84,7 +94,7 @@ export function Field({
 }) {
   return (
     <label className={cn("block space-y-1.5", className)}>
-      <span className="text-xs font-medium uppercase tracking-wide text-nexus-accent/60">
+      <span className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-nexus-muted">
         {label}
       </span>
       {children}
@@ -106,7 +116,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-nexus-accent/15 bg-nexus-panel/50 shadow-lg shadow-black/20",
+        "rounded-xl border border-nexus-accent/12 bg-nexus-card",
         className,
       )}
     >
@@ -251,21 +261,252 @@ export function PageHeader({
   description,
   actions,
 }: {
-  title: string;
-  description?: string;
+  title: ReactNode;
+  description?: ReactNode;
   actions?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-nexus-bright">
+    <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="font-display text-[28px] leading-tight font-bold text-nexus-white">
           {title}
         </h1>
         {description ? (
-          <p className="mt-1 text-sm text-nexus-accent/60">{description}</p>
+          <p className="mt-1 text-sm text-nexus-muted">{description}</p>
         ) : null}
       </div>
-      {actions ? <div className="flex gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      ) : null}
     </div>
+  );
+}
+
+/** A small uppercase heading that opens a section of a page. */
+export function SectionTitle({
+  children,
+  aside,
+  className,
+}: {
+  children: ReactNode;
+  aside?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn("mb-3 flex items-baseline justify-between gap-4", className)}
+    >
+      <h2 className="font-display text-sm font-semibold tracking-[0.12em] text-nexus-muted uppercase">
+        {children}
+      </h2>
+      {aside ? <div className="text-xs text-nexus-dim">{aside}</div> : null}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Toolbar                                                             */
+/* ------------------------------------------------------------------ */
+
+/** The row of filters above a list or a grid. */
+export function Toolbar({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("mb-4 flex flex-wrap items-center gap-2.5", className)}>
+      {children}
+    </div>
+  );
+}
+
+/** A search box: the icon inside the field, the label for screen readers. */
+export function SearchField({
+  label,
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  return (
+    <label
+      className={cn(
+        "flex h-9.5 min-w-56 flex-1 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3",
+        "focus-within:border-nexus-accent/50",
+        className,
+      )}
+    >
+      <Search className="size-4 shrink-0 text-nexus-dim" />
+      <span className="sr-only">{label}</span>
+      <input
+        type="search"
+        className="min-w-0 flex-1 bg-transparent text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:outline-none"
+        {...props}
+      />
+    </label>
+  );
+}
+
+/** A labelled select that sits in a toolbar, the label inside the box. */
+export function ToolbarSelect({
+  label,
+  className,
+  children,
+  ...props
+}: SelectHTMLAttributes<HTMLSelectElement> & { label: string }) {
+  return (
+    <label
+      className={cn(
+        "flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card pl-3 pr-2 text-[13px] text-nexus-muted",
+        className,
+      )}
+    >
+      {label}
+      <select
+        className="max-w-56 bg-transparent text-nexus-white focus:outline-none [&>option]:bg-nexus-abyss"
+        {...props}
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
+/** A checkbox that sits in a toolbar, framed like the fields beside it. */
+export function ToolbarToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex h-9.5 cursor-pointer items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 text-[13px] text-nexus-bright">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="accent-nexus-accent"
+      />
+      {label}
+    </label>
+  );
+}
+
+/** One pill of a row of filters: solid when chosen. */
+export function Chip({
+  active,
+  className,
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & { active: boolean }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      className={cn(
+        "h-7.5 shrink-0 rounded-full border px-3 text-[12.5px] transition-colors",
+        active
+          ? "border-nexus-accent bg-nexus-accent font-semibold text-nexus-abyss"
+          : "border-nexus-accent/20 text-nexus-bright hover:border-nexus-accent/40",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/**
+ * Two to four mutually exclusive choices in one frame: a mode, a filter, a
+ * view. Each option may carry an icon; icon-only options need a label.
+ */
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  label,
+  className,
+}: {
+  value: T;
+  options: { value: T; label: string; icon?: ReactNode; iconOnly?: boolean }[];
+  onChange: (value: T) => void;
+  label: string;
+  className?: string;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className={cn(
+        "flex h-9.5 shrink-0 items-stretch rounded-lg border border-nexus-accent/15 bg-nexus-card p-[3px]",
+        className,
+      )}
+    >
+      {options.map((option) => {
+        const active = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            aria-pressed={active}
+            aria-label={option.iconOnly ? option.label : undefined}
+            title={option.iconOnly ? option.label : undefined}
+            onClick={() => onChange(option.value)}
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 text-[12.5px] font-medium transition-colors",
+              option.iconOnly && "px-2.5",
+              active
+                ? "bg-nexus-accent/16 text-nexus-white"
+                : "text-nexus-muted hover:text-nexus-bright",
+            )}
+          >
+            {option.icon}
+            {option.iconOnly ? null : option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export type ViewMode = "grid" | "list";
+
+/** The grid / list switch of the pages that offer both. */
+export function ViewToggle({
+  value,
+  onChange,
+}: {
+  value: ViewMode;
+  onChange: (value: ViewMode) => void;
+}) {
+  return (
+    <Segmented
+      label="Affichage"
+      value={value}
+      onChange={onChange}
+      options={[
+        {
+          value: "grid",
+          label: "Grille",
+          icon: <LayoutGrid className="size-4" />,
+          iconOnly: true,
+        },
+        {
+          value: "list",
+          label: "Liste",
+          icon: <List className="size-4" />,
+          iconOnly: true,
+        },
+      ]}
+    />
+  );
+}
+
+/** A keyboard combination, as the settings write it. */
+export function Kbd({ children }: { children: ReactNode }) {
+  return (
+    <span className="font-mono text-[10.5px] text-nexus-dim">{children}</span>
   );
 }

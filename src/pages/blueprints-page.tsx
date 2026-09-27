@@ -9,19 +9,24 @@ import {
   BlueprintQuickRemove,
 } from "@/components/blueprint-ownership-buttons";
 import type { Blueprint } from "@/types/nexus";
+import { DraftingCompass } from "lucide-react";
 import {
-  Badge,
   Card,
+  Chip,
   EmptyState,
   ErrorState,
-  Field,
-  Input,
   LoadingState,
   PageHeader,
   Pagination,
-  Select,
+  SearchField,
+  Toolbar,
+  ToolbarSelect,
 } from "@/components/ui";
-import { cn, formatDuration } from "@/lib/utils";
+import { formatDuration } from "@/lib/utils";
+
+/** The quick ownership control, over the corner of a card's picture. */
+const QUICK_CONTROL =
+  "absolute right-2 top-2 bg-nexus-abyss/70 backdrop-blur-sm";
 
 export default function BlueprintsPage() {
   const { user } = useAuth();
@@ -87,76 +92,83 @@ export default function BlueprintsPage() {
     <>
       <PageHeader
         title="Blueprints"
-        description="Recherchez les plans de fabrication, leurs recettes et leurs statistiques."
+        description="Les recettes de fabrication, et celles que vous possédez."
       />
 
-      <Card className="mb-6 p-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Recherche" className="sm:col-span-2 lg:col-span-1">
-            <Input
-              value={search}
-              placeholder="Nom du blueprint…"
-              onChange={(event) =>
-                updateFilter(() => setSearch(event.target.value))
-              }
-            />
-          </Field>
+      <Toolbar className={categoriesQuery.data?.length ? "mb-3" : undefined}>
+        <SearchField
+          label="Rechercher un blueprint"
+          value={search}
+          placeholder="Nom du blueprint…"
+          onChange={(event) =>
+            updateFilter(() => setSearch(event.target.value))
+          }
+        />
 
-          <Field label="Catégorie">
-            <Select
-              value={category}
-              onChange={(event) =>
+        {subcategories.length ? (
+          <ToolbarSelect
+            label="Sous-catégorie"
+            value={subcategory}
+            onChange={(event) =>
+              updateFilter(() => setSubcategory(event.target.value))
+            }
+          >
+            <option value="">Toutes</option>
+            {subcategories.map((sub) => (
+              <option key={sub} value={sub}>
+                {sub}
+              </option>
+            ))}
+          </ToolbarSelect>
+        ) : null}
+
+        {/* The `owned` filter is resolved server-side from the session. */}
+        {user ? (
+          <ToolbarSelect
+            label="Possession"
+            value={owned}
+            onChange={(event) =>
+              updateFilter(() =>
+                setOwned(event.target.value as "" | "true" | "false"),
+              )
+            }
+          >
+            <option value="">Tous</option>
+            <option value="true">Possédés</option>
+            <option value="false">Non possédés</option>
+          </ToolbarSelect>
+        ) : null}
+      </Toolbar>
+
+      {categoriesQuery.data?.length ? (
+        <div className="mb-5 flex flex-wrap gap-2">
+          <Chip
+            active={category === ""}
+            onClick={() =>
+              updateFilter(() => {
+                setCategory("");
+                setSubcategory("");
+              })
+            }
+          >
+            Toutes
+          </Chip>
+          {categoriesQuery.data.map((c) => (
+            <Chip
+              key={c.category}
+              active={category === c.category}
+              onClick={() =>
                 updateFilter(() => {
-                  setCategory(event.target.value);
+                  setCategory(c.category);
                   setSubcategory("");
                 })
               }
             >
-              <option value="">Toutes</option>
-              {categoriesQuery.data?.map((c) => (
-                <option key={c.category} value={c.category}>
-                  {c.category}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
-          <Field label="Sous-catégorie">
-            <Select
-              value={subcategory}
-              disabled={!subcategories.length}
-              onChange={(event) =>
-                updateFilter(() => setSubcategory(event.target.value))
-              }
-            >
-              <option value="">Toutes</option>
-              {subcategories.map((sub) => (
-                <option key={sub} value={sub}>
-                  {sub}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
-          {/* The `owned` filter is resolved server-side from the session. */}
-          {user ? (
-            <Field label="Possession">
-              <Select
-                value={owned}
-                onChange={(event) =>
-                  updateFilter(() =>
-                    setOwned(event.target.value as "" | "true" | "false"),
-                  )
-                }
-              >
-                <option value="">Tous</option>
-                <option value="true">Possédés</option>
-                <option value="false">Non possédés</option>
-              </Select>
-            </Field>
-          ) : null}
+              {c.category}
+            </Chip>
+          ))}
         </div>
-      </Card>
+      ) : null}
 
       {blueprintsQuery.isPending ? (
         <LoadingState />
@@ -172,70 +184,76 @@ export default function BlueprintsPage() {
         />
       ) : (
         <>
-          <p className="mb-3 text-xs text-nexus-accent/50">
+          <p className="mb-3 text-xs text-nexus-dim">
             {blueprintsQuery.data.total} résultat
             {blueprintsQuery.data.total > 1 ? "s" : ""}
           </p>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {blueprintsQuery.data.blueprints.map((blueprint) => (
               /* The quick controls sit beside the link rather than inside it:
                  a button nested in a link would open the blueprint on its way
-                 through. They take the corner where the «Possédé» badge
-                 otherwise sits — one control per card, not a badge next to a
-                 button. */
+                 through. They take the corner of the picture. */
               <div key={blueprint.id} className="relative h-full">
                 <Link
                   to={`/blueprints/${blueprint.slug}`}
                   className="block h-full"
                 >
-                  <Card className="h-full p-4 transition-colors hover:border-nexus-accent/40">
-                    <div className="flex items-start justify-between gap-2">
+                  <Card className="h-full overflow-hidden transition-colors hover:border-nexus-accent/35">
+                    <div className="flex h-26 items-center justify-center bg-[#08243a]">
+                      {blueprint.imageUrl ? (
+                        <img
+                          src={blueprint.imageUrl}
+                          alt=""
+                          loading="lazy"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <DraftingCompass className="size-7 text-nexus-accent/25" />
+                      )}
+                    </div>
+
+                    <div className="p-3.5">
+                      <p className="truncate text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+                        {blueprint.category}
+                        {blueprint.subcategory
+                          ? ` · ${blueprint.subcategory}`
+                          : ""}
+                      </p>
                       <p
-                        className={cn(
-                          "font-medium text-nexus-bright",
-                          canAdd(blueprint) || canRemove(blueprint)
-                            ? "pr-8"
-                            : null,
-                        )}
+                        className="mt-1 truncate text-sm font-semibold text-nexus-white"
+                        title={blueprint.name}
                       >
                         {blueprint.name}
                       </p>
-                      {blueprint.owned && !canRemove(blueprint) ? (
-                        <Badge tone="success">Possédé</Badge>
+
+                      {blueprint.craftingTime || blueprint.owned ? (
+                        <div className="mt-2 flex items-center justify-between gap-2 text-xs text-nexus-dim">
+                          <span>
+                            {blueprint.craftingTime
+                              ? formatDuration(blueprint.craftingTime)
+                              : null}
+                          </span>
+                          {blueprint.owned ? (
+                            <span className="rounded-full bg-emerald-300/14 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+                              Possédé
+                            </span>
+                          ) : null}
+                        </div>
                       ) : null}
                     </div>
-
-                    <p className="mt-1 text-xs text-nexus-accent/50">
-                      {blueprint.category}
-                      {blueprint.subcategory
-                        ? ` · ${blueprint.subcategory}`
-                        : ""}
-                    </p>
-
-                    {blueprint.description ? (
-                      <p className="mt-2 line-clamp-2 text-xs text-nexus-accent/70">
-                        {blueprint.description}
-                      </p>
-                    ) : null}
-
-                    {blueprint.craftingTime ? (
-                      <p className="mt-3 text-[11px] text-nexus-accent/45">
-                        Fabrication : {formatDuration(blueprint.craftingTime)}
-                      </p>
-                    ) : null}
                   </Card>
                 </Link>
 
                 {canAdd(blueprint) ? (
                   <BlueprintQuickAdd
                     blueprintId={blueprint.id}
-                    className="absolute right-2.5 top-2.5"
+                    className={QUICK_CONTROL}
                   />
                 ) : canRemove(blueprint) ? (
                   <BlueprintQuickRemove
                     blueprintId={blueprint.id}
-                    className="absolute right-2.5 top-2.5"
+                    className={QUICK_CONTROL}
                   />
                 ) : null}
               </div>

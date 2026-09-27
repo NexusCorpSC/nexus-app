@@ -28,7 +28,9 @@ import {
   Card,
   ErrorState,
   LoadingState,
+  Chip,
   PageHeader,
+  SectionTitle,
 } from "@/components/ui";
 import { cn, formatDate, formatNumber, formatUEC } from "@/lib/utils";
 
@@ -69,7 +71,7 @@ export default function ItemDetailPage() {
     <>
       <Link
         to="/items"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-accent"
+        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Retour aux objets
@@ -81,7 +83,11 @@ export default function ItemDetailPage() {
           .filter(Boolean)
           .join(" · ")}
         actions={
-          <Button variant="ghost" size="sm" onClick={() => void openOnWeb()}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void openOnWeb()}
+          >
             <ExternalLink className="h-3.5 w-3.5" />
             Ouvrir sur le web
           </Button>
@@ -94,7 +100,7 @@ export default function ItemDetailPage() {
 
           {item.description ? (
             <Section title="Description">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-accent/75">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-muted">
                 {item.description}
               </p>
             </Section>
@@ -177,7 +183,7 @@ export default function ItemDetailPage() {
 
           {item.obtention ? (
             <Section title="Où l'obtenir">
-              <p className="whitespace-pre-line text-xs leading-relaxed text-nexus-accent/70">
+              <p className="whitespace-pre-line text-xs leading-relaxed text-nexus-muted">
                 {item.obtention}
               </p>
             </Section>
@@ -203,12 +209,7 @@ function Section({
 }) {
   return (
     <Card className="p-5">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-semibold text-nexus-bright">{title}</h2>
-        {aside ? (
-          <span className="text-xs text-nexus-accent/50">{aside}</span>
-        ) : null}
-      </div>
+      <SectionTitle aside={aside}>{title}</SectionTitle>
       {children}
     </Card>
   );
@@ -224,11 +225,14 @@ function Readouts({ rows }: { rows: Row[] }) {
   if (filled.length === 0) return null;
 
   return (
-    <dl className="space-y-2 text-xs">
+    <dl className="divide-y divide-nexus-accent/8 text-xs">
       {filled.map(([label, value]) => (
-        <div key={label} className="flex justify-between gap-3">
-          <dt className="text-nexus-accent/50">{label}</dt>
-          <dd className="text-right text-nexus-bright/85">{value}</dd>
+        <div
+          key={label}
+          className="flex justify-between gap-3 py-2 first:pt-0 last:pb-0"
+        >
+          <dt className="text-nexus-dim">{label}</dt>
+          <dd className="text-right text-nexus-white">{value}</dd>
         </div>
       ))}
     </dl>
@@ -258,17 +262,17 @@ function KeyFigure({
 }) {
   if (value === undefined) return null;
   return (
-    <div className="rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 p-3">
-      <p className="text-[11px] uppercase tracking-wide text-nexus-accent/50">
+    <Card className="px-3.5 py-3">
+      <p className="text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
         {label}
       </p>
-      <p className="mt-1 font-mono text-lg text-nexus-bright">
+      <p className="mt-1 font-mono text-lg text-nexus-white">
         {formatNumber(value)}
         {unit ? (
-          <span className="ml-1 text-xs text-nexus-accent/60">{unit}</span>
+          <span className="ml-1 text-xs text-nexus-dim">{unit}</span>
         ) : null}
       </p>
-    </div>
+    </Card>
   );
 }
 
@@ -279,11 +283,11 @@ function KeyFigure({
 function IncompleteNotice({ kind }: { kind: ItemKind }) {
   return (
     <Card className="border-dashed p-5">
-      <p className="flex items-center gap-2 text-sm font-semibold text-nexus-bright">
+      <p className="flex items-center gap-2 text-sm font-semibold text-nexus-white">
         <TriangleAlert className="h-4 w-4 text-amber-300/80" />
         Fiche {ITEM_KIND_LABELS[kind].toLowerCase()} à compléter
       </p>
-      <p className="mt-1 text-xs text-nexus-accent/60">
+      <p className="mt-1 text-xs text-nexus-muted">
         Les données propres à ce type d'objet n'ont pas encore été renseignées
         sur le site.
       </p>
@@ -314,7 +318,7 @@ function SlotRow({
         <span
           className={cn(
             "block text-sm font-medium",
-            name ? "text-nexus-bright" : "text-nexus-bright/50",
+            name ? "text-nexus-white" : "text-nexus-muted",
           )}
         >
           {slot.label}
@@ -324,7 +328,7 @@ function SlotRow({
             "block truncate text-xs",
             slot.mounted
               ? "underline decoration-dotted underline-offset-2"
-              : "text-nexus-accent/60",
+              : "text-nexus-muted",
           )}
           style={{ color: slot.mounted ? accent : undefined }}
         >
@@ -337,7 +341,7 @@ function SlotRow({
         </span>
       ) : null}
       {slot.mounted ? (
-        <span className="shrink-0 text-nexus-accent/50" aria-hidden>
+        <span className="shrink-0 text-nexus-dim" aria-hidden>
           ›
         </span>
       ) : null}
@@ -347,9 +351,9 @@ function SlotRow({
   const className = cn(
     "flex items-center gap-3 rounded-lg border px-3 py-2.5",
     name
-      ? "border-nexus-accent/10 bg-nexus-abyss/40"
+      ? "border-nexus-accent/8 bg-[#08243a]"
       : "border-dashed border-nexus-accent/20",
-    slot.mounted && "transition-colors hover:border-nexus-accent/40",
+    slot.mounted && "transition-colors hover:border-nexus-accent/35",
   );
 
   return slot.mounted ? (
@@ -391,7 +395,7 @@ function SlotList({
           ))}
         </div>
       ) : (
-        <p className="text-xs text-nexus-accent/50">{noneLabel}</p>
+        <p className="text-xs text-nexus-dim">{noneLabel}</p>
       )}
     </Section>
   );
@@ -413,20 +417,20 @@ function BlueprintList({
           <Link
             key={blueprint.slug}
             to={`/blueprints/${blueprint.slug}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 px-3 py-2.5 transition-colors hover:border-nexus-accent/40"
+            className="flex items-center justify-between gap-3 rounded-lg border border-nexus-accent/8 bg-[#08243a] px-3 py-2.5 transition-colors hover:border-nexus-accent/35"
           >
             <span className="min-w-0">
-              <span className="block truncate text-sm font-medium text-nexus-bright">
+              <span className="block truncate text-sm font-semibold text-nexus-white">
                 {blueprint.name}
               </span>
-              <span className="block truncate text-xs text-nexus-accent/50">
+              <span className="block truncate text-xs text-nexus-dim">
                 {[blueprint.category, blueprint.subcategory]
                   .filter(Boolean)
                   .join(" · ")}
               </span>
             </span>
             {blueprint.quantity ? (
-              <span className="shrink-0 font-mono text-xs text-nexus-accent/70">
+              <span className="shrink-0 font-mono text-xs text-nexus-muted">
                 ×{blueprint.quantity}
               </span>
             ) : null}
@@ -434,7 +438,7 @@ function BlueprintList({
         ))}
       </div>
       {hint ? (
-        <p className="mt-2 text-xs text-nexus-accent/50">{hint}</p>
+        <p className="mt-2 text-xs text-nexus-dim">{hint}</p>
       ) : null}
     </Section>
   );
@@ -457,13 +461,14 @@ function RelatedItems({
         {items.map((related) => (
           <ItemCard
             key={related.slug}
+            layout="row"
             item={related}
             current={related.slug === currentSlug}
           />
         ))}
       </div>
       {hint ? (
-        <p className="mt-2 text-xs text-nexus-accent/50">{hint}</p>
+        <p className="mt-2 text-xs text-nexus-dim">{hint}</p>
       ) : null}
     </Section>
   );
@@ -520,27 +525,20 @@ function VehiclePlanViews({
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
         {views.map(([key, label]) => (
-          <button
+          <Chip
             key={key}
-            type="button"
+            active={key === current[0]}
             onClick={() => setPicked(key)}
-            aria-pressed={key === current[0]}
-            className={cn(
-              "rounded-full border px-2.5 py-0.5 text-xs transition-colors",
-              key === current[0]
-                ? "border-nexus-accent/60 bg-nexus-abyss/60 text-nexus-bright"
-                : "border-nexus-accent/15 text-nexus-accent/60 hover:border-nexus-accent/40",
-            )}
           >
             {label}
-          </button>
+          </Chip>
         ))}
 
         {plans.holo ? (
           <button
             type="button"
             onClick={() => void openHolo()}
-            className="ml-auto inline-flex items-center gap-1 text-xs text-nexus-accent/60 transition-colors hover:text-nexus-bright"
+            className="ml-auto inline-flex items-center gap-1 text-xs text-nexus-muted transition-colors hover:text-nexus-bright"
           >
             Vue 3D sur le site
             <ExternalLink className="h-3 w-3" />
@@ -548,9 +546,9 @@ function VehiclePlanViews({
         ) : null}
       </div>
 
-      <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40">
+      <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-lg border border-nexus-accent/8 bg-[#08243a]">
         {failed.includes(url) ? (
-          <p className="text-xs text-nexus-accent/50">
+          <p className="text-xs text-nexus-dim">
             Plan indisponible pour le moment.
           </p>
         ) : (
@@ -566,7 +564,7 @@ function VehiclePlanViews({
         )}
 
         {scale ? (
-          <p className="pointer-events-none absolute inset-x-0 bottom-2 text-center text-[10px] uppercase tracking-wide text-nexus-accent/40">
+          <p className="pointer-events-none absolute inset-x-0 bottom-2 text-center text-[10px] uppercase tracking-wide text-nexus-dim/80">
             {scale}
           </p>
         ) : null}
@@ -660,8 +658,8 @@ function SpreadColumn({
   spread?: WeaponSpread;
 }) {
   return (
-    <div className="rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 p-3">
-      <p className="mb-2 text-[11px] uppercase tracking-wide text-nexus-accent/50">
+    <div className="rounded-lg border border-nexus-accent/8 bg-[#08243a] p-3">
+      <p className="mb-2 text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
         {title}
       </p>
       {spread ? (
@@ -674,7 +672,7 @@ function SpreadColumn({
           ])}
         />
       ) : (
-        <p className="text-xs text-nexus-accent/50">Non renseignée.</p>
+        <p className="text-xs text-nexus-dim">Non renseignée.</p>
       )}
     </div>
   );
@@ -715,12 +713,12 @@ function WeaponSections({ item }: { item: ItemDetails }) {
             {item.weaponProfile.map((stat) => (
               <div key={stat.label}>
                 <div className="flex justify-between text-xs">
-                  <span className="text-nexus-accent/70">{stat.label}</span>
-                  <span className="font-mono text-nexus-bright">
+                  <span className="text-nexus-muted">{stat.label}</span>
+                  <span className="font-mono text-nexus-white">
                     {formatNumber(stat.value)}
                     {stat.unit ? ` ${stat.unit}` : ""}
                     {stat.comparable && stat.average !== undefined ? (
-                      <span className="ml-2 text-nexus-accent/45">
+                      <span className="ml-2 text-nexus-dim">
                         | moy. {formatNumber(stat.average)}
                       </span>
                     ) : null}
@@ -729,7 +727,7 @@ function WeaponSections({ item }: { item: ItemDetails }) {
                 {/* A bar only means something against the rest of the class:
                     alone, a full bar would read as a perfect score. */}
                 {stat.comparable ? (
-                  <div className="mt-1 h-1.5 rounded-full bg-nexus-abyss/60">
+                  <div className="mt-1 h-1.5 rounded-full bg-nexus-abyss/70">
                     <div
                       className="h-full rounded-full"
                       style={{
@@ -749,7 +747,7 @@ function WeaponSections({ item }: { item: ItemDetails }) {
         <Section title="Modes de tir">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-nexus-accent/50">
+              <tr className="text-left text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
                 <th className="pb-2 font-medium">Mode</th>
                 <th className="pb-2 text-right font-medium">Cadence</th>
                 <th className="pb-2 text-right font-medium">DPS</th>
@@ -762,7 +760,7 @@ function WeaponSections({ item }: { item: ItemDetails }) {
               {weapon.fireModes.map((mode, index) => (
                 <tr
                   key={`${mode.label}-${index}`}
-                  className="border-t border-nexus-accent/10 font-mono text-nexus-bright/85"
+                  className="border-t border-nexus-accent/8 font-mono text-nexus-white"
                 >
                   <td className="py-1.5 font-sans font-medium">{mode.label}</td>
                   <td className="py-1.5 text-right">
@@ -869,17 +867,17 @@ function WeaponSections({ item }: { item: ItemDetails }) {
               <div key={peer.slug} className="flex items-center gap-3 text-xs">
                 <span className="w-40 shrink-0 truncate">
                   {peer.isCurrent ? (
-                    <span className="text-nexus-bright">{peer.name}</span>
+                    <span className="text-nexus-white">{peer.name}</span>
                   ) : (
                     <Link
                       to={`/items/${peer.slug}`}
-                      className="text-nexus-accent/75 hover:text-nexus-bright"
+                      className="text-nexus-muted hover:text-nexus-bright"
                     >
                       {peer.name}
                     </Link>
                   )}
                 </span>
-                <div className="h-1.5 flex-1 rounded-full bg-nexus-abyss/60">
+                <div className="h-1.5 flex-1 rounded-full bg-nexus-abyss/70">
                   <div
                     className="h-full rounded-full"
                     style={{
@@ -890,7 +888,7 @@ function WeaponSections({ item }: { item: ItemDetails }) {
                     }}
                   />
                 </div>
-                <span className="w-16 shrink-0 text-right font-mono text-nexus-bright/85">
+                <span className="w-16 shrink-0 text-right font-mono text-nexus-white">
                   {formatNumber(peer.value)}
                 </span>
               </div>
@@ -970,7 +968,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
         {markets.length > 0 ? (
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-[11px] uppercase tracking-wide text-nexus-accent/50">
+              <tr className="text-left text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
                 <th className="pb-2 font-medium">Comptoir</th>
                 <th className="pb-2 font-medium">Sens</th>
                 <th className="pb-2 text-right font-medium">Prix</th>
@@ -981,10 +979,10 @@ function ResourceSections({ item }: { item: ItemDetails }) {
               {markets.map((market, index) => (
                 <tr
                   key={`${market.location}-${index}`}
-                  className="border-t border-nexus-accent/10 text-nexus-bright/85"
+                  className="border-t border-nexus-accent/8 text-nexus-white"
                 >
                   <td className="py-1.5">{market.location}</td>
-                  <td className="py-1.5 text-nexus-accent/70">
+                  <td className="py-1.5 text-nexus-muted">
                     {MARKET_SIDE_LABELS[market.side]}
                   </td>
                   <td className="py-1.5 text-right font-mono">
@@ -1000,7 +998,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
             </tbody>
           </table>
         ) : (
-          <p className="text-xs text-nexus-accent/50">Aucun cours relevé.</p>
+          <p className="text-xs text-nexus-dim">Aucun cours relevé.</p>
         )}
       </Section>
 
@@ -1041,17 +1039,17 @@ function ResourceSections({ item }: { item: ItemDetails }) {
                 key={`${site.location}-${index}`}
                 className="flex items-center justify-between gap-3"
               >
-                <span className="text-nexus-bright/85">
+                <span className="text-nexus-white">
                   {site.location}
                   {site.method ? (
-                    <span className="text-nexus-accent/50">
+                    <span className="text-nexus-dim">
                       {" "}
                       · {site.method}
                     </span>
                   ) : null}
                 </span>
                 {site.frequency ? (
-                  <span className="shrink-0 text-nexus-accent/60">
+                  <span className="shrink-0 text-nexus-muted">
                     {FREQUENCY_LABELS[site.frequency]}
                   </span>
                 ) : null}
