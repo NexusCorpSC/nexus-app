@@ -58,24 +58,26 @@ export type RadialSquadAction = {
   squadId: string;
 };
 
-export type RadialSector = "ready" | "alive" | "lock" | "capture";
+export type RadialSector = "main" | "ready" | "alive" | "lock" | "capture";
 
 /**
  * Where each sector sits, as the angle of its middle, clockwise from the top.
  *
  * Fixed whatever is shown: outside a squad the two squad sectors are gone, but
- * lock and capture stay where they were, so the flick for each is the same in
- * and out of a squad.
+ * the main window, lock and capture stay where they were, so the flick for
+ * each is the same in and out of a squad. The main window takes the top; the
+ * four others kept their side of the circle when it came in.
  */
 export const SECTOR_ANGLES: Record<RadialSector, number> = {
-  ready: 315,
-  alive: 45,
-  lock: 135,
-  capture: 225,
+  main: 0,
+  alive: 72,
+  lock: 144,
+  capture: 216,
+  ready: 288,
 };
 
-/** Each sector's half-width, in degrees: four of them make the circle. */
-export const SECTOR_HALF_WIDTH = 45;
+/** Each sector's half-width, in degrees: five of them make the circle. */
+export const SECTOR_HALF_WIDTH = 36;
 
 /**
  * Below this, the pointer is in the centre and picks nothing: a hand resting
