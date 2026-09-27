@@ -224,8 +224,11 @@ export function InventoryGrid<T extends InventoryDisplayItem>({
   renderLotMeta,
   renderLotActions,
   renderFooter,
+  narrow = false,
 }: {
   sections: LocationSection<T>[];
+  /** Less room beside a panel: one column fewer at each width. */
+  narrow?: boolean;
   /** Beside the quality of each lot: whose it is, for instance. */
   renderLotMeta?: (lot: T) => ReactNode;
   /** At the end of each lot's row. */
@@ -242,7 +245,12 @@ export function InventoryGrid<T extends InventoryDisplayItem>({
             count={section.groups.length}
             scu={section.scu}
           />
-          <div className="grid grid-cols-2 items-start gap-3 lg:grid-cols-3 xl:grid-cols-4">
+          <div
+            className={cn(
+              "grid grid-cols-2 items-start gap-3",
+              narrow ? "xl:grid-cols-3" : "lg:grid-cols-3 xl:grid-cols-4",
+            )}
+          >
             {section.groups.map((group) => (
               <InventoryGroupCard
                 key={group.key}
@@ -457,18 +465,28 @@ export function AdjustQuantityButton({
   mode,
   disabled,
   onSubmit,
+  label: labelOverride,
+  icon: IconOverride,
+  max,
+  maxMessage,
 }: {
   mode: "add" | "remove";
   disabled?: boolean;
   onSubmit: (amount: number) => void;
+  /** Instead of « Ajouter » / « Retirer ». */
+  label?: string;
+  icon?: typeof Plus;
+  /** Most that may be asked for; above it, `maxMessage` is shown. */
+  max?: number;
+  maxMessage?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const label = mode === "add" ? "Ajouter" : "Retirer";
-  const Icon = mode === "add" ? Plus : Minus;
+  const label = labelOverride ?? (mode === "add" ? "Ajouter" : "Retirer");
+  const Icon = IconOverride ?? (mode === "add" ? Plus : Minus);
 
   function close() {
     setOpen(false);
@@ -497,6 +515,10 @@ export function AdjustQuantityButton({
     const amount = Number(value.replace(",", "."));
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Quantité invalide");
+      return;
+    }
+    if (max !== undefined && amount > max) {
+      setError(maxMessage ?? `Au plus ${formatQuantity(max)}`);
       return;
     }
     onSubmit(amount);

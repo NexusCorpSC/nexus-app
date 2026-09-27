@@ -1,8 +1,10 @@
-import type {
-  ButtonHTMLAttributes,
-  InputHTMLAttributes,
-  ReactNode,
-  SelectHTMLAttributes,
+import {
+  useEffect,
+  useId,
+  type ButtonHTMLAttributes,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
 } from "react";
 import {
   AlertTriangle,
@@ -11,6 +13,7 @@ import {
   Loader2,
   Search,
   SearchX,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -121,6 +124,94 @@ export function Card({
       )}
     >
       {children}
+    </div>
+  );
+}
+
+/**
+ * A dialog over the screen: Escape and a click on the backdrop close it.
+ * Rendered only while open, so its state starts afresh each time.
+ */
+export function Modal({
+  open,
+  title,
+  description,
+  icon,
+  onClose,
+  children,
+  footer,
+}: {
+  open: boolean;
+  title: string;
+  description?: string;
+  icon?: ReactNode;
+  onClose: () => void;
+  children: ReactNode;
+  footer?: ReactNode;
+}) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50"
+      >
+        <header className="flex items-start gap-3 px-5 pt-5">
+          {icon ? (
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-nexus-panel text-nexus-accent">
+              {icon}
+            </span>
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <h2
+              id={titleId}
+              className="font-display text-lg font-semibold text-nexus-white"
+            >
+              {title}
+            </h2>
+            {description ? (
+              <p className="mt-0.5 text-[13px] text-nexus-muted">
+                {description}
+              </p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            aria-label="Fermer"
+            onClick={onClose}
+            className="inline-flex size-9 items-center justify-center rounded-lg text-nexus-muted hover:bg-nexus-panel hover:text-nexus-soft"
+          >
+            <X className="size-4" />
+          </button>
+        </header>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          {children}
+        </div>
+        {footer ? (
+          <footer className="flex flex-wrap items-center gap-2 border-t border-nexus-accent/12 bg-nexus-abyss/60 px-5 py-3">
+            {footer}
+          </footer>
+        ) : null}
+      </div>
     </div>
   );
 }

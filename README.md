@@ -55,6 +55,7 @@ contrairement au raccourci qui bascule.
 | Factions      | `/api/factions`                                              | non             |
 | Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
 | Inventaire    | `/api/inventory/items`, `/api/inventory/items/bulk`, `/api/inventory/locations` | oui |
+| ↳ colis      | `/api/inventory/parcels`, `…/parcels/:code`, `…/parcels/:code/accept` | oui |
 | Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                       | partiellement²  |
 | ↳ en jeu      | `/api/orgs/:id/presence`, `/api/me/presence` (GET, PUT, DELETE) | oui          |
 | Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
@@ -398,6 +399,25 @@ reste une recherche. Il rapproche les noms mal lus des matériaux connus
 (`RON` → Iron), relit les chiffres sosies (`lSO` → 150), et, propre à
 Windows OCR, rattache à leurs matériaux les nombres lus sur des lignes à part,
 qu'ils reviennent ligne par ligne ou colonne par colonne.
+
+### Colis entre joueurs
+
+Le même échange que sur le site. Dans l'inventaire, l'icône de colis au pied
+d'une carte met une quantité du lot choisi dans le **colis** (panneau à droite ;
+pas plus que ce qui n'est pas déjà promis ailleurs). **Envoyer le colis** le
+scelle : l'API rend un code de 8 caractères `A-Z0-9`, affiché `K7QM-2X9A`, à
+donner au destinataire.
+
+Rien ne bouge encore : les quantités sont **réservées** (icône d'avion en
+papier sur le lot) jusqu'à ce que le destinataire accepte, que l'expéditeur
+annule, ou 24 h. **Recevoir un colis** montre, dès que le code est complet,
+l'expéditeur et le contenu ; on choisit où ranger et on accepte — l'API retire
+les lots d'un inventaire et les ajoute à l'autre en une transaction, un lot
+identique au même lieu étant complété. `#/inventory/parcels` suit les envois
+et les réceptions.
+
+Les refus arrivent en codes stables (`not_found`, `expired`, `unavailable`…)
+que `src/lib/api/parcels.ts` met en phrases.
 
 ### Bloc-notes
 

@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Table2 } from "lucide-react";
+import { Download, Inbox, Package, Plus, Send, Table2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   adjustInventoryItem,
@@ -37,7 +37,16 @@ import {
   groupInventory,
   type InventorySort,
 } from "@/components/inventory/inventory-items";
-import type { InventoryItemInput } from "@/types/nexus";
+import {
+  PackagePanel,
+  ReceiveParcelModal,
+  SentParcelModal,
+  availableOf,
+  type PackageEntry,
+} from "@/components/inventory/parcels";
+import type { InventoryItem, InventoryItemInput, Parcel } from "@/types/nexus";
+
+const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
 
 export default function InventoryPage() {
   const queryClient = useQueryClient();
@@ -47,6 +56,28 @@ export default function InventoryPage() {
   const [locationFilter, setLocationFilter] = useState("");
   const [sort, setSort] = useState<InventorySort>("updated");
   const [showForm, setShowForm] = useState(false);
+  const [packageEntries, setPackageEntries] = useState<PackageEntry[]>([]);
+  const [sentParcel, setSentParcel] = useState<Parcel | null>(null);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+
+  /** More of a lot in the package, never beyond what is still available. */
+  function addToPackage(item: InventoryItem, quantity: number) {
+    setPackageEntries((entries) => {
+      const existing = entries.find((entry) => entry.item.id === item.id);
+      if (!existing) return [...entries, { item, quantity }];
+      return entries.map((entry) =>
+        entry.item.id === item.id
+          ? {
+              item,
+              quantity: Math.min(entry.quantity + quantity, availableOf(item)),
+            }
+          : entry,
+      );
+    });
+  }
+  const packaged = new Map(
+    packageEntries.map((entry) => [entry.item.id, entry.quantity]),
+  );
 
   const query = useDebounced(search);
   const quality = useDebounced(minQuality);
@@ -129,6 +160,18 @@ export default function InventoryPage() {
         description="Vos ressources, par lieu de stockage."
         actions={
           <>
+            <Button variant="outline" onClick={() => setReceiveOpen(true)}>
+              <Download className="size-4" />
+              Recevoir un colis
+            </Button>
+            <Link
+              to="/inventory/parcels"
+              title="Mes colis"
+              aria-label="Mes colis"
+              className="inline-flex h-9.5 w-9.5 items-center justify-center rounded-lg text-nexus-accent/80 transition-colors hover:bg-nexus-accent/10 hover:text-nexus-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+            >
+              <Inbox className="size-4.5" />
+            </Link>
             <Button
               variant="outline"
               onClick={() => setShowForm((open) => !open)}
@@ -211,76 +254,138 @@ export default function InventoryPage() {
         </div>
       ) : null}
 
-      {itemsQuery.isPending ? (
-        <LoadingState />
-      ) : itemsQuery.isError ? (
-        <ErrorState
-          error={itemsQuery.error}
-          onRetry={() => void itemsQuery.refetch()}
-        />
-      ) : visibleSections.length === 0 ? (
-        query || quality ? (
-          <EmptyState
-            title="Aucune ressource trouvée"
-            description="Essayez un autre nom, une autre qualité ou un autre lieu."
-          />
-        ) : (
-          <EmptyState
-            title="Inventaire vide"
-            description="Ajoutez une première ressource pour la retrouver depuis le bureau."
-          />
-        )
-      ) : (
-        <InventoryGrid
-          sections={visibleSections}
-          renderLotActions={(lot) => (
-            <>
-              <AdjustQuantityButton
-                mode="remove"
-                disabled={adjustMutation.isPending}
-                onSubmit={(amount) =>
-                  adjustMutation.mutate({ id: lot.id, delta: -amount })
-                }
+      <div className="flex items-start gap-5">
+        <div className="min-w-0 flex-1">
+          {itemsQuery.isPending ? (
+            <LoadingState />
+          ) : itemsQuery.isError ? (
+            <ErrorState
+              error={itemsQuery.error}
+              onRetry={() => void itemsQuery.refetch()}
+            />
+          ) : visibleSections.length === 0 ? (
+            query || quality ? (
+              <EmptyState
+                title="Aucune ressource trouvée"
+                description="Essayez un autre nom, une autre qualité ou un autre lieu."
               />
-              <AdjustQuantityButton
-                mode="add"
-                disabled={adjustMutation.isPending}
-                onSubmit={(amount) =>
-                  adjustMutation.mutate({ id: lot.id, delta: amount })
-                }
+            ) : (
+              <EmptyState
+                title="Inventaire vide"
+                description="Ajoutez une première ressource pour la retrouver depuis le bureau."
               />
-            </>
+            )
+          ) : (
+            <InventoryGrid
+              sections={visibleSections}
+              narrow={packageEntries.length > 0}
+              renderLotMeta={(lot) => (
+                <span className="flex items-center gap-2 pl-2">
+                  {lot.reserved !== undefined ? (
+                    <span
+                      className="flex items-center gap-1 text-xs text-amber-300"
+                      title={`${number.format(lot.reserved)} réservés dans un colis en attente`}
+                    >
+                      <Send className="size-3.5" aria-hidden />
+                      <span className="sr-only">
+                        {number.format(lot.reserved)} réservés dans un colis en
+                        attente
+                      </span>
+                    </span>
+                  ) : null}
+                  {packaged.has(lot.id) ? (
+                    <span
+                      className="flex items-center gap-1 text-xs text-nexus-accent"
+                      title={`${number.format(packaged.get(lot.id) ?? 0)} dans le colis`}
+                    >
+                      <Package className="size-3.5" aria-hidden />
+                      <span className="sr-only">
+                        {number.format(packaged.get(lot.id) ?? 0)} dans le colis
+                      </span>
+                    </span>
+                  ) : null}
+                </span>
+              )}
+              renderLotActions={(lot) => (
+                <>
+                  <AdjustQuantityButton
+                    mode="remove"
+                    disabled={adjustMutation.isPending}
+                    onSubmit={(amount) =>
+                      adjustMutation.mutate({ id: lot.id, delta: -amount })
+                    }
+                  />
+                  <AdjustQuantityButton
+                    mode="add"
+                    disabled={adjustMutation.isPending}
+                    onSubmit={(amount) =>
+                      adjustMutation.mutate({ id: lot.id, delta: amount })
+                    }
+                  />
+                </>
+              )}
+              renderFooter={(group, active) => {
+                const allVisible = group.lots.every((lot) => lot.orgVisible);
+                const someVisible = group.lots.some((lot) => lot.orgVisible);
+                return (
+                  <>
+                    <OrgVisibleCheckbox
+                      checked={allVisible}
+                      indeterminate={someVisible && !allVisible}
+                      disabled={toggleVisibilityMutation.isPending}
+                      onChange={() =>
+                        toggleVisibilityMutation.mutate({
+                          ids: group.lots.map((lot) => lot.id),
+                          orgVisible: !allVisible,
+                        })
+                      }
+                    />
+                    <AdjustQuantityButton
+                      mode="add"
+                      label="Ajouter au colis"
+                      icon={Package}
+                      max={availableOf(active)}
+                      maxMessage={
+                        active.reserved
+                          ? `Seuls ${number.format(availableOf(active))} sont disponibles : le reste est réservé.`
+                          : `Au plus ${number.format(active.quantity)}`
+                      }
+                      disabled={availableOf(active) <= 0}
+                      onSubmit={(amount) => addToPackage(active, amount)}
+                    />
+                    <DeleteIconButton
+                      itemName={
+                        active.quality != null
+                          ? `${active.name} (Q ${active.quality})`
+                          : active.name
+                      }
+                      disabled={deleteMutation.isPending}
+                      onClick={() => deleteMutation.mutate(active.id)}
+                    />
+                  </>
+                );
+              }}
+            />
           )}
-          renderFooter={(group, active) => {
-            const allVisible = group.lots.every((lot) => lot.orgVisible);
-            const someVisible = group.lots.some((lot) => lot.orgVisible);
-            return (
-              <>
-                <OrgVisibleCheckbox
-                  checked={allVisible}
-                  indeterminate={someVisible && !allVisible}
-                  disabled={toggleVisibilityMutation.isPending}
-                  onChange={() =>
-                    toggleVisibilityMutation.mutate({
-                      ids: group.lots.map((lot) => lot.id),
-                      orgVisible: !allVisible,
-                    })
-                  }
-                />
-                <DeleteIconButton
-                  itemName={
-                    active.quality != null
-                      ? `${active.name} (Q ${active.quality})`
-                      : active.name
-                  }
-                  disabled={deleteMutation.isPending}
-                  onClick={() => deleteMutation.mutate(active.id)}
-                />
-              </>
-            );
-          }}
-        />
-      )}
+        </div>
+
+        {packageEntries.length > 0 ? (
+          <PackagePanel
+            entries={packageEntries}
+            onChange={setPackageEntries}
+            onSent={setSentParcel}
+          />
+        ) : null}
+      </div>
+
+      <SentParcelModal
+        parcel={sentParcel}
+        onClose={() => setSentParcel(null)}
+      />
+      <ReceiveParcelModal
+        open={receiveOpen}
+        onClose={() => setReceiveOpen(false)}
+      />
     </>
   );
 }
