@@ -71,9 +71,10 @@ export function PresenceForm({
           type="submit"
           size="sm"
           disabled={pending}
-          className={cn(compact && "flex-1")}
+          className={cn(compact && "flex-1 whitespace-nowrap px-2")}
         >
-          <Gamepad2 className="size-3.5" />
+          {/* No room for the icon in the menu's narrow popover. */}
+          {compact ? null : <Gamepad2 className="size-3.5" />}
           {playing ? "Mettre à jour" : "Je joue"}
         </Button>
         {playing ? (
@@ -82,7 +83,7 @@ export function PresenceForm({
             size="sm"
             variant="outline"
             disabled={pending}
-            className={cn(compact && "flex-1")}
+            className={cn(compact && "flex-1 whitespace-nowrap px-2")}
             onClick={() => stop.mutate(undefined, { onSuccess: onDone })}
           >
             J'arrête

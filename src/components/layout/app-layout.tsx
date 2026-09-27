@@ -147,7 +147,10 @@ export default function AppLayout() {
   useEffect(() => {
     void getShortcuts()
       .then((shortcuts) => {
-        setSearchShortcut(formatShortcut(shortcuts.search));
+        // Tight, to fit beside the label in the menu's width.
+        setSearchShortcut(
+          formatShortcut(shortcuts.search).replace(/ \+ /g, "+"),
+        );
         return applyShortcuts(shortcuts);
       })
       .catch((error) => console.error("cannot apply shortcuts", error));
@@ -231,7 +234,7 @@ export default function AppLayout() {
             <Search className="size-4" />
             <span className="flex-1 text-left">Rechercher…</span>
             {searchShortcut ? (
-              <span className="font-mono text-[10px] text-nexus-dim">
+              <span className="shrink-0 font-mono text-[10px] whitespace-nowrap text-nexus-dim">
                 {searchShortcut}
               </span>
             ) : null}
