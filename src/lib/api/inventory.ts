@@ -25,6 +25,26 @@ export function createInventoryItem(input: InventoryItemInput) {
   });
 }
 
+export type BulkInventoryRow = {
+  name: string;
+  quality?: number;
+  quantity: number;
+  unit?: string;
+  locationId: string;
+  orgVisible: boolean;
+};
+
+/**
+ * Adds several items at once. A row matching a lot already held — same name,
+ * quality and unit at the same place — tops it up instead of adding a second.
+ */
+export function bulkAddInventoryItems(rows: BulkInventoryRow[]) {
+  return apiRequest<{ created: number; merged: number }>(
+    "/api/inventory/items/bulk",
+    { method: "POST", body: { rows } },
+  );
+}
+
 export function updateInventoryItem(
   itemId: string,
   input: Partial<InventoryItemInput>,

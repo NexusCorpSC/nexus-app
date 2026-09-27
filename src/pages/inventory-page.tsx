@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Table2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   createInventoryItem,
   deleteInventoryItem,
@@ -132,10 +133,22 @@ export default function InventoryPage() {
         title="Inventaire"
         description="Vos ressources, par lieu de stockage."
         actions={
-          <Button onClick={() => setShowForm((open) => !open)}>
-            <Plus className="size-4" />
-            Ajouter
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setShowForm((open) => !open)}
+            >
+              <Plus className="size-4" />
+              Ajouter
+            </Button>
+            <Link
+              to="/inventory/quick-add"
+              className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent bg-nexus-accent px-4 text-[13px] font-semibold text-nexus-abyss transition-colors hover:bg-nexus-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+            >
+              <Table2 className="size-4" />
+              Ajout en masse
+            </Link>
+          </>
         }
       />
 

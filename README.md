@@ -54,7 +54,7 @@ contrairement au raccourci qui bascule.
 | Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
 | Factions      | `/api/factions`                                              | non             |
 | Réputations   | `/api/reps`, `/api/reps/factions`                            | oui             |
-| Inventaire    | `/api/inventory/items`, `/api/inventory/locations`           | oui             |
+| Inventaire    | `/api/inventory/items`, `/api/inventory/items/bulk`, `/api/inventory/locations` | oui |
 | Organisations | `/api/orgs`, `/api/orgs/:id/inventory`                       | partiellement²  |
 | ↳ en jeu      | `/api/orgs/:id/presence`, `/api/me/presence` (GET, PUT, DELETE) | oui          |
 | Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
