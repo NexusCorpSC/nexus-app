@@ -15,6 +15,7 @@ import MissionDetailPage from "@/pages/mission-detail-page";
 import ReputationsPage from "@/pages/reputations-page";
 import InventoryPage from "@/pages/inventory-page";
 import InventoryQuickAddPage from "@/pages/inventory-quick-add-page";
+import InventoryParcelsPage from "@/pages/inventory-parcels-page";
 import OrgsPage from "@/pages/orgs-page";
 import OrgInventoryPage from "@/pages/org-inventory-page";
 import OrgDetailPage from "@/pages/org-detail-page";
@@ -96,6 +97,7 @@ export default function App() {
             path="inventory/quick-add"
             element={<InventoryQuickAddPage />}
           />
+          <Route path="inventory/parcels" element={<InventoryParcelsPage />} />
           <Route path="orgs/:orgId" element={<OrgDetailPage />} />
           <Route path="orgs/:orgId/inventory" element={<OrgInventoryPage />} />
         </Route>

@@ -447,6 +447,11 @@ export type InventoryItem = {
   quality?: number;
   quantity: number;
   unit?: string;
+  /**
+   * The part of `quantity` promised to a parcel still waiting: it cannot go
+   * in another one. Absent when none is.
+   */
+  reserved?: number;
   locationId: string;
   userId: string;
   orgVisible: boolean;
@@ -480,6 +485,33 @@ export type Organization = {
 export type UserOrganization = Organization & {
   rank: string | null;
   editor: boolean;
+};
+
+/** A lot in a parcel; `itemId` and `locationId` only for its sender. */
+export type ParcelItem = {
+  itemId?: string;
+  name: string;
+  quality?: number;
+  quantity: number;
+  unit?: string;
+  locationId?: string;
+  locationName?: string;
+};
+
+export type ParcelStatus = "pending" | "delivered" | "cancelled" | "expired";
+
+/** A parcel as `/api/inventory/parcels` returns it. */
+export type Parcel = {
+  code: string;
+  status: ParcelStatus;
+  direction: "sent" | "received";
+  items: ParcelItem[];
+  createdAt: string;
+  expiresAt: string;
+  senderName?: string;
+  recipientName?: string;
+  deliveredAt?: string;
+  deliveredLocationName?: string;
 };
 
 /** Org inventory rows carry the owning member's display name. */
