@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Boxes, Users } from "lucide-react";
+import { Boxes, Gamepad2, Users } from "lucide-react";
 import { listOrganizations } from "@/lib/api/orgs";
 import { useAuth } from "@/auth/auth-context";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -59,17 +59,25 @@ export default function OrgsPage() {
               <OrgCard
                 key={org.id}
                 org={org}
+                to={`/orgs/${org.id}`}
                 eyebrow={
                   org.rank ? `[${org.tag}] · ${org.rank}` : `[${org.tag}]`
                 }
               >
                 <div className="mt-2 flex items-center justify-between gap-2">
                   <Link
+                    to={`/orgs/${org.id}`}
+                    className="inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
+                  >
+                    <Gamepad2 className="h-3.5 w-3.5" />
+                    En jeu
+                  </Link>
+                  <Link
                     to={`/orgs/${org.id}/inventory`}
                     className="inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
                   >
                     <Boxes className="h-3.5 w-3.5" />
-                    Inventaire partagé
+                    Inventaire
                   </Link>
                   {org.editor ? (
                     <span className="rounded-full bg-emerald-300/14 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
@@ -133,10 +141,13 @@ export default function OrgsPage() {
 function OrgCard({
   org,
   eyebrow,
+  to,
   children,
 }: {
   org: Organization;
   eyebrow: string;
+  /** Where the name leads: the organization's page, for the reader's own. */
+  to?: string;
   children?: ReactNode;
 }) {
   const [failed, setFailed] = useState(false);
@@ -160,12 +171,22 @@ function OrgCard({
         <p className="truncate text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
           {eyebrow}
         </p>
-        <p
-          className="mt-1 truncate text-sm font-semibold text-nexus-white"
-          title={org.name}
-        >
-          {org.name}
-        </p>
+        {to ? (
+          <Link
+            to={to}
+            className="mt-1 truncate text-sm font-semibold text-nexus-white transition-colors hover:text-nexus-accent"
+            title={org.name}
+          >
+            {org.name}
+          </Link>
+        ) : (
+          <p
+            className="mt-1 truncate text-sm font-semibold text-nexus-white"
+            title={org.name}
+          >
+            {org.name}
+          </p>
+        )}
         {children}
       </div>
     </Card>
