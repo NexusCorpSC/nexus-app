@@ -513,14 +513,15 @@ confisque les événements HTML5 de la webview, et rien ne se déposait jamais.
 Maintenir `Alt+V` affiche un menu radial au centre de l'écran où se trouve le
 curseur ; le relâcher lance l'action du secteur visé :
 
-| Secteur                     | Position    | Proposé                             |
-| --------------------------- | ----------- | ----------------------------------- |
-| READY / NOT READY           | haut gauche | dans une escouade, grisé si éliminé |
-| Éliminé / Actif             | haut droite | dans une escouade                   |
-| Verrouiller / Déverrouiller | bas droite  | toujours — comme `Ctrl+Maj+L`       |
-| Capture de zone             | bas gauche  | toujours — comme `Ctrl+Maj+S`       |
+| Secteur                     | Position    | Proposé                                  |
+| --------------------------- | ----------- | ---------------------------------------- |
+| Nexus (fenêtre principale)  | haut        | toujours — ramène la fenêtre principale  |
+| Éliminé / Actif             | droite      | dans une escouade                        |
+| Verrouiller / Déverrouiller | bas droite  | toujours — comme `Ctrl+Maj+L`            |
+| Capture de zone             | bas gauche  | toujours — comme `Ctrl+Maj+S`            |
+| READY / NOT READY           | gauche      | dans une escouade, grisé si éliminé      |
 
-Verrou et capture gardent leur place hors escouade : le geste est le même dans
+Fenêtre principale, verrou et capture gardent leur place hors escouade : le geste est le même dans
 les deux cas. Le menu est une fenêtre à part, jamais verrouillée : il reste
 utilisable par-dessus des superpositions verrouillées, y compris pour les
 déverrouiller.
@@ -553,7 +554,9 @@ secteur. Elle n'a ni session ni réseau : ce qu'elle sait de l'escouade, c'est l
 fenêtre Escouade qui le lui dit (`useRadialBridge`), et c'est à elle qu'elle
 rend les deux actions d'escouade — écrites par la même mutation que les boutons
 de la ligne de membre, donc affichées aussitôt et confirmées par une
-notification. La capture passe par la commande du raccourci de capture.
+notification. La capture passe par la commande du raccourci de capture, la
+fenêtre principale par `radial_open_main`, qui la réaffiche et la remet au
+premier plan même réduite derrière le jeu.
 
 ### Flux d'événements
 

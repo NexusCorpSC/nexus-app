@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import {
+  AppWindow,
   Check,
   HeartPulse,
   Lock,
@@ -80,8 +81,8 @@ function labelAt(sector: RadialSector) {
  * Rust shows it, moves its pointer and hides it (`src-tauri/src/radial.rs`);
  * this draws it and acts on the sector the pointer was in when the keys were
  * let go. Squad actions go to the squad window, which has the session — see
- * `useRadialBridge` — and lock and capture to the commands their shortcuts
- * run. The menu is its own window and never locked, so it stays usable over
+ * `useRadialBridge` — lock and capture to the commands their shortcuts run,
+ * and the main window sector to the command that brings the app back. The menu is its own window and never locked, so it stays usable over
  * locked overlays — including to unlock them.
  */
 export default function RadialOverlayPage() {
@@ -281,6 +282,14 @@ export default function RadialOverlayPage() {
           </>
         ) : null}
 
+        <SectorLabel sector="main">
+          <AppWindow className="size-6 text-nexus-accent" />
+          <span className="text-[13px] font-bold tracking-wider">NEXUS</span>
+          <span className="text-[11px] text-nexus-accent/60">
+            Fenêtre principale
+          </span>
+        </SectorLabel>
+
         <SectorLabel sector="lock">
           {locked ? (
             <LockOpen className="size-6 text-amber-200" />
@@ -370,10 +379,12 @@ function SectorLabel({
 
 /**
  * The sectors on offer. Squad actions only for someone with a row in a squad;
- * lock and capture always.
+ * the main window, lock and capture always.
  */
 function offeredSectors(squad: RadialSquad | null): RadialSector[] {
-  return squad ? ["ready", "alive", "lock", "capture"] : ["lock", "capture"];
+  return squad
+    ? ["main", "ready", "alive", "lock", "capture"]
+    : ["main", "lock", "capture"];
 }
 
 function hubText(
@@ -384,6 +395,8 @@ function hubText(
   const down = squad ? !squad.alive : false;
 
   switch (hovered) {
+    case "main":
+      return { title: "Ouvrir Nexus", detail: "Affiche la fenêtre principale" };
     case "ready":
       if (down) {
         return { title: "Indisponible", detail: "Repasse Actif d'abord" };
@@ -413,6 +426,13 @@ function hubText(
 /** Does what the sector under the released pointer stands for. */
 function act(released: RadialPointer, squad: RadialSquad | null) {
   const sector = sectorAt(released, offeredSectors(squad));
+
+  if (sector === "main") {
+    void invoke("radial_open_main").catch((error) => {
+      console.error("cannot open the main window from the radial menu", error);
+    });
+    return;
+  }
 
   if (sector === "lock") {
     void invoke("radial_toggle_lock").catch((error) => {

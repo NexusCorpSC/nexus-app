@@ -885,6 +885,12 @@ fn radial_capture(app: AppHandle) -> Result<(), String> {
     start_capture(&app)
 }
 
+/// Brings the main window back from the radial menu, wherever it was put away.
+#[tauri::command]
+fn radial_open_main(app: AppHandle) -> Result<(), String> {
+    show_main_window(&app)
+}
+
 /// Locks the overlays on screen, or unlocks them all, from the radial menu —
 /// what the lock shortcut does.
 #[tauri::command]
@@ -1297,6 +1303,7 @@ pub fn run() {
             cancel_capture,
             recognize_selection,
             radial_capture,
+            radial_open_main,
             show_overlay,
             radial_toggle_lock,
             notifications::notify,
