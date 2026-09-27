@@ -58,7 +58,7 @@ export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="shrink-0 space-y-1">
       <button
         id={id}
         type="button"
@@ -69,16 +69,18 @@ export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
         onBlur={() => setRecording(false)}
         onKeyDown={recording ? handleKeyDown : undefined}
         className={cn(
-          "w-full rounded-lg border px-3 py-2 text-left font-mono text-sm transition",
+          "h-7.5 min-w-33 rounded-md border px-2.5 text-center font-mono text-xs transition-colors",
           recording
             ? "border-nexus-bright bg-nexus-bright/10 text-nexus-bright"
-            : "border-nexus-accent/20 bg-nexus-deep/40 text-slate-200 hover:border-nexus-accent/40",
+            : "border-nexus-accent/18 bg-nexus-abyss text-nexus-white hover:border-nexus-accent/40",
         )}
       >
         {recording ? "Appuyez sur une combinaison…" : formatShortcut(value)}
       </button>
 
-      {error && <p className="text-xs text-rose-300">{error}</p>}
+      {error && (
+        <p className="max-w-48 text-[11.5px] text-rose-300">{error}</p>
+      )}
     </div>
   );
 }
