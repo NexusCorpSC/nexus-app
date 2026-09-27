@@ -55,8 +55,12 @@ export default function OrgInventoryPage() {
     [inventoryQuery.data, sort],
   );
 
-  const visibleSections = locationFilter
-    ? sections.filter((section) => section.key === locationFilter)
+  // A place the other filters emptied does not hide everything: back to all.
+  const activeLocation = sections.some((s) => s.key === locationFilter)
+    ? locationFilter
+    : "";
+  const visibleSections = activeLocation
+    ? sections.filter((section) => section.key === activeLocation)
     : sections;
 
   const totalCount = sections.reduce(
@@ -119,7 +123,7 @@ export default function OrgInventoryPage() {
           className="mb-6 flex flex-wrap gap-2"
         >
           <Chip
-            active={locationFilter === ""}
+            active={activeLocation === ""}
             onClick={() => setLocationFilter("")}
           >
             Tous · {totalCount}
@@ -127,7 +131,7 @@ export default function OrgInventoryPage() {
           {sections.map((section) => (
             <Chip
               key={section.key}
-              active={locationFilter === section.key}
+              active={activeLocation === section.key}
               onClick={() => setLocationFilter(section.key)}
             >
               {section.name} · {section.groups.length}
@@ -144,7 +148,7 @@ export default function OrgInventoryPage() {
           onRetry={() => void inventoryQuery.refetch()}
         />
       ) : visibleSections.length === 0 ? (
-        query || quality || memberId || locationFilter ? (
+        query || quality || memberId ? (
           <EmptyState
             title="Aucune ressource trouvée"
             description="Essayez un autre nom, un autre membre, une autre qualité ou un autre lieu."

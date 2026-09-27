@@ -72,8 +72,12 @@ export default function InventoryPage() {
     [itemsQuery.data, sort],
   );
 
-  const visibleSections = locationFilter
-    ? sections.filter((section) => section.key === locationFilter)
+  // A place the other filters emptied does not hide everything: back to all.
+  const activeLocation = sections.some((s) => s.key === locationFilter)
+    ? locationFilter
+    : "";
+  const visibleSections = activeLocation
+    ? sections.filter((section) => section.key === activeLocation)
     : sections;
 
   function invalidateItems() {
@@ -189,7 +193,7 @@ export default function InventoryPage() {
           className="mb-6 flex flex-wrap gap-2"
         >
           <Chip
-            active={locationFilter === ""}
+            active={activeLocation === ""}
             onClick={() => setLocationFilter("")}
           >
             Tous · {totalCount}
@@ -197,7 +201,7 @@ export default function InventoryPage() {
           {sections.map((section) => (
             <Chip
               key={section.key}
-              active={locationFilter === section.key}
+              active={activeLocation === section.key}
               onClick={() => setLocationFilter(section.key)}
             >
               {section.name} · {section.groups.length}
@@ -214,7 +218,7 @@ export default function InventoryPage() {
           onRetry={() => void itemsQuery.refetch()}
         />
       ) : visibleSections.length === 0 ? (
-        query || quality || locationFilter ? (
+        query || quality ? (
           <EmptyState
             title="Aucune ressource trouvée"
             description="Essayez un autre nom, une autre qualité ou un autre lieu."
