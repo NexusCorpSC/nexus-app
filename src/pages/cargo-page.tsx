@@ -38,6 +38,7 @@ import {
   Field,
   LoadingState,
   PageHeader,
+  SectionTitle,
   Select,
 } from "@/components/ui";
 
@@ -67,10 +68,8 @@ export default function CargoPage() {
         />
 
         <Card className="max-w-md p-6">
-          <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
-            Aucune feuille en cours
-          </h2>
-          <p className="mb-4 text-xs text-nexus-accent/60">
+          <SectionTitle className="mb-1">Aucune feuille en cours</SectionTitle>
+          <p className="mb-4 text-xs text-nexus-muted">
             Choisissez le vaisseau que vous utilisez : c'est sa capacité qui
             décide du reste.
           </p>
@@ -99,7 +98,7 @@ export default function CargoPage() {
         actions={
           <>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => void invoke("toggle_cargo_overlay")}
             >
@@ -157,9 +156,7 @@ export default function CargoPage() {
           <AddLineCard currentMission={missionName(sheet.missionCounter)} />
 
           <Card className="p-5">
-            <h2 className="mb-3 text-sm font-semibold text-nexus-bright">
-              Réglages
-            </h2>
+            <SectionTitle>Réglages</SectionTitle>
 
             <div className="space-y-3">
               <Field label="Plus gros conteneur">
@@ -183,7 +180,7 @@ export default function CargoPage() {
               <Button
                 type="button"
                 size="sm"
-                variant="ghost"
+                variant="outline"
                 onClick={() => void startNewMission()}
               >
                 Nouvelle mission
@@ -204,7 +201,7 @@ export default function CargoPage() {
                 <Button
                   type="button"
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
                   onClick={() => setChangingShip(true)}
                 >
                   Changer de vaisseau
@@ -251,10 +248,8 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
 
   return (
     <Card className="p-5">
-      <h2 className="mb-1 text-sm font-semibold text-nexus-bright">
-        Ajouter du cargo
-      </h2>
-      <p className="mb-3 text-xs text-nexus-accent/50">
+      <SectionTitle className="mb-1">Ajouter du cargo</SectionTitle>
+      <p className="mb-3 text-xs text-nexus-dim">
         Sans mission indiquée, la ligne rejoint « {currentMission} ».
       </p>
 
@@ -267,7 +262,7 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
         }}
       />
 
-      <div className="mt-4 space-y-2 border-t border-nexus-accent/10 pt-4">
+      <div className="mt-4 space-y-2 border-t border-nexus-accent/8 pt-4">
         <Field label="Coller un journal de mission">
           <textarea
             value={paste}
@@ -275,14 +270,14 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
             rows={4}
             spellCheck={false}
             placeholder={"Deliver 0/32 SCU of Titanium to Port Olisar above Crusader.\nCollect Titanium from Area18."}
-            className="w-full rounded-lg border border-nexus-accent/20 bg-nexus-abyss/60 px-3 py-2 font-mono text-xs text-nexus-bright placeholder:text-nexus-accent/35 focus:border-nexus-accent/50 focus:outline-none"
+            className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-abyss/40 px-3 py-2 font-mono text-xs text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </Field>
 
         <Button
           type="button"
           size="sm"
-          variant="ghost"
+          variant="outline"
           disabled={paste.trim() === ""}
           onClick={importPaste}
         >
@@ -290,7 +285,7 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
         </Button>
 
         {feedback ? (
-          <p className="text-xs text-nexus-accent/70">{feedback}</p>
+          <p className="text-xs text-nexus-muted">{feedback}</p>
         ) : null}
       </div>
     </Card>

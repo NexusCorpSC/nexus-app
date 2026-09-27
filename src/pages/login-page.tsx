@@ -1,6 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/auth/auth-context";
-import { Button, Card, PageHeader } from "@/components/ui";
+import { Button, Card } from "@/components/ui";
 
 /**
  * Sign-in happens on Nexus Tools, in the browser: already signed in there, the
@@ -19,23 +19,28 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md">
-      <PageHeader
-        title="Connexion"
-        description="Connectez-vous pour accéder à vos réputations, votre inventaire et vos organisations."
-      />
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <Card className="w-full max-w-md space-y-4 p-7">
+        <div className="mb-2 text-center">
+          <h1 className="font-display text-[28px] leading-tight font-bold text-nexus-white">
+            Connexion
+          </h1>
+          <p className="mt-1 text-sm text-nexus-muted">
+            Connectez-vous pour accéder à vos réputations, votre inventaire et
+            vos organisations.
+          </p>
+        </div>
 
-      <Card className="space-y-4 p-6">
         {signingIn ? (
           <>
-            <p className="text-xs text-nexus-accent/70">
+            <p className="text-center text-xs leading-relaxed text-nexus-dim">
               Terminez la connexion dans votre navigateur : Nexus App reprendra
               la main dès que ce sera fait.
             </p>
 
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               size="sm"
               className="w-full"
               onClick={() => void signIn()}
@@ -55,7 +60,7 @@ export default function LoginPage() {
           </>
         ) : (
           <>
-            <p className="text-xs text-nexus-accent/70">
+            <p className="text-center text-xs leading-relaxed text-nexus-dim">
               La connexion se fait sur Nexus Tools, dans votre navigateur. Si
               vous y êtes déjà connecté, il n'y a rien d'autre à faire.
             </p>

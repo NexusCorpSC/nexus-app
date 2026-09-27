@@ -8,10 +8,10 @@ import {
   Card,
   EmptyState,
   ErrorState,
-  Field,
-  Input,
   LoadingState,
   PageHeader,
+  SearchField,
+  Toolbar,
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { FactionWithBlueprints } from "@/types/nexus";
@@ -57,15 +57,14 @@ export default function FactionsPage() {
         description="Les blueprints récompensés par les missions de chaque faction."
       />
 
-      <Card className="mb-4 p-4">
-        <Field label="Recherche">
-          <Input
-            value={search}
-            placeholder="Nom de faction ou de blueprint…"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </Field>
-      </Card>
+      <Toolbar>
+        <SearchField
+          label="Rechercher une faction ou un blueprint"
+          value={search}
+          placeholder="Nom de faction ou de blueprint…"
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      </Toolbar>
 
       {factions.length === 0 ? (
         <EmptyState
@@ -112,10 +111,10 @@ function FactionCard({
         )}
       >
         <div className="mb-3 flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-semibold text-nexus-bright">
+          <h2 className="font-display text-base font-semibold text-nexus-white">
             {faction.name}
           </h2>
-          <span className="text-xs text-nexus-accent/50">
+          <span className="text-xs text-nexus-dim">
             {faction.blueprints.length} blueprint
             {faction.blueprints.length > 1 ? "s" : ""}
           </span>
@@ -126,21 +125,21 @@ function FactionCard({
             <li key={blueprint._id}>
               <Link
                 to={`/blueprints/${blueprint.slug}`}
-                className="group flex items-center gap-2 rounded-lg border border-nexus-accent/10 bg-nexus-abyss/40 px-3 py-2 transition-colors hover:border-nexus-accent/30"
+                className="group flex items-center gap-2 rounded-lg border border-nexus-accent/8 bg-[#08243a] px-3 py-2 transition-colors hover:border-nexus-accent/35"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-nexus-bright/90">
+                  <p className="truncate text-sm font-medium text-nexus-white">
                     {blueprint.name}
                   </p>
                   {blueprint.category ? (
-                    <p className="truncate text-xs text-nexus-accent/50">
+                    <p className="truncate text-xs text-nexus-dim">
                       {[blueprint.category, blueprint.subcategory]
                         .filter(Boolean)
                         .join(" › ")}
                     </p>
                   ) : null}
                 </div>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-nexus-accent/30 transition-colors group-hover:text-nexus-accent/70" />
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-nexus-dim/60 transition-colors group-hover:text-nexus-accent" />
               </Link>
             </li>
           ))}

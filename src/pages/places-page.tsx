@@ -12,15 +12,15 @@ import {
   type PlaceType,
 } from "@/types/nexus";
 import {
-  Card,
+  Chip,
   EmptyState,
   ErrorState,
-  Field,
-  Input,
   LoadingState,
   PageHeader,
   Pagination,
-  Select,
+  SearchField,
+  Toolbar,
+  ToolbarSelect,
 } from "@/components/ui";
 
 /**
@@ -90,101 +90,94 @@ export default function PlacesPage() {
     <>
       <PageHeader
         title="Lieux"
-        description="Villes, stations et avant-postes du 'verse, avec les services qu'on y trouve, les magasins qui s'y tiennent et les cartes relevées."
+        description="Villes, stations et avant-postes du 'verse, leurs services et leurs cartes."
       />
 
-      <Card className="mb-6 p-4">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Field label="Recherche" className="sm:col-span-2 lg:col-span-1">
-            <Input
-              value={search}
-              placeholder="Nom d'un lieu…"
-              onChange={(event) =>
-                updateFilter(() => setSearch(event.target.value))
-              }
-            />
-          </Field>
+      <Toolbar className="mb-3">
+        <SearchField
+          label="Rechercher un lieu"
+          value={search}
+          placeholder="Nom d'un lieu…"
+          onChange={(event) =>
+            updateFilter(() => setSearch(event.target.value))
+          }
+        />
 
-          <Field label="Type">
-            <Select
-              value={type}
-              onChange={(event) =>
-                updateFilter(() => {
-                  const value = event.target.value;
-                  setType(isPlaceType(value) ? value : "");
-                })
-              }
-            >
-              <option value="">Tous</option>
-              {facetsQuery.data?.types.map((entry) =>
-                isPlaceType(entry.value) ? (
-                  <option key={entry.value} value={entry.value}>
-                    {PLACE_TYPE_LABELS[entry.value]} ({entry.count})
-                  </option>
-                ) : null,
-              )}
-            </Select>
-          </Field>
+        <ToolbarSelect
+          label="Système"
+          value={system}
+          onChange={(event) =>
+            updateFilter(() => {
+              setSystem(event.target.value);
+              // Le corps choisi appartenait peut-être à l'autre système.
+              setBody("");
+            })
+          }
+        >
+          <option value="">Tous</option>
+          {facetsQuery.data?.systems.map((entry) => (
+            <option key={entry.slug} value={entry.slug}>
+              {entry.name}
+            </option>
+          ))}
+        </ToolbarSelect>
 
-          <Field label="Système">
-            <Select
-              value={system}
-              onChange={(event) =>
-                updateFilter(() => {
-                  setSystem(event.target.value);
-                  // Le corps choisi appartenait peut-être à l'autre système.
-                  setBody("");
-                })
-              }
-            >
-              <option value="">Tous</option>
-              {facetsQuery.data?.systems.map((entry) => (
-                <option key={entry.slug} value={entry.slug}>
-                  {entry.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <ToolbarSelect
+          label="Planète ou lune"
+          value={body}
+          disabled={!bodies.length}
+          onChange={(event) => updateFilter(() => setBody(event.target.value))}
+        >
+          <option value="">Tous</option>
+          {bodies.map((entry) => (
+            <option key={entry.slug} value={entry.slug}>
+              {entry.name}
+            </option>
+          ))}
+        </ToolbarSelect>
 
-          <Field label="Planète ou lune">
-            <Select
-              value={body}
-              disabled={!bodies.length}
-              onChange={(event) =>
-                updateFilter(() => setBody(event.target.value))
-              }
-            >
-              <option value="">Tous</option>
-              {bodies.map((entry) => (
-                <option key={entry.slug} value={entry.slug}>
-                  {entry.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
+        <ToolbarSelect
+          label="Service"
+          value={service}
+          onChange={(event) =>
+            updateFilter(() => {
+              const value = event.target.value;
+              setService(isPlaceService(value) ? value : "");
+            })
+          }
+        >
+          <option value="">Tous</option>
+          {facetsQuery.data?.services.map((entry) =>
+            isPlaceService(entry.value) ? (
+              <option key={entry.value} value={entry.value}>
+                {PLACE_SERVICE_LABELS[entry.value]} ({entry.count})
+              </option>
+            ) : null,
+          )}
+        </ToolbarSelect>
+      </Toolbar>
 
-          <Field label="Service">
-            <Select
-              value={service}
-              onChange={(event) =>
-                updateFilter(() => {
-                  const value = event.target.value;
-                  setService(isPlaceService(value) ? value : "");
-                })
-              }
+      <div className="mb-5 flex flex-wrap gap-2">
+        <Chip
+          active={type === ""}
+          onClick={() => updateFilter(() => setType(""))}
+        >
+          Tous
+        </Chip>
+        {facetsQuery.data?.types.map((entry) => {
+          const value = entry.value;
+          return isPlaceType(value) ? (
+            <Chip
+              key={value}
+              active={type === value}
+              onClick={() => updateFilter(() => setType(value))}
             >
-              <option value="">Tous</option>
-              {facetsQuery.data?.services.map((entry) =>
-                isPlaceService(entry.value) ? (
-                  <option key={entry.value} value={entry.value}>
-                    {PLACE_SERVICE_LABELS[entry.value]} ({entry.count})
-                  </option>
-                ) : null,
-              )}
-            </Select>
-          </Field>
-        </div>
-      </Card>
+              {PLACE_TYPE_LABELS[value]}
+              <span className="ml-1.5 opacity-60">{entry.count}</span>
+            </Chip>
+          ) : null;
+        })}
+      </div>
 
       {placesQuery.isPending ? (
         <LoadingState />
@@ -200,12 +193,12 @@ export default function PlacesPage() {
         />
       ) : (
         <>
-          <p className="mb-3 text-xs text-nexus-accent/50">
+          <p className="mb-3 text-xs text-nexus-dim">
             {placesQuery.data.total} résultat
             {placesQuery.data.total > 1 ? "s" : ""}
           </p>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {placesQuery.data.places.map((place) => (
               <PlaceCard key={place.id} place={place} />
             ))}
