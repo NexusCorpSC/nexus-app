@@ -5,7 +5,7 @@ import { ArrowLeft, User } from "lucide-react";
 import { listOrgInventory } from "@/lib/api/orgs";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
-  Button,
+  Chip,
   EmptyState,
   ErrorState,
   LoadingState,
@@ -13,44 +13,60 @@ import {
   SearchField,
   Toolbar,
   ToolbarSelect,
-  ViewToggle,
 } from "@/components/ui";
 import {
   INVENTORY_SORT_OPTIONS,
   InventoryGrid,
-  InventoryList,
-  sortInventoryItems,
-  useStoredViewMode,
+  QualityFilter,
+  parseMinQuality,
+  groupInventory,
   type InventorySort,
 } from "@/components/inventory/inventory-items";
 
+/**
+ * The same cards as the personal inventory — by place, one per resource, a
+ * lot per quality — read-only, each lot saying whose it is.
+ */
 export default function OrgInventoryPage() {
   const { orgId = "" } = useParams();
 
   const [search, setSearch] = useState("");
+  const [minQuality, setMinQuality] = useState("");
   const [memberId, setMemberId] = useState("");
-  const [page, setPage] = useState(1);
+  const [locationFilter, setLocationFilter] = useState("");
   const [sort, setSort] = useState<InventorySort>("updated");
-  const [view, setView] = useStoredViewMode("nexus.org-inventory.view");
 
   const query = useDebounced(search);
+  const quality = useDebounced(minQuality);
 
   const inventoryQuery = useQuery({
-    queryKey: ["org-inventory", orgId, query, memberId, page],
+    queryKey: ["org-inventory", orgId, query, quality, memberId],
     queryFn: () =>
       listOrgInventory(orgId, {
         query: query || undefined,
+        quality: parseMinQuality(quality),
         userId: memberId || undefined,
-        page,
       }),
     enabled: Boolean(orgId),
     placeholderData: keepPreviousData,
   });
 
-  // The sort only orders the page on screen: the endpoint has no sort option.
-  const items = useMemo(
-    () => sortInventoryItems(inventoryQuery.data?.items ?? [], sort),
+  const sections = useMemo(
+    () => groupInventory(inventoryQuery.data?.items ?? [], sort),
     [inventoryQuery.data, sort],
+  );
+
+  // A place the other filters emptied does not hide everything: back to all.
+  const activeLocation = sections.some((s) => s.key === locationFilter)
+    ? locationFilter
+    : "";
+  const visibleSections = activeLocation
+    ? sections.filter((section) => section.key === activeLocation)
+    : sections;
+
+  const totalCount = sections.reduce(
+    (sum, section) => sum + section.groups.length,
+    0,
   );
 
   return (
@@ -68,23 +84,17 @@ export default function OrgInventoryPage() {
         description="Ressources rendues visibles par les membres de l'organisation."
       />
 
-      <Toolbar className="mb-6">
+      <Toolbar className="mb-3">
         <SearchField
           label="Rechercher une ressource"
           value={search}
           placeholder="Nom de la ressource…"
-          onChange={(event) => {
-            setSearch(event.target.value);
-            setPage(1);
-          }}
+          onChange={(event) => setSearch(event.target.value)}
         />
         <ToolbarSelect
           label="Membre"
           value={memberId}
-          onChange={(event) => {
-            setMemberId(event.target.value);
-            setPage(1);
-          }}
+          onChange={(event) => setMemberId(event.target.value)}
         >
           <option value="">Tous</option>
           {inventoryQuery.data?.members.map((member) => (
@@ -93,6 +103,7 @@ export default function OrgInventoryPage() {
             </option>
           ))}
         </ToolbarSelect>
+        <QualityFilter value={minQuality} onChange={setMinQuality} />
         <ToolbarSelect
           label="Tri"
           value={sort}
@@ -104,8 +115,31 @@ export default function OrgInventoryPage() {
             </option>
           ))}
         </ToolbarSelect>
-        <ViewToggle value={view} onChange={setView} />
       </Toolbar>
+
+      {totalCount > 0 ? (
+        <div
+          role="group"
+          aria-label="Filtrer par lieu"
+          className="mb-6 flex flex-wrap gap-2"
+        >
+          <Chip
+            active={activeLocation === ""}
+            onClick={() => setLocationFilter("")}
+          >
+            Tous · {totalCount}
+          </Chip>
+          {sections.map((section) => (
+            <Chip
+              key={section.key}
+              active={activeLocation === section.key}
+              onClick={() => setLocationFilter(section.key)}
+            >
+              {section.name} · {section.groups.length}
+            </Chip>
+          ))}
+        </div>
+      ) : null}
 
       {inventoryQuery.isPending ? (
         <LoadingState />
@@ -114,58 +148,31 @@ export default function OrgInventoryPage() {
           error={inventoryQuery.error}
           onRetry={() => void inventoryQuery.refetch()}
         />
-      ) : items.length === 0 ? (
-        <EmptyState
-          title="Aucune ressource partagée"
-          description="Les membres doivent cocher « Visible par l'org » sur leurs ressources pour qu'elles apparaissent ici."
-        />
+      ) : visibleSections.length === 0 ? (
+        query || quality || memberId ? (
+          <EmptyState
+            title="Aucune ressource trouvée"
+            description="Essayez un autre nom, un autre membre, une autre qualité ou un autre lieu."
+          />
+        ) : (
+          <EmptyState
+            title="Aucune ressource partagée"
+            description="Les membres doivent cocher « Visible par l'org » sur leurs ressources pour qu'elles apparaissent ici."
+          />
+        )
       ) : (
-        <>
-          <p className="mb-4 text-xs text-nexus-dim">
-            {inventoryQuery.data.total} ressource
-            {inventoryQuery.data.total > 1 ? "s" : ""}
-          </p>
-
-          {view === "grid" ? (
-            <InventoryGrid
-              items={items}
-              renderFooter={(item) => (
-                <span className="flex min-w-0 items-center gap-1.5 text-xs text-nexus-muted">
-                  <User className="size-3.5 shrink-0 text-nexus-dim" />
-                  <span className="truncate">{item.ownerName}</span>
-                </span>
-              )}
-            />
-          ) : (
-            <InventoryList
-              items={items}
-              renderMeta={(item) => (
-                <span className="text-nexus-muted">{item.ownerName}</span>
-              )}
-            />
+        <InventoryGrid
+          sections={visibleSections}
+          renderLotMeta={(lot) => (
+            <span
+              className="flex min-w-0 items-center gap-1 text-xs text-nexus-muted"
+              title="Propriétaire"
+            >
+              <User className="size-3.5 shrink-0 text-nexus-dim" />
+              <span className="truncate">{lot.ownerName}</span>
+            </span>
           )}
-
-          {/* This endpoint reports `hasMore` rather than a page count. */}
-          <div className="flex items-center justify-center gap-3 py-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => current - 1)}
-            >
-              Précédent
-            </Button>
-            <span className="text-xs text-nexus-dim">Page {page}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled={!inventoryQuery.data.hasMore}
-              onClick={() => setPage((current) => current + 1)}
-            >
-              Suivant
-            </Button>
-          </div>
-        </>
+        />
       )}
     </>
   );

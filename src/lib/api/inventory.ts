@@ -45,13 +45,19 @@ export function bulkAddInventoryItems(rows: BulkInventoryRow[]) {
   );
 }
 
-export function updateInventoryItem(
-  itemId: string,
-  input: Partial<InventoryItemInput>,
-) {
-  return apiRequest<InventoryItem>(
+/** Shares the item with the member's organizations, or stops sharing it. */
+export function setInventoryItemOrgVisible(itemId: string, orgVisible: boolean) {
+  return apiRequest<{ ok: boolean }>(
     `/api/inventory/items/${encodeURIComponent(itemId)}`,
-    { method: "PATCH", body: input },
+    { method: "PATCH", body: { op: "setOrgVisible", orgVisible } },
+  );
+}
+
+/** Adds to the lot, or takes from it when `delta` is negative. */
+export function adjustInventoryItem(itemId: string, delta: number) {
+  return apiRequest<{ quantity: number }>(
+    `/api/inventory/items/${encodeURIComponent(itemId)}`,
+    { method: "PATCH", body: { op: "adjust", delta } },
   );
 }
 
