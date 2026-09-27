@@ -40,6 +40,7 @@ import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
+import nexusLogo from "@/assets/nexus-logo.png";
 
 type NavItem = {
   to: string;
@@ -212,9 +213,7 @@ export default function AppLayout() {
     <div className="flex h-full">
       <aside className="flex w-58 shrink-0 flex-col border-r border-nexus-accent/8 bg-nexus-night">
         <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3.5">
-          <div className="flex size-7.5 items-center justify-center rounded-lg bg-nexus-accent font-display text-base font-bold text-nexus-abyss">
-            N
-          </div>
+          <img src={nexusLogo} alt="" className="size-8 shrink-0" />
           <div className="flex flex-col">
             <span className="font-display text-[17px] leading-tight font-bold tracking-[0.06em] text-nexus-white">
               NEXUS
