@@ -47,8 +47,12 @@ const CELL =
 
 const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
 
+/**
+ * A number as a French spreadsheet writes it too: "1 234,5", thousands split
+ * by spaces (plain, non-breaking or narrow) and a decimal comma.
+ */
 function parseNumber(value: string) {
-  return Number(value.trim().replace(",", "."));
+  return Number(value.replace(/[\s\u00a0\u202f]/g, "").replace(",", "."));
 }
 
 function sameText(a: string | undefined, b: string | undefined) {
