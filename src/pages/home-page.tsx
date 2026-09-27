@@ -299,7 +299,10 @@ function NotesCard({
 
       {lines.length === 0 ? (
         <p className="text-sm text-nexus-muted">
-          {query.isPending ? "Chargement…" : "Rien de noté pour l'instant."}
+          {/* The query waits for the session, and is not pending meanwhile. */}
+          {sessionLoading || query.isPending
+            ? "Chargement…"
+            : "Rien de noté pour l'instant."}
         </p>
       ) : (
         <div className="flex min-w-0 flex-col gap-1.5 text-[13.5px] leading-relaxed text-nexus-bright">
