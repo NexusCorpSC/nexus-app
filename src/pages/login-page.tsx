@@ -12,7 +12,7 @@ export default function LoginPage() {
   const location = useLocation();
 
   const redirectTo =
-    (location.state as { from?: string } | null)?.from ?? "/blueprints";
+    (location.state as { from?: string } | null)?.from ?? "/home";
 
   if (user) {
     return <Navigate to={redirectTo} replace />;

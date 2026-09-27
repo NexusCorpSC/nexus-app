@@ -15,6 +15,7 @@ import InventoryPage from "@/pages/inventory-page";
 import OrgsPage from "@/pages/orgs-page";
 import OrgInventoryPage from "@/pages/org-inventory-page";
 import SettingsPage from "@/pages/settings-page";
+import HomePage from "@/pages/home-page";
 import LoginPage from "@/pages/login-page";
 import OverlayPage from "@/pages/overlay-page";
 import CapturePage from "@/pages/capture-page";
@@ -51,7 +52,9 @@ export default function App() {
       <Route path="radial" element={<RadialOverlayPage />} />
 
       <Route element={<AppLayout />}>
-        <Route index element={<Navigate to="/blueprints" replace />} />
+        <Route index element={<Navigate to="/home" replace />} />
+
+        <Route path="home" element={<HomePage />} />
 
         <Route path="blueprints" element={<BlueprintsPage />} />
         <Route path="blueprints/:slug" element={<BlueprintDetailPage />} />
@@ -82,7 +85,7 @@ export default function App() {
         <Route path="settings" element={<SettingsPage />} />
         <Route path="login" element={<LoginPage />} />
 
-        <Route path="*" element={<Navigate to="/blueprints" replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
       </Route>
     </Routes>
   );

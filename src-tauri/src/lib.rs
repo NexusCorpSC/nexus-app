@@ -858,6 +858,26 @@ fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+/// Brings an overlay up — shown, never hidden — from a button of the main
+/// window: the launch tiles of the home page and the menu's shortcuts. A
+/// toggle there would put away a window that was already open, which is not
+/// what a button labelled «open» promises.
+#[tauri::command]
+fn show_overlay(app: AppHandle, label: String) -> Result<(), String> {
+    match label.as_str() {
+        SQUAD_WINDOW => {
+            show_window(&app, SQUAD_WINDOW)?;
+            announce_squad_visibility(&app)
+        }
+        PLAN_WINDOW => {
+            show_window(&app, PLAN_WINDOW)?;
+            announce_plan_visibility(&app)
+        }
+        OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW => show_window(&app, &label),
+        other => Err(format!("{other} is not an overlay")),
+    }
+}
+
 /// Starts a region capture from the radial menu — what the capture shortcut
 /// does, picked from the menu instead.
 #[tauri::command]
@@ -1277,6 +1297,7 @@ pub fn run() {
             cancel_capture,
             recognize_selection,
             radial_capture,
+            show_overlay,
             radial_toggle_lock,
             notifications::notify,
             notifications::notifications_ready,

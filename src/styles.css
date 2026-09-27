@@ -11,6 +11,23 @@
   --color-nexus-accent: #9ed0ff;
   --color-nexus-bright: #c9e4ff;
   --color-nexus-soft: #cce7ff;
+
+  /*
+   * The main window's surfaces and text, from darkest to brightest: the rail
+   * the menu sits on, the cards laid over the page, then the text shades —
+   * `white` for titles, `muted` for descriptions, `dim` for what only needs
+   * to be findable.
+   */
+  --color-nexus-night: #041827;
+  --color-nexus-card: #0a2a42;
+  --color-nexus-white: #e6f2ff;
+  --color-nexus-muted: #7e9fb7;
+  --color-nexus-dim: #6f90a8;
+
+  /* Plex for reading, Chakra Petch for titles and labels, JetBrains Mono for keys. */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
 }
 
 :root {
@@ -27,13 +44,7 @@ body {
   margin: 0;
   background-color: var(--color-nexus-abyss);
   color: var(--color-nexus-bright);
-  font-family:
-    Inter,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
