@@ -487,7 +487,6 @@ export type UserOrganization = Organization & {
   editor: boolean;
 };
 
-/** Org inventory rows carry the owning member's display name. */
 /** A lot in a parcel; `itemId` and `locationId` only for its sender. */
 export type ParcelItem = {
   itemId?: string;
@@ -515,6 +514,7 @@ export type Parcel = {
   deliveredLocationName?: string;
 };
 
+/** Org inventory rows carry the owning member's display name. */
 export type OrgInventoryItem = Omit<InventoryItem, "orgVisible" | "userId"> & {
   userId?: string;
   ownerName: string;

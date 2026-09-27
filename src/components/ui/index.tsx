@@ -150,6 +150,7 @@ export function Modal({
   footer?: ReactNode;
 }) {
   const titleId = useId();
+  const descriptionId = useId();
 
   useEffect(() => {
     if (!open) return;
@@ -173,6 +174,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
         className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50"
       >
         <header className="flex items-start gap-3 px-5 pt-5">
@@ -189,7 +191,10 @@ export function Modal({
               {title}
             </h2>
             {description ? (
-              <p className="mt-0.5 text-[13px] text-nexus-muted">
+              <p
+                id={descriptionId}
+                className="mt-0.5 text-[13px] text-nexus-muted"
+              >
                 {description}
               </p>
             ) : null}

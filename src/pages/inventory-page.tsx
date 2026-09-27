@@ -346,7 +346,7 @@ export default function InventoryPage() {
                       icon={Package}
                       max={availableOf(active)}
                       maxMessage={
-                        active.reserved
+                        active.reserved !== undefined
                           ? `Seuls ${number.format(availableOf(active))} sont disponibles : le reste est réservé.`
                           : `Au plus ${number.format(active.quantity)}`
                       }

@@ -74,6 +74,8 @@ function useCopy() {
   return {
     copied,
     copy: (text: string) => {
+      // Absent outside a secure context, and in some webviews.
+      if (!navigator.clipboard?.writeText) return;
       void navigator.clipboard
         .writeText(text)
         .then(() => setCopied(text))
@@ -468,8 +470,10 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
           <Check className="mt-0.5 size-5 shrink-0 text-emerald-300" />
           <div>
             <p className="text-sm font-semibold text-nexus-white">
-              Colis de {received.senderName ?? "un joueur"} reçu à{" "}
-              {received.deliveredLocationName}
+              Colis de {received.senderName ?? "un joueur"} reçu
+              {received.deliveredLocationName
+                ? ` à ${received.deliveredLocationName}`
+                : null}
             </p>
             <p className="text-xs text-emerald-200/90">
               {created} lot{created > 1 ? "s" : ""} créé
@@ -610,7 +614,7 @@ function ParcelStatusBadge({ parcel }: { parcel: Parcel }) {
     parcel.status === "pending"
       ? [Clock, `En attente · ${remaining}`]
       : parcel.status === "delivered"
-        ? [Check, `Livré · ${when}`]
+        ? [Check, when ? `Livré · ${when}` : "Livré"]
         : parcel.status === "cancelled"
           ? [X, "Annulé"]
           : [MinusCircle, "Expiré"];
