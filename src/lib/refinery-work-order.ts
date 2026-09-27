@@ -195,8 +195,22 @@ export function snapMaterial(read: string): { name: string; known: boolean } {
   return { name: titled, known: false };
 }
 
-/** A line holding numbers only: a row's columns, read apart from its name. */
-const NUMBERS_ONLY = /^[^A-Za-z]*[0-9][^A-Za-z]*$/;
+/**
+ * The numbers of a line holding nothing else — a row's columns, read apart
+ * from its name — or `null`. Each word must be a number, digits or their
+ * look-alikes ("325 lSO"), so a material's name is never taken for one.
+ */
+function detachedNumbers(line: string): string[] | null {
+  const words = line
+    .split(/\s+/)
+    .map((word) => word.replace(/^[^A-Za-z0-9|]+|[^A-Za-z0-9|]+$/g, ""))
+    .filter(Boolean);
+  const number = new RegExp(`^${DIGIT}+$`);
+  if (words.length === 0 || !words.every((word) => number.test(word))) {
+    return null;
+  }
+  return words;
+}
 
 /**
  * Gives the materials read without their numbers the number-only lines read
@@ -267,10 +281,12 @@ export function parseWorkOrderText(text: string): WorkOrderParseResult {
     }
     if (END.test(line)) break;
 
-    if (NUMBERS_ONLY.test(line)) {
-      const numbers = line.match(/[0-9]+/g) ?? [];
+    const detachedLine = detachedNumbers(line);
+    if (detachedLine) {
       // A lone digit is the icon in front of a row, read on its own.
-      if (numbers.some((number) => number.length > 1)) detached.push(numbers);
+      if (detachedLine.some((number) => number.length > 1)) {
+        detached.push(detachedLine);
+      }
       continue;
     }
 
