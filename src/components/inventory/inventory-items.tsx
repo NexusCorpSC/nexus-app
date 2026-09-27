@@ -245,7 +245,7 @@ export function InventoryGrid<T extends InventoryDisplayItem>({
           <div className="grid grid-cols-2 items-start gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {section.groups.map((group) => (
               <InventoryGroupCard
-                key={group.key + group.lots.map((lot) => lot.id).join()}
+                key={group.key}
                 group={group}
                 renderLotMeta={renderLotMeta}
                 renderLotActions={renderLotActions}
@@ -410,6 +410,12 @@ export function OrgVisibleCheckbox({
       Visible par l'org
     </label>
   );
+}
+
+/** The minimum quality typed, or nothing when it is not a number. */
+export function parseMinQuality(value: string) {
+  const quality = Number(value);
+  return value.trim() && Number.isFinite(quality) ? quality : undefined;
 }
 
 /** « Qualité ≥ » in a toolbar: lots below it are left out. */

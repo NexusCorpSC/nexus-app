@@ -18,6 +18,7 @@ import {
   INVENTORY_SORT_OPTIONS,
   InventoryGrid,
   QualityFilter,
+  parseMinQuality,
   groupInventory,
   type InventorySort,
 } from "@/components/inventory/inventory-items";
@@ -43,7 +44,7 @@ export default function OrgInventoryPage() {
     queryFn: () =>
       listOrgInventory(orgId, {
         query: query || undefined,
-        quality: quality ? Number(quality) : undefined,
+        quality: parseMinQuality(quality),
         userId: memberId || undefined,
       }),
     enabled: Boolean(orgId),

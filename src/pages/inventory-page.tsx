@@ -33,6 +33,7 @@ import {
   InventoryGrid,
   OrgVisibleCheckbox,
   QualityFilter,
+  parseMinQuality,
   groupInventory,
   type InventorySort,
 } from "@/components/inventory/inventory-items";
@@ -63,7 +64,7 @@ export default function InventoryPage() {
     queryFn: () =>
       listInventoryItems({
         query: query || undefined,
-        quality: quality ? Number(quality) : undefined,
+        quality: parseMinQuality(quality),
       }),
   });
 
@@ -310,7 +311,7 @@ function NewItemForm({
       name: name.trim(),
       quantity: Number(quantity) || 0,
       unit: unit.trim() || undefined,
-      quality: quality ? Number(quality) : undefined,
+      quality: parseMinQuality(quality),
       locationId,
       orgVisible,
     });
