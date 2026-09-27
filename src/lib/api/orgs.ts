@@ -16,13 +16,17 @@ export type OrgInventoryPage = {
   members: { id: string; name: string }[];
 };
 
-/** Items shared with the organization by its members (`orgVisible: true`). */
+/**
+ * Every item shared with the organization by its members (`orgVisible:
+ * true`), at once: they are grouped by place and resource on screen, and a
+ * page would split a resource in two. A server that predates `all` answers
+ * with its largest page.
+ */
 export function listOrgInventory(
   orgId: string,
   params: {
     query?: string;
     quality?: number;
-    page?: number;
     userId?: string;
   } = {},
 ) {
@@ -32,8 +36,9 @@ export function listOrgInventory(
       params: {
         query: params.query,
         quality: params.quality,
-        page: params.page,
         userId: params.userId,
+        all: 1,
+        limit: 100,
       },
     },
   );

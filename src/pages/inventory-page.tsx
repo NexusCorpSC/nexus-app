@@ -3,11 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Table2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
+  adjustInventoryItem,
   createInventoryItem,
   deleteInventoryItem,
   listInventoryItems,
   listLocations,
-  updateInventoryItem,
+  setInventoryItemOrgVisible,
 } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -24,32 +25,30 @@ import {
   Select,
   Toolbar,
   ToolbarSelect,
-  ViewToggle,
 } from "@/components/ui";
 import {
+  AdjustQuantityButton,
   DeleteIconButton,
   INVENTORY_SORT_OPTIONS,
   InventoryGrid,
-  InventoryList,
   OrgVisibleCheckbox,
-  groupByLocation,
-  locationKey,
-  sortInventoryItems,
-  useStoredViewMode,
+  QualityFilter,
+  groupInventory,
   type InventorySort,
 } from "@/components/inventory/inventory-items";
-import type { InventoryItem, InventoryItemInput } from "@/types/nexus";
+import type { InventoryItemInput } from "@/types/nexus";
 
 export default function InventoryPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState("");
+  const [minQuality, setMinQuality] = useState("");
   const [locationFilter, setLocationFilter] = useState("");
   const [sort, setSort] = useState<InventorySort>("updated");
-  const [view, setView] = useStoredViewMode("nexus.inventory.view");
   const [showForm, setShowForm] = useState(false);
 
   const query = useDebounced(search);
+  const quality = useDebounced(minQuality);
 
   const locationsQuery = useQuery({
     queryKey: ["locations"],
@@ -60,21 +59,22 @@ export default function InventoryPage() {
   // Every location is fetched at once so the chips can show their counts;
   // the location filter is applied here rather than by the API.
   const itemsQuery = useQuery({
-    queryKey: ["inventory-items", query],
-    queryFn: () => listInventoryItems({ query: query || undefined }),
+    queryKey: ["inventory-items", query, quality],
+    queryFn: () =>
+      listInventoryItems({
+        query: query || undefined,
+        quality: quality ? Number(quality) : undefined,
+      }),
   });
 
-  const locationGroups = useMemo(
-    () => groupByLocation(itemsQuery.data ?? []),
-    [itemsQuery.data],
+  const sections = useMemo(
+    () => groupInventory(itemsQuery.data ?? [], sort),
+    [itemsQuery.data, sort],
   );
 
-  const visibleItems = useMemo(() => {
-    const items = (itemsQuery.data ?? []).filter(
-      (item) => !locationFilter || locationKey(item) === locationFilter,
-    );
-    return sortInventoryItems(items, sort);
-  }, [itemsQuery.data, locationFilter, sort]);
+  const visibleSections = locationFilter
+    ? sections.filter((section) => section.key === locationFilter)
+    : sections;
 
   function invalidateItems() {
     return queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
@@ -93,39 +93,29 @@ export default function InventoryPage() {
     onSuccess: invalidateItems,
   });
 
-  const toggleVisibilityMutation = useMutation({
-    mutationFn: ({ id, orgVisible }: { id: string; orgVisible: boolean }) =>
-      updateInventoryItem(id, { orgVisible }),
+  const adjustMutation = useMutation({
+    mutationFn: ({ id, delta }: { id: string; delta: number }) =>
+      adjustInventoryItem(id, delta),
     onSuccess: invalidateItems,
   });
 
+  // A card shares or hides all its lots at once, as on the web.
+  const toggleVisibilityMutation = useMutation({
+    mutationFn: ({ ids, orgVisible }: { ids: string[]; orgVisible: boolean }) =>
+      Promise.all(ids.map((id) => setInventoryItemOrgVisible(id, orgVisible))),
+    onSettled: invalidateItems,
+  });
+
   const mutationError =
-    createMutation.error ?? deleteMutation.error ?? toggleVisibilityMutation.error;
+    createMutation.error ??
+    deleteMutation.error ??
+    adjustMutation.error ??
+    toggleVisibilityMutation.error;
 
-  function renderOrgToggle(item: InventoryItem, compact = false) {
-    return (
-      <OrgVisibleCheckbox
-        compact={compact}
-        checked={item.orgVisible}
-        disabled={toggleVisibilityMutation.isPending}
-        onChange={(orgVisible) =>
-          toggleVisibilityMutation.mutate({ id: item.id, orgVisible })
-        }
-      />
-    );
-  }
-
-  function renderDelete(item: InventoryItem) {
-    return (
-      <DeleteIconButton
-        itemName={item.name}
-        disabled={deleteMutation.isPending}
-        onClick={() => deleteMutation.mutate(item.id)}
-      />
-    );
-  }
-
-  const totalCount = itemsQuery.data?.length ?? 0;
+  const totalCount = sections.reduce(
+    (sum, section) => sum + section.groups.length,
+    0,
+  );
 
   return (
     <>
@@ -178,6 +168,7 @@ export default function InventoryPage() {
           placeholder="Nom de la ressource…"
           onChange={(event) => setSearch(event.target.value)}
         />
+        <QualityFilter value={minQuality} onChange={setMinQuality} />
         <ToolbarSelect
           label="Tri"
           value={sort}
@@ -189,7 +180,6 @@ export default function InventoryPage() {
             </option>
           ))}
         </ToolbarSelect>
-        <ViewToggle value={view} onChange={setView} />
       </Toolbar>
 
       {totalCount > 0 ? (
@@ -204,13 +194,13 @@ export default function InventoryPage() {
           >
             Tous · {totalCount}
           </Chip>
-          {locationGroups.map((group) => (
+          {sections.map((section) => (
             <Chip
-              key={group.key}
-              active={locationFilter === group.key}
-              onClick={() => setLocationFilter(group.key)}
+              key={section.key}
+              active={locationFilter === section.key}
+              onClick={() => setLocationFilter(section.key)}
             >
-              {group.name} · {group.items.length}
+              {section.name} · {section.groups.length}
             </Chip>
           ))}
         </div>
@@ -223,11 +213,11 @@ export default function InventoryPage() {
           error={itemsQuery.error}
           onRetry={() => void itemsQuery.refetch()}
         />
-      ) : visibleItems.length === 0 ? (
-        query || locationFilter ? (
+      ) : visibleSections.length === 0 ? (
+        query || quality || locationFilter ? (
           <EmptyState
             title="Aucune ressource trouvée"
-            description="Essayez un autre nom ou un autre lieu."
+            description="Essayez un autre nom, une autre qualité ou un autre lieu."
           />
         ) : (
           <EmptyState
@@ -235,25 +225,55 @@ export default function InventoryPage() {
             description="Ajoutez une première ressource pour la retrouver depuis le bureau."
           />
         )
-      ) : view === "grid" ? (
-        <InventoryGrid
-          items={visibleItems}
-          renderFooter={(item) => (
-            <>
-              {renderOrgToggle(item)}
-              {renderDelete(item)}
-            </>
-          )}
-        />
       ) : (
-        <InventoryList
-          items={visibleItems}
-          renderActions={(item) => (
+        <InventoryGrid
+          sections={visibleSections}
+          renderLotActions={(lot) => (
             <>
-              {renderOrgToggle(item, true)}
-              {renderDelete(item)}
+              <AdjustQuantityButton
+                mode="remove"
+                disabled={adjustMutation.isPending}
+                onSubmit={(amount) =>
+                  adjustMutation.mutate({ id: lot.id, delta: -amount })
+                }
+              />
+              <AdjustQuantityButton
+                mode="add"
+                disabled={adjustMutation.isPending}
+                onSubmit={(amount) =>
+                  adjustMutation.mutate({ id: lot.id, delta: amount })
+                }
+              />
             </>
           )}
+          renderFooter={(group, active) => {
+            const allVisible = group.lots.every((lot) => lot.orgVisible);
+            const someVisible = group.lots.some((lot) => lot.orgVisible);
+            return (
+              <>
+                <OrgVisibleCheckbox
+                  checked={allVisible}
+                  indeterminate={someVisible && !allVisible}
+                  disabled={toggleVisibilityMutation.isPending}
+                  onChange={() =>
+                    toggleVisibilityMutation.mutate({
+                      ids: group.lots.map((lot) => lot.id),
+                      orgVisible: !allVisible,
+                    })
+                  }
+                />
+                <DeleteIconButton
+                  itemName={
+                    active.quality != null
+                      ? `${active.name} (Q ${active.quality})`
+                      : active.name
+                  }
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(active.id)}
+                />
+              </>
+            );
+          }}
         />
       )}
     </>
