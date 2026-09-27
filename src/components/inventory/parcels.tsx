@@ -40,9 +40,12 @@ function roundQty(value: number) {
   return Math.round(value * 1e10) / 1e10;
 }
 
-/** What of a lot a new parcel may still take: not what one waiting holds. */
+/**
+ * What of a lot a new parcel may still take: not what one waiting holds.
+ * Never below zero — the lot may have been used after a parcel was sealed.
+ */
 export function availableOf(item: InventoryItem) {
-  return roundQty(item.quantity - (item.reserved ?? 0));
+  return Math.max(0, roundQty(item.quantity - (item.reserved ?? 0)));
 }
 
 /** "23 h 58", "12 min": what is left of a code's life, kept current. */
