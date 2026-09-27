@@ -6,9 +6,17 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, ArrowLeft, Check, Merge, Plus, X } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  Factory,
+  Merge,
+  Plus,
+  X,
+} from "lucide-react";
 import {
   bulkAddInventoryItems,
   listInventoryItems,
@@ -16,6 +24,10 @@ import {
   type BulkInventoryRow,
 } from "@/lib/api/inventory";
 import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
+import {
+  readWorkOrderImport,
+  WORK_ORDER_PARAM,
+} from "@/lib/refinery-work-order";
 import { cn } from "@/lib/utils";
 import type { Location } from "@/types/nexus";
 
@@ -30,7 +42,15 @@ type Row = {
   /** A place named in a paste that matched none the reader can use. */
   locationText?: string;
   orgVisible: boolean;
+  /**
+   * Read from a refinery work order: its yield must be there, where a typed
+   * row without a quantity counts one.
+   */
+  fromCapture?: boolean;
 };
+
+/** What the capture of a work order brought, shown above the table. */
+type CaptureSummary = { lots: number; sum: number; total?: number };
 
 type Status =
   | { kind: "empty" }
@@ -96,6 +116,8 @@ export default function InventoryQuickAddPage() {
     blankRow(false),
   ]);
   const [notice, setNotice] = useState<string | null>(null);
+  const [capture, setCapture] = useState<CaptureSummary | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const nameInputs = useRef(new Map<number, HTMLInputElement>());
   const [focusKey, setFocusKey] = useState<number | null>(null);
@@ -105,6 +127,54 @@ export default function InventoryQuickAddPage() {
     nameInputs.current.get(focusKey)?.focus();
     setFocusKey(null);
   }, [focusKey, rows]);
+
+  // A refinery work order read from a capture (see `overlay-page.tsx`): its
+  // lots take the place of the blank rows, in cSCU as the game counts them,
+  // and wait for a place to be picked. Read once, then dropped from the route,
+  // so going back does not add them a second time.
+  const workOrderParam = searchParams.get(WORK_ORDER_PARAM);
+  // React runs an effect twice in development: the lots must land once.
+  const consumedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (workOrderParam === null) {
+      // Dropped from the route: the same order captured again is new.
+      consumedRef.current = null;
+      return;
+    }
+    if (consumedRef.current === workOrderParam) return;
+    consumedRef.current = workOrderParam;
+    const workOrder = readWorkOrderImport(workOrderParam);
+    setSearchParams({}, { replace: true });
+    if (!workOrder) return;
+
+    setRows((prev) => {
+      const kept = prev.filter(
+        (row) =>
+          row.name.trim() ||
+          row.quality.trim() ||
+          row.quantity.trim() ||
+          row.locationId ||
+          row.locationText,
+      );
+      const captured = workOrder.lines.map((line) => ({
+        key: nextKey.current++,
+        name: line.name,
+        quality: line.quality?.toString() ?? "",
+        quantity: line.quantity?.toString() ?? "",
+        unit: "cSCU",
+        locationId: "",
+        orgVisible: defaultOrg,
+        fromCapture: true,
+      }));
+      return [...kept, ...captured];
+    });
+    setCapture({
+      lots: workOrder.lines.length,
+      sum: workOrder.lines.reduce((acc, line) => acc + (line.quantity ?? 0), 0),
+      total: workOrder.total,
+    });
+    setNotice(null);
+  }, [workOrderParam, setSearchParams, defaultOrg]);
 
   const itemsQuery = useQuery({
     queryKey: ["inventory-items", ""],
@@ -173,6 +243,13 @@ export default function InventoryQuickAddPage() {
       quality = parseInt(row.quality.trim(), 10);
     }
 
+    if (row.fromCapture && !row.quantity.trim()) {
+      return {
+        kind: "error",
+        message: "Rendement illisible sur la capture",
+        field: "quantity",
+      };
+    }
     const quantity = row.quantity.trim() ? parseNumber(row.quantity) : 1;
     if (!Number.isFinite(quantity) || quantity <= 0) {
       return { kind: "error", message: "Quantité invalide", field: "quantity" };
@@ -366,6 +443,37 @@ export default function InventoryQuickAddPage() {
         title="Ajout en masse"
         description="Saisissez plusieurs ressources à la suite, ou collez-les depuis un tableur."
       />
+
+      {capture ? (
+        <Card className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-nexus-accent/25 px-4 py-3 text-[13px] text-nexus-bright">
+          <Factory className="size-4 shrink-0 text-nexus-accent" />
+          <span className="flex-1">
+            {capture.lots} lot{capture.lots > 1 ? "s" : ""} lu
+            {capture.lots > 1 ? "s" : ""} sur l'ordre de travail · somme{" "}
+            {number.format(capture.sum)} cSCU
+            {capture.total !== undefined ? (
+              <span
+                className={cn(
+                  capture.total !== capture.sum && "text-amber-300",
+                )}
+              >
+                {" "}
+                · total du jeu {number.format(capture.total)} cSCU
+              </span>
+            ) : null}
+            . Choisissez le lieu et vérifiez les chiffres : l'OCR confond
+            parfois le zéro barré du jeu avec un 8.
+          </span>
+          <button
+            type="button"
+            onClick={() => setCapture(null)}
+            aria-label="Masquer"
+            className="inline-flex size-7 items-center justify-center rounded-md text-nexus-muted hover:bg-nexus-accent/10 hover:text-nexus-bright"
+          >
+            <X className="size-4" />
+          </button>
+        </Card>
+      ) : null}
 
       <Card className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
         <span className="font-display text-[11px] font-semibold tracking-[0.12em] text-nexus-muted uppercase">

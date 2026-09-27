@@ -373,6 +373,32 @@ journal a été lu dans le désordre.
 Le même texte se colle à la main dans l'écran, qui accepte aussi le format
 tabulé `Destination;Contenu;Volume;Emplacement`.
 
+#### Une capture d'écran qui remplit l'inventaire
+
+Le panneau d'un **ordre de travail terminé** de la raffinerie liste un lot par
+ligne — matériau, qualité sur 1000, rendement en cSCU — sous l'en-tête
+`MATERIALS YIELDED (CSCU) · QUALITY · YIELD`, et finit par le total `YIELD`.
+
+Quand la capture de zone lit ce panneau, elle ne part pas non plus dans la
+recherche : la palette se range et la fenêtre principale s'ouvre sur
+l'**ajout en masse** de l'inventaire, les lots déjà dans le tableau en cSCU. Il
+reste à choisir le lieu et à relire les chiffres face au jeu — un bandeau
+rappelle la somme des lignes et le total affiché par le jeu, qui doivent
+coïncider. Un rendement que l'OCR n'a pas pu lire laisse sa ligne en erreur
+plutôt que de compter 1.
+
+La palette ne voyant que du texte, les lots voyagent dans la route
+(`/inventory/quick-add?workOrder=…`, voir `openMainRoute`) ; la page les lit une
+fois, puis les retire de l'adresse.
+
+Le parseur (`src/lib/refinery-work-order.ts`) est recopié du site, qui lit le
+même panneau depuis une capture collée. Il ne retient une capture comme ordre
+de travail qu'avec un matériau connu **et** l'en-tête ou le total : « Iron 325 »
+reste une recherche. Il rapproche les noms mal lus des matériaux connus
+(`RON` → Iron), relit les chiffres sosies (`lSO` → 150), et, propre à
+Windows OCR, rattache à leurs matériaux les nombres lus sur des lignes à part,
+qu'ils reviennent ligne par ligne ou colonne par colonne.
+
 ### Bloc-notes
 
 Le même bloc-notes que le site, dans une fenêtre indépendante toujours au-dessus
