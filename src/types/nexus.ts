@@ -1398,3 +1398,28 @@ export type OrgPresence = {
   playing: MemberPresence[];
   memberCount: number;
 };
+
+/* ------------------------------------------------------------------ */
+/* Friends                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mirrors `types/friends.ts` on Nexus Tools. A friendship is mutual and born
+ * of a single-use code: one hands it out, the other types it in, and the code
+ * is gone.
+ */
+export type Friend = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  /** The first organization the reader shares with them, if any. */
+  sharedOrg: string | null;
+  friendsSince: string;
+  /** What they declared, `null` when they are not playing. */
+  playing: { activity: string | null; since: string } | null;
+};
+
+export type FriendList = { friends: Friend[] };
+
+/** The reader's pending code; `null` when none was asked for, or it was used. */
+export type MyFriendCode = { code: string | null };

@@ -48,3 +48,14 @@ export function formatNumber(value?: number): string {
   }
   return value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
 }
+
+/** «1 h 20», from an ISO date; floored, since it says how long so far. */
+export function formatElapsed(since: string, now: number): string {
+  const start = Date.parse(since);
+  if (Number.isNaN(start)) return "";
+  const minutes = Math.max(0, Math.floor((now - start) / 60_000));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours} h ${String(rest).padStart(2, "0")}` : `${hours} h`;
+}

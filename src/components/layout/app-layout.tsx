@@ -30,12 +30,14 @@ import {
   Search,
   Settings as SettingsIcon,
   Star,
+  UserRound,
   Users,
 } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { usePresenceRenewal } from "@/hooks/use-presence";
+import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { cn } from "@/lib/utils";
@@ -83,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
         icon: Star,
         requiresAuth: true,
       },
+      { to: "/friends", label: "Amis", icon: UserRound, requiresAuth: true },
       { to: "/notes", label: "Bloc-notes", icon: NotebookPen },
       { to: "/cargo", label: "Cargo", icon: Container },
       { to: "/orgs", label: "Organisations", icon: Users },
@@ -125,6 +128,11 @@ export default function AppLayout() {
 
   // A declaration of playing stays alive while this window does.
   usePresenceRenewal(Boolean(user));
+
+  // How many friends are playing, beside «Amis» in the menu.
+  const friends = useFriends(Boolean(user));
+  const friendsPlaying =
+    friends.data?.filter((friend) => friend.playing).length ?? 0;
 
   // A blueprint added from the search palette is added in another window, so
   // the screens here have to be told: the query client never refetches on
@@ -260,7 +268,16 @@ export default function AppLayout() {
                 {items.map(({ to, label, icon: Icon }) => (
                   <NavLink key={to} to={to} className={navClass}>
                     <Icon className="size-4" />
-                    {label}
+                    <span className="flex-1">{label}</span>
+                    {to === "/friends" && friendsPlaying > 0 ? (
+                      <span
+                        title={`${friendsPlaying} en jeu`}
+                        className="flex items-center gap-1 rounded-full bg-emerald-300/12 px-1.5 text-[11px] font-medium text-emerald-300"
+                      >
+                        <span className="size-1.5 rounded-full bg-emerald-300" />
+                        {friendsPlaying}
+                      </span>
+                    ) : null}
                   </NavLink>
                 ))}
               </div>

@@ -92,7 +92,7 @@ export function SessionMenu({
               Ma session de jeu
             </p>
             <p className="mt-0.5 text-[11.5px] leading-snug text-nexus-muted">
-              Vos organisations voient que vous jouez, et à quoi.
+              Vos amis et vos organisations voient que vous jouez, et à quoi.
             </p>
           </div>
 
