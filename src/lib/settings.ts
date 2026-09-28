@@ -44,6 +44,8 @@ const KEY_PINNED_MAP = "pinnedMap";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
+const KEY_GAME_LOG_DIR = "gameLogDir";
+const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -288,6 +290,41 @@ export async function setNotificationCorner(
 ): Promise<void> {
   const store = await getStore();
   await store.set(KEY_NOTIFICATION_CORNER, corner);
+}
+
+/**
+ * Where Star Citizen writes its `Game.log`, and whether it is followed at all.
+ * Read from Rust too (`src-tauri/src/game_log.rs`), which applies the same
+ * defaults: the keys and the default folder are copied there.
+ */
+export type GameLogSettings = {
+  /** The game's folder — the one holding `Game.log`, not the file itself. */
+  dir: string;
+  enabled: boolean;
+};
+
+/** Where the RSI launcher installs the live build unless told otherwise. */
+export const DEFAULT_GAME_LOG_DIR =
+  "C:\\Program Files\\Roberts Space Industries\\StarCitizen\\LIVE";
+
+export async function getGameLogSettings(): Promise<GameLogSettings> {
+  const store = await getStore();
+  const dir = await store.get<unknown>(KEY_GAME_LOG_DIR);
+  const enabled = await store.get<unknown>(KEY_GAME_LOG_ENABLED);
+
+  return {
+    dir:
+      typeof dir === "string" && dir.trim() ? dir.trim() : DEFAULT_GAME_LOG_DIR,
+    enabled: typeof enabled === "boolean" ? enabled : true,
+  };
+}
+
+export async function setGameLogSettings(
+  settings: GameLogSettings,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_GAME_LOG_DIR, settings.dir.trim());
+  await store.set(KEY_GAME_LOG_ENABLED, settings.enabled);
 }
 
 /**

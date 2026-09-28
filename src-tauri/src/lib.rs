@@ -2,6 +2,7 @@ mod browser_auth;
 mod capture;
 mod diagnostics;
 mod event_feed;
+mod game_log;
 #[cfg(windows)]
 mod hotkeys;
 mod notifications;
@@ -1277,6 +1278,7 @@ pub fn run() {
         .manage(OverlayOpacityState::default())
         .manage(OverlayLocks::default())
         .manage(event_feed::EventFeed::default())
+        .manage(game_log::GameLog::default())
         .manage(browser_auth::BrowserSignIn::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
@@ -1315,6 +1317,8 @@ pub fn run() {
             event_feed::feed_set_squad,
             event_feed::feed_snapshot,
             event_feed::feed_status,
+            game_log::game_log_sync,
+            game_log::game_log_status,
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,
         ])

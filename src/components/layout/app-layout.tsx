@@ -40,6 +40,7 @@ import { usePresenceRenewal } from "@/hooks/use-presence";
 import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
+import { useGameLog } from "@/hooks/use-game-log";
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import nexusLogo from "@/assets/nexus-logo.png";
@@ -138,6 +139,10 @@ export default function AppLayout() {
   // the screens here have to be told: the query client never refetches on
   // focus, and would keep showing it as not owned.
   useBlueprintOwnershipSync();
+
+  // Star Citizen's own log, followed from Rust: a blueprint received in game is
+  // offered for «mes blueprints» from here, the window holding the session.
+  useGameLog(Boolean(user));
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {
