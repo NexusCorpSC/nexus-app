@@ -14,21 +14,11 @@ import {
 import { useMyPresence } from "@/hooks/use-presence";
 import { listOrganizations } from "@/lib/api/orgs";
 import { getOrgPresence } from "@/lib/api/presence";
+import { formatElapsed } from "@/lib/utils";
 import type { MemberPresence } from "@/types/nexus";
 
 /** Often enough to see a teammate arrive, rare enough to cost nothing. */
 const PRESENCE_REFRESH_MS = 30_000;
-
-/** «1 h 20», from an ISO date; floored, since it says how long so far. */
-function elapsed(since: string, now: number): string {
-  const start = Date.parse(since);
-  if (Number.isNaN(start)) return "";
-  const minutes = Math.max(0, Math.floor((now - start) / 60_000));
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  const rest = minutes % 60;
-  return rest ? `${hours} h ${String(rest).padStart(2, "0")}` : `${hours} h`;
-}
 
 /**
  * One of the reader's organizations: who is playing right now, and what they
@@ -182,7 +172,7 @@ function MemberCard({ member, now }: { member: MemberPresence; now: number }) {
       </div>
 
       <span className="shrink-0 text-xs text-nexus-dim" title="En jeu depuis">
-        {elapsed(member.since, now)}
+        {formatElapsed(member.since, now)}
       </span>
     </li>
   );
