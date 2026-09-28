@@ -53,6 +53,11 @@ export function friendErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "L'opération a échoué.";
 }
 
+/** A code as typed or pasted — lower case, dashed, spaced — as the API takes it. */
+export function cleanFriendCode(raw: string) {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "");
+}
+
 /** "K7QD92PX" → "K7QD-92PX". */
 export function formatFriendCode(code: string) {
   return code.length > 4 ? `${code.slice(0, 4)}-${code.slice(4)}` : code;

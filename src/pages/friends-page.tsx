@@ -15,6 +15,7 @@ import {
 import { FRIENDS_KEY, useFriends } from "@/hooks/use-friends";
 import {
   addFriend,
+  cleanFriendCode,
   createFriendCode,
   formatFriendCode,
   friendErrorMessage,
@@ -234,7 +235,8 @@ function AddFriendCard() {
         className="flex flex-col gap-3"
         onSubmit={(event) => {
           event.preventDefault();
-          if (value.trim()) add.mutate(value);
+          const code = cleanFriendCode(value);
+          if (code) add.mutate(code);
         }}
       >
         <div className="flex items-center gap-2.5">
@@ -265,7 +267,7 @@ function AddFriendCard() {
           </label>
           <Button
             type="submit"
-            disabled={add.isPending || value.trim() === ""}
+            disabled={add.isPending || cleanFriendCode(value) === ""}
             className="h-10"
           >
             Ajouter
