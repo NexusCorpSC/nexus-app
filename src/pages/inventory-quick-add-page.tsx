@@ -221,7 +221,9 @@ export default function InventoryQuickAddPage() {
   /** Remembers a place found by searching, so its name can be shown. */
   const remember = (location: Location | null) => {
     if (location && !locations.some((l) => l.id === location.id)) {
-      setPicked((prev) => [...prev, location]);
+      setPicked((prev) =>
+        prev.some((l) => l.id === location.id) ? prev : [...prev, location],
+      );
     }
   };
 

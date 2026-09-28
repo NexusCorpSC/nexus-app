@@ -244,6 +244,9 @@ export function LocationCombobox({
               id={listId}
               role="listbox"
               aria-label={ariaLabel}
+              // Scrolling the list, by its bar or its blank space, must not
+              // blur the field and close it.
+              onMouseDown={(e) => e.preventDefault()}
               style={{
                 position: "fixed",
                 left: rect.left,
