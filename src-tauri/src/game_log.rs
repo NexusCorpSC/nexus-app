@@ -25,7 +25,7 @@ use std::time::{Duration, SystemTime};
 
 use regex::Regex;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, Manager, State};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_store::StoreExt;
 use tokio::sync::watch;
 
@@ -235,7 +235,7 @@ pub struct GameLogStatus {
     /// The file followed, or that would be.
     path: String,
     enabled: bool,
-    /// Whether the file was there at the last poll.
+    /// Whether the file is there.
     exists: bool,
 }
 
@@ -254,8 +254,6 @@ struct Running {
 #[derive(Default)]
 struct WatcherState {
     running: Option<Running>,
-    /// What the last poll said of the file.
-    exists: bool,
     /// Counts the watchers ever started, so one that outlived its cancellation
     /// by a moment does not report on behalf of its successor.
     generation: u64,
@@ -316,8 +314,6 @@ pub(crate) fn sync(app: &AppHandle) {
         let _ = running.cancel.send(true);
     }
 
-    state.exists = false;
-
     if !config.enabled {
         log("game log: disabled");
         return;
@@ -356,11 +352,8 @@ async fn run(app: AppHandle, path: PathBuf, generation: u64, mut cancelled: watc
                     seen.clear();
                 }
 
-                if let Ok(mut state) = lock(&app) {
-                    if state.generation != generation {
-                        return;
-                    }
-                    state.exists = poll.exists;
+                if lock(&app).is_ok_and(|state| state.generation != generation) {
+                    return;
                 }
 
                 for line in poll.lines {
@@ -404,28 +397,16 @@ pub fn game_log_sync(app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn game_log_status(
-    app: AppHandle,
-    game_log: State<'_, GameLog>,
-) -> Result<GameLogStatus, String> {
+pub fn game_log_status(app: AppHandle) -> GameLogStatus {
     let config = read_config(&app);
-    let state = game_log.0.lock().map_err(|error| error.to_string())?;
 
-    let following = state
-        .running
-        .as_ref()
-        .is_some_and(|running| running.config == config);
-
-    Ok(GameLogStatus {
+    GameLogStatus {
         path: config.path.display().to_string(),
         enabled: config.enabled,
-        // Before the first poll of a watcher, ask the disk rather than say no.
-        exists: if following && state.exists {
-            true
-        } else {
-            config.path.is_file()
-        },
-    })
+        // Asked of the disk each time rather than taken from the last poll,
+        // which can be a second out of date — or older, for a disabled watcher.
+        exists: config.path.is_file(),
+    }
 }
 
 #[cfg(test)]
