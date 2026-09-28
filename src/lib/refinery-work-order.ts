@@ -51,7 +51,10 @@ export const REFINED_MATERIALS = [
 ] as const;
 
 export interface WorkOrderLine {
-  /** The material, snapped to a known one when OCR came close enough. */
+  /**
+   * The material, snapped to a known one when OCR came close enough; empty
+   * when OCR lost the name but kept the numbers.
+   */
   name: string;
   /** Out of 1000; missing when OCR could not read it. */
   quality?: number;
@@ -212,46 +215,108 @@ function detachedNumbers(line: string): string[] | null {
   return words;
 }
 
+/** A line of the panel, and where it came in the text read. */
+interface Placed<T> {
+  at: number;
+  value: T;
+}
+
+function readQuality(raw: string | undefined): number | undefined {
+  const value = readNumber(raw);
+  return value !== undefined && value <= 1000 ? value : undefined;
+}
+
 /**
  * Gives the materials read without their numbers the number-only lines read
  * elsewhere. Windows OCR may cut a row where the gap between the name and the
  * columns is wide, and hand the columns back as lines of their own: either a
  * row at a time ("325 308"), or a column at a time (every quality, then every
- * yield). Only a count that fits one of the two exactly is used — anything
- * else is left for the reader to fill in.
+ * yield).
+ *
+ * It may also drop a short name outright — "TIN" — and keep its numbers, so
+ * there are more rows of numbers than names. Each name then takes the row
+ * read next to it, and a row left over becomes a lot without a name, for the
+ * reader to name rather than lose its yield.
+ *
+ * Returns the lines, in the order of the panel.
  */
-function fillDetachedNumbers(lines: WorkOrderLine[], detached: string[][]) {
-  const bare = lines.filter(
-    (line) => line.quality === undefined && line.quantity === undefined,
+function fillDetachedNumbers(
+  placed: Placed<WorkOrderLine>[],
+  detached: Placed<string[]>[],
+): WorkOrderLine[] {
+  const lines = placed.map(({ value }) => value);
+  const bare = placed.filter(
+    ({ value }) => value.quality === undefined && value.quantity === undefined,
   );
-  if (bare.length === 0 || detached.length === 0) return;
-
-  const quality = (raw: string | undefined) => {
-    const value = readNumber(raw);
-    return value !== undefined && value <= 1000 ? value : undefined;
-  };
+  if (detached.length === 0) return lines;
 
   if (
+    bare.length > 0 &&
     detached.length === bare.length &&
-    detached.every((numbers) => numbers.length === 2)
+    detached.every(({ value }) => value.length === 2)
   ) {
-    bare.forEach((line, index) => {
-      line.quality = quality(detached[index][0]);
-      line.quantity = readNumber(detached[index][1]);
+    bare.forEach(({ value: line }, index) => {
+      line.quality = readQuality(detached[index].value[0]);
+      line.quantity = readNumber(detached[index].value[1]);
     });
-    return;
+    return lines;
   }
 
-  const flat = detached.flat();
+  const flat = detached.flatMap(({ value }) => value);
   if (
-    detached.every((numbers) => numbers.length === 1) &&
+    bare.length > 0 &&
+    detached.every(({ value }) => value.length === 1) &&
     flat.length === bare.length * 2
   ) {
-    bare.forEach((line, index) => {
-      line.quality = quality(flat[index]);
+    bare.forEach(({ value: line }, index) => {
+      line.quality = readQuality(flat[index]);
       line.quantity = readNumber(flat[bare.length + index]);
     });
+    return lines;
   }
+
+  // Rows lost their names: only whole rows are placed, never guessed columns.
+  if (
+    detached.length <= bare.length ||
+    !detached.every(({ value }) => value.length === 2)
+  ) {
+    return lines;
+  }
+
+  // A name and its numbers sit on the same row, so OCR hands them back one
+  // right after the other — the name first, unless the capture says otherwise.
+  const rowAt = new Map(detached.map((row) => [row.at, row]));
+  const hits = (step: number) =>
+    bare.filter(({ at }) => rowAt.has(at + step)).length;
+  const steps = hits(-1) > hits(1) ? [-1, 1] : [1, -1];
+
+  const taken = new Set<Placed<string[]>>();
+  for (const { at, value: line } of bare) {
+    const row = steps
+      .map((step) => rowAt.get(at + step))
+      .find((candidate) => candidate && !taken.has(candidate));
+    if (!row) continue;
+    taken.add(row);
+    line.quality = readQuality(row.value[0]);
+    line.quantity = readNumber(row.value[1]);
+  }
+
+  const unnamed = detached
+    .filter((row) => !taken.has(row))
+    .map(({ at, value }) => ({
+      at,
+      value: {
+        name: "",
+        quality: readQuality(value[0]),
+        quantity: readNumber(value[1]),
+        raw: value.join(" "),
+        known: false,
+      },
+    }));
+
+  return [...placed, ...unnamed]
+    .sort((a, b) => a.at - b.at)
+    .map(({ value }) => value);
 }
 
 /**
@@ -269,11 +334,11 @@ export function parseWorkOrderText(text: string): WorkOrderParseResult {
     .filter(Boolean);
 
   const headerAt = all.findIndex((line) => HEADER.test(line));
-  const lines: WorkOrderLine[] = [];
-  const detached: string[][] = [];
+  const lines: Placed<WorkOrderLine>[] = [];
+  const detached: Placed<string[]>[] = [];
   let total: number | undefined;
 
-  for (const line of all.slice(headerAt + 1)) {
+  for (const [at, line] of all.slice(headerAt + 1).entries()) {
     const lineTotal = readTotal(line);
     if (lineTotal !== undefined) {
       total = lineTotal;
@@ -285,7 +350,7 @@ export function parseWorkOrderText(text: string): WorkOrderParseResult {
     if (detachedLine) {
       // A lone digit is the icon in front of a row, read on its own.
       if (detachedLine.some((number) => number.length > 1)) {
-        detached.push(detachedLine);
+        detached.push({ at, value: detachedLine });
       }
       continue;
     }
@@ -304,17 +369,22 @@ export function parseWorkOrderText(text: string): WorkOrderParseResult {
 
     const quality = readNumber(rawQuality);
     lines.push({
-      name,
-      quality: quality !== undefined && quality <= 1000 ? quality : undefined,
-      quantity: readNumber(rawQuantity),
-      raw: line,
-      known,
+      at,
+      value: {
+        name,
+        quality: quality !== undefined && quality <= 1000 ? quality : undefined,
+        quantity: readNumber(rawQuantity),
+        raw: line,
+        known,
+      },
     });
   }
 
-  fillDetachedNumbers(lines, detached);
-
-  return { lines, total, header: headerAt !== -1 };
+  return {
+    lines: fillDetachedNumbers(lines, detached),
+    total,
+    header: headerAt !== -1,
+  };
 }
 
 /**
@@ -359,13 +429,18 @@ export function workOrderImportRoute(result: WorkOrderParseResult): string {
 }
 
 /** The work order a bulk-add route carries, or `null` when it holds none. */
-export function readWorkOrderImport(raw: string | null): WorkOrderImport | null {
+export function readWorkOrderImport(
+  raw: string | null,
+): WorkOrderImport | null {
   if (!raw) return null;
   try {
     const payload = JSON.parse(raw) as WorkOrderImport;
     if (!Array.isArray(payload?.lines)) return null;
+    // A lot whose name OCR lost still counts when its yield was read.
     const lines = payload.lines.filter(
-      (line) => typeof line?.name === "string" && line.name.trim() !== "",
+      (line) =>
+        typeof line?.name === "string" &&
+        (line.name.trim() !== "" || typeof line.quantity === "number"),
     );
     return lines.length > 0
       ? {

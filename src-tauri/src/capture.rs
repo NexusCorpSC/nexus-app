@@ -150,10 +150,6 @@ impl Capture {
     /// Async because `windows-future` 0.3 dropped the blocking `get()` on
     /// `IAsyncOperation` in favour of `IntoFuture`.
     pub async fn recognize(&self, selection: Selection) -> Result<String, String> {
-        use windows::Graphics::Imaging::{BitmapPixelFormat, SoftwareBitmap};
-        use windows::Media::Ocr::OcrEngine;
-        use windows::Storage::Streams::DataWriter;
-
         let (left, top, width, height) =
             selection.to_pixels(self.image.width(), self.image.height())?;
 
@@ -190,65 +186,107 @@ impl Capture {
             pixel[3] = 0xFF;
         }
 
-        // Scoped so only `Send` values survive to the await below.
-        let bitmap = {
-            let writer = DataWriter::new().map_err(winerr("cannot allocate OCR buffer"))?;
-            writer
-                .WriteBytes(&pixels)
-                .map_err(winerr("cannot fill OCR buffer"))?;
-            let buffer = writer
-                .DetachBuffer()
-                .map_err(winerr("cannot detach OCR buffer"))?;
-
-            SoftwareBitmap::CreateCopyFromBuffer(
-                &buffer,
-                BitmapPixelFormat::Bgra8,
-                width as i32,
-                height as i32,
-            )
-            .map_err(winerr("cannot build bitmap"))?
-        };
-
-        // Follows the languages configured in Windows; recognition quality
-        // depends on the matching language pack being installed.
-        let engine = OcrEngine::TryCreateFromUserProfileLanguages().map_err(|e| {
-            format!("no OCR engine available ({e}) — install a Windows language pack")
-        })?;
-
-        let result = engine
-            .RecognizeAsync(&bitmap)
-            .map_err(winerr("OCR call failed"))?
-            .await
-            .map_err(winerr("OCR failed"))?;
-
-        // Line by line rather than `OcrResult::Text()`, which glues every line
-        // together with a single space: a mission log read that way arrives as
-        // one endless sentence, and the objectives can no longer be told apart.
-        let lines = result.Lines().map_err(winerr("cannot read OCR output"))?;
-        let count = lines.Size().map_err(winerr("cannot count OCR lines"))?;
-
-        let mut text = String::new();
-        for index in 0..count {
-            let line = lines
-                .GetAt(index)
-                .map_err(winerr("cannot read an OCR line"))?
-                .Text()
-                .map_err(winerr("cannot read an OCR line"))?
-                .to_string_lossy();
-
-            let line = line.trim();
-            if line.is_empty() {
-                continue;
-            }
-
-            if !text.is_empty() {
-                text.push('\n');
-            }
-            text.push_str(line);
+        let text = read_text(&pixels, width, height).await?;
+        if !is_work_order(&text) {
+            return Ok(text);
         }
 
-        Ok(text)
+        // A refinery work order is small light text on a dark panel, and read
+        // as it is, the engine drops its short names — "TIN" — outright. Grey
+        // and inverted into dark text on white, as Nexus Tools prepares the
+        // same panel for Tesseract, it keeps them. Only the work order is read
+        // again: the mission log is read well enough as it is.
+        for pixel in pixels.as_chunks_mut::<4>().0 {
+            let [b, g, r, _] = *pixel;
+            let grey = (299 * u32::from(r) + 587 * u32::from(g) + 114 * u32::from(b)) / 1000;
+            let inverted = 255 - grey.min(255) as u8;
+            pixel[0] = inverted;
+            pixel[1] = inverted;
+            pixel[2] = inverted;
+        }
+
+        let inverted = read_text(&pixels, width, height).await?;
+        Ok(if is_work_order(&inverted) {
+            inverted
+        } else {
+            text
+        })
     }
+}
+
+/// Whether text read looks like a completed refinery work order: its column
+/// header, long enough words to survive any capture. The frontend decides for
+/// good (see `refinery-work-order.ts`); this only picks the reading to send.
+#[cfg(windows)]
+fn is_work_order(text: &str) -> bool {
+    let text = text.to_lowercase();
+    text.contains("yielded") || (text.contains("materials") && text.contains("quality"))
+}
+
+/// Runs the OS engine over BGRA8 pixels and returns the lines it read.
+#[cfg(windows)]
+async fn read_text(pixels: &[u8], width: u32, height: u32) -> Result<String, String> {
+    use windows::Graphics::Imaging::{BitmapPixelFormat, SoftwareBitmap};
+    use windows::Media::Ocr::OcrEngine;
+    use windows::Storage::Streams::DataWriter;
+
+    // Scoped so only `Send` values survive to the await below.
+    let bitmap = {
+        let writer = DataWriter::new().map_err(winerr("cannot allocate OCR buffer"))?;
+        writer
+            .WriteBytes(pixels)
+            .map_err(winerr("cannot fill OCR buffer"))?;
+        let buffer = writer
+            .DetachBuffer()
+            .map_err(winerr("cannot detach OCR buffer"))?;
+
+        SoftwareBitmap::CreateCopyFromBuffer(
+            &buffer,
+            BitmapPixelFormat::Bgra8,
+            width as i32,
+            height as i32,
+        )
+        .map_err(winerr("cannot build bitmap"))?
+    };
+
+    // Follows the languages configured in Windows; recognition quality
+    // depends on the matching language pack being installed.
+    let engine = OcrEngine::TryCreateFromUserProfileLanguages()
+        .map_err(|e| format!("no OCR engine available ({e}) — install a Windows language pack"))?;
+
+    let result = engine
+        .RecognizeAsync(&bitmap)
+        .map_err(winerr("OCR call failed"))?
+        .await
+        .map_err(winerr("OCR failed"))?;
+
+    // Line by line rather than `OcrResult::Text()`, which glues every line
+    // together with a single space: a mission log read that way arrives as
+    // one endless sentence, and the objectives can no longer be told apart.
+    let lines = result.Lines().map_err(winerr("cannot read OCR output"))?;
+    let count = lines.Size().map_err(winerr("cannot count OCR lines"))?;
+
+    let mut text = String::new();
+    for index in 0..count {
+        let line = lines
+            .GetAt(index)
+            .map_err(winerr("cannot read an OCR line"))?
+            .Text()
+            .map_err(winerr("cannot read an OCR line"))?
+            .to_string_lossy();
+
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+
+        if !text.is_empty() {
+            text.push('\n');
+        }
+        text.push_str(line);
+    }
+
+    Ok(text)
 }
 
 #[cfg(not(windows))]
