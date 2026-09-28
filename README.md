@@ -49,6 +49,7 @@ contrairement au raccourci qui bascule.
 | Recherche     | `/api/search`                                                | non⁴            |
 | Blueprints    | `/api/blueprints`, `/api/blueprints/:slug`, `…/categories`  | non¹            |
 | ↳ mes blueprints | `/api/blueprints/:id/ownership` (POST, DELETE)            | oui             |
+| ↳ reçu en jeu | `/api/blueprints/lookup?name=` (voir « Game.log »)          | oui             |
 | ↳ dans mon org | `/api/blueprints/:id/org-owners`                            | oui             |
 | Objets        | `/api/items`, `/api/items/:slug`, `…/facets`                 | non             |
 | Missions      | `/api/missions`, `/api/missions/:id`, `…/factions`          | non             |
@@ -76,7 +77,8 @@ d'abord du travail dans `nexus-tools` ; d'ici là, la palette de recherche ouvre
 ces résultats-là dans le navigateur.
 
 Les endpoints `/api/me`, `/api/reps`, `/api/reps/factions`, `/api/orgs`,
-`/api/blueprints/:slug` et `/api/blueprints/:id/ownership` ont été ajoutés à
+`/api/blueprints/:slug`, `/api/blueprints/:id/ownership` et
+`/api/blueprints/lookup` ont été ajoutés à
 `nexus-tools` pour cette application : ces données n'étaient jusqu'ici
 disponibles qu'en rendu serveur, ou par une *server action* que seul le site
 sait appeler.
@@ -112,6 +114,42 @@ l'est une modification de la feuille de cargo. L'annonce part quoi qu'ait
 répondu la route, « c'était déjà le cas » compris — elle se lit « quelqu'un
 vient d'affirmer une possession, relisez », et une fenêtre qui affiche le
 contraire est précisément celle qu'il faut prévenir.
+
+### Game.log
+
+L'application lit le `Game.log` de Star Citizen pendant que l'on joue
+(`src-tauri/src/game_log.rs`). Pour l'instant, une seule ligne l'intéresse :
+celle que le jeu écrit quand le HUD annonce **« Received Blueprint »**.
+
+```
+<2026-09-28T12:00:00.000Z> [Notice] <SHUDEvent_OnNotification> Added notification "Received Blueprint: FS-9 LMG: " …
+```
+
+Le nom est retrouvé sur Nexus par `/api/blueprints/lookup?name=`, une
+correspondance **exacte** (casse et espaces mis à part) : une recherche
+approchée pourrait ajouter le mauvais blueprint à un compte. Ensuite :
+
+- déjà possédé → rien ;
+- inconnu de Nexus → une notification le signale ;
+- sinon → une notification propose **Ajouter** ; la fermer vaut « non ».
+  Rien n'est ajouté sans ce clic.
+
+Le fichier est **suivi, pas relu** : ce qu'il contient au lancement de
+l'application est ignoré, pour ne pas rejouer toute la soirée. Un fichier qui
+apparaît ou qui est recréé ensuite — le jeu en commence un nouveau à chaque
+lancement et range l'ancien dans `logbackups/` — est lu depuis sa première
+ligne. Les anciens journaux ne sont pas parcourus.
+
+Le dossier du jeu se règle dans **Paramètres › Jeu**, et l'analyse peut y être
+coupée. Par défaut : `C:\Program Files\Roberts Space Industries\StarCitizen\LIVE`.
+Rust lit ces réglages dans le même `settings.json` que le frontend
+(`gameLogDir`, `gameLogEnabled`) ; la fenêtre principale lui demande de les
+suivre au démarrage et à chaque enregistrement (`game_log_sync`).
+
+La lecture se fait par sondage, une fois par seconde, plutôt que par
+notification du système : le jeu garde le fichier ouvert en écriture toute la
+session, et Windows ne signale pas de manière fiable ce qui change dans un
+fichier tenu ainsi.
 
 ### Icône de notification
 

@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api-client";
+import { ApiError, apiRequest } from "@/lib/api-client";
 import type {
   Blueprint,
   BlueprintCategory,
@@ -35,6 +35,26 @@ export function listBlueprints(filters: BlueprintFilters = {}) {
 
 export function getBlueprint(slug: string) {
   return apiRequest<Blueprint>(`/api/blueprints/${encodeURIComponent(slug)}`);
+}
+
+/**
+ * The blueprint a name designates, matched exactly — case and spacing aside —
+ * or `null` when Nexus Tools knows no blueprint by that name.
+ *
+ * For names read from the game (`Game.log`), where a search's best guess could
+ * add the wrong blueprint to an account. `owned` is there when signed in.
+ */
+export async function findBlueprintByName(
+  name: string,
+): Promise<Blueprint | null> {
+  try {
+    return await apiRequest<Blueprint>("/api/blueprints/lookup", {
+      params: { name },
+    });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 /**

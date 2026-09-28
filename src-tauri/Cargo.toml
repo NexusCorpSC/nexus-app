@@ -41,6 +41,9 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 # loopback port the browser comes back to after signing in
 # (`src/browser_auth.rs`).
 tokio = { version = "1", features = ["sync", "time", "macros", "net", "io-util"] }
+# Reads the lines `Game.log` is followed for (`src/game_log.rs`). Already in
+# the tree through Tauri's own dependencies.
+regex = "1"
 
 # Screen capture and OCR are Windows-only, matching the only target platform.
 # `xcap` grabs the monitor pixels; `windows` exposes Windows.Media.Ocr, the OCR

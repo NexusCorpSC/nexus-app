@@ -6,6 +6,7 @@ import { AccountSection } from "@/components/settings/account-section";
 import { ShortcutsSection } from "@/components/settings/shortcuts-section";
 import { NotificationsSection } from "@/components/settings/notifications-section";
 import { UpdatesSection } from "@/components/settings/updates-section";
+import { GameSection } from "@/components/settings/game-section";
 
 /**
  * The rubriques, in the order of the sub-navigation. The key is what goes in
@@ -19,6 +20,7 @@ const SECTIONS = [
   { key: "account", label: "Compte", Component: AccountSection },
   { key: "shortcuts", label: "Raccourcis clavier", Component: ShortcutsSection },
   { key: "notifications", label: "Notifications", Component: NotificationsSection },
+  { key: "game", label: "Jeu", Component: GameSection },
   { key: "updates", label: "Mises à jour", Component: UpdatesSection },
 ] as const;
 
