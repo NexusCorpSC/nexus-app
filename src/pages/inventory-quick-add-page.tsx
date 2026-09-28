@@ -23,7 +23,8 @@ import {
   listLocations,
   type BulkInventoryRow,
 } from "@/lib/api/inventory";
-import { Button, Card, Input, PageHeader, Select } from "@/components/ui";
+import { Button, Card, Input, PageHeader } from "@/components/ui";
+import { LocationCombobox } from "@/components/inventory/location-combobox";
 import {
   readWorkOrderImport,
   WORK_ORDER_PARAM,
@@ -117,6 +118,8 @@ export default function InventoryQuickAddPage() {
   ]);
   const [notice, setNotice] = useState<string | null>(null);
   const [capture, setCapture] = useState<CaptureSummary | null>(null);
+  // Places found by searching, beyond the first page the API lists.
+  const [picked, setPicked] = useState<Location[]>([]);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const nameInputs = useRef(new Map<number, HTMLInputElement>());
@@ -190,16 +193,37 @@ export default function InventoryQuickAddPage() {
 
   // The places the reader already stores things at come first: the list the
   // API gives is capped, and favours the catalogue.
-  const locations = useMemo(() => {
+  const held = useMemo(() => {
     const byId = new Map<string, Location>();
     for (const item of existing) {
       if (item.location) byId.set(item.location.id, item.location);
     }
-    for (const location of locationsQuery.data ?? []) {
+    return [...byId.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, "fr"),
+    );
+  }, [existing]);
+
+  const locations = useMemo(() => {
+    const byId = new Map<string, Location>();
+    for (const location of [
+      ...held,
+      ...picked,
+      ...(locationsQuery.data ?? []),
+    ]) {
       if (!byId.has(location.id)) byId.set(location.id, location);
     }
-    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, "fr"));
-  }, [existing, locationsQuery.data]);
+    return [...byId.values()];
+  }, [held, picked, locationsQuery.data]);
+
+  const locationById = (id: string) =>
+    id ? (locations.find((l) => l.id === id) ?? null) : null;
+
+  /** Remembers a place found by searching, so its name can be shown. */
+  const remember = (location: Location | null) => {
+    if (location && !locations.some((l) => l.id === location.id)) {
+      setPicked((prev) => [...prev, location]);
+    }
+  };
 
   const knownNames = useMemo(
     () =>
@@ -209,7 +233,7 @@ export default function InventoryQuickAddPage() {
     [existing],
   );
 
-  const defaultLocation = locations.find((l) => l.id === defaultLocationId);
+  const defaultLocation = locationById(defaultLocationId);
 
   /** The unit the reader already counts a thing in, to fill a blank one. */
   const heldUnit = (name: string) =>
@@ -481,18 +505,17 @@ export default function InventoryQuickAddPage() {
         </span>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
           Lieu
-          <Select
-            value={defaultLocationId}
-            onChange={(event) => setDefaultLocationId(event.target.value)}
-            className="h-8 w-60 py-0"
-          >
-            <option value="">Choisir un lieu…</option>
-            {locations.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.name}
-              </option>
-            ))}
-          </Select>
+          <LocationCombobox
+            value={defaultLocation}
+            onChange={(location) => {
+              remember(location);
+              setDefaultLocationId(location?.id ?? "");
+            }}
+            preferred={held}
+            placeholder="Rechercher un lieu…"
+            aria-label="Lieu par défaut"
+            className="h-8 w-60 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+          />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
           Unité
@@ -633,43 +656,40 @@ export default function InventoryQuickAddPage() {
                   <td>
                     <input
                       value={row.unit}
-                      onChange={(e) => update(row.key, { unit: e.target.value })}
+                      onChange={(e) =>
+                        update(row.key, { unit: e.target.value })
+                      }
                       placeholder={unitOf({ ...row, unit: "" }) ?? "—"}
                       aria-label="Unité"
                       className={CELL}
                     />
                   </td>
                   <td>
-                    <select
-                      value={row.locationId}
-                      onChange={(e) =>
+                    <LocationCombobox
+                      value={locationById(row.locationId)}
+                      onChange={(location) => {
+                        remember(location);
                         update(row.key, {
-                          locationId: e.target.value,
+                          locationId: location?.id ?? "",
                           locationText: undefined,
-                        })
-                      }
-                      aria-label="Lieu"
-                      aria-invalid={errorField === "location" || undefined}
-                      className={cn(
-                        CELL,
-                        "cursor-pointer bg-nexus-card",
-                        !row.locationId && "text-nexus-muted",
-                        errorField === "location" && "text-red-300",
-                      )}
-                    >
-                      <option value="">
-                        {row.locationText
+                        });
+                      }}
+                      preferred={held}
+                      placeholder={
+                        row.locationText
                           ? `« ${row.locationText} » ?`
                           : defaultLocation
                             ? `Défaut · ${defaultLocation.name}`
-                            : "Choisir un lieu…"}
-                      </option>
-                      {locations.map((location) => (
-                        <option key={location.id} value={location.id}>
-                          {location.name}
-                        </option>
-                      ))}
-                    </select>
+                            : "Rechercher un lieu…"
+                      }
+                      aria-label="Lieu"
+                      invalid={errorField === "location"}
+                      className={cn(
+                        CELL,
+                        errorField === "location" &&
+                          "placeholder:text-red-300/80",
+                      )}
+                    />
                   </td>
                   <td className="text-center">
                     <input
