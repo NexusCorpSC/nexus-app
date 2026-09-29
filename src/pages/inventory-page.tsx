@@ -7,10 +7,10 @@ import {
   createInventoryItem,
   deleteInventoryItem,
   listInventoryItems,
-  listLocations,
   setInventoryItemOrgVisible,
 } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
+import { cn } from "@/lib/utils";
 import { fromDisplayQty, toDisplayQty } from "@/lib/units";
 import {
   Button,
@@ -23,7 +23,6 @@ import {
   LoadingState,
   PageHeader,
   SearchField,
-  Select,
   Toolbar,
   ToolbarSelect,
 } from "@/components/ui";
@@ -45,7 +44,13 @@ import {
   availableOf,
   type PackageEntry,
 } from "@/components/inventory/parcels";
-import type { InventoryItem, InventoryItemInput, Parcel } from "@/types/nexus";
+import { LocationCombobox } from "@/components/inventory/location-combobox";
+import type {
+  InventoryItem,
+  InventoryItemInput,
+  Location,
+  Parcel,
+} from "@/types/nexus";
 
 const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
 
@@ -83,12 +88,6 @@ export default function InventoryPage() {
   const query = useDebounced(search);
   const quality = useDebounced(minQuality);
 
-  const locationsQuery = useQuery({
-    queryKey: ["locations"],
-    queryFn: () => listLocations(),
-    staleTime: 10 * 60_000,
-  });
-
   // Every location is fetched at once so the chips can show their counts;
   // the location filter is applied here rather than by the API.
   const itemsQuery = useQuery({
@@ -109,6 +108,17 @@ export default function InventoryPage() {
   const activeLocation = sections.some((s) => s.key === locationFilter)
     ? locationFilter
     : "";
+  // The places the reader already stores things at come first when adding.
+  const held = useMemo(() => {
+    const byId = new Map<string, Location>();
+    for (const item of itemsQuery.data ?? []) {
+      if (item.location) byId.set(item.location.id, item.location);
+    }
+    return [...byId.values()].sort((a, b) =>
+      a.name.localeCompare(b.name, "fr"),
+    );
+  }, [itemsQuery.data]);
+
   const visibleSections = activeLocation
     ? sections.filter((section) => section.key === activeLocation)
     : sections;
@@ -203,7 +213,7 @@ export default function InventoryPage() {
 
       {showForm ? (
         <NewItemForm
-          locations={locationsQuery.data ?? []}
+          held={held}
           pending={createMutation.isPending}
           onCancel={() => setShowForm(false)}
           onSubmit={(input) => createMutation.mutate(input)}
@@ -412,12 +422,12 @@ export default function InventoryPage() {
 }
 
 function NewItemForm({
-  locations,
+  held,
   pending,
   onCancel,
   onSubmit,
 }: {
-  locations: { id: string; name: string }[];
+  held: Location[];
   pending: boolean;
   onCancel: () => void;
   onSubmit: (input: InventoryItemInput) => void;
@@ -426,19 +436,24 @@ function NewItemForm({
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("");
   const [quality, setQuality] = useState("");
-  const [locationId, setLocationId] = useState(locations[0]?.id ?? "");
+  const [location, setLocation] = useState<Location | null>(null);
+  const [locationMissing, setLocationMissing] = useState(false);
   const [orgVisible, setOrgVisible] = useState(false);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    if (!name.trim() || !locationId) return;
+    if (!name.trim()) return;
+    if (!location) {
+      setLocationMissing(true);
+      return;
+    }
 
     onSubmit({
       name: name.trim(),
       quantity: Number(quantity) || 0,
       unit: unit.trim() || undefined,
       quality: parseMinQuality(quality),
-      locationId,
+      locationId: location.id,
       orgVisible,
     });
   }
@@ -486,18 +501,25 @@ function NewItemForm({
             />
           </Field>
           <Field label="Lieu" className="sm:col-span-2">
-            <Select
-              value={locationId}
-              required
-              onChange={(event) => setLocationId(event.target.value)}
-            >
-              <option value="">Choisir un lieu…</option>
-              {locations.map((location) => (
-                <option key={location.id} value={location.id}>
-                  {location.name}
-                </option>
-              ))}
-            </Select>
+            <LocationCombobox
+              value={location}
+              onChange={(picked) => {
+                setLocation(picked);
+                if (picked) setLocationMissing(false);
+              }}
+              preferred={held}
+              placeholder="Rechercher un lieu…"
+              invalid={locationMissing}
+              className={cn(
+                "w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none",
+                locationMissing && "border-red-400/60",
+              )}
+            />
+            {locationMissing ? (
+              <span className="block text-xs text-red-300">
+                Choisissez ou créez un lieu.
+              </span>
+            ) : null}
           </Field>
           <label className="flex items-center gap-2 pb-2 text-sm text-nexus-accent/75">
             <input
