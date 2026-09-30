@@ -44,6 +44,7 @@ import {
   availableOf,
   type PackageEntry,
 } from "@/components/inventory/parcels";
+import { ItemNameCombobox } from "@/components/inventory/item-name-combobox";
 import { LocationCombobox } from "@/components/inventory/location-combobox";
 import type {
   InventoryItem,
@@ -118,6 +119,14 @@ export default function InventoryPage() {
       a.name.localeCompare(b.name, "fr"),
     );
   }, [itemsQuery.data]);
+
+  const heldNames = useMemo(
+    () =>
+      [...new Set((itemsQuery.data ?? []).map((item) => item.name))].sort(
+        (a, b) => a.localeCompare(b, "fr"),
+      ),
+    [itemsQuery.data],
+  );
 
   const visibleSections = activeLocation
     ? sections.filter((section) => section.key === activeLocation)
@@ -214,6 +223,7 @@ export default function InventoryPage() {
       {showForm ? (
         <NewItemForm
           held={held}
+          heldNames={heldNames}
           pending={createMutation.isPending}
           onCancel={() => setShowForm(false)}
           onSubmit={(input) => createMutation.mutate(input)}
@@ -423,11 +433,14 @@ export default function InventoryPage() {
 
 function NewItemForm({
   held,
+  heldNames,
   pending,
   onCancel,
   onSubmit,
 }: {
   held: Location[];
+  /** Names of what the reader already holds, offered first. */
+  heldNames: string[];
   pending: boolean;
   onCancel: () => void;
   onSubmit: (input: InventoryItemInput) => void;
@@ -467,11 +480,13 @@ function NewItemForm({
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Nom" className="sm:col-span-2">
-            <Input
+            <ItemNameCombobox
               value={name}
               required
+              held={heldNames}
               placeholder="Titanium…"
-              onChange={(event) => setName(event.target.value)}
+              onChange={setName}
+              className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </Field>
           <Field label="Quantité">
