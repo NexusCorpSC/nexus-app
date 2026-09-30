@@ -24,6 +24,7 @@ import {
   type BulkInventoryRow,
 } from "@/lib/api/inventory";
 import { Button, Card, Input, PageHeader } from "@/components/ui";
+import { ItemNameCombobox } from "@/components/inventory/item-name-combobox";
 import { LocationCombobox } from "@/components/inventory/location-combobox";
 import {
   readWorkOrderImport,
@@ -110,6 +111,7 @@ export default function InventoryQuickAddPage() {
 
   const [defaultLocationId, setDefaultLocationId] = useState("");
   const [defaultUnit, setDefaultUnit] = useState("");
+  const [defaultQuality, setDefaultQuality] = useState("");
   const [defaultOrg, setDefaultOrg] = useState(false);
   const [rows, setRows] = useState<Row[]>(() => [
     blankRow(false),
@@ -236,6 +238,8 @@ export default function InventoryQuickAddPage() {
   );
 
   const defaultLocation = locationById(defaultLocationId);
+  const defaultQualityValid =
+    !defaultQuality.trim() || /^\d+$/.test(defaultQuality.trim());
 
   /** The unit the reader already counts a thing in, to fill a blank one. */
   const heldUnit = (name: string) =>
@@ -257,16 +261,20 @@ export default function InventoryQuickAddPage() {
     const name = row.name.trim();
     if (!name) return { kind: "error", message: "Nom requis", field: "name" };
 
+    // A blank quality takes the default one, if any.
+    const qualityText = row.quality.trim() || defaultQuality.trim();
     let quality: number | undefined;
-    if (row.quality.trim()) {
-      if (!/^\d+$/.test(row.quality.trim())) {
+    if (qualityText) {
+      if (!/^\d+$/.test(qualityText)) {
         return {
           kind: "error",
-          message: "Qualité : entier ≥ 0",
+          message: row.quality.trim()
+            ? "Qualité : entier ≥ 0"
+            : "Qualité par défaut : entier ≥ 0",
           field: "quality",
         };
       }
-      quality = parseInt(row.quality.trim(), 10);
+      quality = parseInt(qualityText, 10);
     }
 
     if (row.fromCapture && !row.quantity.trim()) {
@@ -520,6 +528,20 @@ export default function InventoryQuickAddPage() {
           />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
+          Qualité
+          <Input
+            inputMode="numeric"
+            value={defaultQuality}
+            placeholder="—"
+            aria-invalid={!defaultQualityValid || undefined}
+            onChange={(event) => setDefaultQuality(event.target.value)}
+            className={cn(
+              "h-8 w-20 py-0 text-right font-mono",
+              !defaultQualityValid && "border-red-400/60 text-red-300",
+            )}
+          />
+        </label>
+        <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
           Unité
           <Input
             value={defaultUnit}
@@ -604,19 +626,19 @@ export default function InventoryQuickAddPage() {
                     {index + 1}
                   </td>
                   <td>
-                    <input
-                      ref={(el) => {
+                    <ItemNameCombobox
+                      inputRef={(el) => {
                         if (el) nameInputs.current.set(row.key, el);
                         else nameInputs.current.delete(row.key);
                       }}
                       autoFocus={index === 0}
                       value={row.name}
-                      list="inventory-quick-add-names"
-                      onChange={(e) => update(row.key, { name: e.target.value })}
+                      held={knownNames}
+                      onChange={(name) => update(row.key, { name })}
                       onPaste={handlePaste(row)}
                       placeholder="Titanium…"
                       aria-label="Nom"
-                      aria-invalid={errorField === "name" || undefined}
+                      invalid={errorField === "name"}
                       className={CELL}
                     />
                   </td>
@@ -627,7 +649,7 @@ export default function InventoryQuickAddPage() {
                       onChange={(e) =>
                         update(row.key, { quality: e.target.value })
                       }
-                      placeholder="—"
+                      placeholder={defaultQuality.trim() || "—"}
                       aria-label="Qualité"
                       aria-invalid={errorField === "quality" || undefined}
                       className={cn(
@@ -722,11 +744,6 @@ export default function InventoryQuickAddPage() {
             })}
           </tbody>
         </table>
-        <datalist id="inventory-quick-add-names">
-          {knownNames.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
         <button
           type="button"
           onClick={addRow}
