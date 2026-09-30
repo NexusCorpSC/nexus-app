@@ -112,6 +112,7 @@ export default function InventoryQuickAddPage() {
   const [defaultLocationId, setDefaultLocationId] = useState("");
   const [defaultUnit, setDefaultUnit] = useState("");
   const [defaultQuality, setDefaultQuality] = useState("");
+  const [defaultDescription, setDefaultDescription] = useState("");
   const [defaultOrg, setDefaultOrg] = useState(false);
   const [rows, setRows] = useState<Row[]>(() => [
     blankRow(false),
@@ -304,6 +305,7 @@ export default function InventoryQuickAddPage() {
     const unit = unitOf(row);
     const payload: BulkInventoryRow = {
       name,
+      description: defaultDescription.trim() || undefined,
       quality,
       quantity,
       unit,
@@ -548,6 +550,15 @@ export default function InventoryQuickAddPage() {
             placeholder="SCU…"
             onChange={(event) => setDefaultUnit(event.target.value)}
             className="h-8 w-24 py-0"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
+          Description
+          <Input
+            value={defaultDescription}
+            placeholder="Notes sur ces objets…"
+            onChange={(event) => setDefaultDescription(event.target.value)}
+            className="h-8 w-64 py-0"
           />
         </label>
         <label className="flex cursor-pointer items-center gap-2 text-[13px] text-nexus-bright">
