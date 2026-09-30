@@ -27,6 +27,8 @@ export function createInventoryItem(input: InventoryItemInput) {
 
 export type BulkInventoryRow = {
   name: string;
+  /** Kept on a new lot only: a lot topped up keeps its own. */
+  description?: string;
   quality?: number;
   quantity: number;
   unit?: string;
