@@ -27,7 +27,7 @@ export function createInventoryItem(input: InventoryItemInput) {
 
 export type BulkInventoryRow = {
   name: string;
-  /** Kept on a new lot only: a lot topped up keeps its own. */
+  /** The lot's note: a lot is only topped up by rows bearing the same. */
   description?: string;
   quality?: number;
   quantity: number;
@@ -38,7 +38,8 @@ export type BulkInventoryRow = {
 
 /**
  * Adds several items at once. A row matching a lot already held — same name,
- * quality and unit at the same place — tops it up instead of adding a second.
+ * quality, unit and note at the same place — tops it up instead of adding a
+ * second.
  */
 export function bulkAddInventoryItems(rows: BulkInventoryRow[]) {
   return apiRequest<{ created: number; merged: number }>(
