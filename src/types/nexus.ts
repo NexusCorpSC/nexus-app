@@ -1377,11 +1377,43 @@ export const PRESENCE_ACTIVITY_SUGGESTIONS = [
   "Social",
 ] as const;
 
+/**
+ * A planned session stays shown until an hour past its time: someone running
+ * late is still «prévu», not «hors jeu».
+ */
+export const PLANNED_SESSION_GRACE_HOURS = 1;
+
+/** The organization event a planned session picks up. */
+export type PlannedEventRef = {
+  orgId: string;
+  eventId: string;
+  title: string;
+};
+
+/**
+ * One's next session: when, and to do what. One per person; planning another
+ * replaces it. It goes away an hour past its time, or when one starts playing
+ * — its activity then becomes the session's.
+ */
+export type PlannedSession = {
+  /** ISO. */
+  at: string;
+  activity: string | null;
+  /** Never set in what friends see: a private event is the org's business. */
+  event: PlannedEventRef | null;
+};
+
+/**
+ * `planned` is optional here, and every reader treats `undefined` as `null`:
+ * a site deployed before planned sessions existed answers without it.
+ */
 export type MyPresence = {
   playing: boolean;
   activity: string | null;
   since: string | null;
   expiresAt: string | null;
+  /** The next session, playing or not; `null` when none is planned. */
+  planned?: PlannedSession | null;
 };
 
 export type MemberPresence = {
@@ -1393,10 +1425,142 @@ export type MemberPresence = {
   since: string;
 };
 
+/** A member who planned a session and is not playing yet. */
+export type MemberPlanned = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  rank: string | null;
+  planned: PlannedSession;
+};
+
 export type OrgPresence = {
   orgId: string;
   playing: MemberPresence[];
+  /**
+   * Those not playing who planned a session, soonest first. `event` is only
+   * set for an event of this organization. Absent from an older site.
+   */
+  planned?: MemberPlanned[];
   memberCount: number;
+};
+
+/* ------------------------------------------------------------------ */
+/* Organization events                                                 */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mirrors `types/org-events.ts` on Nexus Tools: a member plans an outing in
+ * the organization's calendar, the others register to it — with a role, from
+ * the same glyphs as squad roles, and answers to free questions.
+ *
+ * Withdrawing deletes nothing: the registration stays, marked `withdrawn`,
+ * and no longer counts. Registering again brings it back.
+ *
+ * «Évènement» as in a calendar: nothing to do with the event stream below.
+ */
+
+export const ORG_EVENT_ANSWER_MAX_LENGTH = 1000;
+
+/** `private`: members only, the default. `public`: anyone reads it. */
+export type OrgEventVisibility = "private" | "public";
+
+export type OrgEventRole = {
+  /** Opaque and stable: renaming a role changes nothing for who picked it. */
+  id: string;
+  label: string;
+  icon: SquadRoleIcon;
+  /** How many the organizer would like, `null` for no target. Not a cap. */
+  wanted: number | null;
+};
+
+export type OrgEventQuestion = {
+  id: string;
+  label: string;
+  required: boolean;
+};
+
+export type OrgEventRegistration = {
+  userId: string;
+  name: string;
+  /** One of the event's role ids, or `""` for none. */
+  role: string;
+  /** By question id; an unanswered question is absent. */
+  answers: Record<string, string>;
+  /** Kept, but out of every count. */
+  withdrawn: boolean;
+  registeredAt: string;
+  updatedAt: string;
+};
+
+/** A registrant as members see them: without their answers. */
+export type OrgEventParticipant = {
+  userId: string;
+  name: string;
+  role: string;
+};
+
+/** An event as one reader sees it, with what that reader may do with it. */
+export type OrgEventView = {
+  id: string;
+  orgId: string;
+  title: string;
+  description: string;
+  /** ISO. */
+  startsAt: string;
+  /** ISO, after `startsAt`. */
+  endsAt: string;
+  /** Free text: «Hangar 03 de Lorville», «QT vers Nyx». */
+  meetingPoint: string;
+  meetingPlace: { slug: string; name: string } | null;
+  visibility: OrgEventVisibility;
+  roles: OrgEventRole[];
+  questions: OrgEventQuestion[];
+  createdBy: { userId: string; name: string };
+  /** The squad built from the event, `null` until there is one. */
+  squadId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Active registrations, withdrawn ones excluded. */
+  registrationCount: number;
+  /** Active registrations by role id, `""` for those without one. */
+  roleCounts: Record<string, number>;
+  /** Active registrants, for members; empty for a visitor of a public event. */
+  participants: OrgEventParticipant[];
+  /** The reader's registration, withdrawn included; `null` without one. */
+  myRegistration: OrgEventRegistration | null;
+  /** A member of the organization: may register. */
+  canRegister: boolean;
+  /** Its creator or an editor of the organization. */
+  canManage: boolean;
+};
+
+export type OrgEventList = { events: OrgEventView[] };
+
+/** What a member sends to register, or to change their registration. */
+export type OrgEventRegistrationInput = {
+  role?: string;
+  answers?: Record<string, string>;
+};
+
+/** What building the event's squad answers. */
+export type OrgEventSquadResult = {
+  event: OrgEventView;
+  squad: { id: string; name: string; code: string };
+  /** Past twenty registrants, several squads under one raid. */
+  squadCount: number;
+  /** Those who found no room: a raid holds at most six squads. */
+  leftOut: number;
+};
+
+/** An upcoming event the reader is registered to: a planned session to pick. */
+export type MyUpcomingEvent = {
+  orgId: string;
+  orgName: string;
+  eventId: string;
+  title: string;
+  startsAt: string;
+  endsAt: string;
 };
 
 /* ------------------------------------------------------------------ */
@@ -1417,6 +1581,11 @@ export type Friend = {
   friendsSince: string;
   /** What they declared, `null` when they are not playing. */
   playing: { activity: string | null; since: string } | null;
+  /**
+   * Their next session when they are not playing, `null` otherwise — and
+   * absent from an older site. `event` is always `null` here.
+   */
+  planned?: PlannedSession | null;
 };
 
 export type FriendList = { friends: Friend[] };

@@ -22,6 +22,7 @@ import {
   getFriendCode,
   removeFriend,
 } from "@/lib/api/friends";
+import { plannedLabel } from "@/lib/presence";
 import { cn, formatElapsed } from "@/lib/utils";
 import type { Friend } from "@/types/nexus";
 
@@ -328,6 +329,8 @@ function FriendCard({
   onRemove: () => void;
 }) {
   const playing = friend.playing;
+  // Shown only off game; an older site sends no such field.
+  const planned = playing ? null : (friend.planned ?? null);
 
   return (
     <li
@@ -345,6 +348,8 @@ function FriendCard({
         />
         {playing ? (
           <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-nexus-card bg-emerald-300" />
+        ) : planned ? (
+          <span className="absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 border-amber-300 bg-nexus-abyss" />
         ) : null}
       </div>
 
@@ -360,12 +365,18 @@ function FriendCard({
         <p
           className={cn(
             "truncate text-xs",
-            playing ? "text-emerald-300" : "text-nexus-dim",
+            playing
+              ? "text-emerald-300"
+              : planned
+                ? "text-amber-200"
+                : "text-nexus-dim",
           )}
         >
           {playing
             ? (playing.activity ?? "Pas d'activité précisée")
-            : (friend.sharedOrg ?? "Aucune organisation commune")}
+            : planned
+              ? plannedLabel(planned, now)
+              : (friend.sharedOrg ?? "Aucune organisation commune")}
         </p>
       </div>
 
