@@ -1,9 +1,19 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { declarePlaying, getMyPresence, stopPlaying } from "@/lib/api/presence";
+import {
+  cancelPlannedSession,
+  declarePlaying,
+  getMyPresence,
+  listMyUpcomingEvents,
+  planSession,
+  stopPlaying,
+} from "@/lib/api/presence";
 import type { MyPresence } from "@/types/nexus";
 
 const MY_PRESENCE_KEY = ["presence", "me"] as const;
+
+/** The events the reader registered to; dropped by every registration. */
+export const MY_EVENTS_KEY = ["events", "me"] as const;
 
 /**
  * How often a running declaration is renewed while the app is open.
@@ -14,7 +24,10 @@ const MY_PRESENCE_KEY = ["presence", "me"] as const;
  */
 const RENEW_EVERY_MS = 20 * 60_000;
 
-/** The reader's own declaration, and the two ways to change it. */
+/**
+ * The reader's own declaration, and the ways to change it: playing or not,
+ * and the next session planned.
+ */
 export function useMyPresence(enabled: boolean) {
   const queryClient = useQueryClient();
 
@@ -32,8 +45,10 @@ export function useMyPresence(enabled: boolean) {
     void queryClient.invalidateQueries({ queryKey: ["presence", "org"] });
   };
 
+  // `undefined` starts a session on the planned activity: see `declarePlaying`.
   const declare = useMutation({
-    mutationFn: (activity: string | null) => declarePlaying(activity),
+    mutationFn: (activity: string | null | undefined) =>
+      declarePlaying(activity),
     onSuccess: settle,
   });
 
@@ -42,7 +57,46 @@ export function useMyPresence(enabled: boolean) {
     onSuccess: settle,
   });
 
-  return { presence: query.data ?? null, declare, stop };
+  const plan = useMutation({
+    mutationFn: planSession,
+    onSuccess: settle,
+  });
+
+  const cancelPlanned = useMutation({
+    mutationFn: cancelPlannedSession,
+    onSuccess: settle,
+  });
+
+  // «Hors jeu» is both at once: no session running, none planned. One after
+  // the other, the last answer being the whole presence as it now stands.
+  const goOff = useMutation({
+    mutationFn: async (current: MyPresence) => {
+      let next = current;
+      if (current.playing) next = await stopPlaying();
+      if (next.planned) next = await cancelPlannedSession();
+      return next;
+    },
+    onSuccess: settle,
+  });
+
+  return {
+    presence: query.data ?? null,
+    declare,
+    stop,
+    plan,
+    cancelPlanned,
+    goOff,
+  };
+}
+
+/** The upcoming events the reader registered to: planned sessions to pick. */
+export function useMyUpcomingEvents(enabled: boolean) {
+  return useQuery({
+    queryKey: MY_EVENTS_KEY,
+    queryFn: listMyUpcomingEvents,
+    enabled,
+    staleTime: 60_000,
+  });
 }
 
 /**

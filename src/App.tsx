@@ -19,6 +19,7 @@ import InventoryParcelsPage from "@/pages/inventory-parcels-page";
 import OrgsPage from "@/pages/orgs-page";
 import OrgInventoryPage from "@/pages/org-inventory-page";
 import OrgDetailPage from "@/pages/org-detail-page";
+import OrgEventPage from "@/pages/org-event-page";
 import FriendsPage from "@/pages/friends-page";
 import SettingsPage from "@/pages/settings-page";
 import HomePage from "@/pages/home-page";
@@ -101,6 +102,10 @@ export default function App() {
           <Route path="inventory/parcels" element={<InventoryParcelsPage />} />
           <Route path="orgs/:orgId" element={<OrgDetailPage />} />
           <Route path="orgs/:orgId/inventory" element={<OrgInventoryPage />} />
+          <Route
+            path="orgs/:orgId/events/:eventId"
+            element={<OrgEventPage />}
+          />
           <Route path="friends" element={<FriendsPage />} />
         </Route>
 

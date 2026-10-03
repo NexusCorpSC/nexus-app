@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
 import { PresenceForm } from "@/components/presence-form";
 import { useMyPresence } from "@/hooks/use-presence";
+import { plannedLabel, plannedOf } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 
 /**
@@ -9,8 +10,9 @@ import { cn } from "@/lib/utils";
  * playing, and — behind a click — the declaration and the way out.
  *
  * The status line is the button, since it is what one comes to change: «En
- * jeu · Minage» in green, or «Hors jeu». The popover opens upwards, over the
- * menu, and closes on a click outside or Escape.
+ * jeu · Minage» in green, «Session prévue · 21:00 · Minage» in amber, or
+ * «Hors jeu». The popover opens upwards, wider than the menu so the three
+ * modes fit, and closes on a click outside or Escape.
  */
 export function SessionMenu({
   name,
@@ -42,11 +44,15 @@ export function SessionMenu({
   }, [open]);
 
   const playing = presence?.playing ?? false;
+  // Only shown when not playing: a session running says more.
+  const planned = playing ? null : plannedOf(presence);
   const status = playing
     ? presence?.activity
       ? `En jeu · ${presence.activity}`
       : "En jeu"
-    : "Hors jeu";
+    : planned
+      ? plannedLabel(planned)
+      : "Hors jeu";
 
   return (
     <div ref={root} className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -56,6 +62,8 @@ export function SessionMenu({
         </div>
         {playing ? (
           <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-nexus-night bg-emerald-300" />
+        ) : planned ? (
+          <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-amber-300 bg-nexus-night" />
         ) : null}
       </div>
 
@@ -71,10 +79,14 @@ export function SessionMenu({
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={() => setOpen((value) => !value)}
-          title="Déclarer ce que vous faites en jeu"
+          title={planned ? status : "Déclarer ce que vous faites en jeu"}
           className={cn(
             "truncate text-left text-[11px] transition-colors hover:text-nexus-accent",
-            playing ? "text-emerald-300" : "text-nexus-dim",
+            playing
+              ? "text-emerald-300"
+              : planned
+                ? "text-amber-200"
+                : "text-nexus-dim",
           )}
         >
           {status}
@@ -85,14 +97,15 @@ export function SessionMenu({
         <div
           role="dialog"
           aria-label="Ma session de jeu"
-          className="absolute right-2 bottom-full left-2 z-20 mb-2 flex flex-col gap-3 rounded-xl border border-nexus-accent/18 bg-nexus-card p-3.5 shadow-xl shadow-black/40"
+          className="absolute bottom-full left-2 z-20 mb-2 flex w-72 flex-col gap-3 rounded-xl border border-nexus-accent/18 bg-nexus-card p-3.5 shadow-xl shadow-black/40"
         >
           <div>
             <p className="font-display text-sm font-semibold text-nexus-white">
               Ma session de jeu
             </p>
             <p className="mt-0.5 text-[11.5px] leading-snug text-nexus-muted">
-              Vos amis et vos organisations voient que vous jouez, et à quoi.
+              Vos amis et vos organisations voient que vous jouez, ou quand vous
+              comptez jouer, et à quoi.
             </p>
           </div>
 
