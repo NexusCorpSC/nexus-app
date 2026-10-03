@@ -1,6 +1,6 @@
 [package]
 name = "nexus-app"
-version = "0.31.2"
+version = "0.31.3"
 description = "Desktop client for Nexus Tools"
 authors = ["Nexus Corp"]
 edition = "2021"
