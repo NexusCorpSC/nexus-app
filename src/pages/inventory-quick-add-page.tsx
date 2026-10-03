@@ -91,8 +91,8 @@ function roundQty(value: number) {
  *
  * Each row says, before anything is sent, what will become of it: a new item,
  * a new lot of something already held, or a top-up of an existing lot — same
- * name, quality, unit and note at the same place, the rule the API applies. Rows in
- * error stay in the table once the others are added.
+ * name, quality, unit and note at the same place, the rule the API applies.
+ * Rows in error stay in the table once the others are added.
  */
 export default function InventoryQuickAddPage() {
   const navigate = useNavigate();
