@@ -1383,9 +1383,6 @@ export const PRESENCE_ACTIVITY_SUGGESTIONS = [
  */
 export const PLANNED_SESSION_GRACE_HOURS = 1;
 
-/** Further out, it is no longer «my next session» but a diary. */
-export const PLANNED_SESSION_MAX_DAYS_AHEAD = 14;
-
 /** The organization event a planned session picks up. */
 export type PlannedEventRef = {
   orgId: string;
