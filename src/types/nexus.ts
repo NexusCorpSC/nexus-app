@@ -1576,7 +1576,10 @@ export type Friend = {
   userId: string;
   name: string;
   avatar: string | null;
-  /** The first organization the reader shares with them, if any. */
+  /**
+   * The organization shown with their name: the one they chose in their
+   * profile, else the first one the reader shares with them, if any.
+   */
   sharedOrg: string | null;
   friendsSince: string;
   /** What they declared, `null` when they are not playing. */
@@ -1592,3 +1595,22 @@ export type FriendList = { friends: Friend[] };
 
 /** The reader's pending code; `null` when none was asked for, or it was used. */
 export type MyFriendCode = { code: string | null };
+
+/** One of the reader's organizations, as the display choice lists it. */
+export type DisplayOrgOption = {
+  id: string;
+  name: string;
+  tag: string | null;
+  image: string | null;
+};
+
+/**
+ * Mirrors `types/display-org.ts` on Nexus Tools: the organization the reader
+ * shows with their name, in others' friend lists. `orgId` is `null` without a
+ * choice, or once the chosen one was left: each friend then sees the first
+ * organization they share.
+ */
+export type MyDisplayOrg = {
+  orgId: string | null;
+  organizations: DisplayOrgOption[];
+};
