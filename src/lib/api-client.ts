@@ -35,6 +35,10 @@ type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   /** Query string parameters; `undefined` / `null` / `""` entries are dropped. */
   params?: Record<string, string | number | boolean | undefined | null>;
+  /**
+   * Sent as JSON, unless it is a `FormData`: then as `multipart/form-data`,
+   * the boundary set by the `Request` the HTTP plugin builds from it.
+   */
   body?: unknown;
   /** Send the persisted session cookie. Defaults to true. */
   authenticated?: boolean;
@@ -111,7 +115,8 @@ export async function apiRequest<T>(
 
   const headers: Record<string, string> = { Accept: "application/json" };
 
-  if (body !== undefined) {
+  const isForm = body instanceof FormData;
+  if (body !== undefined && !isForm) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -125,7 +130,11 @@ export async function apiRequest<T>(
     response = await tauriFetch(url, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: isForm
+        ? body
+        : body === undefined
+          ? undefined
+          : JSON.stringify(body),
     });
   } catch (cause) {
     throw new ApiError(

@@ -19,6 +19,8 @@ import {
   type PlacePlan,
 } from "@/types/nexus";
 import { ReportButton } from "@/components/report-button";
+import { AddMediaButton } from "@/components/place/add-media-button";
+import { useAuth } from "@/auth/auth-context";
 import {
   Button,
   Card,
@@ -38,6 +40,7 @@ import {
  */
 export default function PlaceDetailPage() {
   const { slug = "" } = useParams();
+  const { user } = useAuth();
 
   const placeQuery = useQuery({
     queryKey: ["place", slug],
@@ -80,6 +83,7 @@ export default function PlaceDetailPage() {
         description={place.shopCategory}
         actions={
           <>
+            {user ? <AddMediaButton place={place} /> : null}
             <ReportButton type="place" id={place.slug} name={place.name} />
             <Button
               variant="outline"
