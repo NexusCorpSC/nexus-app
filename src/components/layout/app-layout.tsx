@@ -147,7 +147,7 @@ export default function AppLayout() {
 
   // What became of the player's contributions on the site: published, sent
   // back, an achievement, a level. Read from here, the window with the session.
-  useContribWatcher(Boolean(user));
+  useContribWatcher(user?.id ?? null);
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {

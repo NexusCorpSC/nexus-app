@@ -348,16 +348,36 @@ export async function setContribNotifications(enabled: boolean): Promise<void> {
  * The site's clock at the last read of the contribution events, sent back as
  * `since`: kept across restarts so nothing is announced twice, or missed while
  * the app was closed.
+ *
+ * One mark per account and per instance: another player signing in on this
+ * machine, or the same player on another instance, starts from their own
+ * first read rather than from someone else's clock.
  */
-export async function getContribSince(): Promise<string | null> {
+async function contribSinceKey(userId: string): Promise<string> {
+  return `${await getApiBaseUrl()}|${userId}`;
+}
+
+export async function getContribSince(userId: string): Promise<string | null> {
   const store = await getStore();
-  const value = await store.get<unknown>(KEY_CONTRIB_SINCE);
+  const marks = await store.get<unknown>(KEY_CONTRIB_SINCE);
+  if (!marks || typeof marks !== "object") return null;
+  const value = (marks as Record<string, unknown>)[
+    await contribSinceKey(userId)
+  ];
   return typeof value === "string" ? value : null;
 }
 
-export async function setContribSince(since: string): Promise<void> {
+export async function setContribSince(
+  userId: string,
+  since: string,
+): Promise<void> {
   const store = await getStore();
-  await store.set(KEY_CONTRIB_SINCE, since);
+  const marks = await store.get<unknown>(KEY_CONTRIB_SINCE);
+  await store.set(KEY_CONTRIB_SINCE, {
+    // A mark from before this format was a bare string: it is dropped.
+    ...(marks && typeof marks === "object" ? marks : {}),
+    [await contribSinceKey(userId)]: since,
+  });
 }
 
 /**

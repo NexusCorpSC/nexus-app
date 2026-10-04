@@ -56,22 +56,23 @@ function toNotification(event: ContribEvent): NotificationInput {
  * Tells the player what became of their contributions on the site: published,
  * sent back for changes, an achievement unlocked, a new level.
  *
- * The first read after sign-in on this machine only sets the mark: an account
- * with a history is not greeted by a pile of old news. After that, `since` is
+ * The first read for an account on an instance only sets the mark: an account
+ * with a history is not greeted by a pile of old news, nor by another
+ * player's. After that, `since` is
  * the site's own clock, persisted, so a restart neither repeats nor drops an
  * event. Failures stay silent, like the update check: nothing was asked.
  */
-export function useContribWatcher(signedIn: boolean) {
+export function useContribWatcher(userId: string | null) {
   useEffect(() => {
-    if (!signedIn) return;
+    if (!userId) return;
     let cancelled = false;
 
     const look = async () => {
       try {
-        const since = await getContribSince();
+        const since = await getContribSince(userId);
         const summary = await getMyContrib(since ?? undefined);
         if (cancelled) return;
-        await setContribSince(summary.now);
+        await setContribSince(userId, summary.now);
         if (!since || !(await getContribNotifications())) return;
 
         const events = summary.events;
@@ -98,5 +99,5 @@ export function useContribWatcher(signedIn: boolean) {
       cancelled = true;
       clearInterval(timer);
     };
-  }, [signedIn]);
+  }, [userId]);
 }
