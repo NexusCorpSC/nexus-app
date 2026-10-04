@@ -25,6 +25,7 @@ const MESSAGES: Record<string, string> = {
   alreadyReported:
     "Vous avez déjà signalé cet élément. Un modérateur s'en occupe.",
   dailyLimit: "Dix signalements par jour au plus. Réessayez demain.",
+  busy: "Un modérateur tranche ce signalement en ce moment. Réessayez dans un instant.",
   reportingSuspended:
     "Trois de vos signalements ont été classés d'affilée : vous ne pouvez plus signaler pendant 7 jours.",
 };
