@@ -402,14 +402,21 @@ export type MissionPage = {
 /* ------------------------------------------------------------------ */
 
 export type FactionLevel = {
+  /** Position relative to the default rank: negative below it (Hostile, Not Eligible). */
   level: number;
   name: string;
   isDefault: boolean;
+  /** In-game rank key (`Technician_Rank2`), set by the site's import. */
+  gameName?: string;
+  /** Reputation needed for this rank, set by the site's import. */
+  minReputation?: number;
 };
 
 export type FactionCareer = {
   name: string;
   levels: FactionLevel[];
+  /** In-game ladder key (`Security_MercenaryGuild`), set by the site's import. */
+  gameScope?: string;
 };
 
 export type RepFaction = {
@@ -417,6 +424,13 @@ export type RepFaction = {
   standings: string[];
   defaultStanding: string;
   careers: FactionCareer[];
+  gameId?: string;
+  description?: string;
+  lawful?: boolean;
+  focus?: string;
+  headquarters?: string;
+  /** Game version the faction disappeared in; kept for players who followed it. */
+  removedInVersion?: string;
 };
 
 export type PlayerReputations = {
