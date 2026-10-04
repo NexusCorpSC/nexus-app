@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Box, Share2 } from "lucide-react";
+import { ArrowLeft, Box, Check, Share2 } from "lucide-react";
 import { getMission } from "@/lib/api/missions";
 import {
   Card,
@@ -34,6 +34,11 @@ export default function MissionDetailPage() {
 
   const mission = missionQuery.data;
   const blueprints = mission.blueprintDetails ?? [];
+  // `owned` only comes back for a signed-in reader, as on the site.
+  const ownershipKnown = blueprints.some(
+    (blueprint) => blueprint.owned !== undefined,
+  );
+  const ownedCount = blueprints.filter((blueprint) => blueprint.owned).length;
 
   const details: { label: string; value: string; className?: string }[] = [
     { label: "Faction", value: mission.faction?.name ?? "—" },
@@ -43,7 +48,9 @@ export default function MissionDetailPage() {
       label: "Récompense",
       value: formatUEC(mission.rewardUEC),
       // Same amber as the grid card, so the reward is recognised at a glance.
-      className: mission.rewardUEC ? "text-right font-semibold text-amber-300" : undefined,
+      className: mission.rewardUEC
+        ? "text-right font-semibold text-amber-300"
+        : undefined,
     },
   ];
 
@@ -94,9 +101,11 @@ export default function MissionDetailPage() {
           <section>
             <SectionTitle
               aside={
-                blueprints.length
-                  ? `${blueprints.length} blueprint${blueprints.length > 1 ? "s" : ""}`
-                  : undefined
+                !blueprints.length
+                  ? undefined
+                  : ownershipKnown
+                    ? `${ownedCount} / ${blueprints.length} possédé${ownedCount > 1 ? "s" : ""}`
+                    : `${blueprints.length} blueprint${blueprints.length > 1 ? "s" : ""}`
               }
             >
               Blueprints débloqués
@@ -111,7 +120,7 @@ export default function MissionDetailPage() {
                     className="flex items-start gap-2.5 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
                   >
                     <Box className="mt-0.5 size-4 shrink-0 text-violet-300" />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="line-clamp-2 text-[13px] font-medium text-nexus-white">
                         {blueprint.name}
                       </p>
@@ -124,6 +133,9 @@ export default function MissionDetailPage() {
                         </p>
                       ) : null}
                     </div>
+                    {blueprint.owned !== undefined ? (
+                      <OwnershipPill owned={blueprint.owned} />
+                    ) : null}
                   </Link>
                 ))}
               </div>
@@ -154,5 +166,19 @@ export default function MissionDetailPage() {
         </Card>
       </div>
     </>
+  );
+}
+
+/** Same wording as the site's mission fiche. */
+function OwnershipPill({ owned }: { owned: boolean }) {
+  return owned ? (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
+      <Check className="size-3" />
+      Possédé
+    </span>
+  ) : (
+    <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-nexus-dim">
+      Non possédé
+    </span>
   );
 }

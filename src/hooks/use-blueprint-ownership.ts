@@ -25,6 +25,8 @@ export const BLUEPRINT_OWNED_EVENT = "blueprints://owned";
 function invalidate(queryClient: ReturnType<typeof useQueryClient>): void {
   void queryClient.invalidateQueries({ queryKey: ["blueprints"] });
   void queryClient.invalidateQueries({ queryKey: ["blueprint"] });
+  // A mission's fiche says which of its blueprints are owned.
+  void queryClient.invalidateQueries({ queryKey: ["mission"] });
 }
 
 function useOwnershipMutation(
