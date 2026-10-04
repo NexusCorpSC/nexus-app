@@ -1690,7 +1690,7 @@ export const REPORT_REASON_LABELS: Record<
 export const MAX_REPORT_COMMENT_LENGTH = 500;
 
 /** What an upheld report earns its reporter. */
-export const REPORT_UPHELD_POINTS = 5;
+export const REPORT_UPHELD_POINTS = 1;
 
 export type ReportInput = {
   /** `id` is a slug for a place or an item, `slug:planId` for a map. */
@@ -1787,9 +1787,9 @@ export type PlaceMediaUploadResult = {
   standing: ContributorStanding;
 };
 
-/** An image of a place: 10 points, 5 more for the place's first one. */
-export const PLACE_MEDIA_POINTS = 10;
-export const PLACE_FIRST_MEDIA_BONUS = 5;
+/** An image of a place: 2 points, 3 more for the place's first one. */
+export const PLACE_MEDIA_POINTS = 2;
+export const PLACE_FIRST_MEDIA_BONUS = 3;
 export const MAX_MEDIA_CAPTION_LENGTH = 140;
 export const MAX_MEDIA_CREDIT_LENGTH = 60;
 
@@ -1811,5 +1811,5 @@ export type ConfirmationResult = {
 };
 
 /** What a confirmation earns, as long as the daily allowance lasts. */
-export const CONFIRMATION_POINTS = 2;
+export const CONFIRMATION_POINTS = 1;
 export const MAX_CONFIRMATION_COMMENT_LENGTH = 300;
