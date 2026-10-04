@@ -374,6 +374,8 @@ export type MissionBlueprint = {
   category?: string;
   subcategory?: string;
   imageUrl?: string;
+  /** Possessed by the reader (or unlocked by default). Only when signed in. */
+  owned?: boolean;
 };
 
 export type Mission = {
