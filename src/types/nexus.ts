@@ -1734,3 +1734,66 @@ export type ContribSummary = {
   /** To send back as `since` on the next read. */
   now: string;
 };
+
+/* ------------------------------------------------------------------ */
+/* Contributions from the app: place images, price confirmations       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * The reader's standing as the site answers it after a contribution: what
+ * `standing` holds in the responses below.
+ */
+export type ContributorStanding = {
+  points: number;
+  level: number;
+  levelKey: string;
+  nextLevelPoints?: number;
+  /** Contributions of the reader waiting for a review. */
+  pending: number;
+  /** ISO date, while a moderator has suspended the reader's contributions. */
+  suspendedUntil?: string;
+};
+
+/** A contribution as `POST /api/lieux/{slug}/media` answers it. */
+export type Contribution = {
+  id: string;
+  kind: string;
+  /** `published` straight away from level 2, `pending` a review before. */
+  status: "published" | "pending" | (string & {});
+  /** Earned on publication. */
+  points: number;
+  target: { type: string; slug: string; name: string };
+};
+
+/** `POST /api/lieux/{slug}/media`, 201. */
+export type PlaceMediaUploadResult = {
+  contribution: Contribution;
+  standing: ContributorStanding;
+};
+
+/** An image of a place: 10 points, 5 more for the place's first one. */
+export const PLACE_MEDIA_POINTS = 10;
+export const PLACE_FIRST_MEDIA_BONUS = 5;
+export const MAX_MEDIA_CAPTION_LENGTH = 140;
+export const MAX_MEDIA_CREDIT_LENGTH = 60;
+
+/** `POST /api/confirmations`: « still accurate », or not, with a word why. */
+export type ConfirmationInput = {
+  target: { type: "item"; slug: string };
+  subject: "prices";
+  accurate: boolean;
+  comment?: string;
+};
+
+/** `POST /api/confirmations`, 201. */
+export type ConfirmationResult = {
+  /** `points` is 0 past the daily allowance of confirmations. */
+  confirmation: { points: number; at: string };
+  standing: ContributorStanding;
+  /** True when this « no longer accurate » opened a report. */
+  reported: boolean;
+};
+
+/** What a confirmation earns, as long as the daily allowance lasts. */
+export const CONFIRMATION_POINTS = 2;
+export const MAX_CONFIRMATION_COMMENT_LENGTH = 300;

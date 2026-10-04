@@ -7,6 +7,7 @@ mod game_log;
 mod hotkeys;
 mod notifications;
 mod radial;
+mod screenshots;
 mod tray;
 
 use std::collections::HashMap;
@@ -1319,6 +1320,7 @@ pub fn run() {
             event_feed::feed_status,
             game_log::game_log_sync,
             game_log::game_log_status,
+            screenshots::latest_screenshot,
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,
         ])

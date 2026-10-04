@@ -59,3 +59,30 @@ export function formatElapsed(since: string, now: number): string {
   const rest = minutes % 60;
   return rest ? `${hours} h ${String(rest).padStart(2, "0")}` : `${hours} h`;
 }
+
+const RELATIVE_TIME = new Intl.RelativeTimeFormat("fr-FR", { numeric: "auto" });
+
+/**
+ * «il y a 23 jours», «hier», «à l'instant», from an ISO date or a timestamp
+ * in milliseconds.
+ */
+export function formatAgo(value: string | number, now = Date.now()): string {
+  const at = typeof value === "number" ? value : Date.parse(value);
+  if (Number.isNaN(at)) return "";
+  const seconds = Math.round((at - now) / 1000);
+  if (Math.abs(seconds) < 60) return "à l'instant";
+
+  // No weeks: «il y a 23 jours» says more than «il y a 3 semaines».
+  const units: [Intl.RelativeTimeFormatUnit, number][] = [
+    ["year", 365 * 24 * 3600],
+    ["month", 30 * 24 * 3600],
+    ["day", 24 * 3600],
+    ["hour", 3600],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) {
+      return RELATIVE_TIME.format(Math.trunc(seconds / size), unit);
+    }
+  }
+  return RELATIVE_TIME.format(Math.trunc(seconds / 60), "minute");
+}
