@@ -95,7 +95,7 @@ function ReportModal({
         <p className="text-[13px] leading-relaxed text-nexus-muted">
           La décision s'affichera dans Mes contributions, sur le site. Si le
           signalement est retenu, il vous rapporte {REPORT_UPHELD_POINTS}{" "}
-          points.
+          {REPORT_UPHELD_POINTS > 1 ? "points" : "point"}.
         </p>
       </Modal>
     );
