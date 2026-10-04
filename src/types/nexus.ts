@@ -1614,3 +1614,78 @@ export type MyDisplayOrg = {
   orgId: string | null;
   organizations: DisplayOrgOption[];
 };
+
+/* ------------------------------------------------------------------ */
+/* Reports                                                             */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mirrors `types/reports.ts` on Nexus Tools and `POST /api/reports`: a
+ * player flags a place, an item, an image, a map or an organization. The
+ * site keeps one case per target; a moderator decides, and an upheld report
+ * earns its reporter points.
+ */
+export type ReportTargetType = "place" | "placeMedia" | "plan" | "item" | "org";
+
+export const REPORT_REASONS = [
+  "wrong",
+  "outdated",
+  "duplicate",
+  "media",
+  "offensive",
+  "copyright",
+  "spam",
+  "other",
+] as const;
+
+export type ReportReason = (typeof REPORT_REASONS)[number];
+
+/** The same wording as the site's report form (`Reports.reasons`). */
+export const REPORT_REASON_LABELS: Record<
+  ReportReason,
+  { label: string; hint: string }
+> = {
+  wrong: {
+    label: "Information fausse",
+    hint: "Un service, un nom, une valeur ou un parent incorrect",
+  },
+  outdated: {
+    label: "Obsolète depuis un patch",
+    hint: "C'était vrai, ça ne l'est plus",
+  },
+  duplicate: {
+    label: "Doublon",
+    hint: "Cet élément existe déjà sous un autre nom",
+  },
+  media: {
+    label: "Image hors sujet ou de mauvaise qualité",
+    hint: "Hors sujet, illisible, interface personnelle visible",
+  },
+  offensive: { label: "Contenu offensant", hint: "Insulte, propos haineux" },
+  copyright: {
+    label: "Droits d'auteur",
+    hint: "Reprise d'un site ou d'une image sans autorisation",
+  },
+  spam: { label: "Spam", hint: "Publicité, liens sans rapport" },
+  other: { label: "Autre", hint: "Expliquez dans le champ ci-dessous" },
+};
+
+/** `other` needs a comment; the site cuts it at 500 characters. */
+export const MAX_REPORT_COMMENT_LENGTH = 500;
+
+/** What an upheld report earns its reporter. */
+export const REPORT_UPHELD_POINTS = 5;
+
+export type ReportInput = {
+  /** `id` is a slug for a place or an item, `slug:planId` for a map. */
+  target: { type: ReportTargetType; id: string };
+  reason: ReportReason;
+  comment?: string;
+};
+
+export type SubmitReportResult = {
+  id: string;
+  status: "open" | "resolved" | "dismissed";
+  /** Players who reported this target, the reader included. */
+  reporters: number;
+};

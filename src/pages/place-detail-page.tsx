@@ -18,6 +18,7 @@ import {
   type PlaceDetails,
   type PlacePlan,
 } from "@/types/nexus";
+import { ReportButton } from "@/components/report-button";
 import {
   Button,
   Card,
@@ -78,14 +79,17 @@ export default function PlaceDetailPage() {
         title={place.name}
         description={place.shopCategory}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void openOnWeb()}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Ouvrir sur le web
-          </Button>
+          <>
+            <ReportButton type="place" id={place.slug} name={place.name} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void openOnWeb()}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ouvrir sur le web
+            </Button>
+          </>
         }
       />
 
