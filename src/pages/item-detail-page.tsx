@@ -23,6 +23,7 @@ import {
   type VehiclePlans,
   type WeaponSpread,
 } from "@/types/nexus";
+import { ReportButton } from "@/components/report-button";
 import {
   Button,
   Card,
@@ -83,14 +84,17 @@ export default function ItemDetailPage() {
           .filter(Boolean)
           .join(" · ")}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void openOnWeb()}
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-            Ouvrir sur le web
-          </Button>
+          <>
+            <ReportButton type="item" id={item.slug} name={item.name} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void openOnWeb()}
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ouvrir sur le web
+            </Button>
+          </>
         }
       />
 
