@@ -78,6 +78,7 @@ const MEDIA_MESSAGES: Record<string, string> = {
   tooManyPending: "Vous avez déjà 5 contributions en attente de relecture.",
   fileTooLarge: "L'image est trop lourde : 4 Mo au plus.",
   uploadFailed: "L'envoi de l'image a échoué. Réessayez dans un instant.",
+  tooManyUploads: "Trop d'images envoyées cette heure-ci. Réessayez plus tard.",
 };
 
 const CONFIRMATION_MESSAGES: Record<string, string> = {
