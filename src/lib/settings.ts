@@ -46,6 +46,8 @@ const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
 const KEY_GAME_LOG_DIR = "gameLogDir";
 const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
+const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
+const KEY_CONTRIB_SINCE = "contribSince";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -325,6 +327,37 @@ export async function setGameLogSettings(
   const store = await getStore();
   await store.set(KEY_GAME_LOG_DIR, settings.dir.trim());
   await store.set(KEY_GAME_LOG_ENABLED, settings.enabled);
+}
+
+/**
+ * Whether a published contribution, one sent back for changes, an achievement
+ * or a new level raises a notification. On unless turned off.
+ */
+export async function getContribNotifications(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_CONTRIB_NOTIFICATIONS);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setContribNotifications(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_CONTRIB_NOTIFICATIONS, enabled);
+}
+
+/**
+ * The site's clock at the last read of the contribution events, sent back as
+ * `since`: kept across restarts so nothing is announced twice, or missed while
+ * the app was closed.
+ */
+export async function getContribSince(): Promise<string | null> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_CONTRIB_SINCE);
+  return typeof value === "string" ? value : null;
+}
+
+export async function setContribSince(since: string): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_CONTRIB_SINCE, since);
 }
 
 /**

@@ -1689,3 +1689,48 @@ export type SubmitReportResult = {
   /** Players who reported this target, the reader included. */
   reporters: number;
 };
+
+/* ------------------------------------------------------------------ */
+/* Contributions: level, achievements, events                          */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mirrors `ContribEvent` in `types/gamification.ts` on Nexus Tools: what
+ * happened to the reader's contributions since the last read, each one a
+ * desktop notification.
+ */
+export type ContribEvent =
+  | {
+      type: "published";
+      at: string;
+      kind: string;
+      name: string;
+      points: number;
+    }
+  | {
+      type: "changesRequested";
+      at: string;
+      kind: string;
+      name: string;
+      message?: string;
+    }
+  | { type: "achievement"; at: string; id: string; title: string }
+  | { type: "level"; at: string; level: number; title: string };
+
+/**
+ * `GET /api/me/contrib`: the reader's points, level and unlocked achievements,
+ * labels already in French, and the events after `since`.
+ */
+export type ContribSummary = {
+  points: number;
+  level: number;
+  levelKey: string;
+  levelName: string;
+  nextLevelPoints?: number;
+  nextLevelName?: string;
+  acceptanceRate?: number;
+  achievements: { id: string; title: string; at?: string }[];
+  events: ContribEvent[];
+  /** To send back as `since` on the next read. */
+  now: string;
+};

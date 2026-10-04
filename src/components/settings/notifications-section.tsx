@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { getNotificationCorner, setNotificationCorner } from "@/lib/settings";
+import {
+  getContribNotifications,
+  getNotificationCorner,
+  setContribNotifications,
+  setNotificationCorner,
+} from "@/lib/settings";
 import {
   applyNotificationCorner,
   DEFAULT_NOTIFICATION_CORNER,
@@ -23,9 +28,24 @@ export function NotificationsSection() {
     null,
   );
 
+  const [contrib, setContrib] = useState(true);
+
   useEffect(() => {
     void getNotificationCorner().then(setCorner);
+    void getContribNotifications().then(setContrib);
   }, []);
+
+  function handleContribChange(next: boolean) {
+    setContrib(next);
+    void setContribNotifications(next).catch((cause) => {
+      setContrib(!next);
+      setNotificationError(
+        cause instanceof Error
+          ? cause.message
+          : "Le réglage n'a pas pu être enregistré.",
+      );
+    });
+  }
 
   /**
    * The choice is applied and shown at once: a corner is far easier to pick
@@ -96,6 +116,21 @@ export function NotificationsSection() {
               ))}
             </Select>
           </Field>
+
+          <label className="flex cursor-pointer items-start gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={contrib}
+              onChange={(event) => handleContribChange(event.target.checked)}
+              className="mt-0.5 accent-nexus-accent"
+            />
+            <span>
+              Mes contributions
+              <small className="mt-0.5 block text-xs text-nexus-dim">
+                Publiée, à corriger, succès débloqué ou nouveau niveau.
+              </small>
+            </span>
+          </label>
 
           {notificationError ? (
             <SettingsError>{notificationError}</SettingsError>
