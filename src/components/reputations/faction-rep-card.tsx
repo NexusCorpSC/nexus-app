@@ -1,6 +1,12 @@
-import type { ReputationUpdate } from "@/lib/api/reps";
-import { Card } from "@/components/ui";
+import { Card, Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import {
+  currentLevel,
+  isMaxed,
+  isStarted,
+  levelTone,
+  showsStanding,
+} from "@/lib/reputations";
 import type {
   FactionCareer,
   FactionLevel,
@@ -8,86 +14,93 @@ import type {
   RepFaction,
 } from "@/types/nexus";
 
-/** The level a player holds in a career, falling back to its default. */
-export function currentCareerLevel(
-  career: FactionCareer,
-  reputations: PlayerReputations,
-  factionName: string,
-): FactionLevel | undefined {
-  return (
-    reputations[factionName]?.careers?.[career.name]?.level ??
-    career.levels.find((level) => level.isDefault) ??
-    career.levels[0]
-  );
+export type LevelChange = (career: FactionCareer, level: FactionLevel) => void;
+
+const TONE_FILL = {
+  below: "bg-orange-300/85",
+  default: "bg-nexus-accent/45",
+  progress: "bg-nexus-accent/85",
+  top: "bg-amber-300/85",
+};
+
+const TONE_TEXT = {
+  below: "text-orange-200",
+  default: "text-nexus-dim",
+  progress: "text-nexus-accent",
+  top: "text-amber-300",
+};
+
+const formatRep = (value: number) => value.toLocaleString("fr-FR");
+
+function rankTitle(level: FactionLevel): string {
+  return level.minReputation && level.minReputation > 0
+    ? `${level.name} · ${formatRep(level.minReputation)}`
+    : level.name;
 }
 
-/**
- * A faction counts as started once the player moved away from any default:
- * a standing other than the faction's, or a career above its default level.
- */
-export function isFactionStarted(
-  faction: RepFaction,
-  reputations: PlayerReputations,
-): boolean {
-  const standing = reputations[faction.name]?.standing;
-  if (standing && standing !== faction.defaultStanding) return true;
-
-  return faction.careers.some((career) => {
-    const level = currentCareerLevel(career, reputations, faction.name);
-    return level ? !level.isDefault : false;
-  });
+/** Focus, legality and removal, as one line under the faction name. */
+export function factionMeta(faction: RepFaction): string {
+  return [
+    faction.focus,
+    faction.lawful === undefined
+      ? undefined
+      : faction.lawful
+        ? "légale"
+        : "illégale",
+    faction.removedInVersion
+      ? `retirée du jeu en ${faction.removedInVersion}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
-
-// Compact native selects: kept native so keyboard and screen readers work
-// without extra code, restyled so they read as text inside a dense card.
-const COMPACT_SELECT =
-  "cursor-pointer rounded-md border border-nexus-accent/15 bg-nexus-abyss/60 px-2 py-1 text-xs " +
-  "focus:border-nexus-accent/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 " +
-  "[&>option]:bg-nexus-abyss [&>option]:text-nexus-white";
 
 export function FactionRepCard({
   faction,
   reputations,
   disabled,
-  onChange,
+  onOpen,
+  onLevel,
 }: {
   faction: RepFaction;
   reputations: PlayerReputations;
   disabled: boolean;
-  onChange: (update: ReputationUpdate) => void;
+  onOpen: () => void;
+  onLevel: LevelChange;
 }) {
-  const standing =
-    reputations[faction.name]?.standing ?? faction.defaultStanding;
+  const started = isStarted(faction, reputations);
+  const maxed = isMaxed(faction, reputations);
+  const meta = factionMeta(faction);
+  const standing = reputations[faction.name]?.standing;
 
   return (
-    <Card className="flex flex-col gap-4 p-4">
+    <Card
+      className={cn(
+        "flex flex-col gap-3.5 p-4",
+        started && "border-nexus-accent/30",
+        maxed && "border-amber-300/45",
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
-        <h2 className="min-w-0 pt-3 font-display text-base font-semibold text-nexus-white">
-          {faction.name}
-        </h2>
-
-        <label className="flex shrink-0 flex-col items-end gap-1">
-          <span className="font-display text-[10px] font-semibold uppercase tracking-[0.14em] text-nexus-dim">
-            Standing
-          </span>
-          <select
-            className={cn(COMPACT_SELECT, "max-w-40 text-nexus-white")}
-            value={standing}
-            disabled={disabled}
-            onChange={(event) =>
-              onChange({
-                factionName: faction.name,
-                standing: event.target.value,
-              })
-            }
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <button
+            type="button"
+            onClick={onOpen}
+            className="text-left font-display text-base font-semibold text-nexus-white hover:text-nexus-accent hover:underline"
           >
-            {faction.standings.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        </label>
+            {faction.name}
+          </button>
+          {meta ? <span className="text-xs text-nexus-dim">{meta}</span> : null}
+        </div>
+        {maxed ? (
+          <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-amber-300/55 bg-amber-300/15 px-2 text-[11px] font-semibold text-amber-200">
+            Rang max
+          </span>
+        ) : showsStanding(faction) &&
+          standing &&
+          standing !== faction.defaultStanding ? (
+          <span className="shrink-0 text-xs text-nexus-dim">{standing}</span>
+        ) : null}
       </div>
 
       {faction.careers.length === 0 ? (
@@ -95,78 +108,66 @@ export function FactionRepCard({
           Aucune carrière pour cette faction.
         </p>
       ) : (
-        <div className="flex flex-col gap-3.5">
-          {faction.careers.map((career) => (
-            <CareerRow
-              key={career.name}
-              career={career}
-              level={currentCareerLevel(career, reputations, faction.name)}
-              disabled={disabled}
-              onChange={(levelName) =>
-                onChange({
-                  factionName: faction.name,
-                  careerName: career.name,
-                  levelName,
-                })
-              }
-            />
-          ))}
-        </div>
+        faction.careers.map((career) => (
+          <CareerLadder
+            key={career.name}
+            faction={faction}
+            career={career}
+            level={currentLevel(faction, career, reputations)}
+            disabled={disabled}
+            onLevel={(level) => onLevel(career, level)}
+          />
+        ))
       )}
     </Card>
   );
 }
 
-function CareerRow({
+// Compact native select: kept native so keyboard and screen readers work
+// without extra code, restyled so the rank name reads as text.
+const COMPACT_SELECT =
+  "h-8 max-w-56 cursor-pointer rounded-md border border-transparent bg-transparent text-right text-[13px] font-semibold " +
+  "hover:border-nexus-accent/25 focus:border-nexus-accent/50 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 " +
+  "[&>option]:bg-nexus-abyss [&>option]:text-nexus-white";
+
+function CareerLadder({
+  faction,
   career,
   level,
   disabled,
-  onChange,
+  onLevel,
 }: {
+  faction: RepFaction;
   career: FactionCareer;
   level: FactionLevel | undefined;
   disabled: boolean;
-  onChange: (levelName: string) => void;
+  onLevel: (level: FactionLevel) => void;
 }) {
+  const tone = levelTone(career, level);
   const index = level
     ? career.levels.findIndex((option) => option.name === level.name)
     : -1;
-  const count = career.levels.length;
-  // The last two ranks of a long ladder (only the last of a short one) are
-  // the rare ones worth singling out in amber.
-  const topThreshold = count >= 4 ? count - 2 : count - 1;
-  const isTop = index >= 0 && index >= topThreshold;
-  const isDefault = !level || level.isDefault;
-
-  const tone = isDefault
-    ? "text-nexus-dim"
-    : isTop
-      ? "text-amber-300"
-      : "text-nexus-accent";
-  const fill = isDefault
-    ? "bg-nexus-dim/45"
-    : isTop
-      ? "bg-amber-300/80"
-      : "bg-nexus-accent/80";
+  const defaultIndex = career.levels.findIndex((option) => option.isDefault);
+  const next = index >= 0 ? career.levels[index + 1] : undefined;
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <span className="min-w-0 truncate text-[13px] text-nexus-bright">
           {career.name}
         </span>
-        {/* The level name is the select itself: what you read is what you
-            change, without a second control under the bar. */}
+        {/* The rank name is the select itself: what you read is what you change. */}
         <select
-          aria-label={`Niveau ${career.name}`}
-          className={cn(
-            COMPACT_SELECT,
-            "max-w-44 border-transparent bg-transparent py-0.5 text-right font-medium hover:border-nexus-accent/25",
-            tone,
-          )}
+          aria-label={`Rang ${career.name} chez ${faction.name}`}
+          className={cn(COMPACT_SELECT, TONE_TEXT[tone])}
           value={level?.name ?? ""}
           disabled={disabled}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => {
+            const picked = career.levels.find(
+              (option) => option.name === event.target.value,
+            );
+            if (picked) onLevel(picked);
+          }}
         >
           {career.levels.map((option) => (
             <option key={option.name} value={option.name}>
@@ -176,19 +177,182 @@ function CareerRow({
         </select>
       </div>
 
-      {count > 0 ? (
-        <div className="flex gap-0.5" aria-hidden>
-          {career.levels.map((option, position) => (
-            <span
+      <div
+        role="group"
+        aria-label={`Barème ${career.name}`}
+        className="flex gap-0.5"
+      >
+        {career.levels.map((option, position) => {
+          const filled =
+            position <= index && (position >= defaultIndex || tone === "below");
+          return (
+            <button
               key={option.name}
-              className={cn(
-                "h-1.5 flex-1 rounded-full",
-                position <= index ? fill : "bg-white/8",
-              )}
-            />
-          ))}
-        </div>
-      ) : null}
+              type="button"
+              title={rankTitle(option)}
+              aria-label={rankTitle(option)}
+              aria-pressed={position === index}
+              disabled={disabled}
+              onClick={() => onLevel(option)}
+              className="group flex h-7 flex-1 items-center disabled:cursor-not-allowed"
+            >
+              <span
+                className={cn(
+                  "block h-2.5 w-full rounded-full bg-white/8 group-hover:outline group-hover:outline-2 group-hover:outline-offset-2 group-hover:outline-nexus-accent/55 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-nexus-accent",
+                  position === defaultIndex &&
+                    "ring-1 ring-inset ring-nexus-accent/35",
+                  filled && TONE_FILL[tone],
+                )}
+              />
+            </button>
+          );
+        })}
+      </div>
+
+      <span className="text-xs text-nexus-dim">
+        {next
+          ? next.minReputation && next.minReputation >= 10
+            ? `Prochain rang : ${next.name} · ${formatRep(next.minReputation)} de réputation`
+            : `Prochain rang : ${next.name}`
+          : "Plus haut rang de ce barème."}
+      </span>
     </div>
+  );
+}
+
+/** The whole ladder of each career, with the reputation each rank needs. */
+export function FactionRepModal({
+  faction,
+  reputations,
+  disabled,
+  onClose,
+  onLevel,
+  onStanding,
+}: {
+  faction: RepFaction | undefined;
+  reputations: PlayerReputations;
+  disabled: boolean;
+  onClose: () => void;
+  onLevel: LevelChange;
+  onStanding: (standing: string) => void;
+}) {
+  if (!faction) return null;
+  const meta = [factionMeta(faction), faction.headquarters]
+    .filter(Boolean)
+    .join(" · ");
+  const standing =
+    reputations[faction.name]?.standing ?? faction.defaultStanding;
+
+  return (
+    <Modal
+      open
+      title={faction.name}
+      description={meta || undefined}
+      onClose={onClose}
+    >
+      <div className="flex flex-col gap-5">
+        {faction.description ? (
+          <p className="text-sm leading-relaxed text-nexus-soft">
+            {faction.description}
+          </p>
+        ) : null}
+
+        {showsStanding(faction) ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-2 text-[13px] font-semibold text-nexus-bright">
+              Standing
+            </legend>
+            <div className="flex gap-1.5">
+              {faction.standings.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={standing === option}
+                  disabled={disabled}
+                  onClick={() => onStanding(option)}
+                  className={cn(
+                    "h-10 flex-1 rounded-lg border border-nexus-accent/20 text-[13px] font-medium text-nexus-muted",
+                    standing === option &&
+                      (option === "Hostile"
+                        ? "border-orange-300 bg-orange-300/10 text-orange-200"
+                        : "border-nexus-accent bg-nexus-accent/10 text-nexus-white"),
+                  )}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+
+        {faction.careers.map((career) => {
+          const level = currentLevel(faction, career, reputations);
+          const index = level
+            ? career.levels.findIndex((option) => option.name === level.name)
+            : -1;
+          const defaultIndex = career.levels.findIndex(
+            (option) => option.isDefault,
+          );
+          const tone = levelTone(career, level);
+          return (
+            <fieldset key={career.name} className="flex flex-col gap-1">
+              <legend className="mb-2 flex w-full justify-between text-[13px] font-semibold text-nexus-bright">
+                <span>{career.name}</span>
+                <span className="font-medium text-nexus-dim">
+                  réputation requise
+                </span>
+              </legend>
+              {[...career.levels].reverse().map((option) => {
+                const position = career.levels.indexOf(option);
+                const checked = position === index;
+                const reached =
+                  position <= index &&
+                  (position >= defaultIndex || tone === "below");
+                return (
+                  <label
+                    key={option.name}
+                    className={cn(
+                      "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 text-sm text-nexus-white hover:bg-nexus-accent/5 has-[:focus-visible]:border-nexus-accent",
+                      checked &&
+                        "border-nexus-accent bg-nexus-accent/10 font-semibold",
+                      checked && tone === "top" && "border-amber-300",
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={`rank-${career.name}`}
+                      checked={checked}
+                      disabled={disabled}
+                      onChange={() => onLevel(career, option)}
+                      className="sr-only"
+                    />
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "size-2.5 shrink-0 rounded-full ring-2 ring-inset ring-nexus-accent/30",
+                        reached && cn(TONE_FILL[tone], "ring-0"),
+                      )}
+                    />
+                    <span className="flex-1">
+                      {option.name}
+                      {option.isDefault ? (
+                        <span className="ml-2 text-xs font-normal text-nexus-dim">
+                          au départ
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="font-mono text-[13px] font-normal text-nexus-dim">
+                      {option.minReputation && option.minReputation > 0
+                        ? formatRep(option.minReputation)
+                        : "—"}
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          );
+        })}
+      </div>
+    </Modal>
   );
 }
