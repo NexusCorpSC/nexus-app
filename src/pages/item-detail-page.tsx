@@ -24,6 +24,7 @@ import {
   type WeaponSpread,
 } from "@/types/nexus";
 import { ReportButton } from "@/components/report-button";
+import { PriceConfirmation } from "@/components/price-confirmation";
 import {
   Button,
   Card,
@@ -1004,6 +1005,12 @@ function ResourceSections({ item }: { item: ItemDetails }) {
         ) : (
           <p className="text-xs text-nexus-dim">Aucun cours relevé.</p>
         )}
+        {markets.length > 0 ? (
+          <PriceConfirmation
+            slug={item.slug}
+            updatedAt={resource.pricesUpdatedAt}
+          />
+        ) : null}
       </Section>
 
       {refining ? (
