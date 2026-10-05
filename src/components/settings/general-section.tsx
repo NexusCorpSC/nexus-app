@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
+import { useTranslations } from "use-intl";
 import { useAuth } from "@/auth/auth-context";
 import {
   ALLOWED_API_BASE_URLS,
@@ -16,9 +17,11 @@ import {
   SettingsError,
   SettingsSectionHeader,
 } from "@/components/settings/section-header";
+import { LanguageCard } from "@/components/settings/language-card";
 
-/** The instance the app talks to, and what the app itself is. */
+/** The language, the instance the app talks to, and what the app itself is. */
 export function GeneralSection() {
+  const t = useTranslations("Settings.general");
   const { refresh } = useAuth();
   const queryClient = useQueryClient();
 
@@ -33,7 +36,7 @@ export function GeneralSection() {
     void getVersion().then(setVersion);
   }, []);
 
-  // Clears the "Enregistré" flash timer if the screen is left first.
+  // Clears the "saved" flash timer if the screen is left first.
   useEffect(
     () => () => {
       if (savedTimer.current) clearTimeout(savedTimer.current);
@@ -50,9 +53,7 @@ export function GeneralSection() {
     // The `http` capability only allows the hosts declared in
     // src-tauri/capabilities/default.json; anything else fails at runtime.
     if (!isAllowedBaseUrl(normalized)) {
-      setError(
-        `Cette URL n'est pas autorisée par les permissions de l'application. Valeurs possibles : ${ALLOWED_API_BASE_URLS.join(", ")}`,
-      );
+      setError(t("urlNotAllowed", { allowed: ALLOWED_API_BASE_URLS.join(", ") }));
       return;
     }
 
@@ -68,15 +69,17 @@ export function GeneralSection() {
   return (
     <section>
       <SettingsSectionHeader
-        title="Général"
-        description="L'instance Nexus Tools à laquelle l'application se connecte."
+        title={t("title")}
+        description={t("description")}
       />
 
       <div className="space-y-4">
+        <LanguageCard />
+
         <Card>
-          <SettingsCardTitle>Instance</SettingsCardTitle>
+          <SettingsCardTitle>{t("instance")}</SettingsCardTitle>
           <form onSubmit={handleSubmit} className="space-y-4 p-4">
-            <Field label="URL de l'API Nexus Tools">
+            <Field label={t("apiUrl")}>
               <Input
                 value={baseUrl}
                 placeholder={DEFAULT_API_BASE_URL}
@@ -85,19 +88,21 @@ export function GeneralSection() {
             </Field>
 
             <p className="text-[11.5px] text-nexus-dim">
-              Utilisez{" "}
-              <code className="font-mono text-nexus-muted">
-                http://localhost:3000
-              </code>{" "}
-              pour pointer vers une instance de développement locale.
+              {t.rich("localHint", {
+                url: () => (
+                  <code className="font-mono text-nexus-muted">
+                    http://localhost:3000
+                  </code>
+                ),
+              })}
             </p>
 
             <div className="flex items-center gap-3">
               <Button type="submit" size="sm">
-                Enregistrer
+                {t("save")}
               </Button>
               {saved ? (
-                <span className="text-xs text-emerald-300">Enregistré</span>
+                <span className="text-xs text-emerald-300">{t("saved")}</span>
               ) : null}
             </div>
 
@@ -106,9 +111,9 @@ export function GeneralSection() {
         </Card>
 
         <Card>
-          <SettingsCardTitle>À propos</SettingsCardTitle>
+          <SettingsCardTitle>{t("about")}</SettingsCardTitle>
           <dl className="flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]">
-            <dt className="text-nexus-muted">Version</dt>
+            <dt className="text-nexus-muted">{t("version")}</dt>
             <dd className="font-mono text-xs text-nexus-white">
               {version || "—"}
             </dd>

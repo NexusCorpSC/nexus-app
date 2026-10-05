@@ -5,6 +5,7 @@ mod event_feed;
 mod game_log;
 #[cfg(windows)]
 mod hotkeys;
+mod native_labels;
 mod notifications;
 mod radial;
 mod screenshots;
@@ -831,7 +832,12 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
             log(format!("region capture failed: {error}"));
             // The shortcut fires with no window of ours on screen, so a
             // notification is the only place this can be seen.
-            notifications::push(&app, Kind::Error, "Capture impossible", Some(error));
+            notifications::push(
+                &app,
+                Kind::Error,
+                native_labels::current(&app).capture_failed,
+                Some(error),
+            );
         }
     });
 
@@ -1242,7 +1248,7 @@ async fn recognize_selection(
             notifications::push(
                 &app,
                 Kind::Error,
-                "Lecture du texte impossible",
+                native_labels::current(&app).ocr_failed,
                 Some(error.clone()),
             );
 
@@ -1281,6 +1287,7 @@ pub fn run() {
         .manage(event_feed::EventFeed::default())
         .manage(game_log::GameLog::default())
         .manage(browser_auth::BrowserSignIn::default())
+        .manage(native_labels::NativeLabelsState::default())
         .invoke_handler(tauri::generate_handler![
             open_search_overlay,
             set_shortcuts,
@@ -1323,6 +1330,7 @@ pub fn run() {
             screenshots::latest_screenshot,
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,
+            native_labels::set_native_labels,
         ])
         .on_window_event(|window, event| {
             // Dismiss the search palette when it loses focus, the way a command

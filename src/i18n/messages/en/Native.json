@@ -1,0 +1,12 @@
+{
+  "search": "Quick search",
+  "capture": "Area capture",
+  "notes": "Notepad",
+  "cargo": "Cargo sheet",
+  "squad": "Squad",
+  "plan": "Flight plan",
+  "map": "Map",
+  "quit": "Quit Nexus App",
+  "captureFailed": "Capture failed",
+  "ocrFailed": "Could not read the text"
+}

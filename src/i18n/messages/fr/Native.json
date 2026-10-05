@@ -1,0 +1,12 @@
+{
+  "search": "Recherche rapide",
+  "capture": "Capture de zone",
+  "notes": "Bloc-notes",
+  "cargo": "Feuille de cargo",
+  "squad": "Escouade",
+  "plan": "Plan de vol",
+  "map": "Carte",
+  "quit": "Quitter Nexus App",
+  "captureFailed": "Capture impossible",
+  "ocrFailed": "Lecture du texte impossible"
+}

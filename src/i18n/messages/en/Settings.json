@@ -1,0 +1,29 @@
+{
+  "title": "Settings",
+  "description": "App settings, sorted by topic.",
+  "sectionsLabel": "Settings sections",
+  "sections": {
+    "general": "General",
+    "account": "Account",
+    "shortcuts": "Keyboard shortcuts",
+    "notifications": "Notifications",
+    "game": "Game",
+    "updates": "Updates"
+  },
+  "language": {
+    "title": "Language",
+    "hint": "The language of the whole app, including overlays and the notification area menu."
+  },
+  "general": {
+    "title": "General",
+    "description": "The app's language and the Nexus Tools instance it connects to.",
+    "instance": "Instance",
+    "apiUrl": "Nexus Tools API URL",
+    "localHint": "Use <url></url> to point to a local development instance.",
+    "save": "Save",
+    "saved": "Saved",
+    "urlNotAllowed": "This URL is not allowed by the app's permissions. Possible values: {allowed}",
+    "about": "About",
+    "version": "Version"
+  }
+}

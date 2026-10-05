@@ -1,3 +1,4 @@
+import { getLocale } from "@/i18n/locale";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import type {
   ConfirmationInput,
@@ -13,7 +14,7 @@ import type {
  */
 export function getMyContrib(since?: string) {
   return apiRequest<ContribSummary>("/api/me/contrib", {
-    params: { since, locale: "fr" },
+    params: { since, locale: getLocale() },
   });
 }
 

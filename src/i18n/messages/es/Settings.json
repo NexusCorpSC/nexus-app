@@ -1,0 +1,29 @@
+{
+  "title": "Ajustes",
+  "description": "Ajustes de la aplicación, ordenados por tema.",
+  "sectionsLabel": "Secciones de ajustes",
+  "sections": {
+    "general": "General",
+    "account": "Cuenta",
+    "shortcuts": "Atajos de teclado",
+    "notifications": "Notificaciones",
+    "game": "Juego",
+    "updates": "Actualizaciones"
+  },
+  "language": {
+    "title": "Idioma",
+    "hint": "El idioma de toda la aplicación, incluidas las ventanas superpuestas y el menú del área de notificación."
+  },
+  "general": {
+    "title": "General",
+    "description": "El idioma de la aplicación y la instancia de Nexus Tools a la que se conecta.",
+    "instance": "Instancia",
+    "apiUrl": "URL de la API de Nexus Tools",
+    "localHint": "Usa <url></url> para apuntar a una instancia de desarrollo local.",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "urlNotAllowed": "Esta URL no está permitida por los permisos de la aplicación. Valores posibles: {allowed}",
+    "about": "Acerca de",
+    "version": "Versión"
+  }
+}
