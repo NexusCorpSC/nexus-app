@@ -32,6 +32,11 @@ import {
   type CareerFamily,
 } from "@/lib/reputations";
 import type { FactionCareer, FactionLevel, RepFaction } from "@/types/nexus";
+import {
+  oneOf,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 
 type Progress = "all" | "started" | "todo";
 
@@ -51,9 +56,19 @@ const GROUP_LABELS: Record<CareerFamily, string> = {
 
 export default function ReputationsPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [progress, setProgress] = useState<Progress>("all");
-  const [family, setFamily] = useState<CareerFamily | "all">("all");
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [progress, setProgress] = useState<Progress>(() =>
+    oneOf(params, "progress", ["all", "started", "todo"], "all"),
+  );
+  const [family, setFamily] = useState<CareerFamily | "all">(() =>
+    oneOf<CareerFamily | "all">(params, "family", CAREER_FAMILIES, "all"),
+  );
+  useUrlFilters({
+    q: search,
+    progress: progress === "all" ? null : progress,
+    family: family === "all" ? null : family,
+  });
   const [openName, setOpenName] = useState<string | null>(null);
 
   const factionsQuery = useQuery({

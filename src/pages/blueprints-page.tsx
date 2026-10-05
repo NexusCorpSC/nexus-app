@@ -3,6 +3,11 @@ import { Link } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { listBlueprintCategories, listBlueprints } from "@/lib/api/blueprints";
 import { useDebounced } from "@/hooks/use-debounced";
+import {
+  pageFrom,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 import { useAuth } from "@/auth/auth-context";
 import {
   BlueprintQuickAdd,
@@ -30,13 +35,20 @@ const QUICK_CONTROL =
 
 export default function BlueprintsPage() {
   const { user } = useAuth();
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
-  const [owned, setOwned] = useState<"" | "true" | "false">("");
-  const [page, setPage] = useState(1);
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [category, setCategory] = useState(params.get("category") ?? "");
+  const [subcategory, setSubcategory] = useState(
+    params.get("subcategory") ?? "",
+  );
+  const [owned, setOwned] = useState<"" | "true" | "false">(() => {
+    const value = params.get("owned");
+    return value === "true" || value === "false" ? value : "";
+  });
+  const [page, setPage] = useState(() => pageFrom(params));
 
   const query = useDebounced(search);
+  useUrlFilters({ q: query, category, subcategory, owned, page });
 
   const categoriesQuery = useQuery({
     queryKey: ["blueprint-categories"],

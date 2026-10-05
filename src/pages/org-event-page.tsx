@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ArrowLeft,
   CalendarClock,
   Check,
   ClipboardList,
@@ -123,13 +123,7 @@ export default function OrgEventPage() {
   }, []);
 
   const back = (
-    <Link
-      to={`/orgs/${orgId}`}
-      className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
-    >
-      <ArrowLeft className="size-3.5" />
-      {org?.name ?? "Organisation"}
-    </Link>
+    <BackLink to={`/orgs/${orgId}`}>{org?.name ?? "Organisation"}</BackLink>
   );
 
   if (event.isPending) return <LoadingState />;

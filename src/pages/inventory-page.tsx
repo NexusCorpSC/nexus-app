@@ -10,6 +10,11 @@ import {
   setInventoryItemOrgVisible,
 } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
+import {
+  oneOf,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 import { cn } from "@/lib/utils";
 import { fromDisplayQty, toDisplayQty } from "@/lib/units";
 import {
@@ -58,10 +63,20 @@ const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
 export default function InventoryPage() {
   const queryClient = useQueryClient();
 
-  const [search, setSearch] = useState("");
-  const [minQuality, setMinQuality] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [sort, setSort] = useState<InventorySort>("updated");
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [minQuality, setMinQuality] = useState(params.get("quality") ?? "");
+  const [locationFilter, setLocationFilter] = useState(
+    params.get("location") ?? "",
+  );
+  const [sort, setSort] = useState<InventorySort>(() =>
+    oneOf(
+      params,
+      "sort",
+      INVENTORY_SORT_OPTIONS.map((option) => option.value),
+      "updated",
+    ),
+  );
   const [showForm, setShowForm] = useState(false);
   const [packageEntries, setPackageEntries] = useState<PackageEntry[]>([]);
   const [sentParcel, setSentParcel] = useState<Parcel | null>(null);
@@ -88,6 +103,12 @@ export default function InventoryPage() {
 
   const query = useDebounced(search);
   const quality = useDebounced(minQuality);
+  useUrlFilters({
+    q: query,
+    quality,
+    location: locationFilter,
+    sort: sort === "updated" ? null : sort,
+  });
 
   // Every location is fetched at once so the chips can show their counts;
   // the location filter is applied here rather than by the API.

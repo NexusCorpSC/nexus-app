@@ -42,6 +42,7 @@ import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { useGameLog } from "@/hooks/use-game-log";
+import { useNavigationTracker } from "@/hooks/use-navigation-tracker";
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import nexusLogo from "@/assets/nexus-logo.png";
@@ -123,6 +124,7 @@ const NAVIGATE_EVENT = "main://navigate";
 export default function AppLayout() {
   const { user, loading, signOut, signIn } = useAuth();
   const navigate = useNavigate();
+  useNavigationTracker();
 
   // Only the main window looks: the check is per application, not per window,
   // and this is the one that can show what to do about it.

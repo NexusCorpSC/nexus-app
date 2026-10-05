@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight } from "lucide-react";
 import { listFactionBlueprints } from "@/lib/api/factions";
 import { useDebounced } from "@/hooks/use-debounced";
+import { useInitialParams, useUrlFilters } from "@/hooks/use-url-filters";
 import {
   Card,
   EmptyState,
@@ -26,8 +27,10 @@ import type { FactionWithBlueprints } from "@/types/nexus";
 export default function FactionsPage() {
   // The search palette links here with a faction id when it finds one.
   const { factionId } = useParams();
-  const [search, setSearch] = useState("");
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
   const query = useDebounced(search);
+  useUrlFilters({ q: query });
 
   const factionsQuery = useQuery({
     queryKey: ["factions"],
