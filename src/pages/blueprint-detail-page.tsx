@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
 import { BlueprintOrgOwners } from "@/components/blueprint-org-owners";
@@ -38,10 +39,13 @@ export default function BlueprintDetailPage() {
 
   if (blueprintQuery.isError) {
     return (
-      <ErrorState
-        error={blueprintQuery.error}
-        onRetry={() => void blueprintQuery.refetch()}
-      />
+      <>
+        <BackLink to="/blueprints">Retour aux blueprints</BackLink>
+        <ErrorState
+          error={blueprintQuery.error}
+          onRetry={() => void blueprintQuery.refetch()}
+        />
+      </>
     );
   }
 
@@ -54,13 +58,7 @@ export default function BlueprintDetailPage() {
 
   return (
     <>
-      <Link
-        to="/blueprints"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux blueprints
-      </Link>
+      <BackLink to="/blueprints">Retour aux blueprints</BackLink>
 
       <PageHeader
         title={blueprint.name}

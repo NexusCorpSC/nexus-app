@@ -6,6 +6,11 @@ import { listOrganizations } from "@/lib/api/orgs";
 import { useAuth } from "@/auth/auth-context";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
+  pageFrom,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
+import {
   Card,
   EmptyState,
   ErrorState,
@@ -20,10 +25,12 @@ import type { Organization } from "@/types/nexus";
 
 export default function OrgsPage() {
   const { user } = useAuth();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [page, setPage] = useState(() => pageFrom(params));
 
   const query = useDebounced(search);
+  useUrlFilters({ q: query, page });
 
   const orgsQuery = useQuery({
     queryKey: ["orgs", query, page],

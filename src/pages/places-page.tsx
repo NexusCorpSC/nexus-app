@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { listPlaceFacets, listPlaces } from "@/lib/api/places";
 import { useDebounced } from "@/hooks/use-debounced";
+import {
+  pageFrom,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 import { PlaceCard } from "@/components/place-card";
 import {
   PLACE_SERVICE_LABELS,
@@ -44,14 +49,20 @@ function isPlaceType(value: string): value is PlaceType {
  * donne l'hôpital, pas Lorville.
  */
 export default function PlacesPage() {
-  const [search, setSearch] = useState("");
-  const [type, setType] = useState<PlaceType | "">("");
-  const [system, setSystem] = useState("");
-  const [body, setBody] = useState("");
-  const [service, setService] = useState<PlaceService | "">("");
-  const [page, setPage] = useState(1);
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [type, setType] = useState<PlaceType | "">(
+    (params.get("type") as PlaceType | null) ?? "",
+  );
+  const [system, setSystem] = useState(params.get("system") ?? "");
+  const [body, setBody] = useState(params.get("body") ?? "");
+  const [service, setService] = useState<PlaceService | "">(
+    (params.get("service") as PlaceService | null) ?? "",
+  );
+  const [page, setPage] = useState(() => pageFrom(params));
 
   const query = useDebounced(search);
+  useUrlFilters({ q: query, type, system, body, service, page });
 
   const facetsQuery = useQuery({
     queryKey: ["place-facets"],

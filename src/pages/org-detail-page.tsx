@@ -1,14 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  Boxes,
-  CalendarPlus,
-  ExternalLink,
-  Globe,
-  Lock,
-} from "lucide-react";
+import { Boxes, CalendarPlus, ExternalLink, Globe, Lock } from "lucide-react";
 import { EventPill } from "@/components/org-event-pill";
 import { PresenceForm } from "@/components/presence-form";
 import { RoleIcon } from "@/components/squad/role-icon";
@@ -123,13 +117,7 @@ export default function OrgDetailPage() {
 
   return (
     <>
-      <Link
-        to="/orgs"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="size-3.5" />
-        Organisations
-      </Link>
+      <BackLink to="/orgs">Retour aux organisations</BackLink>
 
       <PageHeader
         title={org ? `${org.name} [${org.tag}]` : "Organisation"}

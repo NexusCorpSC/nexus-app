@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Box, Check, Share2 } from "lucide-react";
+import { Box, Check, Share2 } from "lucide-react";
 import { getMission } from "@/lib/api/missions";
 import {
   Card,
@@ -25,10 +26,13 @@ export default function MissionDetailPage() {
 
   if (missionQuery.isError) {
     return (
-      <ErrorState
-        error={missionQuery.error}
-        onRetry={() => void missionQuery.refetch()}
-      />
+      <>
+        <BackLink to="/missions">Retour aux missions</BackLink>
+        <ErrorState
+          error={missionQuery.error}
+          onRetry={() => void missionQuery.refetch()}
+        />
+      </>
     );
   }
 
@@ -56,13 +60,7 @@ export default function MissionDetailPage() {
 
   return (
     <>
-      <Link
-        to="/missions"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="size-3.5" />
-        Retour aux missions
-      </Link>
+      <BackLink to="/missions">Retour aux missions</BackLink>
 
       {mission.missionType ? (
         <p className="mb-1 text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">

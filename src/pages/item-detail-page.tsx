@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, ExternalLink, TriangleAlert } from "lucide-react";
+import { ExternalLink, TriangleAlert } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getItem } from "@/lib/api/items";
 import { getApiBaseUrl } from "@/lib/settings";
@@ -60,10 +61,13 @@ export default function ItemDetailPage() {
 
   if (itemQuery.isError) {
     return (
-      <ErrorState
-        error={itemQuery.error}
-        onRetry={() => void itemQuery.refetch()}
-      />
+      <>
+        <BackLink to="/items">Retour aux objets</BackLink>
+        <ErrorState
+          error={itemQuery.error}
+          onRetry={() => void itemQuery.refetch()}
+        />
+      </>
     );
   }
 
@@ -71,13 +75,7 @@ export default function ItemDetailPage() {
 
   return (
     <>
-      <Link
-        to="/items"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux objets
-      </Link>
+      <BackLink to="/items">Retour aux objets</BackLink>
 
       <PageHeader
         title={item.name}

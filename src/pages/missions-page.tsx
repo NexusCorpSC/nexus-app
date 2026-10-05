@@ -3,6 +3,11 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { listMissionFactions, listMissions } from "@/lib/api/missions";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
+  pageFrom,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
+import {
   EmptyState,
   ErrorState,
   LoadingState,
@@ -16,12 +21,21 @@ import {
 import { MissionCard } from "@/components/missions/mission-card";
 
 export default function MissionsPage() {
-  const [search, setSearch] = useState("");
-  const [factionId, setFactionId] = useState("");
-  const [hasBlueprints, setHasBlueprints] = useState(false);
-  const [page, setPage] = useState(1);
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [factionId, setFactionId] = useState(params.get("faction") ?? "");
+  const [hasBlueprints, setHasBlueprints] = useState(
+    params.get("blueprints") === "true",
+  );
+  const [page, setPage] = useState(() => pageFrom(params));
 
   const query = useDebounced(search);
+  useUrlFilters({
+    q: query,
+    faction: factionId,
+    blueprints: hasBlueprints,
+    page,
+  });
 
   const factionsQuery = useQuery({
     queryKey: ["mission-factions"],

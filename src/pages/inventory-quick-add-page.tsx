@@ -6,17 +6,11 @@ import {
   type ClipboardEvent,
   type KeyboardEvent,
 } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
+import { lastListUrl } from "@/lib/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  Factory,
-  Merge,
-  Plus,
-  X,
-} from "lucide-react";
+import { AlertCircle, Check, Factory, Merge, Plus, X } from "lucide-react";
 import {
   bulkAddInventoryItems,
   listInventoryItems,
@@ -351,7 +345,7 @@ export default function InventoryQuickAddPage() {
       await queryClient.invalidateQueries({ queryKey: ["inventory-items"] });
       const kept = rows.filter((_, i) => statuses[i].kind === "error");
       if (kept.length === 0) {
-        navigate("/inventory");
+        navigate(lastListUrl("/inventory"));
         return;
       }
       setRows(kept);
@@ -469,13 +463,7 @@ export default function InventoryQuickAddPage() {
 
   return (
     <>
-      <Link
-        to="/inventory"
-        className="mb-3 inline-flex items-center gap-1.5 text-xs text-nexus-muted hover:text-nexus-bright"
-      >
-        <ArrowLeft className="size-3.5" />
-        Inventaire
-      </Link>
+      <BackLink to="/inventory">Retour à l'inventaire</BackLink>
       <PageHeader
         title="Ajout en masse"
         description="Saisissez plusieurs ressources à la suite, ou collez-les depuis un tableur."
@@ -794,7 +782,10 @@ export default function InventoryQuickAddPage() {
               : null))
           )}
         </p>
-        <Button variant="ghost" onClick={() => navigate("/inventory")}>
+        <Button
+          variant="ghost"
+          onClick={() => navigate(lastListUrl("/inventory"))}
+        >
           Annuler
         </Button>
         <Button

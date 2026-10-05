@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ArrowLeft, ExternalLink, Map as MapIcon, Pin } from "lucide-react";
+import { ExternalLink, Map as MapIcon, Pin } from "lucide-react";
 import { getPlace } from "@/lib/api/places";
 import {
   onPinnedMapChange,
@@ -57,10 +58,13 @@ export default function PlaceDetailPage() {
 
   if (placeQuery.isError) {
     return (
-      <ErrorState
-        error={placeQuery.error}
-        onRetry={() => void placeQuery.refetch()}
-      />
+      <>
+        <BackLink to="/places">Retour aux lieux</BackLink>
+        <ErrorState
+          error={placeQuery.error}
+          onRetry={() => void placeQuery.refetch()}
+        />
+      </>
     );
   }
 
@@ -70,13 +74,7 @@ export default function PlaceDetailPage() {
 
   return (
     <>
-      <Link
-        to="/places"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux lieux
-      </Link>
+      <BackLink to="/places">Retour aux lieux</BackLink>
 
       <PageHeader
         title={place.name}

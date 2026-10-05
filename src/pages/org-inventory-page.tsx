@@ -1,9 +1,15 @@
 import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { BackLink } from "@/components/layout/back-link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, User } from "lucide-react";
+import { User } from "lucide-react";
 import { listOrgInventory } from "@/lib/api/orgs";
 import { useDebounced } from "@/hooks/use-debounced";
+import {
+  oneOf,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 import {
   Chip,
   EmptyState,
@@ -30,14 +36,31 @@ import {
 export default function OrgInventoryPage() {
   const { orgId = "" } = useParams();
 
-  const [search, setSearch] = useState("");
-  const [minQuality, setMinQuality] = useState("");
-  const [memberId, setMemberId] = useState("");
-  const [locationFilter, setLocationFilter] = useState("");
-  const [sort, setSort] = useState<InventorySort>("updated");
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [minQuality, setMinQuality] = useState(params.get("quality") ?? "");
+  const [memberId, setMemberId] = useState(params.get("member") ?? "");
+  const [locationFilter, setLocationFilter] = useState(
+    params.get("location") ?? "",
+  );
+  const [sort, setSort] = useState<InventorySort>(() =>
+    oneOf(
+      params,
+      "sort",
+      INVENTORY_SORT_OPTIONS.map((option) => option.value),
+      "updated",
+    ),
+  );
 
   const query = useDebounced(search);
   const quality = useDebounced(minQuality);
+  useUrlFilters({
+    q: query,
+    quality,
+    member: memberId,
+    location: locationFilter,
+    sort: sort === "updated" ? null : sort,
+  });
 
   const inventoryQuery = useQuery({
     queryKey: ["org-inventory", orgId, query, quality, memberId],
@@ -71,13 +94,7 @@ export default function OrgInventoryPage() {
 
   return (
     <>
-      <Link
-        to="/orgs"
-        className="mb-4 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux organisations
-      </Link>
+      <BackLink to={`/orgs/${orgId}`}>Retour à l'organisation</BackLink>
 
       <PageHeader
         title="Inventaire partagé"

@@ -2,6 +2,11 @@ import { useMemo, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { listItemFacets, listItems } from "@/lib/api/items";
 import { useDebounced } from "@/hooks/use-debounced";
+import {
+  pageFrom,
+  useInitialParams,
+  useUrlFilters,
+} from "@/hooks/use-url-filters";
 import { ItemCard } from "@/components/item-card";
 import { ITEM_KIND_LABELS, ITEM_KINDS, type ItemKind } from "@/types/nexus";
 import {
@@ -22,14 +27,22 @@ import {
  * the API takes; the values they offer come from `/api/items/facets`.
  */
 export default function ItemsPage() {
-  const [search, setSearch] = useState("");
-  const [kind, setKind] = useState<ItemKind | "">("");
-  const [category, setCategory] = useState("");
-  const [subcategory, setSubcategory] = useState("");
-  const [manufacturer, setManufacturer] = useState("");
-  const [page, setPage] = useState(1);
+  const params = useInitialParams();
+  const [search, setSearch] = useState(params.get("q") ?? "");
+  const [kind, setKind] = useState<ItemKind | "">(
+    (params.get("kind") as ItemKind | null) ?? "",
+  );
+  const [category, setCategory] = useState(params.get("category") ?? "");
+  const [subcategory, setSubcategory] = useState(
+    params.get("subcategory") ?? "",
+  );
+  const [manufacturer, setManufacturer] = useState(
+    params.get("manufacturer") ?? "",
+  );
+  const [page, setPage] = useState(() => pageFrom(params));
 
   const query = useDebounced(search);
+  useUrlFilters({ q: query, kind, category, subcategory, manufacturer, page });
 
   const facetsQuery = useQuery({
     queryKey: ["item-facets"],
