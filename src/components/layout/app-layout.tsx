@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import {
@@ -43,6 +43,7 @@ import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { useGameLog } from "@/hooks/use-game-log";
 import { useNavigationTracker } from "@/hooks/use-navigation-tracker";
+import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import nexusLogo from "@/assets/nexus-logo.png";
@@ -125,6 +126,8 @@ export default function AppLayout() {
   const { user, loading, signOut, signIn } = useAuth();
   const navigate = useNavigate();
   useNavigationTracker();
+  const mainRef = useRef<HTMLElement>(null);
+  useScrollRestoration(mainRef);
 
   // Only the main window looks: the check is per application, not per window,
   // and this is the one that can show what to do about it.
@@ -357,7 +360,7 @@ export default function AppLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto">
+      <main ref={mainRef} className="flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-10 py-8">
           <Outlet />
         </div>
