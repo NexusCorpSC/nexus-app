@@ -1,0 +1,66 @@
+{
+  "back": "Back to inventory",
+  "title": "Bulk add",
+  "description": "Type several resources in a row, or paste them from a spreadsheet.",
+  "capture": {
+    "summary": "{count, plural, one {# lot read} other {# lots read}} from the work order · sum {sum} cSCU<total></total>. Pick the location and check the figures: OCR sometimes mistakes the game's slashed zero for an 8.",
+    "gameTotal": "· game total {total} cSCU",
+    "dismiss": "Hide"
+  },
+  "defaults": {
+    "title": "Defaults",
+    "location": "Location",
+    "locationLabel": "Default location",
+    "quality": "Quality",
+    "unit": "Unit",
+    "description": "Description",
+    "descriptionPlaceholder": "Notes about these items…"
+  },
+  "orgVisible": "Visible to the org",
+  "hints": {
+    "tab": "next cell",
+    "enter": "next row",
+    "duplicate": "duplicate",
+    "paste": "paste Name · Quality · Quantity · Unit · Location"
+  },
+  "columns": {
+    "name": "Name",
+    "quality": "Quality",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "location": "Location",
+    "org": "Org",
+    "status": "Check"
+  },
+  "namePlaceholder": "Titanium…",
+  "locationPlaceholder": "Search for a location…",
+  "locationUnmatched": "“{name}”?",
+  "locationDefault": "Default · {name}",
+  "removeRow": "Remove row",
+  "addRow": "New row",
+  "errors": {
+    "name": "Name required",
+    "quality": "Quality: whole number ≥ 0",
+    "qualityDefault": "Default quality: whole number ≥ 0",
+    "yieldUnreadable": "Yield unreadable on the capture",
+    "quantity": "Invalid quantity",
+    "locationUnknown": "Unknown location: {name}",
+    "location": "Location required"
+  },
+  "status": {
+    "newLot": "New lot",
+    "newItem": "New item",
+    "merge": "Merge: ×{from} → ×{to}"
+  },
+  "done": "{created} created, {merged} merged. Rows in error are left to fix.",
+  "summary": {
+    "ready": "<n>{count}</n> ready",
+    "merges": "<n>{count}</n> {count, plural, one {merge into an existing lot} other {merges into existing lots}}",
+    "errors": "<n>{count}</n> to fix"
+  },
+  "submitFailed": "Adding failed.",
+  "errorsKept": "Rows in error stay in the table after adding.",
+  "cancel": "Cancel",
+  "saving": "Saving…",
+  "submit": "{count, plural, =0 {Add} one {Add # item} other {Add # items}}"
+}

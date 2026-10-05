@@ -1,0 +1,14 @@
+{
+  "lock": {
+    "lock": "Verrouiller : les clics passent au jeu, sauf sur ce bouton",
+    "unlock": "Déverrouiller : la fenêtre reprend les clics"
+  },
+  "opacity": {
+    "action": "Fond {mode} — passer en {next}",
+    "modes": {
+      "clear": "transparent",
+      "shaded": "ombré",
+      "opaque": "opaque"
+    }
+  }
+}

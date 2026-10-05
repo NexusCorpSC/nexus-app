@@ -1,0 +1,20 @@
+{
+  "title": "Flight plan",
+  "openOnSite": "Open on the site",
+  "close": "Close",
+  "noPlan": "No flight plan for this squad.",
+  "noPhase": "This plan has no phase yet.",
+  "previousPhase": "Previous phase",
+  "nextPhase": "Next phase",
+  "you": "You",
+  "presenterLeads": "{name} is leading",
+  "followingPresenter": "Following {name}",
+  "follow": "Follow",
+  "frozenPhase": "Frozen phase",
+  "frozen": "Frozen",
+  "unlockToDraw": "Unlock to draw",
+  "undo": "Undo",
+  "redo": "Redo",
+  "pen": "Freehand",
+  "eraser": "Eraser — your strokes, and other people's if you run the plan"
+}

@@ -1,0 +1,16 @@
+{
+  "available": "Update {version} available",
+  "clickToInstall": "Click to install it.",
+  "noRelease": "No published release announces an update.",
+  "checkFailed": "Couldn't check for updates: {message}",
+  "contrib": {
+    "published": "Contribution published",
+    "publishedBody": "{name} · +{points, plural, one {# point} other {# points}}",
+    "changesRequested": "Contribution needs changes",
+    "changesRequestedBody": "{name}: “{message}”",
+    "achievement": "Achievement unlocked",
+    "level": "New level",
+    "backlogTitle": "Contributions",
+    "backlog": "{count, plural, one {# more update on your contributions.} other {# more updates on your contributions.}}"
+  }
+}

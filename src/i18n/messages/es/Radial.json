@@ -1,0 +1,51 @@
+{
+  "readyCount": "{ready}/{total} listos",
+  "sectors": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "readyDisabled": "No disponible: abatido",
+    "youAreReady": "Estás: listo",
+    "youAreNotReady": "Estás: no listo",
+    "alive": "ACTIVO",
+    "down": "ABATIDO",
+    "youAreDown": "Estás: abatido",
+    "youAreAlive": "Estás: activo",
+    "mainWindow": "Ventana principal",
+    "lock": "BLOQUEAR",
+    "unlock": "DESBLOQUEAR",
+    "overlays": "Superposiciones",
+    "overlaysLocked": "Superposiciones bloqueadas",
+    "capture": "CAPTURA",
+    "areaCapture": "Captura de zona"
+  },
+  "hint": {
+    "release": "suelta para confirmar",
+    "cancel": "al centro o Esc para cancelar"
+  },
+  "hub": {
+    "mainTitle": "Abrir Nexus",
+    "mainDetail": "Muestra la ventana principal",
+    "unavailableTitle": "No disponible",
+    "unavailableDetail": "Vuelve a Activo primero",
+    "goNotReady": "Pasar a NOT READY",
+    "goReady": "Pasar a READY",
+    "releaseToConfirm": "Suelta para confirmar",
+    "backAlive": "Volver a activo",
+    "goDown": "Declararme abatido",
+    "goDownDetail": "También quita READY",
+    "unlockTitle": "Desbloquear",
+    "unlockDetail": "Las ventanas vuelven a recibir los clics",
+    "lockTitle": "Bloquear",
+    "lockDetail": "Los clics pasan al juego",
+    "captureTitle": "Captura de zona",
+    "captureDetail": "Suelta para iniciar",
+    "noneTitle": "Ninguna acción",
+    "noneDetail": "Soltar aquí cancela"
+  },
+  "notify": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "down": "Abatido",
+    "alive": "Activo"
+  }
+}

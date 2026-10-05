@@ -1,14 +1,16 @@
 import { Link } from "react-router-dom";
 import { Box, Flag, Share2, ShieldAlert } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { formatUEC } from "@/lib/utils";
 import type { Mission } from "@/types/nexus";
 
 /** A pill flagging an illegal mission; shared with the detail page. */
 export function IllegalPill() {
+  const t = useTranslations("Missions");
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-red-300/30 bg-red-500/15 px-2 py-0.5 text-[11px] font-medium text-red-300">
       <ShieldAlert className="size-3" />
-      Illégale
+      {t("illegal")}
     </span>
   );
 }
@@ -19,6 +21,7 @@ export function IllegalPill() {
  * that decide whether to take it (faction, reward, sharing, blueprints).
  */
 export function MissionCard({ mission }: { mission: Mission }) {
+  const t = useTranslations("Missions");
   const blueprintCount = mission.blueprintDetails?.length ?? 0;
 
   return (
@@ -61,13 +64,13 @@ export function MissionCard({ mission }: { mission: Mission }) {
         {mission.canBeShared ? (
           <span className="inline-flex items-center gap-1 text-emerald-300">
             <Share2 className="size-3.5" />
-            Partageable
+            {t("shareable")}
           </span>
         ) : null}
         {blueprintCount > 0 ? (
           <span className="inline-flex items-center gap-1 text-violet-300">
             <Box className="size-3.5" />
-            {blueprintCount} blueprint{blueprintCount > 1 ? "s" : ""}
+            {t("blueprintCount", { count: blueprintCount })}
           </span>
         ) : null}
       </div>

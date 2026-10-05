@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Copy, KeyRound, UserMinus, UserPlus } from "lucide-react";
+import { useTranslations } from "use-intl";
 import {
   Button,
   Card,
@@ -33,6 +34,7 @@ const CODE_KEY = ["friends", "code"] as const;
  * who is playing — as each declared it, here or on the site.
  */
 export default function FriendsPage() {
+  const t = useTranslations("Friends");
   const friends = useFriends(true);
   const [removing, setRemoving] = useState<Friend | null>(null);
 
@@ -50,16 +52,16 @@ export default function FriendsPage() {
   return (
     <>
       <PageHeader
-        title="Amis"
-        description="Qui est en jeu, et à quoi. Chacun le déclare depuis Nexus App ou le site."
+        title={t("title")}
+        description={t("description")}
         actions={
           friends.data ? (
             <span className="text-[13px] text-nexus-muted">
               <span className="font-semibold text-emerald-300">
-                {playing.length} en jeu
+                {t("playingCount", { count: playing.length })}
               </span>
               {" · "}
-              {list.length} {list.length > 1 ? "amis" : "ami"}
+              {t("total", { count: list.length })}
             </span>
           ) : null
         }
@@ -79,18 +81,23 @@ export default function FriendsPage() {
         />
       ) : list.length === 0 ? (
         <EmptyState
-          title="Pas encore d'amis"
-          description="Partagez votre code ou saisissez celui d'un ami : vous serez ajoutés l'un à l'autre."
+          title={t("empty.title")}
+          description={t("empty.description")}
         />
       ) : (
         <>
           <section className="mb-7">
-            <SectionTitle aside={`${playing.length} sur ${list.length}`}>
-              En jeu
+            <SectionTitle
+              aside={t("playingAside", {
+                playing: playing.length,
+                total: list.length,
+              })}
+            >
+              {t("playing")}
             </SectionTitle>
             {playing.length === 0 ? (
               <p className="text-[13px] text-nexus-muted">
-                Aucun ami en jeu pour le moment.
+                {t("nobodyPlaying")}
               </p>
             ) : (
               <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -108,7 +115,7 @@ export default function FriendsPage() {
 
           {offline.length > 0 ? (
             <section>
-              <SectionTitle>Pas en jeu</SectionTitle>
+              <SectionTitle>{t("offline")}</SectionTitle>
               <ul className="grid grid-cols-1 gap-x-3 md:grid-cols-2 xl:grid-cols-3">
                 {offline.map((friend) => (
                   <FriendCard
@@ -135,6 +142,7 @@ export default function FriendsPage() {
 }
 
 function FriendCodeCard() {
+  const t = useTranslations("Friends.code");
   const queryClient = useQueryClient();
   const code = useQuery({
     queryKey: CODE_KEY,
@@ -171,7 +179,7 @@ function FriendCodeCard() {
       <div className="flex items-center gap-2.5">
         <KeyRound className="size-4 text-nexus-accent" />
         <h2 className="font-display text-base font-semibold text-nexus-white">
-          Mon code ami
+          {t("title")}
         </h2>
       </div>
 
@@ -187,25 +195,22 @@ function FriendCodeCard() {
               ) : (
                 <Copy className="size-4" />
               )}
-              {copied ? "Copié" : "Copier"}
+              {copied ? t("copied") : t("copy")}
             </Button>
           </div>
-          <p className="text-xs leading-relaxed text-nexus-dim">
-            Usage unique : il disparaît dès qu'un ami l'utilise. Un nouveau code
-            sera créé à votre prochaine demande.
-          </p>
+          <p className="text-xs leading-relaxed text-nexus-dim">{t("usage")}</p>
         </>
       ) : (
         <>
           <p className="text-[13px] leading-relaxed text-nexus-muted">
-            Générez un code et partagez-le. Il ne sert qu'une fois.
+            {t("hint")}
           </p>
           <Button
             onClick={() => create.mutate()}
             disabled={code.isPending || create.isPending}
             className="h-10"
           >
-            Générer un code
+            {t("generate")}
           </Button>
           {create.isError ? (
             <p className="text-xs text-red-300">
@@ -219,6 +224,7 @@ function FriendCodeCard() {
 }
 
 function AddFriendCard() {
+  const t = useTranslations("Friends.add");
   const queryClient = useQueryClient();
   const [value, setValue] = useState("");
 
@@ -243,12 +249,12 @@ function AddFriendCard() {
         <div className="flex items-center gap-2.5">
           <UserPlus className="size-4 text-nexus-accent" />
           <h2 className="font-display text-base font-semibold text-nexus-white">
-            Ajouter un ami
+            {t("title")}
           </h2>
         </div>
         <div className="flex gap-2">
           <label className="flex-1">
-            <span className="sr-only">Code ami</span>
+            <span className="sr-only">{t("codeLabel")}</span>
             <Input
               value={value}
               onChange={(event) => {
@@ -271,7 +277,7 @@ function AddFriendCard() {
             disabled={add.isPending || cleanFriendCode(value) === ""}
             className="h-10"
           >
-            Ajouter
+            {t("submit")}
           </Button>
         </div>
         {add.isError ? (
@@ -284,13 +290,10 @@ function AddFriendCard() {
             className="flex items-center gap-2 text-[13px] text-emerald-300"
           >
             <Check className="size-4" />
-            Vous êtes maintenant ami avec {add.data.name}.
+            {t("added", { name: add.data.name })}
           </p>
         ) : (
-          <p className="text-xs leading-relaxed text-nexus-dim">
-            Saisissez le code qu'un ami vous a transmis. Vous serez ajoutés l'un
-            à l'autre.
-          </p>
+          <p className="text-xs leading-relaxed text-nexus-dim">{t("hint")}</p>
         )}
       </form>
     </Card>
@@ -328,6 +331,7 @@ function FriendCard({
   now: number;
   onRemove: () => void;
 }) {
+  const t = useTranslations("Friends.card");
   const playing = friend.playing;
   // Shown only off game; an older site sends no such field.
   const planned = playing ? null : (friend.planned ?? null);
@@ -373,15 +377,15 @@ function FriendCard({
           )}
         >
           {playing
-            ? (playing.activity ?? "Pas d'activité précisée")
+            ? (playing.activity ?? t("noActivity"))
             : planned
               ? plannedLabel(planned, now)
-              : (friend.sharedOrg ?? "Aucune organisation commune")}
+              : (friend.sharedOrg ?? t("noSharedOrg"))}
         </p>
       </div>
 
       {playing ? (
-        <span className="shrink-0 text-xs text-nexus-dim" title="En jeu depuis">
+        <span className="shrink-0 text-xs text-nexus-dim" title={t("since")}>
           {formatElapsed(playing.since, now)}
         </span>
       ) : null}
@@ -389,8 +393,8 @@ function FriendCard({
       <button
         type="button"
         onClick={onRemove}
-        aria-label={`Retirer ${friend.name} de vos amis`}
-        title="Retirer des amis"
+        aria-label={t("removeLabel", { name: friend.name })}
+        title={t("removeTitle")}
         className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-nexus-dim opacity-0 transition-opacity group-hover:opacity-100 hover:bg-nexus-accent/10 hover:text-red-300 focus-visible:opacity-100"
       >
         <UserMinus className="size-4" />
@@ -406,6 +410,7 @@ function RemoveFriendModal({
   friend: Friend;
   onClose: () => void;
 }) {
+  const t = useTranslations("Friends.remove");
   const queryClient = useQueryClient();
   const remove = useMutation({
     mutationFn: () => removeFriend(friend.userId),
@@ -418,21 +423,21 @@ function RemoveFriendModal({
   return (
     <Modal
       open
-      title={`Retirer ${friend.name} ?`}
-      description="Vous disparaîtrez aussi de sa liste. Pour redevenir amis, il faudra un nouveau code."
+      title={t("title", { name: friend.name })}
+      description={t("description")}
       icon={<UserMinus className="size-5" />}
       onClose={onClose}
       footer={
         <>
           <Button variant="outline" onClick={onClose} className="ml-auto">
-            Annuler
+            {t("cancel")}
           </Button>
           <Button
             variant="danger"
             onClick={() => remove.mutate()}
             disabled={remove.isPending}
           >
-            Retirer des amis
+            {t("confirm")}
           </Button>
         </>
       }
@@ -443,7 +448,7 @@ function RemoveFriendModal({
         </p>
       ) : (
         <p className="text-[13px] text-nexus-muted">
-          Vous ne verrez plus quand {friend.name} est en jeu.
+          {t("body", { name: friend.name })}
         </p>
       )}
     </Modal>

@@ -4,6 +4,7 @@ import { HashRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "@/App";
 import { AuthProvider } from "@/auth/auth-context";
+import { I18nProvider } from "@/i18n/i18n-provider";
 import { ApiError } from "@/lib/api-client";
 // Bundled rather than fetched: the CSP allows no font host, and the app has to
 // look the same offline.
@@ -39,7 +40,11 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
       {/* Hash routing: the bundle is served from a file:// style origin. */}
       <HashRouter>
         <AuthProvider>
-          <App />
+          {/* Inside the session rather than around it: a change of language
+              remounts what is under it, and must not sign anyone out. */}
+          <I18nProvider>
+            <App />
+          </I18nProvider>
         </AuthProvider>
       </HashRouter>
     </QueryClientProvider>

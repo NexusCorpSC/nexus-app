@@ -1,0 +1,94 @@
+{
+  "registrations": "{count, plural, =0 {Ningún inscrito} one {# inscrito} other {# inscritos}}",
+  "span": {
+    "minutes": "{minutes} min",
+    "hours": "{hours} h",
+    "hoursMinutes": "{hours} h {minutes}"
+  },
+  "pill": {
+    "public": "Público",
+    "private": "Privado",
+    "privateTo": "Privado · miembros de {org}",
+    "live": "En curso",
+    "registered": "Inscrito",
+    "registeredAs": "Inscrito · {role}",
+    "missing": "{count, plural, one {Falta # {role}} other {Faltan # {role}}}"
+  },
+  "status": {
+    "over": "Terminado",
+    "live": "En curso",
+    "startsIn": "Empieza en {duration}",
+    "inDays": "{count, plural, one {En # día} other {En # días}}"
+  },
+  "orgFallback": "Organización",
+  "notFound": {
+    "title": "Evento no encontrado.",
+    "description": "Puede que se haya eliminado, o que esté reservado a los miembros de la organización."
+  },
+  "header": {
+    "summary": "Resumen",
+    "summaryTitle": "Abre el resumen del organizador en el navegador",
+    "edit": "Editar",
+    "editTitle": "Abre el formulario en el navegador"
+  },
+  "thePlan": "El plan",
+  "facts": {
+    "label": "En resumen",
+    "when": "Cuándo",
+    "whenDetail": "{day} · {duration} · hora de {city}",
+    "where": "Punto de encuentro",
+    "whereUnknown": "Por concretar",
+    "seePlace": "Ver el lugar",
+    "seePlaceNamed": "{place} · ver el lugar",
+    "organizer": "Organizado por"
+  },
+  "whoComes": {
+    "title": "Quién viene",
+    "you": "Tú ({name})",
+    "listMembersOnly": "La lista de inscritos está reservada a los miembros de la organización.",
+    "noParticipants": "Todavía no se ha inscrito nadie.",
+    "noRole": "Sin rol",
+    "countOfWanted": "{count} de {wanted, plural, one {# deseado} other {# deseados}}",
+    "nobodyInRole": "Nadie por ahora."
+  },
+  "registration": {
+    "error": "No se pudo completar la inscripción: {message}",
+    "unknownError": "error desconocido",
+    "title": "Inscripción",
+    "ended": "Este evento ha terminado: las inscripciones están cerradas.",
+    "membersOnly": "La inscripción está reservada a los miembros de la organización.",
+    "registered": "Estás inscrito",
+    "roleIs": "Rol: {role}",
+    "squadReady": "La escuadra del evento está lista: abrirla",
+    "shownAsPlanned": "Añadido a tu estado como sesión prevista. Tus amigos y la org lo ven.",
+    "showAsPlanned": "Mostrarlo como mi próxima sesión",
+    "editAnswers": "Modificar mis respuestas",
+    "withdraw": "Darse de baja",
+    "editTitle": "Modificar mi inscripción",
+    "register": "Inscribirse",
+    "hint": "Modificable hasta el final del evento. {name} ve tus respuestas.",
+    "role": "Tu rol",
+    "lookingFor": "Buscamos {count}",
+    "countMissing": "{count, plural, =0 {Ningún inscrito} one {# inscrito} other {# inscritos}} · faltan {missing}",
+    "required": "obligatorio",
+    "optional": "opcional",
+    "update": "Guardar mis respuestas",
+    "reRegister": "Volver a inscribirse",
+    "cancel": "Cancelar",
+    "withdrawn": "Te has dado de baja. Tus respuestas se guardan por si vuelves."
+  },
+  "squad": {
+    "nobody": "Nadie se ha inscrito en el evento.",
+    "exists": "La escuadra del evento ya existe.",
+    "error": "No se pudo crear la escuadra: {message}",
+    "errorUnknown": "No se pudo crear la escuadra.",
+    "ready": "La escuadra está lista",
+    "createdDetail": "{count, plural, one {{name}, código} other {# escuadras reunidas en un raid, la primera con el código}}",
+    "leftOut": "{count, plural, one {# inscrito no ha encontrado sitio} other {# inscritos no han encontrado sitio}}: un raid cuenta con 6 escuadras como máximo.",
+    "open": "Abrir la escuadra",
+    "title": "Crear la escuadra del evento",
+    "alreadyDrawn": "Ya se ha creado una escuadra a partir de este evento. Si se ha disuelto, puedes crear una nueva.",
+    "hint": "{count, plural, one {Una escuadra de # inscrito} other {Una escuadra de # inscritos}} liderada por ti{hasRoles, select, yes {, con los roles {roles}} other {}}. Cada uno conserva el rol elegido en la inscripción y la encuentra en su lista de escuadras, sin abandonar la suya. Por encima de 20, varias escuadras reunidas en un raid.",
+    "create": "Crear la escuadra"
+  }
+}

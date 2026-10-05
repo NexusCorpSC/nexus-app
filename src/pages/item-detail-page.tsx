@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { ExternalLink, TriangleAlert } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getItem } from "@/lib/api/items";
@@ -13,14 +14,12 @@ import {
   KindBadge,
 } from "@/components/item-card";
 import {
-  ITEM_KIND_LABELS,
   type ItemBlueprintLink,
   type ItemDetails,
   type ItemKind,
   type ItemStatistics,
   type ItemSummary,
   type ResolvedItemSlot,
-  type ResourceMarketSide,
   type VehiclePlans,
   type WeaponSpread,
 } from "@/types/nexus";
@@ -44,6 +43,7 @@ import { cn, formatDate, formatNumber, formatUEC } from "@/lib/utils";
  * the objects mounted in it or carrying it.
  */
 export default function ItemDetailPage() {
+  const t = useTranslations("Items.detail");
   const { slug = "" } = useParams();
 
   const itemQuery = useQuery({
@@ -62,7 +62,7 @@ export default function ItemDetailPage() {
   if (itemQuery.isError) {
     return (
       <>
-        <BackLink to="/items">Retour aux objets</BackLink>
+        <BackLink to="/items">{t("back")}</BackLink>
         <ErrorState
           error={itemQuery.error}
           onRetry={() => void itemQuery.refetch()}
@@ -75,7 +75,7 @@ export default function ItemDetailPage() {
 
   return (
     <>
-      <BackLink to="/items">Retour aux objets</BackLink>
+      <BackLink to="/items">{t("back")}</BackLink>
 
       <PageHeader
         title={item.name}
@@ -91,7 +91,7 @@ export default function ItemDetailPage() {
               onClick={() => void openOnWeb()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Ouvrir sur le web
+              {t("openOnWeb")}
             </Button>
           </>
         }
@@ -102,7 +102,7 @@ export default function ItemDetailPage() {
           <ItemHeroImage item={item} />
 
           {item.description ? (
-            <Section title="Description">
+            <Section title={t("description")}>
               <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-muted">
                 {item.description}
               </p>
@@ -119,23 +119,23 @@ export default function ItemDetailPage() {
 
           {item.blueprints.length > 0 ? (
             <BlueprintList
-              title="Fabriqué avec"
+              title={t("madeWith")}
               blueprints={item.blueprints}
               hint={
                 item.blueprintsInferred
-                  ? "Blueprints du même nom : aucun lien n'a été posé à la main."
+                  ? t("blueprintsInferred")
                   : undefined
               }
             />
           ) : null}
 
           {item.kind !== "resource" && item.consumedBy.length > 0 ? (
-            <BlueprintList title="Utilisé dans" blueprints={item.consumedBy} />
+            <BlueprintList title={t("usedIn")} blueprints={item.consumedBy} />
           ) : null}
 
           {item.variants.length > 0 ? (
             <RelatedItems
-              title={`${item.variants.length} variantes`}
+              title={t("variants", { count: item.variants.length })}
               items={item.variants}
               currentSlug={item.slug}
             />
@@ -143,7 +143,9 @@ export default function ItemDetailPage() {
 
           {item.setItems.length > 0 ? (
             <RelatedItems
-              title={item.setName ? `Ensemble : ${item.setName}` : "Ensemble"}
+              title={
+                item.setName ? t("setNamed", { name: item.setName }) : t("set")
+              }
               items={item.setItems}
               currentSlug={item.slug}
             />
@@ -151,41 +153,41 @@ export default function ItemDetailPage() {
 
           {item.mountedOn.length > 0 ? (
             <RelatedItems
-              title={`Monté sur ${item.mountedOn.length} objet${item.mountedOn.length > 1 ? "s" : ""}`}
+              title={t("mountedOn", { count: item.mountedOn.length })}
               items={item.mountedOn}
               currentSlug={item.slug}
-              hint="D'après l'équipement d'origine renseigné sur chaque fiche."
+              hint={t("mountedOnHint")}
             />
           ) : null}
         </div>
 
         <div className="space-y-4">
-          <Section title="Fiche">
+          <Section title={t("sheet")}>
             <Readouts
               rows={[
-                ["Type", <KindBadge key="kind" kind={item.kind} />],
-                ["Catégorie", item.category],
-                ["Sous-catégorie", item.subcategory],
-                ["Fabricant", item.manufacturer],
+                [t("rows.type"), <KindBadge key="kind" kind={item.kind} />],
+                [t("rows.category"), item.category],
+                [t("rows.subcategory"), item.subcategory],
+                [t("rows.manufacturer"), item.manufacturer],
                 [
-                  "Taille",
+                  t("rows.size"),
                   item.size !== undefined ? `S${item.size}` : undefined,
                 ],
-                ["Tier", item.tier],
-                ["Variante", item.variantName],
-                ["Ensemble", item.setName],
+                [t("rows.tier"), item.tier],
+                [t("rows.variant"), item.variantName],
+                [t("rows.set"), item.setName],
               ]}
             />
           </Section>
 
           {item.statistics && Object.keys(item.statistics).length > 0 ? (
-            <Section title="Statistiques">
+            <Section title={t("statistics")}>
               <StatisticsList statistics={item.statistics} />
             </Section>
           ) : null}
 
           {item.obtention ? (
-            <Section title="Où l'obtenir">
+            <Section title={t("obtention")}>
               <p className="whitespace-pre-line text-xs leading-relaxed text-nexus-muted">
                 {item.obtention}
               </p>
@@ -284,15 +286,15 @@ function KeyFigure({
  * has filled in yet says so rather than showing empty sections.
  */
 function IncompleteNotice({ kind }: { kind: ItemKind }) {
+  const t = useTranslations("Items.detail.incomplete");
   return (
     <Card className="border-dashed p-5">
       <p className="flex items-center gap-2 text-sm font-semibold text-nexus-white">
         <TriangleAlert className="h-4 w-4 text-amber-300/80" />
-        Fiche {ITEM_KIND_LABELS[kind].toLowerCase()} à compléter
+        {t("title", { kind })}
       </p>
       <p className="mt-1 text-xs text-nexus-muted">
-        Les données propres à ce type d'objet n'ont pas encore été renseignées
-        sur le site.
+        {t("description")}
       </p>
     </Card>
   );
@@ -485,11 +487,7 @@ function RelatedItems({
 type PlanView = Exclude<keyof VehiclePlans, "holo">;
 
 /** Les vues plates d'un plan, dans l'ordre où on les regarde. */
-const PLAN_VIEWS: [key: PlanView, label: string][] = [
-  ["top", "Dessus"],
-  ["side", "Côté"],
-  ["front", "Face"],
-];
+const PLAN_VIEWS: PlanView[] = ["top", "side", "front"];
 
 /**
  * Les plans du véhicule : les rendus orthographiques que l'import récupère,
@@ -507,14 +505,15 @@ function VehiclePlanViews({
   scale?: string;
   slug: string;
 }) {
-  const views = PLAN_VIEWS.filter(([key]) => plans[key]);
-  const [picked, setPicked] = useState<PlanView>(() => views[0]?.[0] ?? "top");
+  const t = useTranslations("Items.detail.plans");
+  const views = PLAN_VIEWS.filter((key) => plans[key]);
+  const [picked, setPicked] = useState<PlanView>(() => views[0] ?? "top");
   const [failed, setFailed] = useState<string[]>([]);
 
-  const current = views.find(([key]) => key === picked) ?? views[0];
+  const current = views.find((key) => key === picked) ?? views[0];
   if (!current) return null;
 
-  const url = plans[current[0]]!;
+  const url = plans[current]!;
 
   async function openHolo() {
     const baseUrl = await getApiBaseUrl();
@@ -523,17 +522,17 @@ function VehiclePlanViews({
 
   return (
     <Section
-      title="Plans"
-      aside={plans.holo ? undefined : "Rendus orthographiques"}
+      title={t("title")}
+      aside={plans.holo ? undefined : t("source")}
     >
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        {views.map(([key, label]) => (
+        {views.map((key) => (
           <Chip
             key={key}
-            active={key === current[0]}
+            active={key === current}
             onClick={() => setPicked(key)}
           >
-            {label}
+            {t(`views.${key}`)}
           </Chip>
         ))}
 
@@ -543,7 +542,7 @@ function VehiclePlanViews({
             onClick={() => void openHolo()}
             className="ml-auto inline-flex items-center gap-1 text-xs text-nexus-muted transition-colors hover:text-nexus-bright"
           >
-            Vue 3D sur le site
+            {t("holo")}
             <ExternalLink className="h-3 w-3" />
           </button>
         ) : null}
@@ -552,13 +551,13 @@ function VehiclePlanViews({
       <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-lg border border-nexus-accent/8 bg-[#08243a]">
         {failed.includes(url) ? (
           <p className="text-xs text-nexus-dim">
-            Plan indisponible pour le moment.
+            {t("unavailable")}
           </p>
         ) : (
           <img
             key={url}
             src={url}
-            alt={`${name}, vue de ${current[1].toLowerCase()}`}
+            alt={t("alt", { name, view: current })}
             className="h-full w-full object-contain p-3"
             onError={() =>
               setFailed((urls) => (urls.includes(url) ? urls : [...urls, url]))
@@ -577,6 +576,7 @@ function VehiclePlanViews({
 }
 
 function VehicleSections({ item }: { item: ItemDetails }) {
+  const t = useTranslations("Items.detail");
   const vehicle = item.vehicle;
   const accent = KIND_ACCENT.vehicle;
 
@@ -591,23 +591,35 @@ function VehicleSections({ item }: { item: ItemDetails }) {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KeyFigure label="Places" value={vehicle.crew} />
-        <KeyFigure label="Vitesse max" value={vehicle.speedMax} unit="m/s" />
-        <KeyFigure label="Croisière" value={vehicle.speedScm} unit="m/s" />
-        <KeyFigure label="Soute" value={vehicle.cargoScu} unit="SCU" />
+        <KeyFigure label={t("vehicle.crew")} value={vehicle.crew} />
+        <KeyFigure
+          label={t("vehicle.speedMax")}
+          value={vehicle.speedMax}
+          unit="m/s"
+        />
+        <KeyFigure
+          label={t("vehicle.speedScm")}
+          value={vehicle.speedScm}
+          unit="m/s"
+        />
+        <KeyFigure
+          label={t("vehicle.cargo")}
+          value={vehicle.cargoScu}
+          unit="SCU"
+        />
       </div>
 
       {vehicle.mass !== undefined || dimensions ? (
-        <Section title="Fiche technique">
+        <Section title={t("vehicle.technical")}>
           <Readouts
             rows={[
               [
-                "Masse",
+                t("vehicle.mass"),
                 vehicle.mass !== undefined
                   ? `${formatNumber(vehicle.mass)} kg`
                   : undefined,
               ],
-              ["Dimensions", dimensions],
+              [t("vehicle.dimensions"), dimensions],
             ]}
           />
         </Section>
@@ -623,19 +635,19 @@ function VehicleSections({ item }: { item: ItemDetails }) {
       ) : null}
 
       <SlotList
-        title="Armement"
+        title={t("vehicle.armament")}
         slots={item.hardpoints}
         accent={accent}
-        emptyLabel="Emplacement vide"
-        noneLabel="Aucun point d'emport renseigné."
+        emptyLabel={t("slotEmpty")}
+        noneLabel={t("vehicle.armamentEmpty")}
       />
 
       <SlotList
-        title="Équipements"
+        title={t("vehicle.equipment")}
         slots={item.components}
         accent={accent}
-        emptyLabel="Emplacement vide"
-        noneLabel="Aucun composant renseigné."
+        emptyLabel={t("slotEmpty")}
+        noneLabel={t("vehicle.equipmentEmpty")}
       />
     </>
   );
@@ -645,12 +657,12 @@ function VehicleSections({ item }: { item: ItemDetails }) {
 /* Weapons                                                             */
 /* ------------------------------------------------------------------ */
 
-const SPREAD_ROWS: [keyof WeaponSpread, string][] = [
-  ["min", "Minimum"],
-  ["max", "Maximum"],
-  ["firstShot", "Premier tir"],
-  ["perShot", "Par tir"],
-  ["decay", "Décroissance"],
+const SPREAD_ROWS: (keyof WeaponSpread)[] = [
+  "min",
+  "max",
+  "firstShot",
+  "perShot",
+  "decay",
 ];
 
 function SpreadColumn({
@@ -660,6 +672,7 @@ function SpreadColumn({
   title: string;
   spread?: WeaponSpread;
 }) {
+  const t = useTranslations("Items.detail.weapon");
   return (
     <div className="rounded-lg border border-nexus-accent/8 bg-[#08243a] p-3">
       <p className="mb-2 text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
@@ -667,21 +680,22 @@ function SpreadColumn({
       </p>
       {spread ? (
         <Readouts
-          rows={SPREAD_ROWS.map(([key, label]) => [
-            label,
+          rows={SPREAD_ROWS.map((key) => [
+            t(`spreadRows.${key}`),
             spread[key] !== undefined
               ? `${formatNumber(spread[key])}${key === "decay" ? "°/s" : "°"}`
               : undefined,
           ])}
         />
       ) : (
-        <p className="text-xs text-nexus-dim">Non renseignée.</p>
+        <p className="text-xs text-nexus-dim">{t("spreadEmpty")}</p>
       )}
     </div>
   );
 }
 
 function WeaponSections({ item }: { item: ItemDetails }) {
+  const t = useTranslations("Items.detail");
   const weapon = item.weapon;
   const accent = KIND_ACCENT.weapon;
 
@@ -693,25 +707,36 @@ function WeaponSections({ item }: { item: ItemDetails }) {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KeyFigure label="Cadence" value={weapon.rateOfFire} unit="coups/min" />
-        <KeyFigure label="Chargeur" value={weapon.magazine} />
-        <KeyFigure label="Rechargement" value={weapon.reloadTime} unit="s" />
-        <KeyFigure label="Masse" value={weapon.mass} unit="kg" />
+        <KeyFigure
+          label={t("weapon.rateOfFire")}
+          value={weapon.rateOfFire}
+          unit={t("weapon.rpmUnit")}
+        />
+        <KeyFigure label={t("weapon.magazine")} value={weapon.magazine} />
+        <KeyFigure
+          label={t("weapon.reload")}
+          value={weapon.reloadTime}
+          unit="s"
+        />
+        <KeyFigure label={t("weapon.mass")} value={weapon.mass} unit="kg" />
       </div>
 
       {(weapon.damageType || weapon.caliber) && (
-        <Section title="Caractéristiques">
+        <Section title={t("characteristics")}>
           <Readouts
             rows={[
-              ["Type de dégâts", weapon.damageType],
-              ["Calibre", weapon.caliber],
+              [t("weapon.damageType"), weapon.damageType],
+              [t("weapon.caliber"), weapon.caliber],
             ]}
           />
         </Section>
       )}
 
       {item.weaponProfile.length > 0 ? (
-        <Section title="Profil de dégâts" aside="rapporté à sa classe">
+        <Section
+          title={t("weapon.damageProfile")}
+          aside={t("weapon.damageProfileHint")}
+        >
           <div className="space-y-3">
             {item.weaponProfile.map((stat) => (
               <div key={stat.label}>
@@ -722,7 +747,9 @@ function WeaponSections({ item }: { item: ItemDetails }) {
                     {stat.unit ? ` ${stat.unit}` : ""}
                     {stat.comparable && stat.average !== undefined ? (
                       <span className="ml-2 text-nexus-dim">
-                        | moy. {formatNumber(stat.average)}
+                        {t("weapon.average", {
+                          value: formatNumber(stat.average),
+                        })}
                       </span>
                     ) : null}
                   </span>
@@ -747,16 +774,26 @@ function WeaponSections({ item }: { item: ItemDetails }) {
       ) : null}
 
       {weapon.fireModes && weapon.fireModes.length > 0 ? (
-        <Section title="Modes de tir">
+        <Section title={t("weapon.fireModes")}>
           <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
-                <th className="pb-2 font-medium">Mode</th>
-                <th className="pb-2 text-right font-medium">Cadence</th>
-                <th className="pb-2 text-right font-medium">DPS</th>
-                <th className="pb-2 text-right font-medium">Mun. / tir</th>
-                <th className="pb-2 text-right font-medium">Projectiles</th>
-                <th className="pb-2 text-right font-medium">Rafale</th>
+                <th className="pb-2 font-medium">{t("weapon.modeLabel")}</th>
+                <th className="pb-2 text-right font-medium">
+                  {t("weapon.modeRpm")}
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  {t("weapon.modeDps")}
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  {t("weapon.modeAmmo")}
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  {t("weapon.modePellets")}
+                </th>
+                <th className="pb-2 text-right font-medium">
+                  {t("weapon.modeBurst")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -789,65 +826,76 @@ function WeaponSections({ item }: { item: ItemDetails }) {
       ) : null}
 
       {weapon.spread || weapon.adsSpread ? (
-        <Section title="Dispersion" aside="degrés">
+        <Section title={t("weapon.spread")} aside={t("weapon.spreadUnit")}>
           <div className="grid gap-3 sm:grid-cols-2">
-            <SpreadColumn title="À la hanche" spread={weapon.spread} />
-            <SpreadColumn title="En visée" spread={weapon.adsSpread} />
+            <SpreadColumn title={t("weapon.spreadHip")} spread={weapon.spread} />
+            <SpreadColumn
+              title={t("weapon.spreadAds")}
+              spread={weapon.adsSpread}
+            />
           </div>
         </Section>
       ) : null}
 
       {ammo ? (
-        <Section title="Munitions">
+        <Section title={t("ammo.title")}>
           <Readouts
             rows={[
               [
-                "Dégâts par tir",
+                t("ammo.damagePerShot"),
                 ammo.damagePerShot !== undefined
                   ? formatNumber(ammo.damagePerShot)
                   : undefined,
               ],
-              ["Type de dégâts", ammo.damageType],
+              [t("weapon.damageType"), ammo.damageType],
               [
-                "Vitesse",
+                t("ammo.speed"),
                 ammo.speed !== undefined
                   ? `${formatNumber(ammo.speed)} m/s`
                   : undefined,
               ],
               [
-                "Portée",
+                t("ammo.range"),
                 ammo.range !== undefined
                   ? `${formatNumber(ammo.range)} m`
                   : undefined,
               ],
               [
-                "Durée de vol",
+                t("ammo.lifetime"),
                 ammo.lifetime !== undefined
                   ? `${formatNumber(ammo.lifetime)} s`
                   : undefined,
               ],
               [
-                "Capacité",
+                t("ammo.capacity"),
                 ammo.capacity !== undefined
                   ? formatNumber(ammo.capacity)
                   : undefined,
               ],
-              ["Taille", ammo.size !== undefined ? `S${ammo.size}` : undefined],
               [
-                "Pénétration",
+                t("ammo.size"),
+                ammo.size !== undefined ? `S${ammo.size}` : undefined,
+              ],
+              [
+                t("ammo.penetration"),
                 ammo.penetration !== undefined
                   ? formatNumber(ammo.penetration)
                   : undefined,
               ],
               [
-                "Chute des dégâts",
+                t("ammo.falloffTitle"),
                 ammo.falloffStart !== undefined &&
                 ammo.falloffPerMeter !== undefined
-                  ? `pleins jusqu'à ${formatNumber(ammo.falloffStart)} m, puis −${formatNumber(ammo.falloffPerMeter)}/m${
-                      ammo.falloffMinDamage !== undefined
-                        ? `, plancher ${formatNumber(ammo.falloffMinDamage)}`
-                        : ""
-                    }`
+                  ? ammo.falloffMinDamage !== undefined
+                    ? t("ammo.falloffWithFloor", {
+                        start: formatNumber(ammo.falloffStart),
+                        perMeter: formatNumber(ammo.falloffPerMeter),
+                        min: formatNumber(ammo.falloffMinDamage),
+                      })
+                    : t("ammo.falloff", {
+                        start: formatNumber(ammo.falloffStart),
+                        perMeter: formatNumber(ammo.falloffPerMeter),
+                      })
                   : undefined,
               ],
             ]}
@@ -856,15 +904,18 @@ function WeaponSections({ item }: { item: ItemDetails }) {
       ) : null}
 
       <SlotList
-        title="Accessoires"
+        title={t("weapon.attachments")}
         slots={item.attachments}
         accent={accent}
-        emptyLabel="Emplacement vide"
-        noneLabel="Aucun accessoire renseigné."
+        emptyLabel={t("slotEmpty")}
+        noneLabel={t("weapon.attachmentsEmpty")}
       />
 
       {item.weaponPeers.length > 1 ? (
-        <Section title="Face à sa classe" aside={item.weaponProfile[0]?.label}>
+        <Section
+          title={t("weapon.againstClass")}
+          aside={item.weaponProfile[0]?.label}
+        >
           <div className="space-y-2">
             {item.weaponPeers.map((peer) => (
               <div key={peer.slug} className="flex items-center gap-3 text-xs">
@@ -907,19 +958,8 @@ function WeaponSections({ item }: { item: ItemDetails }) {
 /* Resources                                                           */
 /* ------------------------------------------------------------------ */
 
-const MARKET_SIDE_LABELS: Record<ResourceMarketSide, string> = {
-  buy: "Achète",
-  sell: "Vend",
-  grey: "Marché gris",
-};
-
-const FREQUENCY_LABELS = {
-  common: "Courant",
-  occasional: "Occasionnel",
-  risky: "Risqué",
-} as const;
-
 function ResourceSections({ item }: { item: ItemDetails }) {
+  const t = useTranslations("Items.detail.resource");
   const resource = item.resource;
 
   if (!resource) return <IncompleteNotice kind="resource" />;
@@ -936,21 +976,18 @@ function ResourceSections({ item }: { item: ItemDetails }) {
 
   return (
     <>
-      <Section title="Caractéristiques">
+      <Section title={t("characteristics")}>
         <Readouts
           rows={[
-            ["Forme", resource.form],
+            [t("form"), resource.form],
+            [t("volatile"), resource.volatile ? t("volatileYes") : undefined],
             [
-              "Volatile",
-              resource.volatile ? "Oui : cargaison instable" : undefined,
-            ],
-            [
-              "Volume unitaire",
+              t("unitVolume"),
               resource.unitVolumeScu !== undefined
                 ? `${formatNumber(resource.unitVolumeScu)} SCU`
                 : undefined,
             ],
-            ["Pureté", purity],
+            [t("purity"), purity],
           ]}
         />
         {resource.transportNote ? (
@@ -961,10 +998,10 @@ function ResourceSections({ item }: { item: ItemDetails }) {
       </Section>
 
       <Section
-        title="Cours par comptoir"
+        title={t("markets")}
         aside={
           resource.pricesUpdatedAt
-            ? `relevés le ${formatDate(resource.pricesUpdatedAt)}`
+            ? t("pricesUpdated", { date: formatDate(resource.pricesUpdatedAt) })
             : undefined
         }
       >
@@ -972,10 +1009,10 @@ function ResourceSections({ item }: { item: ItemDetails }) {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
-                <th className="pb-2 font-medium">Comptoir</th>
-                <th className="pb-2 font-medium">Sens</th>
-                <th className="pb-2 text-right font-medium">Prix</th>
-                <th className="pb-2 text-right font-medium">Stock</th>
+                <th className="pb-2 font-medium">{t("counter")}</th>
+                <th className="pb-2 font-medium">{t("side")}</th>
+                <th className="pb-2 text-right font-medium">{t("price")}</th>
+                <th className="pb-2 text-right font-medium">{t("stock")}</th>
               </tr>
             </thead>
             <tbody>
@@ -986,7 +1023,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
                 >
                   <td className="py-1.5">{market.location}</td>
                   <td className="py-1.5 text-nexus-muted">
-                    {MARKET_SIDE_LABELS[market.side]}
+                    {t(`sides.${market.side}`)}
                   </td>
                   <td className="py-1.5 text-right font-mono">
                     {formatUEC(market.price)}
@@ -1001,7 +1038,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
             </tbody>
           </table>
         ) : (
-          <p className="text-xs text-nexus-dim">Aucun cours relevé.</p>
+          <p className="text-xs text-nexus-dim">{t("marketsEmpty")}</p>
         )}
         {markets.length > 0 ? (
           <PriceConfirmation
@@ -1012,36 +1049,36 @@ function ResourceSections({ item }: { item: ItemDetails }) {
       </Section>
 
       {refining ? (
-        <Section title="Raffinage">
+        <Section title={t("refining")}>
           <Readouts
             rows={[
-              ["Procédé", refining.process],
+              [t("process"), refining.process],
               [
-                "Rendement",
+                t("yield"),
                 refining.yield !== undefined
                   ? `${formatNumber(refining.yield)} %`
                   : undefined,
               ],
               [
-                "Durée du cycle",
+                t("cycleDuration"),
                 refining.durationSeconds !== undefined
                   ? `${formatNumber(refining.durationSeconds / 60)} min`
                   : undefined,
               ],
               [
-                "Coût",
+                t("cost"),
                 refining.cost !== undefined
                   ? formatUEC(refining.cost)
                   : undefined,
               ],
-              ["Produit", refining.outputName],
+              [t("output"), refining.outputName],
             ]}
           />
         </Section>
       ) : null}
 
       {resource.extraction && resource.extraction.length > 0 ? (
-        <Section title="Lieux d'extraction">
+        <Section title={t("extraction")}>
           <ul className="space-y-1.5 text-xs">
             {resource.extraction.map((site, index) => (
               <li
@@ -1059,7 +1096,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
                 </span>
                 {site.frequency ? (
                   <span className="shrink-0 text-nexus-muted">
-                    {FREQUENCY_LABELS[site.frequency]}
+                    {t(`frequencies.${site.frequency}`)}
                   </span>
                 ) : null}
               </li>

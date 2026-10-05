@@ -1,0 +1,37 @@
+{
+  "unreachable": "No se puede conectar con {url}. Comprueba la URL de la API y tu conexión.",
+  "httpFailed": "{method} {path} ha fallado (HTTP {status})",
+  "contrib": {
+    "unauthenticated": "Inicia sesión para contribuir.",
+    "suspended": "La moderación ha suspendido tus contribuciones.",
+    "placeNotFound": "Este lugar ya no existe.",
+    "noMedia": "Elige una imagen.",
+    "invalidMedia": "Esta imagen no se acepta: JPEG, PNG o WebP.",
+    "tooManyPending": "Ya tienes 5 contribuciones pendientes de revisión.",
+    "fileTooLarge": "La imagen pesa demasiado: 4 MB como máximo.",
+    "uploadFailed": "El envío de la imagen ha fallado. Inténtalo de nuevo en un momento.",
+    "tooManyUploads": "Demasiadas imágenes enviadas esta hora. Inténtalo de nuevo más tarde.",
+    "notFound": "Este objeto ya no existe.",
+    "invalidInput": "No se ha podido leer la confirmación. Revisa el comentario.",
+    "alreadyConfirmed": "Ya has confirmado estos precios esta semana."
+  },
+  "friends": {
+    "invalid_code": "Un código de amigo tiene 8 caracteres, como K7QD-92PX.",
+    "not_found": "Este código no existe o ya se ha usado. Pide uno nuevo.",
+    "own_code": "Es tu propio código: compártelo mejor con un amigo.",
+    "already_friends": "Ya sois amigos.",
+    "too_many_attempts": "Demasiados códigos erróneos: inténtalo de nuevo en unos minutos."
+  },
+  "reports": {
+    "unauthenticated": "Inicia sesión para reportar.",
+    "invalidTarget": "Este elemento no se puede reportar.",
+    "targetNotFound": "Este elemento ya no existe.",
+    "invalidReason": "Elige un motivo.",
+    "commentRequired": "Especifica el problema para el motivo «Otro».",
+    "ownContent": "No puedes reportar tu propio contenido: mejor propón una corrección en la web.",
+    "alreadyReported": "Ya has reportado este elemento. Un moderador se está encargando.",
+    "dailyLimit": "Diez reportes al día como máximo. Inténtalo de nuevo mañana.",
+    "busy": "Un moderador está resolviendo este reporte en este momento. Inténtalo de nuevo en un instante.",
+    "reportingSuspended": "Tres de tus reportes seguidos han sido desestimados: no puedes reportar durante 7 días."
+  }
+}

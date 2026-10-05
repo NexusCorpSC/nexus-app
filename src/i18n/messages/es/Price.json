@@ -1,0 +1,11 @@
+{
+  "thanksAccurate": "{points, plural, =0 {¡Gracias! Precios confirmados} one {¡Gracias! Precios confirmados, +# punto} other {¡Gracias! Precios confirmados, +# puntos}}",
+  "thanksOutdated": "Gracias, queda anotado.",
+  "reported": "Se ha abierto un reporte para revisar estos precios.",
+  "confirmedAgo": "Confirmado {ago}",
+  "never": "Nunca confirmado",
+  "accurate": "Sigue siendo exacto",
+  "outdated": "Nuevo precio",
+  "commentPlaceholder": "¿Qué precio has visto y dónde?",
+  "fixOnSite": "Corregir en la web"
+}

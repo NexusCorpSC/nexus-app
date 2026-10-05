@@ -1,0 +1,24 @@
+{
+  "title": "Notificaciones",
+  "description": "Se muestran sobre el juego, en la esquina elegida de la pantalla donde está el cursor, y luego desaparecen solas. Pasa el ratón por encima de una para mantenerla en pantalla.",
+  "showExample": "Mostrar un ejemplo",
+  "exampleBody": "Esto es un ejemplo de notificación.",
+  "display": "Visualización",
+  "corner": "Esquina de visualización",
+  "corners": {
+    "bottomRight": "Abajo a la derecha",
+    "bottomLeft": "Abajo a la izquierda",
+    "topRight": "Arriba a la derecha",
+    "topLeft": "Arriba a la izquierda"
+  },
+  "cornerApplied": {
+    "bottomRight": "Se mostrarán abajo a la derecha.",
+    "bottomLeft": "Se mostrarán abajo a la izquierda.",
+    "topRight": "Se mostrarán arriba a la derecha.",
+    "topLeft": "Se mostrarán arriba a la izquierda."
+  },
+  "cornerError": "No se pudo aplicar la esquina de visualización. Se aplicará en el próximo inicio.",
+  "contrib": "Mis contribuciones",
+  "contribHint": "Publicada, por corregir, logro desbloqueado o nuevo nivel.",
+  "contribError": "No se pudo guardar el ajuste."
+}

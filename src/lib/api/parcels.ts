@@ -1,4 +1,5 @@
 import { ApiError, apiRequest } from "@/lib/api-client";
+import { translator } from "@/i18n/translate";
 import type { Parcel } from "@/types/nexus";
 
 /**
@@ -44,31 +45,38 @@ export function cancelParcel(code: string) {
   );
 }
 
-const MESSAGES: Record<string, string | ((item: string) => string)> = {
-  invalid_code: "Ce n'est pas un code de colis : 8 lettres ou chiffres.",
-  invalid_items:
-    "Le colis contient un lot qui n'est plus dans votre inventaire.",
-  invalid_location: "Choisissez un lieu de stockage.",
-  not_found: "Aucun colis n'a ce code.",
-  too_many_attempts: "Trop de codes erronés : réessayez dans quelques minutes.",
-  own_parcel: "C'est votre propre colis : donnez ce code à un autre joueur.",
-  delivered: "Ce colis a déjà été reçu.",
-  cancelled: "L'expéditeur a annulé ce colis.",
-  expired: "Ce code a expiré.",
-  unavailable: (item) =>
-    `${item || "Un lot"} : la quantité n'est plus disponible.`,
-};
+/** The refusals of the parcels API that have a sentence of their own. */
+const KNOWN_ERRORS = [
+  "invalid_code",
+  "invalid_items",
+  "invalid_location",
+  "not_found",
+  "too_many_attempts",
+  "own_parcel",
+  "delivered",
+  "cancelled",
+  "expired",
+] as const;
+
+type KnownError = (typeof KNOWN_ERRORS)[number];
+
+function isKnownError(code: string): code is KnownError {
+  return (KNOWN_ERRORS as readonly string[]).includes(code);
+}
 
 /** A refusal of the parcels API, as a sentence. */
 export function parcelErrorMessage(error: unknown): string {
+  const t = translator("Parcels.errors");
   if (error instanceof ApiError) {
     const body = error.body as { error?: string; item?: string } | undefined;
-    const message = body?.error ? MESSAGES[body.error] : undefined;
-    if (typeof message === "function") return message(body?.item ?? "");
-    if (message) return message;
+    const code = body?.error;
+    if (code === "unavailable") {
+      return t("unavailable", { item: body?.item || t("someLot") });
+    }
+    if (code && isKnownError(code)) return t(code);
     return error.message;
   }
-  return error instanceof Error ? error.message : "L'opération a échoué.";
+  return error instanceof Error ? error.message : t("generic");
 }
 
 /** A code as typed: capitals and digits, at most 8. */

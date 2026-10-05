@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
@@ -22,6 +23,7 @@ import {
 import { formatDuration } from "@/lib/utils";
 
 export default function BlueprintDetailPage() {
+  const t = useTranslations("Blueprints.detail");
   const { slug = "" } = useParams();
 
   const blueprintQuery = useQuery({
@@ -40,7 +42,7 @@ export default function BlueprintDetailPage() {
   if (blueprintQuery.isError) {
     return (
       <>
-        <BackLink to="/blueprints">Retour aux blueprints</BackLink>
+        <BackLink to="/blueprints">{t("back")}</BackLink>
         <ErrorState
           error={blueprintQuery.error}
           onRetry={() => void blueprintQuery.refetch()}
@@ -58,7 +60,7 @@ export default function BlueprintDetailPage() {
 
   return (
     <>
-      <BackLink to="/blueprints">Retour aux blueprints</BackLink>
+      <BackLink to="/blueprints">{t("back")}</BackLink>
 
       <PageHeader
         title={blueprint.name}
@@ -82,25 +84,25 @@ export default function BlueprintDetailPage() {
               onClick={() => void openOnWeb()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Ouvrir sur le web
+              {t("openOnWeb")}
             </Button>
           </>
         }
       />
 
       <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <FactTile label="Fabrication" value={formatDuration(craftingTime)} />
+        <FactTile label={t("craftingTime")} value={formatDuration(craftingTime)} />
         {blueprint.tier !== undefined ? (
-          <FactTile label="Tier" value={blueprint.tier} />
+          <FactTile label={t("tier")} value={blueprint.tier} />
         ) : null}
         {blueprint.owned !== undefined ? (
           <FactTile
-            label="Possession"
+            label={t("ownership")}
             value={
               blueprint.owned ? (
-                <span className="text-emerald-300">Possédé</span>
+                <span className="text-emerald-300">{t("owned")}</span>
               ) : (
-                "Non possédé"
+                t("notOwned")
               )
             }
           />
@@ -122,7 +124,7 @@ export default function BlueprintDetailPage() {
               ) : null}
               {blueprint.description ? (
                 <div className="p-5">
-                  <SectionTitle>Description</SectionTitle>
+                  <SectionTitle>{t("description")}</SectionTitle>
                   <p className="text-sm leading-relaxed text-nexus-muted">
                     {blueprint.description}
                   </p>
@@ -132,7 +134,7 @@ export default function BlueprintDetailPage() {
           ) : null}
 
           <Card className="p-5">
-            <SectionTitle>Recette</SectionTitle>
+            <SectionTitle>{t("recipe")}</SectionTitle>
 
             {blueprint.recipe?.components?.length ? (
               <ul className="divide-y divide-nexus-accent/8">
@@ -154,7 +156,7 @@ export default function BlueprintDetailPage() {
                           <span className="font-mono text-nexus-dim">
                             ×{option.quantity}
                             {option.minQuality
-                              ? ` · qualité ≥ ${option.minQuality}`
+                              ? ` · ${t("minQuality", { quality: option.minQuality })}`
                               : ""}
                           </span>
                         </li>
@@ -165,7 +167,7 @@ export default function BlueprintDetailPage() {
               </ul>
             ) : (
               <p className="text-xs text-nexus-dim">
-                Aucune recette renseignée pour ce blueprint.
+                {t("noRecipe")}
               </p>
             )}
           </Card>
@@ -174,7 +176,7 @@ export default function BlueprintDetailPage() {
         <div className="space-y-4">
           {statistics.length > 0 ? (
             <Card className="p-5">
-              <SectionTitle>Statistiques</SectionTitle>
+              <SectionTitle>{t("statistics")}</SectionTitle>
               <dl className="divide-y divide-nexus-accent/8 text-xs">
                 {statistics.map(([name, stat]) => (
                   <div
@@ -194,7 +196,7 @@ export default function BlueprintDetailPage() {
 
           {blueprint.obtention ? (
             <Card className="p-5">
-              <SectionTitle>Obtention</SectionTitle>
+              <SectionTitle>{t("obtention")}</SectionTitle>
               <p className="text-xs leading-relaxed text-nexus-muted">
                 {blueprint.obtention}
               </p>

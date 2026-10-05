@@ -1,0 +1,11 @@
+{
+  "thanksAccurate": "{points, plural, =0 {Merci ! Cours confirmés} one {Merci ! Cours confirmés, +# point} other {Merci ! Cours confirmés, +# points}}",
+  "thanksOutdated": "Merci, c'est noté.",
+  "reported": "Un signalement est ouvert pour revoir ces cours.",
+  "confirmedAgo": "Confirmé {ago}",
+  "never": "Jamais confirmé",
+  "accurate": "Toujours exact",
+  "outdated": "Nouveau prix",
+  "commentPlaceholder": "Quel prix avez-vous relevé, et où ?",
+  "fixOnSite": "Corriger sur le site"
+}

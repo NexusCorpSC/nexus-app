@@ -1,0 +1,55 @@
+{
+  "list": {
+    "title": "Blueprints",
+    "description": "Les recettes de fabrication, et celles que vous possédez.",
+    "searchLabel": "Rechercher un blueprint",
+    "searchPlaceholder": "Nom du blueprint…",
+    "subcategory": "Sous-catégorie",
+    "allSubcategories": "Toutes",
+    "allCategories": "Toutes",
+    "ownership": "Possession",
+    "ownedAll": "Tous",
+    "ownedOwned": "Possédés",
+    "ownedNotOwned": "Non possédés",
+    "emptyTitle": "Aucun blueprint trouvé",
+    "emptyDescription": "Essayez un autre terme de recherche ou élargissez les filtres.",
+    "results": "{count, plural, one {# résultat} other {# résultats}}",
+    "owned": "Possédé"
+  },
+  "detail": {
+    "back": "Retour aux blueprints",
+    "openOnWeb": "Ouvrir sur le web",
+    "craftingTime": "Fabrication",
+    "tier": "Tier",
+    "ownership": "Possession",
+    "owned": "Possédé",
+    "notOwned": "Non possédé",
+    "description": "Description",
+    "recipe": "Recette",
+    "minQuality": "qualité ≥ {quality}",
+    "noRecipe": "Aucune recette renseignée pour ce blueprint.",
+    "statistics": "Statistiques",
+    "obtention": "Obtention"
+  },
+  "orgOwners": {
+    "title": "Dans mon organisation",
+    "signIn": "Connectez-vous pour voir qui, dans vos organisations, possède ce blueprint.",
+    "noOrgs": "Vous n'appartenez à aucune organisation.",
+    "empty": "Personne ne le possède dans cette organisation."
+  },
+  "ownership": {
+    "add": "Ajouter à mes blueprints",
+    "remove": "Retirer de mes blueprints",
+    "ownedRemove": "Possédé — retirer de mes blueprints",
+    "retry": "Réessayer",
+    "added": "Ajouté",
+    "addedTitle": "Ajouté à vos blueprints",
+    "alreadyIn": "Déjà dedans",
+    "alreadyInTitle": "Déjà dans vos blueprints",
+    "removed": "Retiré",
+    "removedTitle": "Retiré de vos blueprints",
+    "alreadyOut": "Déjà retiré",
+    "alreadyOutTitle": "N'était pas dans vos blueprints",
+    "failed": "Impossible — {message}"
+  }
+}

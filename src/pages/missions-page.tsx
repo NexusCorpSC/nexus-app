@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { listMissionFactions, listMissions } from "@/lib/api/missions";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -21,6 +22,7 @@ import {
 import { MissionCard } from "@/components/missions/mission-card";
 
 export default function MissionsPage() {
+  const t = useTranslations("Missions.list");
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [factionId, setFactionId] = useState(params.get("faction") ?? "");
@@ -66,27 +68,27 @@ export default function MissionsPage() {
   return (
     <>
       <PageHeader
-        title="Missions"
-        description="Parcourez les missions, leurs factions et les blueprints qu'elles débloquent."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Toolbar>
         <SearchField
-          label="Rechercher une mission"
-          placeholder="Titre ou description…"
+          label={t("searchLabel")}
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(event) =>
             updateFilter(() => setSearch(event.target.value))
           }
         />
         <ToolbarSelect
-          label="Faction"
+          label={t("faction")}
           value={factionId}
           onChange={(event) =>
             updateFilter(() => setFactionId(event.target.value))
           }
         >
-          <option value="">Toutes</option>
+          <option value="">{t("all")}</option>
           {factionsQuery.data?.map((faction) => (
             <option key={faction._id} value={faction._id}>
               {faction.name}
@@ -95,14 +97,13 @@ export default function MissionsPage() {
           ))}
         </ToolbarSelect>
         <ToolbarToggle
-          label="Avec blueprints"
+          label={t("withBlueprints")}
           checked={hasBlueprints}
           onChange={(checked) => updateFilter(() => setHasBlueprints(checked))}
         />
         {data && data.total > 0 ? (
           <span className="ml-auto text-xs text-nexus-dim">
-            {data.missions.length} sur {data.total.toLocaleString("fr-FR")}{" "}
-            mission{data.total > 1 ? "s" : ""}
+            {t("count", { shown: data.missions.length, total: data.total })}
           </span>
         ) : null}
       </Toolbar>
@@ -116,8 +117,8 @@ export default function MissionsPage() {
         />
       ) : missionsQuery.data.missions.length === 0 ? (
         <EmptyState
-          title="Aucune mission trouvée"
-          description="Modifiez la recherche ou changez de faction."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <>

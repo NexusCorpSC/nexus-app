@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { LogOut } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { PresenceForm } from "@/components/presence-form";
 import { useMyPresence } from "@/hooks/use-presence";
 import { plannedLabel, plannedOf } from "@/lib/presence";
@@ -21,6 +22,7 @@ export function SessionMenu({
   name: string;
   onSignOut: () => void;
 }) {
+  const t = useTranslations("Layout.session");
   const { presence } = useMyPresence(true);
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -48,11 +50,11 @@ export function SessionMenu({
   const planned = playing ? null : plannedOf(presence);
   const status = playing
     ? presence?.activity
-      ? `En jeu · ${presence.activity}`
-      : "En jeu"
+      ? t("playingActivity", { activity: presence.activity })
+      : t("playing")
     : planned
       ? plannedLabel(planned)
-      : "Hors jeu";
+      : t("off");
 
   return (
     <div ref={root} className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -79,7 +81,7 @@ export function SessionMenu({
           aria-expanded={open}
           aria-haspopup="dialog"
           onClick={() => setOpen((value) => !value)}
-          title={planned ? status : "Déclarer ce que vous faites en jeu"}
+          title={planned ? status : t("declare")}
           className={cn(
             "truncate text-left text-[11px] transition-colors hover:text-nexus-accent",
             playing
@@ -96,16 +98,15 @@ export function SessionMenu({
       {open ? (
         <div
           role="dialog"
-          aria-label="Ma session de jeu"
+          aria-label={t("title")}
           className="absolute bottom-full left-2 z-20 mb-2 flex w-72 flex-col gap-3 rounded-xl border border-nexus-accent/18 bg-nexus-card p-3.5 shadow-xl shadow-black/40"
         >
           <div>
             <p className="font-display text-sm font-semibold text-nexus-white">
-              Ma session de jeu
+              {t("title")}
             </p>
             <p className="mt-0.5 text-[11.5px] leading-snug text-nexus-muted">
-              Vos amis et vos organisations voient que vous jouez, ou quand vous
-              comptez jouer, et à quoi.
+              {t("hint")}
             </p>
           </div>
 
@@ -117,7 +118,7 @@ export function SessionMenu({
             className="flex items-center gap-1.5 border-t border-nexus-accent/10 pt-2.5 text-left text-xs text-nexus-dim transition-colors hover:text-nexus-accent"
           >
             <LogOut className="size-3.5" />
-            Se déconnecter
+            {t("signOut")}
           </button>
         </div>
       ) : null}

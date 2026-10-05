@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Check, Pencil, Trash2, X } from "lucide-react";
+import { useTranslations } from "use-intl";
 import {
   CONTAINER_SIZES,
   containerCount,
@@ -38,6 +39,7 @@ export function CapacitySummary({
   shipName: string;
   compact?: boolean;
 }) {
+  const t = useTranslations("Cargo.sheet");
   const used = totalVolume(lines);
   const remaining = capacity - used;
   const ratio = capacity > 0 ? Math.min(1, used / capacity) : 0;
@@ -68,7 +70,9 @@ export function CapacitySummary({
         >
           {used} / {capacity} SCU
           <span className="ml-2 text-nexus-bright/85">
-            {over ? `${-remaining} en trop` : `${remaining} libres`}
+            {over
+              ? t("over", { count: -remaining })
+              : t("free", { count: remaining })}
           </span>
         </p>
       </div>
@@ -88,9 +92,11 @@ export function CapacitySummary({
       </div>
 
       <p className="text-[11px] text-nexus-accent/50">
-        {lines.length} ligne{lines.length > 1 ? "s" : ""} ·{" "}
-        {containerCount(sumQuantities(lines))} conteneurs ·{" "}
-        {formatQuantities(sumQuantities(lines))}
+        {t("summary", {
+          lines: lines.length,
+          containers: containerCount(sumQuantities(lines)),
+          quantities: formatQuantities(sumQuantities(lines)),
+        })}
       </p>
     </div>
   );
@@ -132,6 +138,7 @@ export function CargoLineForm({
   onSubmit: (line: ParsedBulkLine) => void;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("Cargo.sheet");
   const start = initial ?? EMPTY_LINE;
 
   const [destination, setDestination] = useState(start.destination);
@@ -183,14 +190,14 @@ export function CargoLineForm({
       <form onSubmit={submit} onKeyDown={onKeyDown} className="space-y-1.5">
         <div className="grid grid-cols-2 gap-1.5">
           <CompactInput
-            label="Destination"
+            label={t("destination")}
             value={destination}
             onChange={setDestination}
             placeholder="Port Olisar"
             autoFocus
           />
           <CompactInput
-            label="Contenu"
+            label={t("content")}
             value={content}
             onChange={setContent}
             placeholder="Titanium"
@@ -198,24 +205,24 @@ export function CargoLineForm({
           {/* A bare number: the unit belongs in the label, and «32 SCU» as an
               example invites typing it back, which the field then refuses. */}
           <CompactInput
-            label="Volume en SCU"
+            label={t("volumeInScu")}
             value={volume}
             onChange={setVolume}
             placeholder="32"
             inputMode="numeric"
           />
           <CompactInput
-            label="Emplacement"
+            label={t("location")}
             value={location}
             onChange={setLocation}
             placeholder="Area18"
           />
           {withMission ? (
             <CompactInput
-              label="Mission"
+              label={t("mission")}
               value={mission}
               onChange={setMission}
-              placeholder={missionPlaceholder ?? "Mission"}
+              placeholder={missionPlaceholder ?? t("mission")}
               className="col-span-2"
             />
           ) : null}
@@ -233,7 +240,7 @@ export function CargoLineForm({
 
   return (
     <form onSubmit={submit} onKeyDown={onKeyDown} className="space-y-3">
-      <Field label="Destination">
+      <Field label={t("destination")}>
         <Input
           value={destination}
           onChange={(event) => setDestination(event.target.value)}
@@ -241,7 +248,7 @@ export function CargoLineForm({
         />
       </Field>
 
-      <Field label="Contenu">
+      <Field label={t("content")}>
         <Input
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -250,7 +257,7 @@ export function CargoLineForm({
       </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Volume (SCU)">
+        <Field label={t("volume")}>
           <Input
             value={volume}
             inputMode="numeric"
@@ -259,7 +266,7 @@ export function CargoLineForm({
           />
         </Field>
 
-        <Field label="Emplacement">
+        <Field label={t("location")}>
           <Input
             value={location}
             onChange={(event) => setLocation(event.target.value)}
@@ -269,11 +276,11 @@ export function CargoLineForm({
       </div>
 
       {withMission ? (
-        <Field label="Mission">
+        <Field label={t("mission")}>
           <Input
             value={mission}
             onChange={(event) => setMission(event.target.value)}
-            placeholder={missionPlaceholder ?? "Mission"}
+            placeholder={missionPlaceholder ?? t("mission")}
           />
         </Field>
       ) : null}
@@ -299,6 +306,8 @@ function FormActions({
   valid: boolean;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("Cargo.sheet");
+
   return (
     <div className="flex items-center gap-2">
       <Button type="submit" size="sm" disabled={!valid}>
@@ -308,7 +317,7 @@ function FormActions({
 
       {onCancel ? (
         <Button type="button" size="sm" variant="ghost" onClick={onCancel}>
-          Annuler
+          {t("cancel")}
         </Button>
       ) : null}
     </div>
@@ -370,6 +379,7 @@ export function MissionGroups({
   onRenameMission?: (from: string, to: string) => void;
   onEditLine?: (id: string, line: ParsedBulkLine) => void;
 }) {
+  const t = useTranslations("Cargo.sheet");
   const groups = groupByMission(lines);
   const [editing, setEditing] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -406,7 +416,7 @@ export function MissionGroups({
               <>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-medium text-nexus-bright/90">
-                    {group.mission || "Sans mission"}
+                    {group.mission || t("noMission")}
                   </p>
 
                   {/* Narrow, the counts go under the name rather than beside
@@ -430,7 +440,7 @@ export function MissionGroups({
                       default, not a mission: there is no name to rewrite. */}
                   {onRenameMission && group.mission ? (
                     <IconButton
-                      label="Renommer la mission"
+                      label={t("renameMission")}
                       onClick={() => setRenaming(group.mission)}
                     >
                       <Pencil className="size-3" />
@@ -439,7 +449,7 @@ export function MissionGroups({
 
                   {onRemoveMission && group.mission ? (
                     <IconButton
-                      label="Supprimer la mission"
+                      label={t("deleteMission")}
                       danger
                       onClick={() => onRemoveMission(group.mission)}
                     >
@@ -461,7 +471,7 @@ export function MissionGroups({
                       compact={compact}
                       withMission
                       missionPlaceholder={missionPlaceholder}
-                      submitLabel="Enregistrer"
+                      submitLabel={t("save")}
                       submitIcon={<Check className="h-3.5 w-3.5" />}
                       onSubmit={(edit) => {
                         onEditLine(line.id, edit);
@@ -489,7 +499,7 @@ export function MissionGroups({
                       <div className="flex items-baseline gap-2 text-[11px] text-nexus-accent/50">
                         {line.location ? (
                           <span className="truncate">
-                            Depuis {line.location}
+                            {t("from", { location: line.location })}
                           </span>
                         ) : null}
                         {compact ? (
@@ -512,7 +522,7 @@ export function MissionGroups({
 
                     {onEditLine ? (
                       <IconButton
-                        label="Modifier la ligne"
+                        label={t("editLine")}
                         onClick={() => setEditing(line.id)}
                       >
                         <Pencil className="size-3" />
@@ -521,7 +531,7 @@ export function MissionGroups({
 
                     {onRemoveLine ? (
                       <IconButton
-                        label="Supprimer la ligne"
+                        label={t("deleteLine")}
                         danger
                         onClick={() => onRemoveLine(line.id)}
                       >
@@ -581,6 +591,7 @@ function MissionRename({
   onSubmit: (name: string) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("Cargo.sheet");
   const [value, setValue] = useState(name);
   const trimmed = value.trim();
 
@@ -601,7 +612,7 @@ function MissionRename({
       }}
     >
       <input
-        aria-label="Nom de la mission"
+        aria-label={t("missionName")}
         autoFocus
         value={value}
         onChange={(event) => setValue(event.target.value)}
@@ -611,10 +622,10 @@ function MissionRename({
         )}
       />
 
-      <IconButton type="submit" label="Enregistrer le nom">
+      <IconButton type="submit" label={t("saveName")}>
         <Check className="size-3" />
       </IconButton>
-      <IconButton label="Annuler" onClick={onCancel}>
+      <IconButton label={t("cancel")} onClick={onCancel}>
         <X className="size-3" />
       </IconButton>
     </form>
@@ -629,6 +640,7 @@ export function CloseSheetButton({
   lineCount: number;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("Cargo.sheet");
   const [asking, setAsking] = useState(false);
 
   if (!asking) {
@@ -639,7 +651,7 @@ export function CloseSheetButton({
         variant="danger"
         onClick={() => (lineCount > 0 ? setAsking(true) : onConfirm())}
       >
-        Clôturer
+        {t("close")}
       </Button>
     );
   }
@@ -656,7 +668,7 @@ export function CloseSheetButton({
         }}
       >
         <Check className="h-3.5 w-3.5" />
-        {lineCount} ligne{lineCount > 1 ? "s" : ""} — confirmer
+        {t("confirmClose", { count: lineCount })}
       </Button>
       <Button
         type="button"
@@ -665,7 +677,7 @@ export function CloseSheetButton({
         onClick={() => setAsking(false)}
       >
         <X className="h-3.5 w-3.5" />
-        <span className="sr-only">Annuler</span>
+        <span className="sr-only">{t("cancel")}</span>
       </Button>
     </div>
   );

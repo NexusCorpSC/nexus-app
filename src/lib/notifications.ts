@@ -90,13 +90,6 @@ export type NotificationCorner = (typeof NOTIFICATION_CORNERS)[number];
 /** Where Windows shows its own notifications, so it is where users look. */
 export const DEFAULT_NOTIFICATION_CORNER: NotificationCorner = "bottom-right";
 
-export const NOTIFICATION_CORNER_LABELS: Record<NotificationCorner, string> = {
-  "bottom-right": "En bas à droite",
-  "bottom-left": "En bas à gauche",
-  "top-right": "En haut à droite",
-  "top-left": "En haut à gauche",
-};
-
 /**
  * How long a toast stays up, by severity: long enough to read a failure, short
  * enough that a confirmation does not linger over the game.

@@ -1,0 +1,51 @@
+{
+  "readyCount": "{ready}/{total} prêts",
+  "sectors": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "readyDisabled": "Indisponible : éliminé",
+    "youAreReady": "Tu es : prêt",
+    "youAreNotReady": "Tu es : pas prêt",
+    "alive": "ACTIF",
+    "down": "ÉLIMINÉ",
+    "youAreDown": "Tu es : éliminé",
+    "youAreAlive": "Tu es : actif",
+    "mainWindow": "Fenêtre principale",
+    "lock": "VERROUILLER",
+    "unlock": "DÉVERROUILLER",
+    "overlays": "Superpositions",
+    "overlaysLocked": "Superpositions verrouillées",
+    "capture": "CAPTURE",
+    "areaCapture": "Capture de zone"
+  },
+  "hint": {
+    "release": "relâcher pour valider",
+    "cancel": "au centre ou Échap pour annuler"
+  },
+  "hub": {
+    "mainTitle": "Ouvrir Nexus",
+    "mainDetail": "Affiche la fenêtre principale",
+    "unavailableTitle": "Indisponible",
+    "unavailableDetail": "Repasse Actif d'abord",
+    "goNotReady": "Passer NOT READY",
+    "goReady": "Passer READY",
+    "releaseToConfirm": "Relâche pour valider",
+    "backAlive": "Revenir actif",
+    "goDown": "Me déclarer éliminé",
+    "goDownDetail": "Retire aussi READY",
+    "unlockTitle": "Déverrouiller",
+    "unlockDetail": "Les fenêtres reprennent les clics",
+    "lockTitle": "Verrouiller",
+    "lockDetail": "Les clics passent au jeu",
+    "captureTitle": "Capture de zone",
+    "captureDetail": "Relâche pour lancer",
+    "noneTitle": "Aucune action",
+    "noneDetail": "Relâcher ici annule"
+  },
+  "notify": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "down": "Éliminé",
+    "alive": "Actif"
+  }
+}

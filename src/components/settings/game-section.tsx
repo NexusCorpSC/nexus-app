@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   DEFAULT_GAME_LOG_DIR,
   getGameLogSettings,
@@ -17,6 +18,7 @@ import {
 } from "@/components/settings/section-header";
 
 export function GameSection() {
+  const t = useTranslations("SettingsGame");
   const [dir, setDir] = useState(DEFAULT_GAME_LOG_DIR);
   const [enabled, setEnabled] = useState(true);
   const [saved, setSaved] = useState<{ dir: string; enabled: boolean } | null>(
@@ -56,11 +58,7 @@ export function GameSection() {
       setSaved(next);
       refreshStatus();
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "Les réglages n'ont pas pu être enregistrés.",
-      );
+      setError(cause instanceof Error ? cause.message : t("saveError"));
     } finally {
       setSaving(false);
     }
@@ -69,12 +67,12 @@ export function GameSection() {
   return (
     <section>
       <SettingsSectionHeader
-        title="Jeu"
-        description="Nexus App lit le Game.log de Star Citizen pendant que vous jouez. Quand vous recevez un blueprint en jeu, une notification vous propose de l'ajouter à vos blueprints Nexus."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Card>
-        <SettingsCardTitle>Analyse du Game.log</SettingsCardTitle>
+        <SettingsCardTitle>{t("cardTitle")}</SettingsCardTitle>
         <div className="space-y-4 p-4">
           <label className="flex cursor-pointer items-center gap-2 text-[13.5px] text-nexus-bright">
             <input
@@ -83,10 +81,10 @@ export function GameSection() {
               onChange={(event) => setEnabled(event.target.checked)}
               className="accent-nexus-accent"
             />
-            Analyser le Game.log
+            {t("enable")}
           </label>
 
-          <Field label="Dossier de Star Citizen">
+          <Field label={t("dirLabel")}>
             <div className="flex gap-2">
               <Input
                 value={dir}
@@ -101,23 +99,22 @@ export function GameSection() {
                 onClick={() => setDir(DEFAULT_GAME_LOG_DIR)}
                 disabled={!enabled || dir === DEFAULT_GAME_LOG_DIR}
               >
-                Par défaut
+                {t("defaultDir")}
               </Button>
             </div>
           </Field>
           <p className="text-xs text-nexus-muted">
-            Le dossier qui contient <code>Game.log</code>, par exemple celui de
-            la version LIVE ou PTU.
+            {t.rich("dirHint", { code: (chunks) => <code>{chunks}</code> })}
           </p>
 
           {status ? (
             <div className="flex flex-wrap items-center gap-2 text-xs text-nexus-muted">
               {!status.enabled ? (
-                <Badge>Désactivée</Badge>
+                <Badge>{t("disabled")}</Badge>
               ) : status.exists ? (
-                <Badge tone="success">Game.log trouvé</Badge>
+                <Badge tone="success">{t("found")}</Badge>
               ) : (
-                <Badge tone="warning">Game.log introuvable</Badge>
+                <Badge tone="warning">{t("missing")}</Badge>
               )}
               <span className="break-all">{status.path}</span>
             </div>
@@ -131,7 +128,7 @@ export function GameSection() {
               onClick={() => void save()}
               disabled={!dirty || saving}
             >
-              Enregistrer
+              {t("save")}
             </Button>
           </div>
         </div>

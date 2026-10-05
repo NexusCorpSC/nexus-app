@@ -1,4 +1,5 @@
 import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
+import { translator } from "@/i18n/translate";
 import {
   getApiBaseUrl,
   getSessionCookie,
@@ -139,7 +140,7 @@ export async function apiRequest<T>(
   } catch (cause) {
     throw new ApiError(
       0,
-      `Impossible de joindre ${baseUrl}. Vérifiez l'URL de l'API et votre connexion.`,
+      translator("Api")("unreachable", { url: baseUrl }),
       cause,
     );
   }
@@ -165,7 +166,11 @@ export async function apiRequest<T>(
   if (!response.ok) {
     const message =
       extractErrorMessage(payload) ??
-      `${method} ${path} a échoué (HTTP ${response.status})`;
+      translator("Api")("httpFailed", {
+        method,
+        path,
+        status: response.status,
+      });
 
     throw new ApiError(response.status, message, payload);
   }

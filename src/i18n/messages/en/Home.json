@@ -1,0 +1,49 @@
+{
+  "greeting": "Hello, {name}",
+  "welcome": "Welcome",
+  "intro": "Everything you need before launching the game, and the windows to keep on top of it.",
+  "overlays": {
+    "title": "Overlays",
+    "radialHint": "In game, hold <key>{shortcut}</key> for the radial menu",
+    "search": "Search",
+    "squad": "Squad",
+    "map": "Map",
+    "plan": "Flight plan",
+    "notes": "Scratch pad",
+    "cargo": "Cargo"
+  },
+  "database": {
+    "title": "Database",
+    "blueprints": {
+      "title": "Blueprints",
+      "detail": "Recipes and ownership"
+    },
+    "items": {
+      "title": "Items",
+      "detail": "Where to buy them, and at what price"
+    },
+    "places": {
+      "title": "Locations",
+      "detail": "Stations, cities, maps"
+    },
+    "missions": {
+      "title": "Missions",
+      "detail": "Rewards and blueprints"
+    }
+  },
+  "squad": {
+    "title": "Squad",
+    "inviteCode": "Invite code <mono>{code}</mono>",
+    "ready": "{ready}/{total} ready",
+    "signedOut": "Sign in to find your squad.",
+    "none": "You're not in any squad. Create one or join one from the overlay.",
+    "openOverlay": "Open the overlay",
+    "plan": "Flight plan"
+  },
+  "notes": {
+    "title": "Scratch pad",
+    "saved": "Saved {date}",
+    "empty": "Nothing noted yet.",
+    "open": "Open the scratch pad"
+  }
+}

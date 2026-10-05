@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Check, ExternalLink, PenLine } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { translator } from "@/i18n/translate";
 import { useAuth } from "@/auth/auth-context";
 import { confirmPrices, confirmationErrorMessage } from "@/lib/api/contrib";
 import { notify } from "@/lib/notifications";
@@ -27,6 +29,8 @@ export function PriceConfirmation({
   /** `resource.pricesUpdatedAt`: a confirmation moves it to now. */
   updatedAt?: string;
 }) {
+  const t = useTranslations("Price");
+  const common = useTranslations("Common");
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [correcting, setCorrecting] = useState(false);
@@ -37,17 +41,15 @@ export function PriceConfirmation({
       confirmPrices(slug, accurate, accurate ? undefined : comment.trim()),
     onSuccess: async (result, accurate) => {
       const points = result.confirmation.points;
+      // Read now rather than from the render: the answer may come back after
+      // a change of language.
+      const price = translator("Price");
       await notify({
         kind: "success",
         title: accurate
-          ? points > 0
-            ? `Merci ! Cours confirmés, +${points} points`
-            : "Merci ! Cours confirmés"
-          : "Merci, c'est noté.",
-        body:
-          !accurate && result.reported
-            ? "Un signalement est ouvert pour revoir ces cours."
-            : undefined,
+          ? price("thanksAccurate", { points: Math.max(points, 0) })
+          : price("thanksOutdated"),
+        body: !accurate && result.reported ? price("reported") : undefined,
         route: `/items/${slug}`,
       });
       setCorrecting(false);
@@ -68,7 +70,9 @@ export function PriceConfirmation({
     <div className="mt-4 rounded-lg border border-nexus-accent/12 bg-nexus-abyss/40 px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <p className="mr-auto text-xs text-nexus-muted">
-          {updatedAt ? `Confirmé ${formatAgo(updatedAt)}` : "Jamais confirmé"}
+          {updatedAt
+            ? t("confirmedAgo", { ago: formatAgo(updatedAt) })
+            : t("never")}
           <span className="ml-2 rounded-full bg-amber-300/12 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-200">
             +{CONFIRMATION_POINTS}
           </span>
@@ -79,7 +83,7 @@ export function PriceConfirmation({
           disabled={send.isPending}
         >
           <Check className="h-3.5 w-3.5" />
-          Toujours exact
+          {t("accurate")}
         </Button>
         <Button
           variant="outline"
@@ -89,7 +93,7 @@ export function PriceConfirmation({
           aria-expanded={correcting}
         >
           <PenLine className="h-3.5 w-3.5" />
-          Nouveau prix
+          {t("outdated")}
         </Button>
       </div>
 
@@ -106,7 +110,7 @@ export function PriceConfirmation({
             value={comment}
             maxLength={MAX_CONFIRMATION_COMMENT_LENGTH}
             onChange={(event) => setComment(event.target.value)}
-            placeholder="Quel prix avez-vous relevé, et où ?"
+            placeholder={t("commentPlaceholder")}
             className="w-full resize-y rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -117,14 +121,14 @@ export function PriceConfirmation({
               onClick={() => void openContribute()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Corriger sur le site
+              {t("fixOnSite")}
             </Button>
             <Button
               type="submit"
               size="sm"
               disabled={send.isPending || comment.trim().length === 0}
             >
-              {send.isPending ? "Envoi…" : "Envoyer"}
+              {send.isPending ? common("sending") : common("send")}
             </Button>
           </div>
         </form>

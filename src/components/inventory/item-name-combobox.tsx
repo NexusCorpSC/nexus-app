@@ -12,10 +12,12 @@ import {
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Package } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
 import { listItems } from "@/lib/api/items";
 import { useDebounced } from "@/hooks/use-debounced";
 import { cn } from "@/lib/utils";
-import { ITEM_KIND_LABELS, type ItemKind } from "@/types/nexus";
+import { type ItemKind } from "@/types/nexus";
 
 /** Case and accents aside, as a player types an object's name. */
 function fold(text: string) {
@@ -66,6 +68,8 @@ export function ItemNameCombobox({
   onPaste?: (e: ClipboardEvent<HTMLInputElement>) => void;
   "aria-label"?: string;
 }) {
+  const t = useTranslations("Inventory");
+  const tItems = useTranslations("Items");
   const listId = useId();
   const fieldRef = useRef<HTMLInputElement | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -111,7 +115,7 @@ export function ItemNameCombobox({
         (a, b) =>
           Number(b.held) - Number(a.held) ||
           starts(a) - starts(b) ||
-          a.name.localeCompare(b.name, "fr"),
+          a.name.localeCompare(b.name, getLocale()),
       )
       .slice(0, MAX_SUGGESTIONS);
   }, [typed, query, held, remoteQuery.data]);
@@ -259,9 +263,9 @@ export function ItemNameCombobox({
                   <span className="truncate">{suggestion.name}</span>
                   <span className="ml-auto shrink-0 pl-2 text-xs text-nexus-dim">
                     {suggestion.held
-                      ? "En stock"
+                      ? t("itemNameHeld")
                       : suggestion.kind
-                        ? ITEM_KIND_LABELS[suggestion.kind]
+                        ? tItems(`kinds.${suggestion.kind}`)
                         : null}
                   </span>
                 </div>

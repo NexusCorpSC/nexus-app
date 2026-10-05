@@ -8,9 +8,10 @@
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::AppHandle;
+use tauri::{AppHandle, Wry};
 
 use crate::diagnostics::log;
+use crate::native_labels::{self, NativeLabels};
 use crate::{show_main_window, trigger, Action};
 
 /// The Nexus Corp logo, taken at 128 px rather than at the 32 px of the window
@@ -28,26 +29,42 @@ const PLAN_ITEM: &str = "tray-plan";
 const MAP_ITEM: &str = "tray-map";
 const QUIT_ITEM: &str = "tray-quit";
 
-/// Adds the icon for as long as the app runs.
-pub fn install(app: &AppHandle) -> tauri::Result<()> {
-    let search = MenuItem::with_id(app, SEARCH_ITEM, "Recherche rapide", true, None::<&str>)?;
-    let capture = MenuItem::with_id(app, CAPTURE_ITEM, "Capture de zone", true, None::<&str>)?;
-    let notes = MenuItem::with_id(app, NOTES_ITEM, "Bloc-notes", true, None::<&str>)?;
-    let cargo = MenuItem::with_id(app, CARGO_ITEM, "Feuille de cargo", true, None::<&str>)?;
-    let squad = MenuItem::with_id(app, SQUAD_ITEM, "Escouade", true, None::<&str>)?;
-    let plan = MenuItem::with_id(app, PLAN_ITEM, "Plan de vol", true, None::<&str>)?;
-    let map = MenuItem::with_id(app, MAP_ITEM, "Carte", true, None::<&str>)?;
-    let separator = PredefinedMenuItem::separator(app)?;
-    let quit = MenuItem::with_id(app, QUIT_ITEM, "Quitter Nexus App", true, None::<&str>)?;
+const TRAY_ID: &str = "nexus-app";
 
-    let menu = Menu::with_items(
+/// The menu, in the language the webview last asked for.
+fn build_menu(app: &AppHandle, labels: &NativeLabels) -> tauri::Result<Menu<Wry>> {
+    let search = MenuItem::with_id(app, SEARCH_ITEM, &labels.search, true, None::<&str>)?;
+    let capture = MenuItem::with_id(app, CAPTURE_ITEM, &labels.capture, true, None::<&str>)?;
+    let notes = MenuItem::with_id(app, NOTES_ITEM, &labels.notes, true, None::<&str>)?;
+    let cargo = MenuItem::with_id(app, CARGO_ITEM, &labels.cargo, true, None::<&str>)?;
+    let squad = MenuItem::with_id(app, SQUAD_ITEM, &labels.squad, true, None::<&str>)?;
+    let plan = MenuItem::with_id(app, PLAN_ITEM, &labels.plan, true, None::<&str>)?;
+    let map = MenuItem::with_id(app, MAP_ITEM, &labels.map, true, None::<&str>)?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    let quit = MenuItem::with_id(app, QUIT_ITEM, &labels.quit, true, None::<&str>)?;
+
+    Menu::with_items(
         app,
         &[
             &search, &capture, &notes, &cargo, &squad, &plan, &map, &separator, &quit,
         ],
-    )?;
+    )
+}
 
-    let mut tray = TrayIconBuilder::with_id("nexus-app")
+/// Swaps the menu for one in another language. The ids stay the same, so
+/// `on_menu` needs no telling.
+pub(crate) fn relabel(app: &AppHandle, labels: &NativeLabels) -> tauri::Result<()> {
+    let Some(tray) = app.tray_by_id(TRAY_ID) else {
+        return Ok(());
+    };
+    tray.set_menu(Some(build_menu(app, labels)?))
+}
+
+/// Adds the icon for as long as the app runs.
+pub fn install(app: &AppHandle) -> tauri::Result<()> {
+    let menu = build_menu(app, &native_labels::current(app))?;
+
+    let mut tray = TrayIconBuilder::with_id(TRAY_ID)
         .tooltip("Nexus App")
         .menu(&menu)
         // Windows convention, and what the request asks for: the left button

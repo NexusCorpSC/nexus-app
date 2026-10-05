@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useQuery } from "@tanstack/react-query";
 import { Map as MapIcon, Search, X } from "lucide-react";
+import { useTranslations } from "use-intl";
 
 import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
@@ -15,7 +16,6 @@ import { getPlacePlans, listPlaces } from "@/lib/api/places";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { onPinnedMapChange, pinMap, readPinnedMap } from "@/lib/pinned-map";
 import { cn } from "@/lib/utils";
-import { PLACE_TYPE_LABELS } from "@/types/nexus";
 
 /**
  * La carte d'un lieu, par-dessus le jeu.
@@ -39,6 +39,7 @@ import { PLACE_TYPE_LABELS } from "@/types/nexus";
  */
 export default function MapOverlayPage() {
   useTransparentWindow();
+  const t = useTranslations("MapOverlay");
 
   const mode = useOverlayMode("map");
   const locked = useOverlayLocked("map");
@@ -124,7 +125,7 @@ export default function MapOverlayPage() {
 
         <div className="pointer-events-none min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-slate-200">
-            {query.data?.name ?? "Carte"}
+            {query.data?.name ?? t("title")}
           </p>
           {query.data && query.data.ancestors.length > 0 ? (
             <p className="truncate text-[11px] text-slate-400">
@@ -136,7 +137,7 @@ export default function MapOverlayPage() {
         <button
           type="button"
           onClick={() => setPicking(!open)}
-          title="Choisir un lieu"
+          title={t("pick")}
           aria-pressed={open}
           className={cn(
             "shrink-0 rounded p-1 transition hover:bg-white/10",
@@ -145,7 +146,7 @@ export default function MapOverlayPage() {
               : "text-slate-400 hover:text-slate-100",
           )}
         >
-          <span className="sr-only">Choisir un lieu</span>
+          <span className="sr-only">{t("pick")}</span>
           <Search className="size-4" />
         </button>
 
@@ -155,10 +156,10 @@ export default function MapOverlayPage() {
         <button
           type="button"
           onClick={close}
-          title="Fermer"
+          title={t("close")}
           className="shrink-0 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
         >
-          <span className="sr-only">Fermer</span>
+          <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
         </button>
       </div>
@@ -193,23 +194,20 @@ export default function MapOverlayPage() {
       ) : !read || (slug && query.isPending) ? (
         <Note>…</Note>
       ) : !slug ? (
-        <Note>
-          Aucune carte épinglée. Épinglez-en une depuis la fiche d'un lieu, ou
-          choisissez ici.
-        </Note>
+        <Note>{t("noPinned")}</Note>
       ) : query.isError ? (
         <Note>
-          La carte n'a pas pu être chargée.
+          {t("loadFailed")}
           <button
             type="button"
             onClick={() => void query.refetch()}
             className="ml-1 underline underline-offset-2 hover:text-slate-200"
           >
-            Réessayer
+            {t("retry")}
           </button>
         </Note>
       ) : !active ? (
-        <Note>Ce lieu n'a pas encore été relevé.</Note>
+        <Note>{t("notSurveyed")}</Note>
       ) : (
         <MapView
           plan={active}
@@ -237,6 +235,8 @@ function Note({ children }: { children: React.ReactNode }) {
  * recherche pourtant juste un résultat vide, ce qui ne s'explique pas.
  */
 function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
+  const t = useTranslations("MapOverlay");
+  const tPlaces = useTranslations("Places");
   const [search, setSearch] = useState("");
   const query = useDebounced(search);
 
@@ -251,7 +251,7 @@ function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
         autoFocus
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Nom d'un lieu…"
+        placeholder={t("searchPlaceholder")}
         className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
       />
 
@@ -260,11 +260,11 @@ function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
           <p className="px-1 py-2 text-[12px] text-slate-500">…</p>
         ) : results.isError ? (
           <p className="px-1 py-2 text-[12px] text-slate-500">
-            La recherche a échoué.
+            {t("searchFailed")}
           </p>
         ) : results.data.places.length === 0 ? (
           <p className="px-1 py-2 text-[12px] text-slate-500">
-            Aucun lieu trouvé.
+            {t("noResults")}
           </p>
         ) : (
           results.data.places.map((place) => {
@@ -295,8 +295,8 @@ function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
                             (name, index, all) =>
                               !!name && all.indexOf(name) === index,
                           )
-                          .join(" › ") || PLACE_TYPE_LABELS[place.type]
-                      : "Pas encore relevé"}
+                          .join(" › ") || tPlaces(`types.${place.type}`)
+                      : t("notSurveyedYet")}
                   </span>
                 </span>
               </button>

@@ -1,0 +1,41 @@
+{
+  "manage": "Manage the raid",
+  "create": "Create a raid",
+  "announcement": "Announcement to the whole raid",
+  "announcementTo": "Announcement to {name}",
+  "readyCheck": "Ready check",
+  "readyCheckHint": "The whole raid goes back to “not ready” and gets a notification",
+  "columns": "{count, plural, one {One column} other {# columns}}",
+  "columnsCycle": "{current} — switch to {next}",
+  "squad": {
+    "fold": "Collapse {name}",
+    "unfold": "Expand {name}",
+    "lead": "Lead squad of the raid",
+    "pip": "{name} — {state, select, down {down} ready {ready} other {not ready}}",
+    "move": "Move {name}",
+    "earlier": "Move {name} up",
+    "later": "Move {name} down"
+  },
+  "sheet": {
+    "intro": "A raid groups several squads under one announcement. Each keeps its code, its leader and its roles.",
+    "linked": "Linked squads",
+    "summary": "{squads} · {players, plural, one {# player} other {# players}}",
+    "lead": "Lead squad",
+    "players": "{count, plural, one {# player} other {# players}}",
+    "switchTo": "Switch to {name}",
+    "unlink": "Remove {name} from the raid",
+    "full": "A raid holds at most {max} squads",
+    "newSquadHint": "Open one more squad in the raid",
+    "newSquad": "New squad",
+    "code": "Raid code: <value>{code}</value>",
+    "leave": "Leave the raid",
+    "codeLabel": "Raid code",
+    "link": "Link my squad",
+    "onlyCommanders": "Only the squad leader and their lieutenants can take it into a raid."
+  },
+  "notifications": {
+    "readyCheckTitle": "Raid ready check — {name}",
+    "readyCheckBody": "{by} asks the whole raid to say they are ready.",
+    "announcementTitle": "Raid announcement — {name}"
+  }
+}

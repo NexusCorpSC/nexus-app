@@ -1,0 +1,17 @@
+{
+  "title": "Mises à jour",
+  "description": "L'application regarde au démarrage, puis toutes les six heures, si une release plus récente est publiée. Rien n'est installé sans votre accord.",
+  "check": "Vérifier maintenant",
+  "checking": "Recherche…",
+  "version": "Version",
+  "installed": "Installée",
+  "latest": "Vous avez la dernière version ({version}).",
+  "available": "Disponible",
+  "versionNumber": "Version {version}",
+  "installedVersion": "installée : {version}",
+  "downloading": "Téléchargement… {progress}. L'application redémarrera pour terminer.",
+  "percent": "{percent} %",
+  "megabytes": "{size} Mo",
+  "install": "Installer et redémarrer",
+  "installFailed": "L'installation a échoué : {error}"
+}

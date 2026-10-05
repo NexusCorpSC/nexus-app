@@ -1,0 +1,29 @@
+{
+  "title": "Compte",
+  "description": "La session ouverte sur l'instance configurée dans Général.",
+  "session": "Session",
+  "signedInAs": "Connecté en tant que",
+  "signedOut": "Non connecté",
+  "profile": {
+    "title": "Profil",
+    "loadError": "Impossible de lire vos organisations sur cette instance.",
+    "noOrganization": "Rejoignez une organisation pour l'afficher avec votre pseudo.",
+    "label": "Organisation affichée avec mon pseudo",
+    "auto": "Automatique : la première en commun",
+    "saveError": "L'enregistrement a échoué. Réessayez.",
+    "hint": "Vos amis la voient à côté de votre pseudo. En automatique, ou si vous quittez l'organisation choisie, chacun voit la première organisation que vous avez en commun."
+  },
+  "contrib": {
+    "title": "Contributions",
+    "loadError": "Impossible de lire votre niveau sur cette instance.",
+    "levelBadge": "N{level}",
+    "pointsOf": "{points} / {next} pts",
+    "points": "{points} pts",
+    "nextLevel": "{name} à {points} points.",
+    "lastLevel": "Dernier niveau gagné par les points.",
+    "achievements": "{count, plural, one {# succès débloqué} other {# succès débloqués}}.",
+    "siteHint": "Les plans dessinés et les nouveaux objets se proposent sur le site, avec votre historique et le classement.",
+    "openSite": "Mes contributions sur le site",
+    "loading": "Chargement…"
+  }
+}

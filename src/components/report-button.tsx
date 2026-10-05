@@ -1,25 +1,17 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { CircleCheck, Flag } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { reportErrorMessage, submitReport } from "@/lib/api/reports";
 import { cn } from "@/lib/utils";
 import {
   MAX_REPORT_COMMENT_LENGTH,
   REPORT_REASONS,
-  REPORT_REASON_LABELS,
   REPORT_UPHELD_POINTS,
   type ReportReason,
   type ReportTargetType,
 } from "@/types/nexus";
 import { Button, Modal } from "@/components/ui";
-
-const TITLES: Record<ReportTargetType, string> = {
-  place: "Signaler ce lieu",
-  placeMedia: "Signaler cette image",
-  plan: "Signaler cette carte",
-  item: "Signaler cet objet",
-  org: "Signaler cette organisation",
-};
 
 /**
  * « Signaler », avec le même formulaire que sur le site : un motif, un
@@ -36,13 +28,14 @@ export function ReportButton({
   id: string;
   name: string;
 }) {
+  const t = useTranslations("Report");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
         <Flag className="h-3.5 w-3.5" />
-        Signaler
+        {t("button")}
       </Button>
       {open ? (
         <ReportModal
@@ -67,6 +60,8 @@ function ReportModal({
   name: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("Report");
+  const common = useTranslations("Common");
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [comment, setComment] = useState("");
   const send = useMutation({
@@ -83,19 +78,17 @@ function ReportModal({
     return (
       <Modal
         open
-        title="Merci, c'est noté"
+        title={t("doneTitle")}
         icon={<CircleCheck className="size-5" />}
         onClose={onClose}
         footer={
           <Button variant="outline" onClick={onClose} className="ml-auto">
-            Fermer
+            {common("close")}
           </Button>
         }
       >
         <p className="text-[13px] leading-relaxed text-nexus-muted">
-          La décision s'affichera dans Mes contributions, sur le site. Si le
-          signalement est retenu, il vous rapporte {REPORT_UPHELD_POINTS}{" "}
-          {REPORT_UPHELD_POINTS > 1 ? "points" : "point"}.
+          {t("doneBody", { points: REPORT_UPHELD_POINTS })}
         </p>
       </Modal>
     );
@@ -104,27 +97,27 @@ function ReportModal({
   return (
     <Modal
       open
-      title={TITLES[type]}
-      description={`${name} · un modérateur examine chaque signalement`}
+      title={t(`title.${type}`)}
+      description={t("subtitle", { name })}
       icon={<Flag className="size-5" />}
       onClose={onClose}
       footer={
         <>
           <Button variant="outline" onClick={onClose} className="ml-auto">
-            Annuler
+            {common("cancel")}
           </Button>
           <Button
             onClick={() => send.mutate()}
             disabled={!reason || needsComment || send.isPending}
           >
-            {send.isPending ? "Envoi…" : "Envoyer le signalement"}
+            {send.isPending ? common("sending") : t("send")}
           </Button>
         </>
       }
     >
       <fieldset className="space-y-2">
         <legend className="mb-2 text-[13px] font-semibold text-nexus-white">
-          Quel est le problème ?
+          {t("question")}
         </legend>
         {REPORT_REASONS.map((entry) => (
           <label
@@ -144,9 +137,9 @@ function ReportModal({
               className="mt-0.5 size-4 accent-nexus-accent"
             />
             <span>
-              {REPORT_REASON_LABELS[entry].label}
+              {t(`reasons.${entry}.label`)}
               <small className="mt-0.5 block text-xs text-nexus-dim">
-                {REPORT_REASON_LABELS[entry].hint}
+                {t(`reasons.${entry}.hint`)}
               </small>
             </span>
           </label>
@@ -155,9 +148,7 @@ function ReportModal({
 
       <label className="mt-4 block space-y-1.5">
         <span className="text-[13px] text-nexus-muted">
-          {reason === "other"
-            ? "Précisez (obligatoire pour « Autre »)"
-            : "Précisez (facultatif sauf « Autre »)"}
+          {reason === "other" ? t("commentRequired") : t("comment")}
         </span>
         <textarea
           rows={3}

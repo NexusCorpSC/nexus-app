@@ -16,6 +16,8 @@ import {
   isRaidColumns,
   type RaidLayout,
 } from "@/lib/raid-layout";
+import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
@@ -48,6 +50,7 @@ const KEY_GAME_LOG_DIR = "gameLogDir";
 const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
 const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
+const KEY_LOCALE = "locale";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -430,14 +433,16 @@ export async function setCachedCargoShips(ships: unknown): Promise<void> {
   await store.set(KEY_CARGO_SHIPS, ships);
 }
 
-/** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */
+/** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display (in French). */
 export function formatShortcut(accelerator: string): string {
+  const t = translator("Shortcuts");
+
   return accelerator
     .split("+")
     .map((token) => {
       switch (token) {
         case "Shift":
-          return "Maj";
+          return t("keys.shift");
         case "Super":
           return "Win";
         default:
@@ -464,4 +469,24 @@ export async function setSessionCookie(cookie: string | null): Promise<void> {
   } else {
     await store.delete(KEY_SESSION_COOKIE);
   }
+}
+
+/**
+ * The language of the app. On first launch, the system's own if the app
+ * speaks it, French otherwise; written down at once, so it stays put even if
+ * the system language changes later — only the settings change it.
+ */
+export async function getLocaleSetting(): Promise<Locale> {
+  const store = await getStore();
+  const value = await store.get<string>(KEY_LOCALE);
+  if (isLocale(value)) return value;
+
+  const detected = detectSystemLocale();
+  await store.set(KEY_LOCALE, detected);
+  return detected;
+}
+
+export async function setLocaleSetting(locale: Locale): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_LOCALE, locale);
 }

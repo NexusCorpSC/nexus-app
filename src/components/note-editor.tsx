@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { Button } from "@/components/ui";
 import { writeNote } from "@/lib/notes";
 import { cn } from "@/lib/utils";
@@ -30,10 +33,12 @@ function formatUpdatedAt(iso: string | null): string | null {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return null;
 
-  return `Enregistré ${date.toLocaleString("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  })}`;
+  return translator("Notes.status")("savedAt", {
+    date: date.toLocaleString(getLocale(), {
+      dateStyle: "short",
+      timeStyle: "short",
+    }),
+  });
 }
 
 export type NoteAutosave = {
@@ -67,6 +72,7 @@ export function useNoteAutosave({
   signedIn: boolean;
   onSaved?: (note: Note) => void;
 }): NoteAutosave {
+  const t = useTranslations("Notes.status");
   const [saved, setSaved] = useState(note);
   const [content, setContent] = useState(note.content);
   const [status, setStatus] = useState<SaveStatus>("idle");
@@ -134,11 +140,11 @@ export function useNoteAutosave({
         setError(
           cause instanceof Error
             ? cause.message
-            : "Enregistrement impossible pour le moment.",
+            : t("saveFailed"),
         );
       }
     },
-    [signedIn],
+    [signedIn, t],
   );
 
   // The timer and the unmount handler both need the values as of when they
@@ -176,11 +182,11 @@ export function useNoteAutosave({
   }, []);
 
   const statusLabel = isDirty
-    ? "Modifications non enregistrées"
+    ? t("unsaved")
     : status === "saving"
-      ? "Enregistrement…"
+      ? t("saving")
       : status === "error"
-        ? "Échec de l'enregistrement"
+        ? t("error")
         : formatUpdatedAt(saved.updatedAt);
 
   return {
@@ -206,6 +212,7 @@ export function NoteEditor({
   textareaClassName,
   onSaved,
 }: NoteEditorProps) {
+  const t = useTranslations("Notes");
   const { content, setContent, isDirty, status, error, statusLabel, saveNow } =
     useNoteAutosave({ note, signedIn, onSaved });
 
@@ -215,8 +222,8 @@ export function NoteEditor({
         value={content}
         onChange={(event) => setContent(event.target.value)}
         maxLength={NOTE_CONTENT_MAX_LENGTH}
-        placeholder="Routes de minage, prix, plans de mission…"
-        aria-label="Bloc-notes"
+        placeholder={t("placeholder")}
+        aria-label={t("title")}
         autoFocus={autoFocus}
         spellCheck={false}
         className={cn(
@@ -241,7 +248,7 @@ export function NoteEditor({
             onClick={saveNow}
             disabled={!isDirty || status === "saving"}
           >
-            Enregistrer
+            {t("save")}
           </Button>
         </div>
       </div>

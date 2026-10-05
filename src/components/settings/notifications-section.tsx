@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
 import {
   getContribNotifications,
   getNotificationCorner,
@@ -9,7 +10,6 @@ import {
   applyNotificationCorner,
   DEFAULT_NOTIFICATION_CORNER,
   notify,
-  NOTIFICATION_CORNER_LABELS,
   NOTIFICATION_CORNERS,
   type NotificationCorner,
 } from "@/lib/notifications";
@@ -20,7 +20,16 @@ import {
   SettingsSectionHeader,
 } from "@/components/settings/section-header";
 
+/** Each corner's key in the messages. */
+const CORNER_KEYS = {
+  "bottom-right": "bottomRight",
+  "bottom-left": "bottomLeft",
+  "top-right": "topRight",
+  "top-left": "topLeft",
+} as const satisfies Record<NotificationCorner, string>;
+
 export function NotificationsSection() {
+  const t = useTranslations("SettingsNotifications");
   const [corner, setCorner] = useState<NotificationCorner>(
     DEFAULT_NOTIFICATION_CORNER,
   );
@@ -40,9 +49,7 @@ export function NotificationsSection() {
     void setContribNotifications(next).catch((cause) => {
       setContrib(!next);
       setNotificationError(
-        cause instanceof Error
-          ? cause.message
-          : "Le réglage n'a pas pu être enregistré.",
+        cause instanceof Error ? cause.message : t("contribError"),
       );
     });
   }
@@ -62,14 +69,12 @@ export function NotificationsSection() {
       await setNotificationCorner(next);
       await applyNotificationCorner(next);
       await notify({
-        title: "Notifications",
-        body: `Elles s'afficheront ${NOTIFICATION_CORNER_LABELS[next].toLowerCase()}.`,
+        title: t("title"),
+        body: t(`cornerApplied.${CORNER_KEYS[next]}`),
       });
     } catch (cause) {
       setNotificationError(
-        cause instanceof Error
-          ? cause.message
-          : "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
+        cause instanceof Error ? cause.message : t("cornerError"),
       );
     }
   }
@@ -77,8 +82,8 @@ export function NotificationsSection() {
   return (
     <section>
       <SettingsSectionHeader
-        title="Notifications"
-        description="Elles s'affichent par-dessus le jeu, dans le coin choisi de l'écran où se trouve le curseur, puis disparaissent d'elles-mêmes. Survolez-en une pour la garder à l'écran."
+        title={t("title")}
+        description={t("description")}
         actions={
           <Button
             type="button"
@@ -88,19 +93,19 @@ export function NotificationsSection() {
               void notify({
                 kind: "success",
                 title: "Nexus App",
-                body: "Ceci est un exemple de notification.",
+                body: t("exampleBody"),
               })
             }
           >
-            Afficher un exemple
+            {t("showExample")}
           </Button>
         }
       />
 
       <Card>
-        <SettingsCardTitle>Affichage</SettingsCardTitle>
+        <SettingsCardTitle>{t("display")}</SettingsCardTitle>
         <div className="space-y-4 p-4">
-          <Field label="Coin d'affichage">
+          <Field label={t("corner")}>
             <Select
               value={corner}
               onChange={(event) =>
@@ -111,7 +116,7 @@ export function NotificationsSection() {
             >
               {NOTIFICATION_CORNERS.map((value) => (
                 <option key={value} value={value}>
-                  {NOTIFICATION_CORNER_LABELS[value]}
+                  {t(`corners.${CORNER_KEYS[value]}`)}
                 </option>
               ))}
             </Select>
@@ -125,9 +130,9 @@ export function NotificationsSection() {
               className="mt-0.5 accent-nexus-accent"
             />
             <span>
-              Mes contributions
+              {t("contrib")}
               <small className="mt-0.5 block text-xs text-nexus-dim">
-                Publiée, à corriger, succès débloqué ou nouveau niveau.
+                {t("contribHint")}
               </small>
             </span>
           </label>

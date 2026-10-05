@@ -1,3 +1,4 @@
+import { translator } from "@/i18n/translate";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import type { Friend, FriendList, MyFriendCode } from "@/types/nexus";
 
@@ -35,22 +36,32 @@ export function removeFriend(userId: string) {
   });
 }
 
-const MESSAGES: Record<string, string> = {
-  invalid_code: "Un code ami fait 8 caractères, comme K7QD-92PX.",
-  not_found:
-    "Ce code n'existe pas ou a déjà été utilisé. Demandez-en un nouveau.",
-  own_code: "C'est votre propre code : partagez-le plutôt à un ami.",
-  already_friends: "Vous êtes déjà amis.",
-  too_many_attempts: "Trop de codes erronés : réessayez dans quelques minutes.",
-};
+/** The refusals the friends API answers with a code of its own. */
+const CODES = [
+  "invalid_code",
+  "not_found",
+  "own_code",
+  "already_friends",
+  "too_many_attempts",
+] as const;
+
+type FriendErrorCode = (typeof CODES)[number];
+
+function isFriendErrorCode(value: unknown): value is FriendErrorCode {
+  return (CODES as readonly unknown[]).includes(value);
+}
 
 /** A refusal of the friends API, as a sentence. */
 export function friendErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
     const body = error.body as { error?: string } | undefined;
-    return (body?.error && MESSAGES[body.error]) || error.message;
+    return isFriendErrorCode(body?.error)
+      ? translator("Api.friends")(body.error)
+      : error.message;
   }
-  return error instanceof Error ? error.message : "L'opération a échoué.";
+  return error instanceof Error
+    ? error.message
+    : translator("Common")("operationFailed");
 }
 
 /** A code as typed or pasted — lower case, dashed, spaced — as the API takes it. */

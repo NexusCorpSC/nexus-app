@@ -1,0 +1,20 @@
+{
+  "title": "Plan de vol",
+  "openOnSite": "Ouvrir sur le site",
+  "close": "Fermer",
+  "noPlan": "Aucun plan de vol pour cette escouade.",
+  "noPhase": "Ce plan n'a pas encore de phase.",
+  "previousPhase": "Phase précédente",
+  "nextPhase": "Phase suivante",
+  "you": "Vous",
+  "presenterLeads": "{name} mène",
+  "followingPresenter": "Suit {name}",
+  "follow": "Suivre",
+  "frozenPhase": "Phase figée",
+  "frozen": "Figée",
+  "unlockToDraw": "Déverrouillez pour dessiner",
+  "undo": "Annuler",
+  "redo": "Rétablir",
+  "pen": "Trait libre",
+  "eraser": "Gomme — vos traits, et ceux des autres si vous menez le plan"
+}

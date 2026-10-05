@@ -1,0 +1,39 @@
+{
+  "modeLabel": "État",
+  "modes": {
+    "playing": "En jeu",
+    "planned": "Session prévue",
+    "off": "Hors jeu"
+  },
+  "offHint": "Arrête la session en cours et annule la session prévue.",
+  "offNow": "Vous êtes hors jeu, sans session prévue.",
+  "goOff": "Passer hors jeu",
+  "updateFailed": "La mise à jour a échoué.",
+  "activityLabel": "Activité",
+  "activityPlaceholder": "Que faites-vous ? (facultatif)",
+  "update": "Mettre à jour",
+  "start": "Je joue",
+  "stop": "J'arrête",
+  "nextPlanned": "Prochaine session prévue · {time} · {activity}",
+  "noActivity": "sans activité précisée",
+  "plannedTime": "À",
+  "plannedActivity": "Pour faire",
+  "plannedPlaceholder": "Que ferez-vous ?",
+  "fromEvent": "Ou reprendre un évènement où vous êtes inscrit :",
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "plannedHint": "Elle s'efface {hours} h après l'heure prévue, ou dès que vous passez « En jeu » : son activité est reprise.",
+  "suggestions": {
+    "mining": "Minage",
+    "trading": "Commerce",
+    "hauling": "Transport",
+    "bountyHunting": "Chasse de primes",
+    "combat": "Combat",
+    "exploration": "Exploration",
+    "salvage": "Récupération",
+    "industry": "Industrie",
+    "missions": "Missions",
+    "racing": "Course",
+    "social": "Social"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslations } from "use-intl";
 import { formatShortcut } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ type ShortcutInputProps = {
  * swallowed system-wide, in every other application.
  */
 export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
+  const t = useTranslations("Common.shortcutInput");
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +49,7 @@ export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
     if (event.metaKey) modifiers.push("Super");
 
     if (modifiers.length === 0) {
-      setError("Ajoutez au moins un modificateur : Ctrl, Alt ou Maj.");
+      setError(t("missingModifier"));
       return;
     }
 
@@ -75,7 +77,7 @@ export function ShortcutInput({ id, value, onChange }: ShortcutInputProps) {
             : "border-nexus-accent/18 bg-nexus-abyss text-nexus-white hover:border-nexus-accent/40",
         )}
       >
-        {recording ? "Appuyez sur une combinaison…" : formatShortcut(value)}
+        {recording ? t("recording") : formatShortcut(value)}
       </button>
 
       {error && (

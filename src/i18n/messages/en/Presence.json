@@ -1,0 +1,39 @@
+{
+  "modeLabel": "Status",
+  "modes": {
+    "playing": "Playing",
+    "planned": "Planned session",
+    "off": "Offline"
+  },
+  "offHint": "Ends the current session and cancels the planned one.",
+  "offNow": "You're offline, with no planned session.",
+  "goOff": "Go offline",
+  "updateFailed": "The update failed.",
+  "activityLabel": "Activity",
+  "activityPlaceholder": "What are you doing? (optional)",
+  "update": "Update",
+  "start": "I'm playing",
+  "stop": "I'm done",
+  "nextPlanned": "Next planned session · {time} · {activity}",
+  "noActivity": "no activity given",
+  "plannedTime": "At",
+  "plannedActivity": "To do",
+  "plannedPlaceholder": "What will you do?",
+  "fromEvent": "Or pick up an event you registered to:",
+  "save": "Save",
+  "cancel": "Cancel",
+  "plannedHint": "It clears {hours} h after the planned time, or as soon as you switch to “Playing”: its activity carries over.",
+  "suggestions": {
+    "mining": "Mining",
+    "trading": "Trading",
+    "hauling": "Hauling",
+    "bountyHunting": "Bounty hunting",
+    "combat": "Combat",
+    "exploration": "Exploration",
+    "salvage": "Salvage",
+    "industry": "Industry",
+    "missions": "Missions",
+    "racing": "Racing",
+    "social": "Social"
+  }
+}

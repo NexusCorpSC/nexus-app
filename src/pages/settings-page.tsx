@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import { useTranslations } from "use-intl";
 import { PageHeader } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { GeneralSection } from "@/components/settings/general-section";
@@ -10,18 +11,19 @@ import { GameSection } from "@/components/settings/game-section";
 
 /**
  * The rubriques, in the order of the sub-navigation. The key is what goes in
- * `?section=`, so a link elsewhere in the app can open one directly.
+ * `?section=`, so a link elsewhere in the app can open one directly, and
+ * the name of its label under `Settings.sections`.
  *
  * There is no "Superpositions" rubrique: the only overlay settings are the
  * opacity and lock combinations, which live with the other shortcuts.
  */
 const SECTIONS = [
-  { key: "general", label: "Général", Component: GeneralSection },
-  { key: "account", label: "Compte", Component: AccountSection },
-  { key: "shortcuts", label: "Raccourcis clavier", Component: ShortcutsSection },
-  { key: "notifications", label: "Notifications", Component: NotificationsSection },
-  { key: "game", label: "Jeu", Component: GameSection },
-  { key: "updates", label: "Mises à jour", Component: UpdatesSection },
+  { key: "general", Component: GeneralSection },
+  { key: "account", Component: AccountSection },
+  { key: "shortcuts", Component: ShortcutsSection },
+  { key: "notifications", Component: NotificationsSection },
+  { key: "game", Component: GameSection },
+  { key: "updates", Component: UpdatesSection },
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number]["key"];
@@ -31,6 +33,7 @@ function isSectionKey(value: string | null): value is SectionKey {
 }
 
 export default function SettingsPage() {
+  const t = useTranslations("Settings");
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get("section");
   // An unknown or missing value falls back rather than showing an empty page.
@@ -52,13 +55,13 @@ export default function SettingsPage() {
   return (
     <div>
       <PageHeader
-        title="Paramètres"
-        description="Réglages de l'application, rangés par sujet."
+        title={t("title")}
+        description={t("description")}
       />
 
       <div className="flex flex-col gap-6 md:flex-row md:items-start">
         <nav
-          aria-label="Rubriques des paramètres"
+          aria-label={t("sectionsLabel")}
           className="flex shrink-0 flex-row flex-wrap gap-1 md:w-47 md:flex-col"
         >
           {SECTIONS.map((section) => {
@@ -76,7 +79,7 @@ export default function SettingsPage() {
                     : "text-nexus-accent/70 hover:bg-nexus-accent/6 hover:text-nexus-accent",
                 )}
               >
-                {section.label}
+                {t(`sections.${section.key}`)}
               </button>
             );
           })}

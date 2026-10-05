@@ -15,6 +15,7 @@ import {
   SearchX,
   X,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { cn } from "@/lib/utils";
 
 /* ------------------------------------------------------------------ */
@@ -149,6 +150,7 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  const t = useTranslations("Common");
   const titleId = useId();
   const descriptionId = useId();
 
@@ -201,7 +203,7 @@ export function Modal({
           </div>
           <button
             type="button"
-            aria-label="Fermer"
+            aria-label={t("close")}
             onClick={onClose}
             className="inline-flex size-9 items-center justify-center rounded-lg text-nexus-muted hover:bg-nexus-panel hover:text-nexus-soft"
           >
@@ -258,11 +260,12 @@ export function Spinner({ className }: { className?: string }) {
   );
 }
 
-export function LoadingState({ label = "Chargement…" }: { label?: string }) {
+export function LoadingState({ label }: { label?: string }) {
+  const t = useTranslations("Common");
   return (
     <div className="flex items-center justify-center gap-3 py-16 text-sm text-nexus-accent/60">
       <Spinner />
-      {label}
+      {label ?? t("loading")}
     </div>
   );
 }
@@ -292,8 +295,8 @@ export function ErrorState({
   error: unknown;
   onRetry?: () => void;
 }) {
-  const message =
-    error instanceof Error ? error.message : "Une erreur est survenue.";
+  const t = useTranslations("Common");
+  const message = error instanceof Error ? error.message : t("error");
 
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -301,7 +304,7 @@ export function ErrorState({
       <p className="max-w-md text-sm text-nexus-bright/80">{message}</p>
       {onRetry ? (
         <Button variant="ghost" size="sm" onClick={onRetry}>
-          Réessayer
+          {t("retry")}
         </Button>
       ) : null}
     </div>
@@ -321,6 +324,7 @@ export function Pagination({
   totalPages: number;
   onPageChange: (page: number) => void;
 }) {
+  const t = useTranslations("Common.pagination");
   if (totalPages <= 1) return null;
 
   return (
@@ -331,10 +335,10 @@ export function Pagination({
         disabled={page <= 1}
         onClick={() => onPageChange(page - 1)}
       >
-        Précédent
+        {t("previous")}
       </Button>
       <span className="text-xs text-nexus-accent/60">
-        Page {page} / {totalPages}
+        {t("page", { page, total: totalPages })}
       </span>
       <Button
         variant="ghost"
@@ -342,7 +346,7 @@ export function Pagination({
         disabled={page >= totalPages}
         onClick={() => onPageChange(page + 1)}
       >
-        Suivant
+        {t("next")}
       </Button>
     </div>
   );
@@ -577,21 +581,22 @@ export function ViewToggle({
   value: ViewMode;
   onChange: (value: ViewMode) => void;
 }) {
+  const t = useTranslations("Common.view");
   return (
     <Segmented
-      label="Affichage"
+      label={t("label")}
       value={value}
       onChange={onChange}
       options={[
         {
           value: "grid",
-          label: "Grille",
+          label: t("grid"),
           icon: <LayoutGrid className="size-4" />,
           iconOnly: true,
         },
         {
           value: "list",
-          label: "Liste",
+          label: t("list"),
           icon: <List className="size-4" />,
           iconOnly: true,
         },

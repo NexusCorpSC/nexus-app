@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { NotebookPen, X } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { NoteEditor } from "@/components/note-editor";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
  * focus — it is dismissed by its shortcut or its close button.
  */
 export default function NotesOverlayPage() {
+  const t = useTranslations("Notes");
   const { user, loading } = useAuth();
   const signedIn = Boolean(user);
   const queryClient = useQueryClient();
@@ -91,11 +93,11 @@ export default function NotesOverlayPage() {
       >
         <NotebookPen className="pointer-events-none size-4 text-slate-400" />
         <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
-          Bloc-notes
+          {t("title")}
         </p>
         {!signedIn && !loading && (
           <span className="pointer-events-none rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-300">
-            local
+            {t("localBadge")}
           </span>
         )}
         <OverlayOpacityButton label="notes" mode={mode} />
@@ -104,10 +106,10 @@ export default function NotesOverlayPage() {
         <button
           type="button"
           onClick={close}
-          title="Fermer"
+          title={t("close")}
           className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
         >
-          <span className="sr-only">Fermer</span>
+          <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
         </button>
       </div>

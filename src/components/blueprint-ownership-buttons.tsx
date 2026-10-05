@@ -1,5 +1,6 @@
 import { Check, Loader2, Minus, Plus, TriangleAlert } from "lucide-react";
 import type { UseMutationResult } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import {
   useAddBlueprint,
   useRemoveBlueprint,
@@ -25,31 +26,34 @@ import { cn } from "@/lib/utils";
 
 type Mutation = UseMutationResult<BlueprintOwnership, Error, string>;
 
+type Translate = ReturnType<typeof useTranslations<"Blueprints.ownership">>;
+
 /** What a button has to say, once it has said it. */
-function outcome(mutation: Mutation, verb: "add" | "remove") {
+function outcome(t: Translate, mutation: Mutation, verb: "add" | "remove") {
   const data = mutation.data;
   if (!data) return null;
 
   if (verb === "add") {
     return data.changed
-      ? { label: "Ajouté", title: "Ajouté à vos blueprints" }
-      : { label: "Déjà dedans", title: "Déjà dans vos blueprints" };
+      ? { label: t("added"), title: t("addedTitle") }
+      : { label: t("alreadyIn"), title: t("alreadyInTitle") };
   }
 
   return data.changed
-    ? { label: "Retiré", title: "Retiré de vos blueprints" }
-    : { label: "Déjà retiré", title: "N'était pas dans vos blueprints" };
+    ? { label: t("removed"), title: t("removedTitle") }
+    : { label: t("alreadyOut"), title: t("alreadyOutTitle") };
 }
 
-function errorText(error: unknown): string {
+function errorText(t: Translate, error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
-  return `Impossible — ${message}`;
+  return t("failed", { message });
 }
 
 /** Labelled, for a page header. */
 export function BlueprintAddButton({ blueprintId }: { blueprintId: string }) {
+  const t = useTranslations("Blueprints.ownership");
   const add = useAddBlueprint();
-  const done = outcome(add, "add");
+  const done = outcome(t, add, "add");
 
   if (done) {
     return (
@@ -65,7 +69,7 @@ export function BlueprintAddButton({ blueprintId }: { blueprintId: string }) {
       variant="primary"
       size="sm"
       disabled={add.isPending}
-      title={add.isError ? errorText(add.error) : "Ajouter à mes blueprints"}
+      title={add.isError ? errorText(t, add.error) : t("add")}
       onClick={() => add.mutate(blueprintId)}
     >
       {add.isPending ? (
@@ -75,7 +79,7 @@ export function BlueprintAddButton({ blueprintId }: { blueprintId: string }) {
       ) : (
         <Plus className="h-3.5 w-3.5" />
       )}
-      {add.isError ? "Réessayer" : "Ajouter à mes blueprints"}
+      {add.isError ? t("retry") : t("add")}
     </Button>
   );
 }
@@ -86,8 +90,9 @@ export function BlueprintRemoveButton({
 }: {
   blueprintId: string;
 }) {
+  const t = useTranslations("Blueprints.ownership");
   const remove = useRemoveBlueprint();
-  const done = outcome(remove, "remove");
+  const done = outcome(t, remove, "remove");
 
   if (done) {
     return (
@@ -104,7 +109,7 @@ export function BlueprintRemoveButton({
       size="sm"
       disabled={remove.isPending}
       title={
-        remove.isError ? errorText(remove.error) : "Retirer de mes blueprints"
+        remove.isError ? errorText(t, remove.error) : t("remove")
       }
       onClick={() => remove.mutate(blueprintId)}
     >
@@ -115,7 +120,7 @@ export function BlueprintRemoveButton({
       ) : (
         <Minus className="h-3.5 w-3.5" />
       )}
-      {remove.isError ? "Réessayer" : "Retirer de mes blueprints"}
+      {remove.isError ? t("retry") : t("remove")}
     </Button>
   );
 }
@@ -133,12 +138,13 @@ export function BlueprintQuickAdd({
   tone?: "app" | "overlay";
   className?: string;
 }) {
+  const t = useTranslations("Blueprints.ownership");
   const add = useAddBlueprint();
-  const done = outcome(add, "add");
+  const done = outcome(t, add, "add");
 
   return (
     <QuickButton
-      title={done ? done.title : "Ajouter à mes blueprints"}
+      title={done ? done.title : t("add")}
       mutation={add}
       done={Boolean(done)}
       idle={<Plus className="size-4" />}
@@ -164,12 +170,13 @@ export function BlueprintQuickRemove({
   blueprintId: string;
   className?: string;
 }) {
+  const t = useTranslations("Blueprints.ownership");
   const remove = useRemoveBlueprint();
-  const done = outcome(remove, "remove");
+  const done = outcome(t, remove, "remove");
 
   return (
     <QuickButton
-      title={done ? done.title : "Possédé — retirer de mes blueprints"}
+      title={done ? done.title : t("ownedRemove")}
       mutation={remove}
       done={Boolean(done)}
       idle={
@@ -202,7 +209,8 @@ function QuickButton({
   className?: string;
   onClick: () => void;
 }) {
-  const label = mutation.isError ? errorText(mutation.error) : title;
+  const t = useTranslations("Blueprints.ownership");
+  const label = mutation.isError ? errorText(t, mutation.error) : title;
 
   return (
     <button

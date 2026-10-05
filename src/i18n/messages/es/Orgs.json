@@ -1,0 +1,46 @@
+{
+  "list": {
+    "title": "Organizaciones",
+    "description": "Tus organizaciones y las organizaciones públicas de la comunidad.",
+    "mine": "Mis organizaciones",
+    "playing": "Jugando",
+    "inventory": "Inventario",
+    "editor": "Editor",
+    "public": "Organizaciones públicas",
+    "searchLabel": "Buscar una organización",
+    "searchPlaceholder": "Nombre o tag…",
+    "noPublic": "No se ha encontrado ninguna organización pública"
+  },
+  "detail": {
+    "back": "Volver a las organizaciones",
+    "fallbackTitle": "Organización",
+    "rank": "Tu rango: {rank}",
+    "description": "Tus compañeros en el juego.",
+    "planOnSite": "Planificar en el sitio",
+    "planOnSiteTitle": "Abre el formulario en el navegador",
+    "sharedInventory": "Inventario compartido",
+    "mySession": "Mi sesión",
+    "youArePlaying": "Estás jugando",
+    "youAreNotPlaying": "No estás jugando",
+    "playingNow": "Jugando ahora",
+    "playingCount": "{playing} de {total}",
+    "nobodyTitle": "Nadie está jugando ahora mismo",
+    "nobodyDescription": "Cada uno lo declara desde Nexus App o el sitio, con lo que está haciendo si quiere.",
+    "plannedTitle": "Sesiones previstas",
+    "events": "Eventos",
+    "upcomingCount": "{count, plural, one {# próximo} other {# próximos}}",
+    "loading": "Cargando…",
+    "eventsError": "No se han podido cargar los eventos.",
+    "retry": "Reintentar",
+    "noEvents": "No hay eventos previstos por el momento.",
+    "fullCalendar": "El calendario completo en el sitio"
+  },
+  "member": {
+    "playing": "Jugando",
+    "since": "Jugando desde"
+  },
+  "planned": {
+    "event": "{title} · evento",
+    "noActivity": "Sesión prevista"
+  }
+}

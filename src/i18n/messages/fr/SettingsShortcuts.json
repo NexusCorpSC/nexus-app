@@ -1,0 +1,58 @@
+{
+  "title": "Raccourcis clavier",
+  "description": "Actifs même application réduite. Cliquez sur une combinaison puis appuyez sur la nouvelle.",
+  "applied": "Appliqué",
+  "defaults": "Valeurs par défaut",
+  "apply": "Appliquer",
+  "windows": "Fenêtres",
+  "inGame": "En jeu",
+  "applyError": "Les raccourcis n'ont pas pu être appliqués. Ils le seront au prochain démarrage.",
+  "rejected": "Ces combinaisons n'ont pas pu être prises. Elles restent enregistrées mais sont inactives : choisissez-en d'autres.",
+  "rejection": "{label} — {accelerator} : {reason}",
+  "rows": {
+    "search": {
+      "label": "Recherche",
+      "hint": "Recherche rapide en superposition."
+    },
+    "capture": {
+      "label": "Capture de zone",
+      "hint": "Sélectionne une zone de l'écran à capturer."
+    },
+    "notes": {
+      "label": "Bloc-notes",
+      "hint": "Bloc-notes en superposition."
+    },
+    "cargo": {
+      "label": "Feuille de cargo",
+      "hint": "Feuille de cargo en superposition."
+    },
+    "squad": {
+      "label": "Escouade",
+      "hint": "Escouade en superposition."
+    },
+    "plan": {
+      "label": "Plan de vol",
+      "hint": "Plan de vol en superposition."
+    },
+    "map": {
+      "label": "Carte",
+      "hint": "La carte épinglée depuis un lieu, ou choisie dans la fenêtre.",
+      "detail": "Affiche la carte épinglée depuis la fiche d'un lieu, ou choisie dans la fenêtre elle-même."
+    },
+    "radial": {
+      "label": "Maintenir le menu radial rapide",
+      "hint": "Maintenez, visez une action à la souris, relâchez. Échap annule.",
+      "detail": "Maintenez la combinaison pour afficher le menu au centre de l'écran, donnez un coup de souris vers une action, puis relâchez pour la lancer. Relâcher sans bouger, ou Échap, annule. READY et Éliminé/Actif n'y figurent que dans une escouade ; le verrouillage et la capture de zone, toujours."
+    },
+    "lock": {
+      "label": "Verrouillage",
+      "hint": "Les clics passent au jeu ; le menu radial reste utilisable.",
+      "detail": "Verrouille toutes les superpositions affichées — les clics passent au jeu — ou, si l'une l'est déjà, les déverrouille toutes. Le menu radial n'est pas concerné : il reste utilisable."
+    },
+    "opacity": {
+      "label": "Opacité",
+      "hint": "Efface les superpositions, le jeu vu au travers, ou les rend.",
+      "detail": "Efface toutes les superpositions d'un coup — le jeu vu au travers — ou leur rend leur panneau. Chacune porte aussi le bouton, qui passe par le fond ombré entre les deux."
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Boxes, Gamepad2, Users } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { listOrganizations } from "@/lib/api/orgs";
 import { useAuth } from "@/auth/auth-context";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -24,6 +25,7 @@ import {
 import type { Organization } from "@/types/nexus";
 
 export default function OrgsPage() {
+  const t = useTranslations("Orgs.list");
   const { user } = useAuth();
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
@@ -53,14 +55,11 @@ export default function OrgsPage() {
 
   return (
     <>
-      <PageHeader
-        title="Organisations"
-        description="Vos organisations et les organisations publiques de la communauté."
-      />
+      <PageHeader title={t("title")} description={t("description")} />
 
       {user && userOrganizations.length > 0 ? (
         <section className="mb-8">
-          <SectionTitle>Mes organisations</SectionTitle>
+          <SectionTitle>{t("mine")}</SectionTitle>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
             {userOrganizations.map((org) => (
               <OrgCard
@@ -77,18 +76,18 @@ export default function OrgsPage() {
                     className="inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
                   >
                     <Gamepad2 className="h-3.5 w-3.5" />
-                    En jeu
+                    {t("playing")}
                   </Link>
                   <Link
                     to={`/orgs/${org.id}/inventory`}
                     className="inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
                   >
                     <Boxes className="h-3.5 w-3.5" />
-                    Inventaire
+                    {t("inventory")}
                   </Link>
                   {org.editor ? (
                     <span className="rounded-full bg-emerald-300/14 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
-                      Éditeur
+                      {t("editor")}
                     </span>
                   ) : null}
                 </div>
@@ -99,13 +98,13 @@ export default function OrgsPage() {
       ) : null}
 
       <section>
-        <SectionTitle>Organisations publiques</SectionTitle>
+        <SectionTitle>{t("public")}</SectionTitle>
 
         <Toolbar>
           <SearchField
-            label="Rechercher une organisation"
+            label={t("searchLabel")}
             value={search}
-            placeholder="Nom ou tag…"
+            placeholder={t("searchPlaceholder")}
             onChange={(event) => {
               setSearch(event.target.value);
               setPage(1);
@@ -114,7 +113,7 @@ export default function OrgsPage() {
         </Toolbar>
 
         {organizations.length === 0 ? (
-          <EmptyState title="Aucune organisation publique trouvée" />
+          <EmptyState title={t("noPublic")} />
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">

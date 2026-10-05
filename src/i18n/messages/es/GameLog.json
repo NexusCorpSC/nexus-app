@@ -1,0 +1,15 @@
+{
+  "received": "Blueprint obtenido",
+  "added": "Blueprint añadido",
+  "addedBody": "{name} ahora forma parte de tus blueprints.",
+  "alreadyOwned": "Blueprint ya obtenido",
+  "alreadyOwnedBody": "{name} ya estaba en tus blueprints.",
+  "addFailed": "No se pudo añadir",
+  "addFailedBody": "{name} no se pudo añadir: {error}",
+  "unknownError": "error desconocido",
+  "signInBody": "{name} — inicia sesión en Nexus para añadirlo a tus blueprints.",
+  "unknownBody": "{name} aún no lo conoce Nexus: no se puede añadir.",
+  "offerBody": "{name} — ¿añadirlo a tus blueprints de Nexus?",
+  "add": "Añadir",
+  "lookupFailedBody": "No se pudo buscar {name} en Nexus."
+}

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { ExternalLink, Search, Loader2 } from "lucide-react";
 import { searchEverything } from "@/lib/api/search";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -57,6 +58,7 @@ function asQuery(text: string): string {
  * clients has a screen for it (see `src/lib/search.ts`).
  */
 export default function OverlayPage() {
+  const t = useTranslations("Search");
   const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [highlighted, setHighlighted] = useState(0);
@@ -232,7 +234,7 @@ export default function OverlayPage() {
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Rechercher…"
+            placeholder={t("placeholder")}
             className="w-full bg-transparent py-4 text-lg text-slate-100 outline-none placeholder:text-slate-500"
             /* The palette owns keyboard navigation. */
             autoComplete="off"
@@ -246,28 +248,30 @@ export default function OverlayPage() {
         <div className="max-h-80 overflow-y-auto">
           {error && (
             <p className="px-4 py-6 text-sm text-rose-300">
-              Recherche indisponible — vérifiez l'URL de l'API dans Paramètres.
+              {t("unavailable")}
             </p>
           )}
 
           {!error && searchable && results.length === 0 && !isFetching && (
-            <p className="px-4 py-6 text-sm text-slate-400">Aucun résultat.</p>
+            <p className="px-4 py-6 text-sm text-slate-400">
+              {t("noResults")}
+            </p>
           )}
 
           {!error && !searchable && (
             <p className="px-4 py-6 text-sm text-slate-400">
               {trimmedQuery
-                ? `Tapez au moins ${MIN_SEARCH_QUERY_LENGTH} caractères.`
+                ? t("minLength", { count: MIN_SEARCH_QUERY_LENGTH })
                 : null}
-              {!trimmedQuery && (
-                <>
-                  Tapez pour rechercher, ou capturez une zone de l'écran avec
-                  <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
-                    {formatShortcut(shortcuts.capture)}
-                  </kbd>
-                  pour lire le texte à l'écran.
-                </>
-              )}
+              {!trimmedQuery &&
+                t.rich("idleHint", {
+                  shortcut: formatShortcut(shortcuts.capture),
+                  kbd: (chunks) => (
+                    <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
+                      {chunks}
+                    </kbd>
+                  ),
+                })}
             </p>
           )}
 
@@ -321,7 +325,7 @@ export default function OverlayPage() {
         </div>
 
         <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-xs text-slate-500">
-          <span>↑↓ naviguer · ⏎ ouvrir · Échap fermer</span>
+          <span>{t("footer")}</span>
           <span>{formatShortcut(shortcuts.search)}</span>
         </div>
       </div>

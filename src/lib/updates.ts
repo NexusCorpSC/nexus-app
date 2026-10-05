@@ -1,4 +1,5 @@
 import { check, type Update } from "@tauri-apps/plugin-updater";
+import { translator } from "@/i18n/translate";
 
 /**
  * Self-update against the GitHub releases of the repository.
@@ -63,10 +64,11 @@ export async function installUpdate(
  */
 export function describeUpdateError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
+  const t = translator("Updates");
 
   if (/release not found|Could not fetch a valid release/i.test(message)) {
-    return "Aucune release publiée n'annonce de mise à jour.";
+    return t("noRelease");
   }
 
-  return `Impossible de vérifier les mises à jour : ${message}`;
+  return t("checkFailed", { message });
 }

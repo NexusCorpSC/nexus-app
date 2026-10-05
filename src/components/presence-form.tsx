@@ -1,5 +1,6 @@
 import { useEffect, useId, useState } from "react";
 import { CalendarClock, Gamepad2 } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { Button } from "@/components/ui";
 import { useMyPresence, useMyUpcomingEvents } from "@/hooks/use-presence";
 import {
@@ -18,11 +19,7 @@ import {
 
 type Mode = "playing" | "planned" | "off";
 
-const MODES: { value: Mode; label: string }[] = [
-  { value: "playing", label: "En jeu" },
-  { value: "planned", label: "Session prévue" },
-  { value: "off", label: "Hors jeu" },
-];
+const MODES: Mode[] = ["playing", "planned", "off"];
 
 function modeOf(presence: MyPresence | null): Mode {
   if (presence?.playing) return "playing";
@@ -50,6 +47,7 @@ export function PresenceForm({
   compact?: boolean;
   onDone?: () => void;
 }) {
+  const t = useTranslations("Presence");
   const { presence, declare, stop, plan, cancelPlanned, goOff } =
     useMyPresence(true);
 
@@ -79,7 +77,7 @@ export function PresenceForm({
     <div className={cn("flex flex-col gap-3", className)}>
       <div
         role="radiogroup"
-        aria-label="État"
+        aria-label={t("modeLabel")}
         className={cn(
           "grid grid-cols-3 gap-0.5 rounded-lg border border-nexus-accent/15 bg-nexus-abyss p-[3px]",
           !compact && "max-w-md",
@@ -87,19 +85,19 @@ export function PresenceForm({
       >
         {MODES.map((option) => (
           <button
-            key={option.value}
+            key={option}
             type="button"
             role="radio"
-            aria-checked={mode === option.value}
-            onClick={() => setMode(option.value)}
+            aria-checked={mode === option}
+            onClick={() => setMode(option)}
             className={cn(
               "h-7.5 truncate rounded-md px-1.5 text-[12px] font-medium transition-colors",
-              mode === option.value
+              mode === option
                 ? "bg-nexus-accent/16 text-nexus-white"
                 : "text-nexus-muted hover:text-nexus-bright",
             )}
           >
-            {option.label}
+            {t(`modes.${option}`)}
           </button>
         ))}
       </div>
@@ -128,8 +126,8 @@ export function PresenceForm({
         <div className="flex flex-col gap-2">
           <p className="text-[12.5px] text-nexus-muted">
             {presence?.playing || plannedOf(presence)
-              ? "Arrête la session en cours et annule la session prévue."
-              : "Vous êtes hors jeu, sans session prévue."}
+              ? t("offHint")
+              : t("offNow")}
           </p>
           {presence && (presence.playing || plannedOf(presence)) ? (
             <Button
@@ -140,7 +138,7 @@ export function PresenceForm({
               className={cn(compact ? "w-full" : "self-start")}
               onClick={() => goOff.mutate(presence, { onSuccess: onDone })}
             >
-              Passer hors jeu
+              {t("goOff")}
             </Button>
           ) : null}
         </div>
@@ -148,18 +146,23 @@ export function PresenceForm({
 
       {error ? (
         <p className="w-full text-xs text-red-300">
-          {error instanceof Error ? error.message : "La mise à jour a échoué."}
+          {error instanceof Error ? error.message : t("updateFailed")}
         </p>
       ) : null}
     </div>
   );
 }
 
+/**
+ * Suggestions only: the activity is free text, sent as typed, so a suggestion
+ * is written in the language of whoever picks it.
+ */
 function ActivitySuggestions({ id }: { id: string }) {
+  const t = useTranslations("Presence.suggestions");
   return (
     <datalist id={id}>
       {PRESENCE_ACTIVITY_SUGGESTIONS.map((suggestion) => (
-        <option key={suggestion} value={suggestion} />
+        <option key={suggestion} value={t(suggestion)} />
       ))}
     </datalist>
   );
@@ -179,6 +182,7 @@ function PlayingForm({
   onDeclare: (activity: string | null | undefined) => void;
   onStop: () => void;
 }) {
+  const t = useTranslations("Presence");
   const [activity, setActivity] = useState("");
   const listId = useId();
 
@@ -207,7 +211,7 @@ function PlayingForm({
       }}
     >
       <label className={cn(compact ? "w-full" : "min-w-52 flex-1")}>
-        <span className="sr-only">Activité</span>
+        <span className="sr-only">{t("activityLabel")}</span>
         <input
           value={activity}
           onChange={(event) => setActivity(event.target.value)}
@@ -215,7 +219,7 @@ function PlayingForm({
           placeholder={
             !playing && planned?.activity
               ? planned.activity
-              : "Que faites-vous ? (facultatif)"
+              : t("activityPlaceholder")
           }
           list={listId}
           className={FIELD}
@@ -232,7 +236,7 @@ function PlayingForm({
         >
           {/* No room for the icon in the menu's narrow popover. */}
           {compact ? null : <Gamepad2 className="size-3.5" />}
-          {playing ? "Mettre à jour" : "Je joue"}
+          {playing ? t("update") : t("start")}
         </Button>
         {playing ? (
           <Button
@@ -243,15 +247,17 @@ function PlayingForm({
             className={cn(compact && "flex-1 whitespace-nowrap px-2")}
             onClick={onStop}
           >
-            J'arrête
+            {t("stop")}
           </Button>
         ) : null}
       </div>
 
       {playing && planned ? (
         <p className="w-full text-xs text-amber-200">
-          Prochaine session prévue · {formatPlannedTime(planned.at)} ·{" "}
-          {planned.activity ?? "sans activité précisée"}
+          {t("nextPlanned", {
+            time: formatPlannedTime(planned.at),
+            activity: planned.activity ?? t("noActivity"),
+          })}
         </p>
       ) : null}
     </form>
@@ -275,6 +281,7 @@ function PlannedForm({
   }) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("Presence");
   const planned = plannedOf(presence);
   const [time, setTime] = useState("21:00");
   const [activity, setActivity] = useState("");
@@ -312,7 +319,7 @@ function PlannedForm({
         )}
       >
         <label>
-          <span className="sr-only">À</span>
+          <span className="sr-only">{t("plannedTime")}</span>
           <input
             type="time"
             required
@@ -322,12 +329,12 @@ function PlannedForm({
           />
         </label>
         <label>
-          <span className="sr-only">Pour faire</span>
+          <span className="sr-only">{t("plannedActivity")}</span>
           <input
             value={activity}
             onChange={(event) => setActivity(event.target.value)}
             maxLength={PRESENCE_ACTIVITY_MAX_LENGTH}
-            placeholder="Que ferez-vous ?"
+            placeholder={t("plannedPlaceholder")}
             list={listId}
             className={FIELD}
           />
@@ -338,7 +345,7 @@ function PlannedForm({
       {upcoming.length > 0 ? (
         <div className={cn("flex flex-col gap-1.5", !compact && "max-w-xl")}>
           <span className="text-[11.5px] text-nexus-muted">
-            Ou reprendre un évènement où vous êtes inscrit :
+            {t("fromEvent")}
           </span>
           {upcoming.map((event) => {
             const picked = planned?.event?.eventId === event.eventId;
@@ -384,7 +391,7 @@ function PlannedForm({
           className={cn(compact && "flex-1 whitespace-nowrap px-2")}
         >
           {compact ? null : <CalendarClock className="size-3.5" />}
-          Enregistrer
+          {t("save")}
         </Button>
         {planned ? (
           <Button
@@ -395,14 +402,13 @@ function PlannedForm({
             className={cn(compact && "flex-1 whitespace-nowrap px-2")}
             onClick={onCancel}
           >
-            Annuler
+            {t("cancel")}
           </Button>
         ) : null}
       </div>
 
       <p className="text-[11px] leading-snug text-nexus-dim">
-        Elle s'efface {PLANNED_SESSION_GRACE_HOURS} h après l'heure prévue, ou
-        dès que vous passez « En jeu » : son activité est reprise.
+        {t("plannedHint", { hours: PLANNED_SESSION_GRACE_HOURS })}
       </p>
     </form>
   );

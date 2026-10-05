@@ -1,0 +1,49 @@
+{
+  "greeting": "Bonjour, {name}",
+  "welcome": "Bienvenue",
+  "intro": "Tout ce qu'il faut avant de lancer le jeu, et les fenêtres à garder par-dessus.",
+  "overlays": {
+    "title": "Superpositions",
+    "radialHint": "En jeu, maintenez <key>{shortcut}</key> pour le menu radial",
+    "search": "Recherche",
+    "squad": "Escouade",
+    "map": "Carte",
+    "plan": "Plan de vol",
+    "notes": "Bloc-notes",
+    "cargo": "Cargo"
+  },
+  "database": {
+    "title": "Base de données",
+    "blueprints": {
+      "title": "Blueprints",
+      "detail": "Recettes et possession"
+    },
+    "items": {
+      "title": "Objets",
+      "detail": "Où les acheter, à quel prix"
+    },
+    "places": {
+      "title": "Lieux",
+      "detail": "Stations, villes, cartes"
+    },
+    "missions": {
+      "title": "Missions",
+      "detail": "Récompenses et blueprints"
+    }
+  },
+  "squad": {
+    "title": "Escouade",
+    "inviteCode": "Code d'invitation <mono>{code}</mono>",
+    "ready": "{ready}/{total} prêts",
+    "signedOut": "Connectez-vous pour retrouver votre escouade.",
+    "none": "Vous n'êtes dans aucune escouade. Créez-en une ou rejoignez-la depuis la superposition.",
+    "openOverlay": "Ouvrir la superposition",
+    "plan": "Plan de vol"
+  },
+  "notes": {
+    "title": "Bloc-notes",
+    "saved": "Enregistré {date}",
+    "empty": "Rien de noté pour l'instant.",
+    "open": "Ouvrir le bloc-notes"
+  }
+}

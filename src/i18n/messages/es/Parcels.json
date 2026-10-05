@@ -1,0 +1,84 @@
+{
+  "remainingHours": "{hours} h {minutes}",
+  "remainingMinutes": "{minutes} min",
+  "close": "Cerrar",
+  "cancelShort": "Cancelar",
+  "page": {
+    "back": "Volver al inventario",
+    "title": "Paquetes",
+    "description": "Tus paquetes enviados y recibidos en los últimos 30 días."
+  },
+  "package": {
+    "title": "Paquete",
+    "clear": "Vaciar",
+    "from": "Desde {places}",
+    "outOf": "de {available}",
+    "quantityOf": "Cantidad de {name}",
+    "remove": "Quitar {name} del paquete",
+    "sending": "Enviando…",
+    "send": "Enviar el paquete",
+    "sendHint": "Crea un código para dárselo al destinatario. Los lotes se quedan contigo, reservados, hasta que lo acepte."
+  },
+  "sent": {
+    "title": "Paquete sellado",
+    "description": "Da este código al jugador que debe recibirlo.",
+    "cancel": "Cancelar el envío",
+    "seeAll": "Seguir mis paquetes",
+    "codeLabel": "Código {code}",
+    "codeCopied": "Código copiado",
+    "copyCode": "Copiar el código",
+    "waiting": "Esperando al destinatario · caduca en {remaining}",
+    "contents": "Contenido",
+    "reservedHint": "Estas cantidades están reservadas: no pueden ir en otro paquete. Salen de tu inventario cuando el destinatario acepta."
+  },
+  "receive": {
+    "title": "Recibir un paquete",
+    "description": "Introduce o pega el código que te dio el remitente.",
+    "someone": "un jugador",
+    "someoneStart": "Un jugador",
+    "received": "Paquete de {sender} recibido",
+    "receivedAt": "Paquete de {sender} recibido en {location}",
+    "receivedDescription": "{created, plural, one {# lote creado} other {# lotes creados}}, {merged, plural, one {# lote completado} other {# lotes completados}}.",
+    "codeField": "Código del paquete",
+    "looking": "Buscando el paquete…",
+    "codeHint": "8 caracteres, letras y números. Se aceptan guiones, espacios y minúsculas.",
+    "from": "{sender} te envía {count, plural, one {# lote} other {# lotes}}.",
+    "storeAt": "Guardar en",
+    "storeAtPlaceholder": "Elegir un lugar…",
+    "orgVisible": "Visible para la org",
+    "mergeHint": "Si ya hay un lote idéntico guardado en este lugar, se completará.",
+    "accepting": "Recibiendo…",
+    "accept": "Aceptar el paquete"
+  },
+  "status": {
+    "pending": "Pendiente · {remaining}",
+    "deliveredAt": "Entregado · {when}",
+    "delivered": "Entregado",
+    "cancelled": "Cancelado",
+    "expired": "Caducado"
+  },
+  "list": {
+    "tabs": {
+      "sent": "Enviados",
+      "received": "Recibidos"
+    },
+    "emptySent": "Ningún paquete enviado. Prepara uno desde el inventario.",
+    "emptyReceived": "Ningún paquete recibido.",
+    "copyCodeOf": "Copiar el código {code}",
+    "hint": "Un paquete cancelado o caducado no ha movido nada: sus lotes se quedaron con el remitente. Un código solo sirve una vez."
+  },
+  "errors": {
+    "invalid_code": "No es un código de paquete: 8 letras o números.",
+    "invalid_items": "El paquete contiene un lote que ya no está en tu inventario.",
+    "invalid_location": "Elige un lugar de almacenamiento.",
+    "not_found": "Ningún paquete tiene este código.",
+    "too_many_attempts": "Demasiados códigos erróneos: inténtalo de nuevo en unos minutos.",
+    "own_parcel": "Es tu propio paquete: da este código a otro jugador.",
+    "delivered": "Este paquete ya se ha recibido.",
+    "cancelled": "El remitente canceló este paquete.",
+    "expired": "Este código ha caducado.",
+    "unavailable": "{item}: la cantidad ya no está disponible.",
+    "someLot": "Un lote",
+    "generic": "La operación ha fallado."
+  }
+}

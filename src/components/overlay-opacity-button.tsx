@@ -1,8 +1,8 @@
 import { Circle, CircleDashed, CircleDot } from "lucide-react";
+import { useTranslations } from "use-intl";
 import {
   cycleOverlayOpacity,
   nextOverlayMode,
-  OVERLAY_MODE_LABELS,
   type OverlayLabel,
   type OverlayMode,
 } from "@/lib/overlay-opacity";
@@ -31,8 +31,12 @@ export function OverlayOpacityButton({
   mode: OverlayMode;
   className?: string;
 }) {
+  const t = useTranslations("Overlay.opacity");
   const next = nextOverlayMode(mode);
-  const action = `Fond ${OVERLAY_MODE_LABELS[mode]} — passer en ${OVERLAY_MODE_LABELS[next]}`;
+  const action = t("action", {
+    mode: t(`modes.${mode}`),
+    next: t(`modes.${next}`),
+  });
 
   const Glyph =
     mode === "opaque" ? CircleDot : mode === "shaded" ? Circle : CircleDashed;

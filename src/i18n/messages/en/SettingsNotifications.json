@@ -1,0 +1,24 @@
+{
+  "title": "Notifications",
+  "description": "They show up over the game, in the chosen corner of the screen the cursor is on, then go away on their own. Hover over one to keep it on screen.",
+  "showExample": "Show an example",
+  "exampleBody": "This is an example notification.",
+  "display": "Display",
+  "corner": "Display corner",
+  "corners": {
+    "bottomRight": "Bottom right",
+    "bottomLeft": "Bottom left",
+    "topRight": "Top right",
+    "topLeft": "Top left"
+  },
+  "cornerApplied": {
+    "bottomRight": "They will show up in the bottom right.",
+    "bottomLeft": "They will show up in the bottom left.",
+    "topRight": "They will show up in the top right.",
+    "topLeft": "They will show up in the top left."
+  },
+  "cornerError": "The display corner could not be applied. It will be at the next startup.",
+  "contrib": "My contributions",
+  "contribHint": "Published, needs changes, achievement unlocked or new level.",
+  "contribError": "The setting could not be saved."
+}

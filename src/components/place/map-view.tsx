@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Maximize2, ZoomIn, ZoomOut } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { translator } from "@/i18n/translate";
 import { PLACE_ACCENT } from "@/components/place-card";
 import { useImageViewport } from "@/hooks/use-image-viewport";
 import {
   isDrawnPlan,
-  PLACE_SERVICE_LABELS,
   planImage,
   type PlacePlan,
   type PlacePlanMarker,
@@ -34,8 +35,9 @@ export function markerLabel(
     const target = targets.find((entry) => entry.slug === marker.targetSlug);
     if (target) return target.name;
   }
-  if (marker.service) return PLACE_SERVICE_LABELS[marker.service];
-  return "Repère";
+  const t = translator("Places");
+  if (marker.service) return t(`services.${marker.service}`);
+  return t("map.marker");
 }
 
 /**
@@ -77,6 +79,7 @@ export function MapView({
     stageProps,
     keyboardProps,
   } = useImageViewport({ enabled: interactive });
+  const t = useTranslations("Places.map");
   const [selected, setSelected] = useState<string | null>(null);
 
   const active = plan.markers.find((marker) => marker.id === selected);
@@ -101,7 +104,7 @@ export function MapView({
       {...(interactive ? keyboardProps : null)}
       tabIndex={interactive ? 0 : undefined}
       role={interactive ? "group" : undefined}
-      aria-label={interactive ? `Carte : ${plan.name}` : undefined}
+      aria-label={interactive ? t("label", { name: plan.name }) : undefined}
       className={cn(
         "relative overflow-hidden rounded-lg bg-nexus-abyss/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-nexus-accent/40",
         interactive && (isPanning ? "cursor-grabbing" : "cursor-grab"),
@@ -177,13 +180,13 @@ export function MapView({
 
       {interactive ? (
         <div className="absolute right-2 top-2 flex flex-col gap-1">
-          <ViewportButton label="Zoomer" onClick={() => zoomBy(1.2)}>
+          <ViewportButton label={t("zoomIn")} onClick={() => zoomBy(1.2)}>
             <ZoomIn className="h-3.5 w-3.5" />
           </ViewportButton>
-          <ViewportButton label="Dézoomer" onClick={() => zoomBy(1 / 1.2)}>
+          <ViewportButton label={t("zoomOut")} onClick={() => zoomBy(1 / 1.2)}>
             <ZoomOut className="h-3.5 w-3.5" />
           </ViewportButton>
-          <ViewportButton label="Recentrer" onClick={reset}>
+          <ViewportButton label={t("recenter")} onClick={reset}>
             <Maximize2 className="h-3.5 w-3.5" />
           </ViewportButton>
         </div>
@@ -240,11 +243,10 @@ export function MapLegend({
   targets: PlaceSummary[];
   onOpenTarget?: (slug: string) => void;
 }) {
+  const t = useTranslations("Places.map");
   if (plan.markers.length === 0) {
     return (
-      <p className="text-xs text-nexus-accent/50">
-        Aucun repère posé sur cette carte.
-      </p>
+      <p className="text-xs text-nexus-accent/50">{t("noMarkers")}</p>
     );
   }
 

@@ -1,0 +1,94 @@
+{
+  "registrations": "{count, plural, =0 {No one registered} one {# registered} other {# registered}}",
+  "span": {
+    "minutes": "{minutes} min",
+    "hours": "{hours} h",
+    "hoursMinutes": "{hours} h {minutes}"
+  },
+  "pill": {
+    "public": "Public",
+    "private": "Private",
+    "privateTo": "Private · {org} members",
+    "live": "Happening now",
+    "registered": "Registered",
+    "registeredAs": "Registered · {role}",
+    "missing": "{count} {role} missing"
+  },
+  "status": {
+    "over": "Over",
+    "live": "Happening now",
+    "startsIn": "Starts in {duration}",
+    "inDays": "{count, plural, one {In # day} other {In # days}}"
+  },
+  "orgFallback": "Organization",
+  "notFound": {
+    "title": "Event not found.",
+    "description": "It may have been deleted, or it is reserved for members of the organization."
+  },
+  "header": {
+    "summary": "Summary",
+    "summaryTitle": "Opens the organizer summary in the browser",
+    "edit": "Edit",
+    "editTitle": "Opens the form in the browser"
+  },
+  "thePlan": "The plan",
+  "facts": {
+    "label": "At a glance",
+    "when": "When",
+    "whenDetail": "{day} · {duration} · {city} time",
+    "where": "Meeting point",
+    "whereUnknown": "To be announced",
+    "seePlace": "See the place",
+    "seePlaceNamed": "{place} · see the place",
+    "organizer": "Organized by"
+  },
+  "whoComes": {
+    "title": "Who's coming",
+    "you": "You ({name})",
+    "listMembersOnly": "The list of participants is only shown to organization members.",
+    "noParticipants": "No one has registered yet.",
+    "noRole": "No role",
+    "countOfWanted": "{count} of {wanted} wanted",
+    "nobodyInRole": "No one yet."
+  },
+  "registration": {
+    "error": "Registration failed: {message}",
+    "unknownError": "unknown error",
+    "title": "Registration",
+    "ended": "This event is over: registrations are closed.",
+    "membersOnly": "Only members of the organization can register.",
+    "registered": "You're registered",
+    "roleIs": "Role: {role}",
+    "squadReady": "The event's squad is ready: open it",
+    "shownAsPlanned": "Added to your status as a planned session. Your friends and the organization see it.",
+    "showAsPlanned": "Show it as my next session",
+    "editAnswers": "Edit my answers",
+    "withdraw": "Withdraw",
+    "editTitle": "Edit my registration",
+    "register": "Register",
+    "hint": "Editable until the event ends. {name} sees your answers.",
+    "role": "Your role",
+    "lookingFor": "{count} wanted",
+    "countMissing": "{count, plural, =0 {No one registered} one {# registered} other {# registered}} · {missing} missing",
+    "required": "required",
+    "optional": "optional",
+    "update": "Save my answers",
+    "reRegister": "Register again",
+    "cancel": "Cancel",
+    "withdrawn": "You withdrew. Your answers are kept should you come back."
+  },
+  "squad": {
+    "nobody": "No one is registered to the event.",
+    "exists": "The event's squad already exists.",
+    "error": "Creating the squad failed: {message}",
+    "errorUnknown": "Creating the squad failed.",
+    "ready": "The squad is ready",
+    "createdDetail": "{count, plural, one {{name}, code} other {# squads grouped in a raid, the first with code}}",
+    "leftOut": "{count, plural, one {# participant found no room} other {# participants found no room}}: a raid holds at most 6 squads.",
+    "open": "Open the squad",
+    "title": "Create the event's squad",
+    "alreadyDrawn": "A squad was already made from this event. If it was disbanded, you can create a new one.",
+    "hint": "{count, plural, one {A squad of # participant} other {A squad of # participants}} led by you{hasRoles, select, yes {, with the roles {roles}} other {}}. Everyone keeps the role they picked on registration and finds it in their squad list, without leaving their own. Past 20, several squads grouped in a raid.",
+    "create": "Create the squad"
+  }
+}

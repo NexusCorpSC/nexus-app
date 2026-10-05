@@ -1,0 +1,23 @@
+{
+  "labels": {
+    "search": "Recherche rapide",
+    "capture": "Capture de zone",
+    "notes": "Bloc-notes",
+    "cargo": "Feuille de cargo",
+    "squad": "Escouade",
+    "plan": "Plan de vol",
+    "map": "Carte",
+    "opacity": "Opacité des superpositions",
+    "lock": "Verrouillage des superpositions",
+    "radial": "Menu radial rapide"
+  },
+  "keys": {
+    "shift": "Maj"
+  },
+  "rejections": {
+    "duplicate": "déjà utilisée par un autre raccourci de Nexus",
+    "unavailable": "les raccourcis globaux sont indisponibles sur ce système",
+    "invalid": "combinaison invalide : {error}",
+    "refused": "refusée par le système ({error})"
+  }
+}

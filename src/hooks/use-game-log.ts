@@ -9,6 +9,7 @@ import {
   type BlueprintReceived,
 } from "@/lib/game-log";
 import { notify } from "@/lib/notifications";
+import { translator } from "@/i18n/translate";
 import { useAddBlueprint } from "@/hooks/use-blueprint-ownership";
 
 /** Long enough to finish a fight before answering. */
@@ -86,22 +87,25 @@ export function useGameLog(signedIn: boolean): void {
 
     addRef.current.mutate(payload.blueprintId, {
       onSuccess: ({ changed }) => {
+        const t = translator("GameLog");
         void notify({
           kind: "success",
-          title: changed ? "Blueprint ajouté" : "Blueprint déjà possédé",
+          title: changed ? t("added") : t("alreadyOwned"),
           body: changed
-            ? `${payload.name} fait maintenant partie de vos blueprints.`
-            : `${payload.name} était déjà dans vos blueprints.`,
+            ? t("addedBody", { name: payload.name })
+            : t("alreadyOwnedBody", { name: payload.name }),
           route: `/blueprints/${encodeURIComponent(payload.slug)}`,
         });
       },
       onError: (error) => {
+        const t = translator("GameLog");
         void notify({
           kind: "error",
-          title: "Ajout impossible",
-          body: `${payload.name} n'a pas pu être ajouté : ${
-            error instanceof Error ? error.message : "erreur inconnue"
-          }`,
+          title: t("addFailed"),
+          body: t("addFailedBody", {
+            name: payload.name,
+            error: error instanceof Error ? error.message : t("unknownError"),
+          }),
           route: `/blueprints/${encodeURIComponent(payload.slug)}`,
         });
       },
@@ -110,11 +114,13 @@ export function useGameLog(signedIn: boolean): void {
 }
 
 async function offer(name: string, signedIn: boolean): Promise<void> {
+  const t = translator("GameLog");
+
   if (!signedIn) {
     await notify({
       kind: "info",
-      title: "Blueprint obtenu",
-      body: `${name} — connectez-vous à Nexus pour l'ajouter à vos blueprints.`,
+      title: t("received"),
+      body: t("signInBody", { name }),
       route: "/settings?section=account",
     });
     return;
@@ -126,8 +132,8 @@ async function offer(name: string, signedIn: boolean): Promise<void> {
     if (!blueprint) {
       await notify({
         kind: "warning",
-        title: "Blueprint obtenu",
-        body: `${name} n'est pas encore connu de Nexus : il ne peut pas être ajouté.`,
+        title: t("received"),
+        body: t("unknownBody", { name }),
       });
       return;
     }
@@ -137,11 +143,11 @@ async function offer(name: string, signedIn: boolean): Promise<void> {
 
     await notify({
       kind: "info",
-      title: "Blueprint obtenu",
-      body: `${blueprint.name} — l'ajouter à vos blueprints Nexus ?`,
+      title: t("received"),
+      body: t("offerBody", { name: blueprint.name }),
       timeoutMs: OFFER_TIMEOUT_MS,
       action: {
-        label: "Ajouter",
+        label: t("add"),
         event: GAME_LOG_ADD_BLUEPRINT_EVENT,
         payload: {
           blueprintId: blueprint.id,
@@ -155,8 +161,8 @@ async function offer(name: string, signedIn: boolean): Promise<void> {
     console.error("cannot look up a blueprint from the game log", error);
     await notify({
       kind: "error",
-      title: "Blueprint obtenu",
-      body: `${name} n'a pas pu être recherché sur Nexus.`,
+      title: t("received"),
+      body: t("lookupFailedBody", { name }),
     });
   }
 }

@@ -1,0 +1,66 @@
+{
+  "back": "Volver al inventario",
+  "title": "Añadido en masa",
+  "description": "Introduce varios recursos seguidos, o pégalos desde una hoja de cálculo.",
+  "capture": {
+    "summary": "{count, plural, one {# lote leído} other {# lotes leídos}} en la orden de trabajo · suma {sum} cSCU<total></total>. Elige el lugar y revisa las cifras: el OCR a veces confunde el cero tachado del juego con un 8.",
+    "gameTotal": "· total del juego {total} cSCU",
+    "dismiss": "Ocultar"
+  },
+  "defaults": {
+    "title": "Por defecto",
+    "location": "Lugar",
+    "locationLabel": "Lugar por defecto",
+    "quality": "Calidad",
+    "unit": "Unidad",
+    "description": "Descripción",
+    "descriptionPlaceholder": "Notas sobre estos objetos…"
+  },
+  "orgVisible": "Visible para la org",
+  "hints": {
+    "tab": "celda siguiente",
+    "enter": "línea siguiente",
+    "duplicate": "duplicar",
+    "paste": "pegar Nombre · Calidad · Cantidad · Unidad · Lugar"
+  },
+  "columns": {
+    "name": "Nombre",
+    "quality": "Calidad",
+    "quantity": "Cantidad",
+    "unit": "Unidad",
+    "location": "Lugar",
+    "org": "Org",
+    "status": "Control"
+  },
+  "namePlaceholder": "Titanium…",
+  "locationPlaceholder": "Buscar un lugar…",
+  "locationUnmatched": "¿«{name}»?",
+  "locationDefault": "Por defecto · {name}",
+  "removeRow": "Eliminar la línea",
+  "addRow": "Nueva línea",
+  "errors": {
+    "name": "Nombre requerido",
+    "quality": "Calidad: entero ≥ 0",
+    "qualityDefault": "Calidad por defecto: entero ≥ 0",
+    "yieldUnreadable": "Rendimiento ilegible en la captura",
+    "quantity": "Cantidad no válida",
+    "locationUnknown": "Lugar no encontrado: {name}",
+    "location": "Lugar requerido"
+  },
+  "status": {
+    "newLot": "Nuevo lote",
+    "newItem": "Nuevo objeto",
+    "merge": "Fusión: ×{from} → ×{to}"
+  },
+  "done": "{created, plural, one {# creado} other {# creados}}, {merged, plural, one {# fusionado} other {# fusionados}}. Las líneas con errores quedan por corregir.",
+  "summary": {
+    "ready": "<n>{count}</n> {count, plural, one {línea lista} other {líneas listas}}",
+    "merges": "<n>{count}</n> {count, plural, one {fusión con un lote existente} other {fusiones con un lote existente}}",
+    "errors": "<n>{count}</n> por corregir"
+  },
+  "submitFailed": "El añadido ha fallado.",
+  "errorsKept": "Las líneas con errores permanecen en la tabla después del añadido.",
+  "cancel": "Cancelar",
+  "saving": "Guardando…",
+  "submit": "{count, plural, =0 {Añadir} one {Añadir # objeto} other {Añadir # objetos}}"
+}

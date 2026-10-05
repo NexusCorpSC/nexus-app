@@ -1,0 +1,94 @@
+{
+  "registrations": "{count, plural, =0 {Aucun inscrit} one {# inscrit} other {# inscrits}}",
+  "span": {
+    "minutes": "{minutes} min",
+    "hours": "{hours} h",
+    "hoursMinutes": "{hours} h {minutes}"
+  },
+  "pill": {
+    "public": "Public",
+    "private": "Privé",
+    "privateTo": "Privé · membres de {org}",
+    "live": "En cours",
+    "registered": "Inscrit",
+    "registeredAs": "Inscrit · {role}",
+    "missing": "Il manque {count} {role}"
+  },
+  "status": {
+    "over": "Terminé",
+    "live": "En cours",
+    "startsIn": "Commence dans {duration}",
+    "inDays": "{count, plural, one {Dans # jour} other {Dans # jours}}"
+  },
+  "orgFallback": "Organisation",
+  "notFound": {
+    "title": "Évènement introuvable.",
+    "description": "Il a peut-être été supprimé, ou il est réservé aux membres de l'organisation."
+  },
+  "header": {
+    "summary": "Résumé",
+    "summaryTitle": "Ouvre le résumé de l'organisateur dans le navigateur",
+    "edit": "Modifier",
+    "editTitle": "Ouvre le formulaire dans le navigateur"
+  },
+  "thePlan": "Le plan",
+  "facts": {
+    "label": "En bref",
+    "when": "Quand",
+    "whenDetail": "{day} · {duration} · heure de {city}",
+    "where": "Rendez-vous",
+    "whereUnknown": "À préciser",
+    "seePlace": "Voir le lieu",
+    "seePlaceNamed": "{place} · voir le lieu",
+    "organizer": "Organisé par"
+  },
+  "whoComes": {
+    "title": "Qui vient",
+    "you": "Vous ({name})",
+    "listMembersOnly": "La liste des inscrits est réservée aux membres de l'organisation.",
+    "noParticipants": "Personne n'est encore inscrit.",
+    "noRole": "Sans rôle",
+    "countOfWanted": "{count} sur {wanted, plural, one {# souhaité} other {# souhaités}}",
+    "nobodyInRole": "Personne pour l'instant."
+  },
+  "registration": {
+    "error": "L'inscription a échoué : {message}",
+    "unknownError": "erreur inconnue",
+    "title": "Inscription",
+    "ended": "Cet évènement est terminé : les inscriptions sont closes.",
+    "membersOnly": "L'inscription est réservée aux membres de l'organisation.",
+    "registered": "Vous êtes inscrit",
+    "roleIs": "Rôle : {role}",
+    "squadReady": "L'escouade de l'évènement est prête : l'ouvrir",
+    "shownAsPlanned": "Ajouté à votre statut comme session prévue. Vos amis et l'orga le voient.",
+    "showAsPlanned": "L'afficher comme ma prochaine session",
+    "editAnswers": "Modifier mes réponses",
+    "withdraw": "Se désinscrire",
+    "editTitle": "Modifier mon inscription",
+    "register": "S'inscrire",
+    "hint": "Modifiable jusqu'à la fin de l'évènement. {name} voit vos réponses.",
+    "role": "Votre rôle",
+    "lookingFor": "On en cherche {count}",
+    "countMissing": "{count, plural, =0 {Aucun inscrit} one {# inscrit} other {# inscrits}} · il en manque {missing}",
+    "required": "obligatoire",
+    "optional": "facultatif",
+    "update": "Enregistrer mes réponses",
+    "reRegister": "Se réinscrire",
+    "cancel": "Annuler",
+    "withdrawn": "Vous vous êtes désinscrit. Vos réponses sont gardées si vous revenez."
+  },
+  "squad": {
+    "nobody": "Personne n'est inscrit à l'évènement.",
+    "exists": "L'escouade de l'évènement existe déjà.",
+    "error": "La création de l'escouade a échoué : {message}",
+    "errorUnknown": "La création de l'escouade a échoué.",
+    "ready": "L'escouade est prête",
+    "createdDetail": "{count, plural, one {{name}, code} other {# escouades réunies en raid, la première avec le code}}",
+    "leftOut": "{count, plural, one {# inscrit n'a pas trouvé de place} other {# inscrits n'ont pas trouvé de place}} : un raid compte au plus 6 escouades.",
+    "open": "Ouvrir l'escouade",
+    "title": "Créer l'escouade de l'évènement",
+    "alreadyDrawn": "Une escouade a déjà été tirée de cet évènement. Si elle a été dissoute, vous pouvez en créer une nouvelle.",
+    "hint": "{count, plural, one {Une escouade de # inscrit} other {Une escouade de # inscrits}} menée par vous{hasRoles, select, yes {, avec les rôles {roles}} other {}}. Chacun garde le rôle choisi à l'inscription et la retrouve dans sa liste d'escouades, sans quitter la sienne. Au-delà de 20, plusieurs escouades réunies en raid.",
+    "create": "Créer l'escouade"
+  }
+}

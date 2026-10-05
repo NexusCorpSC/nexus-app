@@ -1,0 +1,26 @@
+{
+  "loading": "Loading…",
+  "error": "Something went wrong.",
+  "retry": "Retry",
+  "close": "Close",
+  "cancel": "Cancel",
+  "send": "Send",
+  "sending": "Sending…",
+  "back": "Back",
+  "sendFailed": "Sending failed.",
+  "operationFailed": "The operation failed.",
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {page} / {total}"
+  },
+  "view": {
+    "label": "View",
+    "grid": "Grid",
+    "list": "List"
+  },
+  "shortcutInput": {
+    "recording": "Press a combination…",
+    "missingModifier": "Add at least one modifier: Ctrl, Alt or Shift."
+  }
+}

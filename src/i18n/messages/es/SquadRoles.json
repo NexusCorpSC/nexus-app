@@ -1,0 +1,28 @@
+{
+  "title": "Roles",
+  "newRole": "Nuevo rol",
+  "editRole": "Editar un rol",
+  "intro": "Compartidos por toda la escuadra. Los siete predefinidos se pueden renombrar y cambiar de icono, pero no se pueden borrar.",
+  "base": "predefinido",
+  "custom": "personal",
+  "edit": "Editar {label}",
+  "delete": "Eliminar {label}",
+  "none": "Ninguno",
+  "manage": "Gestionar los roles…",
+  "editor": {
+    "name": "Nombre del rol",
+    "namePlaceholder": "Sniper, Boarder, Intendente…",
+    "icon": "Icono",
+    "preview": "En la fila",
+    "unnamed": "ponle nombre",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "groups": {
+    "combat": "Combate",
+    "vol": "Vuelo",
+    "soutien": "Apoyo",
+    "metier": "Oficio",
+    "reperes": "Marcas"
+  }
+}

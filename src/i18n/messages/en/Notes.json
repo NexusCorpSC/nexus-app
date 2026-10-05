@@ -1,0 +1,36 @@
+{
+  "title": "Scratch Pad",
+  "descriptionOnline": "Your notes online, shared with the Nexus Tools site.",
+  "descriptionLocal": "Notes stored on this computer. Sign in to find them on the site and your other devices.",
+  "showOverlay": "Show over the game",
+  "localBadge": "local",
+  "close": "Close",
+  "placeholder": "Mining routes, prices, mission plans…",
+  "save": "Save",
+  "status": {
+    "savedAt": "Saved {date}",
+    "unsaved": "Unsaved changes",
+    "saving": "Saving…",
+    "error": "Save failed",
+    "saveFailed": "Saving is not possible right now."
+  },
+  "workspace": {
+    "modeLabel": "Scratch pad mode",
+    "edit": "Edit",
+    "preview": "Preview",
+    "hintRaw": "Raw Markdown",
+    "hintReadOnly": "Tables, checkboxes, images or HTML: editable in Edit mode",
+    "hintEditable": "Click in the text to edit it"
+  },
+  "toolbar": {
+    "bold": "Bold",
+    "italic": "Italic",
+    "heading": "Heading",
+    "list": "List",
+    "link": "Link",
+    "removeLink": "Remove link",
+    "linkPlaceholder": "https://… then Enter",
+    "linkAddress": "Link address",
+    "openLinkHint": "Ctrl + click to open the link"
+  }
+}

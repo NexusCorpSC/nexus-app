@@ -11,6 +11,7 @@ import {
   Skull,
   X,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { formatShortcut } from "@/lib/settings";
 import {
@@ -32,6 +33,7 @@ import {
   type RadialSquadAction,
 } from "@/lib/radial";
 import { cn } from "@/lib/utils";
+import { translator } from "@/i18n/translate";
 
 /** The ring, in the SVG's own units: 400 across, the hub in the middle. */
 const SIZE = 400;
@@ -86,6 +88,7 @@ function labelAt(sector: RadialSector) {
  * locked overlays — including to unlock them.
  */
 export default function RadialOverlayPage() {
+  const t = useTranslations("Radial");
   const [squad, setSquad] = useState<RadialSquad | null>(null);
   const [pointer, setPointer] = useState<RadialPointer>(CENTRED);
   const [accelerator, setAccelerator] = useState<string | null>(null);
@@ -173,7 +176,7 @@ export default function RadialOverlayPage() {
             </span>
             <span className="text-nexus-accent/50">·</span>
             <span className="text-emerald-300">
-              {squad.readyCount}/{squad.total} prêts
+              {t("readyCount", { ready: squad.readyCount, total: squad.total })}
             </span>
           </div>
         ) : null}
@@ -250,14 +253,14 @@ export default function RadialOverlayPage() {
                   squad.ready ? "text-red-300" : "text-emerald-300",
                 )}
               >
-                {squad.ready ? "NOT READY" : "READY"}
+                {squad.ready ? t("sectors.notReady") : t("sectors.ready")}
               </span>
               <span className="text-[11px] text-nexus-accent/60">
                 {down
-                  ? "Indisponible : éliminé"
+                  ? t("sectors.readyDisabled")
                   : squad.ready
-                    ? "Tu es : prêt"
-                    : "Tu es : pas prêt"}
+                    ? t("sectors.youAreReady")
+                    : t("sectors.youAreNotReady")}
               </span>
             </SectorLabel>
 
@@ -273,10 +276,10 @@ export default function RadialOverlayPage() {
                   down ? "text-emerald-300" : "text-red-300",
                 )}
               >
-                {down ? "ACTIF" : "ÉLIMINÉ"}
+                {down ? t("sectors.alive") : t("sectors.down")}
               </span>
               <span className="text-[11px] text-nexus-accent/60">
-                {down ? "Tu es : éliminé" : "Tu es : actif"}
+                {down ? t("sectors.youAreDown") : t("sectors.youAreAlive")}
               </span>
             </SectorLabel>
           </>
@@ -286,7 +289,7 @@ export default function RadialOverlayPage() {
           <AppWindow className="size-6 text-nexus-accent" />
           <span className="text-[13px] font-bold tracking-wider">NEXUS</span>
           <span className="text-[11px] text-nexus-accent/60">
-            Fenêtre principale
+            {t("sectors.mainWindow")}
           </span>
         </SectorLabel>
 
@@ -297,18 +300,20 @@ export default function RadialOverlayPage() {
             <Lock className="size-6 text-amber-200" />
           )}
           <span className="text-[13px] font-bold tracking-wider text-amber-200">
-            {locked ? "DÉVERROUILLER" : "VERROUILLER"}
+            {locked ? t("sectors.unlock") : t("sectors.lock")}
           </span>
           <span className="text-[11px] text-nexus-accent/60">
-            {locked ? "Superpositions verrouillées" : "Superpositions"}
+            {locked ? t("sectors.overlaysLocked") : t("sectors.overlays")}
           </span>
         </SectorLabel>
 
         <SectorLabel sector="capture">
           <ScanText className="size-6 text-nexus-accent" />
-          <span className="text-[13px] font-bold tracking-wider">CAPTURE</span>
+          <span className="text-[13px] font-bold tracking-wider">
+            {t("sectors.capture")}
+          </span>
           <span className="text-[11px] text-nexus-accent/60">
-            Capture de zone
+            {t("sectors.areaCapture")}
           </span>
         </SectorLabel>
 
@@ -345,9 +350,9 @@ export default function RadialOverlayPage() {
                 </span>
               ))
           : null}
-        <span>relâcher pour valider</span>
+        <span>{t("hint.release")}</span>
         <span className="text-nexus-accent/35">·</span>
-        <span>au centre ou Échap pour annuler</span>
+        <span>{t("hint.cancel")}</span>
       </div>
     </div>
   );
@@ -393,33 +398,37 @@ function hubText(
   locked: boolean,
 ): { title: string; detail: string } {
   const down = squad ? !squad.alive : false;
+  const t = translator("Radial");
 
   switch (hovered) {
     case "main":
-      return { title: "Ouvrir Nexus", detail: "Affiche la fenêtre principale" };
+      return { title: t("hub.mainTitle"), detail: t("hub.mainDetail") };
     case "ready":
       if (down) {
-        return { title: "Indisponible", detail: "Repasse Actif d'abord" };
+        return {
+          title: t("hub.unavailableTitle"),
+          detail: t("hub.unavailableDetail"),
+        };
       }
       return {
-        title: squad?.ready ? "Passer NOT READY" : "Passer READY",
-        detail: "Relâche pour valider",
+        title: squad?.ready ? t("hub.goNotReady") : t("hub.goReady"),
+        detail: t("hub.releaseToConfirm"),
       };
     case "alive":
       return down
-        ? { title: "Revenir actif", detail: "Relâche pour valider" }
-        : { title: "Me déclarer éliminé", detail: "Retire aussi READY" };
+        ? { title: t("hub.backAlive"), detail: t("hub.releaseToConfirm") }
+        : { title: t("hub.goDown"), detail: t("hub.goDownDetail") };
     case "lock":
       return locked
         ? {
-            title: "Déverrouiller",
-            detail: "Les fenêtres reprennent les clics",
+            title: t("hub.unlockTitle"),
+            detail: t("hub.unlockDetail"),
           }
-        : { title: "Verrouiller", detail: "Les clics passent au jeu" };
+        : { title: t("hub.lockTitle"), detail: t("hub.lockDetail") };
     case "capture":
-      return { title: "Capture de zone", detail: "Relâche pour lancer" };
+      return { title: t("hub.captureTitle"), detail: t("hub.captureDetail") };
     default:
-      return { title: "Aucune action", detail: "Relâcher ici annule" };
+      return { title: t("hub.noneTitle"), detail: t("hub.noneDetail") };
   }
 }
 

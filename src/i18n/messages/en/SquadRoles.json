@@ -1,0 +1,28 @@
+{
+  "title": "Roles",
+  "newRole": "New role",
+  "editRole": "Edit a role",
+  "intro": "Shared by the whole squad. The seven provided can be renamed and given another icon, but not deleted.",
+  "base": "built-in",
+  "custom": "custom",
+  "edit": "Edit {label}",
+  "delete": "Delete {label}",
+  "none": "None",
+  "manage": "Manage roles…",
+  "editor": {
+    "name": "Role name",
+    "namePlaceholder": "Sniper, Boarder, Quartermaster…",
+    "icon": "Icon",
+    "preview": "On the row",
+    "unnamed": "name it",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "groups": {
+    "combat": "Combat",
+    "vol": "Flight",
+    "soutien": "Support",
+    "metier": "Trade",
+    "reperes": "Marks"
+  }
+}

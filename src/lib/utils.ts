@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -25,14 +27,14 @@ export function formatDuration(seconds?: number): string {
 /** Formats a UEC amount with thin-space thousands separators. */
 export function formatUEC(amount?: number): string {
   if (amount === undefined || amount === null) return "—";
-  return `${amount.toLocaleString("fr-FR")} aUEC`;
+  return `${amount.toLocaleString(getLocale())} aUEC`;
 }
 
 export function formatDate(value?: string): string {
   if (!value) return "—";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleString("fr-FR", {
+  return date.toLocaleString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
@@ -41,12 +43,12 @@ export function formatDate(value?: string): string {
   });
 }
 
-/** Formats a plain number the French way: `1 150` / `37,5`. */
+/** Formats a plain number the reader's way: `1 150` / `37,5` in French. */
 export function formatNumber(value?: number): string {
   if (value === undefined || value === null || !Number.isFinite(value)) {
     return "—";
   }
-  return value.toLocaleString("fr-FR", { maximumFractionDigits: 2 });
+  return value.toLocaleString(getLocale(), { maximumFractionDigits: 2 });
 }
 
 /** «1 h 20», from an ISO date; floored, since it says how long so far. */
@@ -60,8 +62,6 @@ export function formatElapsed(since: string, now: number): string {
   return rest ? `${hours} h ${String(rest).padStart(2, "0")}` : `${hours} h`;
 }
 
-const RELATIVE_TIME = new Intl.RelativeTimeFormat("fr-FR", { numeric: "auto" });
-
 /**
  * «il y a 23 jours», «hier», «à l'instant», from an ISO date or a timestamp
  * in milliseconds.
@@ -70,7 +70,9 @@ export function formatAgo(value: string | number, now = Date.now()): string {
   const at = typeof value === "number" ? value : Date.parse(value);
   if (Number.isNaN(at)) return "";
   const seconds = Math.round((at - now) / 1000);
-  if (Math.abs(seconds) < 60) return "à l'instant";
+  if (Math.abs(seconds) < 60) return translator("Format")("justNow");
+
+  const relative = new Intl.RelativeTimeFormat(getLocale(), { numeric: "auto" });
 
   // No weeks: «il y a 23 jours» says more than «il y a 3 semaines».
   const units: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -81,8 +83,8 @@ export function formatAgo(value: string | number, now = Date.now()): string {
   ];
   for (const [unit, size] of units) {
     if (Math.abs(seconds) >= size) {
-      return RELATIVE_TIME.format(Math.trunc(seconds / size), unit);
+      return relative.format(Math.trunc(seconds / size), unit);
     }
   }
-  return RELATIVE_TIME.format(Math.trunc(seconds / 60), "minute");
+  return relative.format(Math.trunc(seconds / 60), "minute");
 }

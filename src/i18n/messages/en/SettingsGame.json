@@ -1,0 +1,14 @@
+{
+  "title": "Game",
+  "description": "Nexus App reads Star Citizen's Game.log while you play. When you receive a blueprint in game, a notification offers to add it to your Nexus blueprints.",
+  "cardTitle": "Game.log analysis",
+  "enable": "Analyze the Game.log",
+  "dirLabel": "Star Citizen folder",
+  "defaultDir": "Default",
+  "dirHint": "The folder that contains <code>Game.log</code>, for example the LIVE or PTU one.",
+  "disabled": "Disabled",
+  "found": "Game.log found",
+  "missing": "Game.log not found",
+  "saveError": "The settings could not be saved.",
+  "save": "Save"
+}

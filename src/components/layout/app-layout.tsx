@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
+import { useTranslations } from "use-intl";
 import {
   formatShortcut,
   getNotificationCorner,
@@ -48,61 +49,77 @@ import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import nexusLogo from "@/assets/nexus-logo.png";
 
+type NavKey =
+  | "home"
+  | "blueprints"
+  | "items"
+  | "places"
+  | "missions"
+  | "factions"
+  | "inventory"
+  | "reputations"
+  | "friends"
+  | "notes"
+  | "cargo"
+  | "orgs";
+
 type NavItem = {
   to: string;
-  label: string;
+  label: NavKey;
   icon: typeof Hammer;
   /** Hidden while signed out. */
   requiresAuth?: boolean;
 };
 
-type NavGroup = { title: string | null; items: NavItem[] };
+type NavGroup = { title: "database" | "mySpace" | null; items: NavItem[] };
 
 /**
  * The menu, in the order a session goes: the home page, then what the game
  * is made of, then what is the reader's own.
  */
 const NAV_GROUPS: NavGroup[] = [
-  { title: null, items: [{ to: "/home", label: "Accueil", icon: House }] },
+  { title: null, items: [{ to: "/home", label: "home", icon: House }] },
   {
-    title: "Base de données",
+    title: "database",
     items: [
-      { to: "/blueprints", label: "Blueprints", icon: Hammer },
-      { to: "/items", label: "Objets", icon: Package },
-      { to: "/places", label: "Lieux", icon: MapPin },
-      { to: "/missions", label: "Missions", icon: Rocket },
-      { to: "/factions", label: "Factions", icon: Flag },
+      { to: "/blueprints", label: "blueprints", icon: Hammer },
+      { to: "/items", label: "items", icon: Package },
+      { to: "/places", label: "places", icon: MapPin },
+      { to: "/missions", label: "missions", icon: Rocket },
+      { to: "/factions", label: "factions", icon: Flag },
     ],
   },
   {
-    title: "Mon espace",
+    title: "mySpace",
     items: [
       {
         to: "/inventory",
-        label: "Inventaire",
+        label: "inventory",
         icon: Archive,
         requiresAuth: true,
       },
       {
         to: "/reputations",
-        label: "Réputations",
+        label: "reputations",
         icon: Star,
         requiresAuth: true,
       },
-      { to: "/friends", label: "Amis", icon: UserRound, requiresAuth: true },
-      { to: "/notes", label: "Bloc-notes", icon: NotebookPen },
-      { to: "/cargo", label: "Cargo", icon: Container },
-      { to: "/orgs", label: "Organisations", icon: Users },
+      { to: "/friends", label: "friends", icon: UserRound, requiresAuth: true },
+      { to: "/notes", label: "notes", icon: NotebookPen },
+      { to: "/cargo", label: "cargo", icon: Container },
+      { to: "/orgs", label: "orgs", icon: Users },
     ],
   },
 ];
 
 /** The two overlays the menu opens directly: the ones used in every session. */
-const MENU_OVERLAYS: { label: OverlayLabel; title: string; icon: typeof Hammer }[] =
-  [
-    { label: "squad", title: "Escouade", icon: Users },
-    { label: "map", title: "Carte", icon: MapIcon },
-  ];
+const MENU_OVERLAYS: {
+  label: OverlayLabel & ("squad" | "map");
+  icon: typeof Hammer;
+}[] = [
+  { label: "squad", icon: Users },
+  { label: "map", icon: MapIcon },
+];
 
 function open(label: OverlayLabel) {
   void showOverlay(label).catch((error) =>
@@ -123,6 +140,7 @@ function navClass({ isActive }: { isActive: boolean }) {
 const NAVIGATE_EVENT = "main://navigate";
 
 export default function AppLayout() {
+  const t = useTranslations("Layout");
   const { user, loading, signOut, signIn } = useAuth();
   const navigate = useNavigate();
   useNavigationTracker();
@@ -254,7 +272,7 @@ export default function AppLayout() {
             className="flex h-9 w-full items-center gap-2 rounded-lg border border-nexus-accent/12 bg-nexus-accent/6 px-2.5 text-[13px] text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:text-nexus-bright"
           >
             <Search className="size-4" />
-            <span className="flex-1 text-left">Rechercher…</span>
+            <span className="flex-1 text-left">{t("search")}</span>
             {searchShortcut ? (
               <span className="shrink-0 font-mono text-[10px] whitespace-nowrap text-nexus-dim">
                 {searchShortcut}
@@ -264,7 +282,7 @@ export default function AppLayout() {
         </div>
 
         <nav
-          aria-label="Navigation principale"
+          aria-label={t("mainNav")}
           className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-3 py-1"
         >
           {NAV_GROUPS.map((group) => {
@@ -277,16 +295,16 @@ export default function AppLayout() {
               <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
                 {group.title ? (
                   <p className="px-2.5 pb-1 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
-                    {group.title}
+                    {t(`groups.${group.title}`)}
                   </p>
                 ) : null}
                 {items.map(({ to, label, icon: Icon }) => (
                   <NavLink key={to} to={to} className={navClass}>
                     <Icon className="size-4" />
-                    <span className="flex-1">{label}</span>
+                    <span className="flex-1">{t(`nav.${label}`)}</span>
                     {to === "/friends" && friendsPlaying > 0 ? (
                       <span
-                        title={`${friendsPlaying} en jeu`}
+                        title={t("friendsPlaying", { count: friendsPlaying })}
                         className="flex items-center gap-1 rounded-full bg-emerald-300/12 px-1.5 text-[11px] font-medium text-emerald-300"
                       >
                         <span className="size-1.5 rounded-full bg-emerald-300" />
@@ -301,19 +319,19 @@ export default function AppLayout() {
 
           <div className="flex flex-col gap-1.5">
             <p className="px-2.5 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
-              En jeu
+              {t("groups.inGame")}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
-              {MENU_OVERLAYS.map(({ label, title, icon: Icon }) => (
+              {MENU_OVERLAYS.map(({ label, icon: Icon }) => (
                 <button
                   key={label}
                   type="button"
                   onClick={() => open(label)}
-                  title={`Afficher la superposition ${title}`}
+                  title={t("showOverlay", { name: t(`overlays.${label}`) })}
                   className="flex h-13 flex-col items-center justify-center gap-1 rounded-lg border border-nexus-accent/14 bg-nexus-accent/7 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/12"
                 >
                   <Icon className="size-4 text-nexus-accent" />
-                  {title}
+                  {t(`overlays.${label}`)}
                 </button>
               ))}
             </div>
@@ -324,7 +342,7 @@ export default function AppLayout() {
           {loading ? (
             <div className="flex flex-1 items-center gap-2 text-sm text-nexus-dim">
               <Spinner />
-              Session…
+              {t("sessionLoading")}
             </div>
           ) : user ? (
             <SessionMenu name={user.name} onSignOut={() => void signOut()} />
@@ -338,14 +356,14 @@ export default function AppLayout() {
               className="flex h-8 flex-1 items-center gap-2 rounded-lg px-2 text-[13px] text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
             >
               <LogIn className="size-4" />
-              Se connecter
+              {t("signIn")}
             </button>
           )}
 
           <NavLink
             to="/settings"
-            aria-label="Paramètres"
-            title="Paramètres"
+            aria-label={t("settings")}
+            title={t("settings")}
             className={({ isActive }) =>
               cn(
                 "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",

@@ -12,6 +12,7 @@ import {
   Undo2,
   X,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
 
 import { useAuth } from "@/auth/auth-context";
 import { OverlayLockButton } from "@/components/overlay-lock-button";
@@ -59,6 +60,7 @@ interface Mark {
   stroke: PlanStroke;
 }
 export default function PlanOverlayPage() {
+  const t = useTranslations("Plan");
   const { user, loading } = useAuth();
   const userId = user?.id ?? null;
 
@@ -290,7 +292,7 @@ export default function PlanOverlayPage() {
          * piece of text in the way is let through to it, the buttons are not.
          */}
         <span className="pointer-events-none min-w-0 truncate text-[13px] font-semibold text-nexus-soft">
-          {plan?.name ?? "Plan de vol"}
+          {plan?.name ?? t("title")}
         </span>
 
         {phase ? (
@@ -304,7 +306,7 @@ export default function PlanOverlayPage() {
         {plan ? (
           <button
             type="button"
-            title="Ouvrir sur le site"
+            title={t("openOnSite")}
             onClick={() =>
               void getApiBaseUrl().then((base) =>
                 openUrl(`${base}/squads/plans/${plan.id}`),
@@ -321,7 +323,7 @@ export default function PlanOverlayPage() {
 
         <button
           type="button"
-          title="Fermer"
+          title={t("close")}
           onClick={() => void invoke("close_plan_overlay")}
           className="flex size-7 items-center justify-center rounded text-nexus-accent/65 hover:text-nexus-soft"
         >
@@ -331,18 +333,14 @@ export default function PlanOverlayPage() {
 
       {loading || !plan || !phase ? (
         <div className="flex flex-1 items-center justify-center px-4 text-center text-[13px] text-nexus-accent/65">
-          {loading
-            ? "…"
-            : plans.length === 0
-              ? "Aucun plan de vol pour cette escouade."
-              : "Ce plan n'a pas encore de phase."}
+          {loading ? "…" : plans.length === 0 ? t("noPlan") : t("noPhase")}
         </div>
       ) : (
         <>
           <div className="flex shrink-0 items-center gap-2 px-2 pb-1.5">
             <button
               type="button"
-              title="Phase précédente"
+              title={t("previousPhase")}
               onClick={() => step(-1)}
               className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
             >
@@ -371,7 +369,7 @@ export default function PlanOverlayPage() {
 
             <button
               type="button"
-              title="Phase suivante"
+              title={t("nextPhase")}
               onClick={() => step(1)}
               className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
             >
@@ -403,7 +401,7 @@ export default function PlanOverlayPage() {
           {mine ? (
             <div className="shrink-0 border-t border-nexus-accent/15 px-2.5 py-2">
               <p className="text-[10px] uppercase tracking-wider text-nexus-accent/55">
-                Vous
+                {t("you")}
               </p>
               <p className="text-[13px] font-semibold text-nexus-soft">
                 {mine.task}
@@ -422,8 +420,8 @@ export default function PlanOverlayPage() {
               <span className="flex min-w-0 items-center gap-1.5 truncate text-[11px] text-amber-300">
                 <span className="size-1.5 shrink-0 rounded-full bg-amber-300" />
                 {stepped && stepped !== presenter.phaseId
-                  ? `${presenter.name} mène`
-                  : `Suit ${presenter.name}`}
+                  ? t("presenterLeads", { name: presenter.name })
+                  : t("followingPresenter", { name: presenter.name })}
               </span>
             ) : null}
 
@@ -433,7 +431,7 @@ export default function PlanOverlayPage() {
                 onClick={() => setStepped(null)}
                 className="shrink-0 rounded border border-nexus-accent/25 px-1.5 py-0.5 text-[11px] text-nexus-accent/85 hover:text-nexus-soft"
               >
-                Suivre
+                {t("follow")}
               </button>
             ) : null}
 
@@ -441,21 +439,21 @@ export default function PlanOverlayPage() {
 
             {phase.locked ? (
               <span
-                title="Phase figée"
+                title={t("frozenPhase")}
                 className="flex items-center gap-1 text-[11px] text-amber-300"
               >
                 <Lock className="size-3.5" />
-                Figée
+                {t("frozen")}
               </span>
             ) : locked ? (
               <span className="text-[11px] text-nexus-accent/50">
-                Déverrouillez pour dessiner
+                {t("unlockToDraw")}
               </span>
             ) : (
               <>
                 <button
                   type="button"
-                  title="Annuler"
+                  title={t("undo")}
                   disabled={!canUndo}
                   onClick={() => void walk(true)}
                   className={cn(
@@ -468,7 +466,7 @@ export default function PlanOverlayPage() {
 
                 <button
                   type="button"
-                  title="Rétablir"
+                  title={t("redo")}
                   disabled={!canRedo}
                   onClick={() => void walk(false)}
                   className={cn(
@@ -481,7 +479,7 @@ export default function PlanOverlayPage() {
 
                 <button
                   type="button"
-                  title="Trait libre"
+                  title={t("pen")}
                   aria-pressed={tool === "pen"}
                   onClick={() => setTool(tool === "pen" ? "none" : "pen")}
                   className={cn(
@@ -496,7 +494,7 @@ export default function PlanOverlayPage() {
 
                 <button
                   type="button"
-                  title="Gomme — vos traits, et ceux des autres si vous menez le plan"
+                  title={t("eraser")}
                   aria-pressed={tool === "eraser"}
                   onClick={() => setTool(tool === "eraser" ? "none" : "eraser")}
                   className={cn(

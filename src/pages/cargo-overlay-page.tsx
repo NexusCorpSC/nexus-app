@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslations } from "use-intl";
 import { Boxes, Pencil, Plus, X } from "lucide-react";
 import { useCargoSheet } from "@/hooks/use-cargo-sheet";
 import {
@@ -47,6 +48,7 @@ import { cn } from "@/lib/utils";
  * shortcut, its close button, or the tray.
  */
 export default function CargoOverlayPage() {
+  const t = useTranslations("Cargo");
   const { sheet, loading } = useCargoSheet();
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState(false);
@@ -100,14 +102,14 @@ export default function CargoOverlayPage() {
       >
         <Boxes className="pointer-events-none size-4 text-slate-400" />
         <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
-          Feuille de cargo
+          {t("page.title")}
         </p>
 
         {sheet ? (
           <button
             type="button"
             onClick={() => (editing ? stopEditing() : setEditing(true))}
-            title={editing ? "Terminer les modifications" : "Modifier"}
+            title={editing ? t("overlay.doneEditing") : t("overlay.edit")}
             aria-pressed={editing}
             className={cn(
               "rounded p-1 transition hover:bg-white/10",
@@ -117,7 +119,7 @@ export default function CargoOverlayPage() {
             )}
           >
             <span className="sr-only">
-              {editing ? "Terminer les modifications" : "Modifier"}
+              {editing ? t("overlay.doneEditing") : t("overlay.edit")}
             </span>
             <Pencil className="size-4" />
           </button>
@@ -129,21 +131,20 @@ export default function CargoOverlayPage() {
         <button
           type="button"
           onClick={close}
-          title="Fermer"
+          title={t("overlay.close")}
           className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
         >
-          <span className="sr-only">Fermer</span>
+          <span className="sr-only">{t("overlay.close")}</span>
           <X className="size-4" />
         </button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
         {loading ? (
-          <p className="text-xs text-slate-400">Chargement…</p>
+          <p className="text-xs text-slate-400">{t("overlay.loading")}</p>
         ) : !sheet ? (
           <p className="text-xs text-slate-400">
-            Aucune feuille en cours. Ouvrez « Feuille de cargo » dans la fenêtre
-            principale, ou capturez un journal de mission.
+            {t("overlay.noSheet")}
           </p>
         ) : (
           <>
@@ -165,7 +166,7 @@ export default function CargoOverlayPage() {
                     onClick={() => setAdding((open) => !open)}
                   >
                     <Plus className="h-3.5 w-3.5" />
-                    Ajouter
+                    {t("add.submit")}
                   </Button>
 
                   <Button
@@ -174,11 +175,11 @@ export default function CargoOverlayPage() {
                     variant="ghost"
                     onClick={() => void startNewMission()}
                   >
-                    Nouvelle mission
+                    {t("page.newMission")}
                   </Button>
 
                   <Select
-                    aria-label="Plus gros conteneur"
+                    aria-label={t("page.maxContainer")}
                     value={String(sheet.maxContainer)}
                     onChange={(event) => {
                       const size = Number(event.target.value);
@@ -207,12 +208,11 @@ export default function CargoOverlayPage() {
                 {adding ? (
                   <>
                     <p className="text-[11px] text-nexus-accent/50">
-                      Sans mission indiquée, la ligne rejoint « {currentMission}{" "}
-                      ».
+                      {t("add.joinsMission", { mission: currentMission ?? "" })}
                     </p>
                     <CargoLineForm
                       compact
-                      submitLabel="Ajouter"
+                      submitLabel={t("add.submit")}
                       submitIcon={<Plus className="h-3.5 w-3.5" />}
                       onSubmit={(line) => void addLines([line])}
                       onCancel={() => setAdding(false)}
@@ -225,7 +225,7 @@ export default function CargoOverlayPage() {
             <div className="min-h-0 flex-1 overflow-y-auto">
               {sheet.lines.length === 0 ? (
                 <p className="text-xs text-slate-400">
-                  Feuille vide : rien à charger pour l'instant.
+                  {t("overlay.empty")}
                 </p>
               ) : (
                 <MissionGroups

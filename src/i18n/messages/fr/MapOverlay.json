@@ -1,0 +1,13 @@
+{
+  "title": "Carte",
+  "pick": "Choisir un lieu",
+  "close": "Fermer",
+  "noPinned": "Aucune carte épinglée. Épinglez-en une depuis la fiche d'un lieu, ou choisissez ici.",
+  "loadFailed": "La carte n'a pas pu être chargée.",
+  "retry": "Réessayer",
+  "notSurveyed": "Ce lieu n'a pas encore été relevé.",
+  "searchPlaceholder": "Nom d'un lieu…",
+  "searchFailed": "La recherche a échoué.",
+  "noResults": "Aucun lieu trouvé.",
+  "notSurveyedYet": "Pas encore relevé"
+}

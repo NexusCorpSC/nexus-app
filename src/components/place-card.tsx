@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { useTranslations } from "use-intl";
 import {
   Building,
   Building2,
@@ -12,11 +13,8 @@ import {
   Sun,
   Warehouse,
 } from "lucide-react";
-import {
-  PLACE_TYPE_LABELS,
-  type PlaceSummary,
-  type PlaceType,
-} from "@/types/nexus";
+import { type PlaceSummary, type PlaceType } from "@/types/nexus";
+import { translator } from "@/i18n/translate";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +51,7 @@ const PLACE_ICONS: Record<PlaceType, typeof Globe> = {
 };
 
 export function PlaceTypeBadge({ type }: { type: PlaceType }) {
+  const t = useTranslations("Places");
   const accent = PLACE_ACCENT[type];
   return (
     <span
@@ -63,7 +62,7 @@ export function PlaceTypeBadge({ type }: { type: PlaceType }) {
         backgroundColor: `${accent}1a`,
       }}
     >
-      {PLACE_TYPE_LABELS[type]}
+      {t(`types.${type}`)}
     </span>
   );
 }
@@ -117,10 +116,11 @@ export function placeTrail(place: PlaceSummary): string {
 
 /** Ce qu'un lieu contient, dit en clair plutôt qu'en compteurs bruts. */
 function placeHoldings(place: PlaceSummary): string {
+  const t = translator("Places");
   const parts: string[] = [];
-  if (place.childCount) parts.push(`${place.childCount} lieu${place.childCount > 1 ? "x" : ""}`);
-  if (place.shopCount) parts.push(`${place.shopCount} magasin${place.shopCount > 1 ? "s" : ""}`);
-  if (place.planCount) parts.push(`${place.planCount} carte${place.planCount > 1 ? "s" : ""}`);
+  if (place.childCount) parts.push(t("holdings.places", { count: place.childCount }));
+  if (place.shopCount) parts.push(t("holdings.shops", { count: place.shopCount }));
+  if (place.planCount) parts.push(t("holdings.maps", { count: place.planCount }));
   return parts.join(" · ");
 }
 
@@ -143,6 +143,7 @@ export function PlaceCard({
   trailing?: ReactNode;
   layout?: "tile" | "row";
 }) {
+  const t = useTranslations("Places");
   const trail = placeTrail(place);
   const holdings = placeHoldings(place);
   const detail = place.shopCategory || holdings;
@@ -166,7 +167,7 @@ export function PlaceCard({
             className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
             style={{ color: `${PLACE_ACCENT[place.type]}cc` }}
           >
-            {PLACE_TYPE_LABELS[place.type]}
+            {t(`types.${place.type}`)}
           </p>
           <p
             className="mt-1 truncate text-sm font-semibold text-nexus-white"

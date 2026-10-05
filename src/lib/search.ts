@@ -1,26 +1,17 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { openMainRoute } from "@/lib/main-window";
 import { getApiBaseUrl } from "@/lib/settings";
+import { translator } from "@/i18n/translate";
 import {
-  ITEM_KIND_LABELS,
   isItemKind,
   type SearchResult,
   type SearchType,
 } from "@/types/nexus";
 
 /** What each kind of result is called in the palette. */
-export const SEARCH_TYPE_LABELS: Record<SearchType, string> = {
-  blueprint: "Blueprint",
-  item: "Objet",
-  place: "Lieu",
-  mission: "Mission",
-  faction: "Faction",
-  shopItem: "Article",
-  shop: "Boutique",
-  organization: "Organisation",
-  cargoShip: "Cargo",
-  inventoryItem: "Inventaire",
-};
+export function searchTypeLabel(type: SearchType): string {
+  return translator("Search.types")(type);
+}
 
 /**
  * What to call one result. An in-game object says which kind it is — a
@@ -30,10 +21,10 @@ export function searchResultLabel(result: SearchResult): string {
   if (result.type === "item") {
     const kind = result.meta?.kind;
     if (typeof kind === "string" && isItemKind(kind)) {
-      return ITEM_KIND_LABELS[kind];
+      return translator("Items")(`kinds.${kind}`);
     }
   }
-  return SEARCH_TYPE_LABELS[result.type];
+  return searchTypeLabel(result.type);
 }
 
 /**

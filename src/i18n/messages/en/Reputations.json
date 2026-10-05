@@ -1,0 +1,46 @@
+{
+  "title": "Reputations",
+  "description": "Your rank with each faction, as shown in the mobiGlas. {started, plural, one {# faction tracked} other {# factions tracked}} out of {total}, {maxed} at max rank.",
+  "updateFailed": "The update failed.",
+  "noFactions": "No faction configured",
+  "searchLabel": "Search a faction, career or rank",
+  "searchPlaceholder": "Faction, career or rank…",
+  "progressLabel": "Progress",
+  "progress": {
+    "all": "All",
+    "started": "Started",
+    "todo": "Not started"
+  },
+  "familyLabel": "Career type",
+  "allFamilies": "All",
+  "family": {
+    "guild": "Guilds",
+    "hauling": "Hauling",
+    "faction": "Faction contracts",
+    "trade": "Trade"
+  },
+  "group": {
+    "guild": "Guilds and trades",
+    "hauling": "Hauling",
+    "faction": "Faction contracts",
+    "trade": "Trade"
+  },
+  "count": "{count, plural, one {# faction} other {# factions}}",
+  "noMatchTitle": "No faction matches",
+  "noMatchHint": "Try another name, or show all factions.",
+  "card": {
+    "lawful": "lawful",
+    "unlawful": "unlawful",
+    "removed": "removed from the game in {version}",
+    "maxBadge": "Max rank",
+    "noCareer": "No career for this faction.",
+    "rankOf": "{career} rank with {faction}",
+    "ladderOf": "{career} ladder",
+    "nextRank": "Next rank: {rank}",
+    "nextRankWithRep": "Next rank: {rank} · {rep} reputation",
+    "topRank": "Highest rank of this ladder.",
+    "standing": "Standing",
+    "requiredRep": "required reputation",
+    "startingRank": "starting rank"
+  }
+}

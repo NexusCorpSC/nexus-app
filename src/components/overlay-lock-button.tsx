@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Lock, LockOpen } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { lockOverlay, unlockOverlay } from "@/lib/overlay-lock";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ export function OverlayLockButton({
   locked: boolean;
   className?: string;
 }) {
+  const t = useTranslations("Overlay.lock");
   const button = useRef<HTMLButtonElement>(null);
 
   // The zone follows the button. `ResizeObserver` on the body rather than on
@@ -56,9 +58,7 @@ export function OverlayLockButton({
     };
   }, [label, locked]);
 
-  const action = locked
-    ? "Déverrouiller : la fenêtre reprend les clics"
-    : "Verrouiller : les clics passent au jeu, sauf sur ce bouton";
+  const action = locked ? t("unlock") : t("lock");
 
   return (
     <button

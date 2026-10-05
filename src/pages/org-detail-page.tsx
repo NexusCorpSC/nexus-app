@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, CalendarPlus, ExternalLink, Globe, Lock } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { EventPill } from "@/components/org-event-pill";
 import { PresenceForm } from "@/components/presence-form";
 import { RoleIcon } from "@/components/squad/role-icon";
@@ -17,6 +18,7 @@ import {
   Spinner,
 } from "@/components/ui";
 import { useMyPresence } from "@/hooks/use-presence";
+import { getLocale } from "@/i18n/locale";
 import { listOrgEvents } from "@/lib/api/org-events";
 import { listOrganizations } from "@/lib/api/orgs";
 import { getOrgPresence } from "@/lib/api/presence";
@@ -39,11 +41,13 @@ import type {
 /** Often enough to see a teammate arrive, rare enough to cost nothing. */
 const PRESENCE_REFRESH_MS = 30_000;
 
-const SHORT_DAY = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-});
+function shortDay() {
+  return new Intl.DateTimeFormat(getLocale(), {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
 
 /**
  * Planned sessions at the same time for the same thing read as one line:
@@ -67,6 +71,7 @@ function groupPlanned(planned: MemberPlanned[]) {
  * the events coming up.
  */
 export default function OrgDetailPage() {
+  const t = useTranslations("Orgs.detail");
   const { orgId = "" } = useParams();
   const { presence: mine } = useMyPresence(true);
 
@@ -117,12 +122,12 @@ export default function OrgDetailPage() {
 
   return (
     <>
-      <BackLink to="/orgs">Retour aux organisations</BackLink>
+      <BackLink to="/orgs">{t("back")}</BackLink>
 
       <PageHeader
-        title={org ? `${org.name} [${org.tag}]` : "Organisation"}
+        title={org ? `${org.name} [${org.tag}]` : t("fallbackTitle")}
         description={
-          org?.rank ? `Votre rang : ${org.rank}` : "Vos coéquipiers en jeu."
+          org?.rank ? t("rank", { rank: org.rank }) : t("description")
         }
         actions={
           <>
@@ -130,17 +135,17 @@ export default function OrgDetailPage() {
             <Button
               variant="outline"
               onClick={() => void openOnSite(`/orgs/${orgId}/events/new`)}
-              title="Ouvre le formulaire dans le navigateur"
+              title={t("planOnSiteTitle")}
             >
               <CalendarPlus className="size-4" />
-              Prévoir sur le site
+              {t("planOnSite")}
             </Button>
             <Link
               to={`/orgs/${orgId}/inventory`}
               className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/25 px-4 text-[13px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
             >
               <Boxes className="size-4" />
-              Inventaire partagé
+              {t("sharedInventory")}
             </Link>
           </>
         }
@@ -149,7 +154,7 @@ export default function OrgDetailPage() {
       <Card className="mb-7 flex flex-col gap-3 px-5 py-4">
         <div className="flex items-center justify-between gap-3">
           <p className="font-display text-base font-semibold text-nexus-white">
-            Ma session
+            {t("mySession")}
           </p>
           <span
             className={cn(
@@ -172,24 +177,29 @@ export default function OrgDetailPage() {
               )}
             />
             {mine?.playing
-              ? "Vous êtes en jeu"
+              ? t("youArePlaying")
               : myPlanned
                 ? plannedLabel(myPlanned, now)
-                : "Vous n'êtes pas en jeu"}
+                : t("youAreNotPlaying")}
           </span>
         </div>
         <PresenceForm />
       </Card>
 
       <section>
-        <SectionTitle aside={`${playing.length} sur ${memberCount}`}>
-          En jeu maintenant
+        <SectionTitle
+          aside={t("playingCount", {
+            playing: playing.length,
+            total: memberCount,
+          })}
+        >
+          {t("playingNow")}
         </SectionTitle>
 
         {playing.length === 0 ? (
           <EmptyState
-            title="Personne n'est en jeu pour le moment"
-            description="Chacun le déclare depuis Nexus App ou le site, avec ce qu'il fait s'il le souhaite."
+            title={t("nobodyTitle")}
+            description={t("nobodyDescription")}
           />
         ) : (
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -202,7 +212,7 @@ export default function OrgDetailPage() {
         {planned.length > 0 ? (
           <div className="mt-6">
             <SectionTitle aside={presence.data.planned?.length}>
-              Sessions prévues
+              {t("plannedTitle")}
             </SectionTitle>
             <ul className="flex flex-col gap-2">
               {planned.map(({ at, members }) => (
@@ -222,33 +232,33 @@ export default function OrgDetailPage() {
         <SectionTitle
           aside={
             events.data
-              ? `${upcomingOf(events.data, now).length} à venir`
+              ? t("upcomingCount", {
+                  count: upcomingOf(events.data, now).length,
+                })
               : undefined
           }
         >
-          Évènements
+          {t("events")}
         </SectionTitle>
 
         {events.isPending ? (
           <div className="flex items-center gap-2 py-4 text-[13px] text-nexus-muted">
             <Spinner />
-            Chargement…
+            {t("loading")}
           </div>
         ) : events.isError ? (
           <p className="text-[13px] text-nexus-muted">
-            Les évènements n'ont pas pu être chargés.{" "}
+            {t("eventsError")}{" "}
             <button
               type="button"
               onClick={() => void events.refetch()}
               className="text-nexus-accent hover:text-nexus-bright"
             >
-              Réessayer
+              {t("retry")}
             </button>
           </p>
         ) : upcomingOf(events.data, now).length === 0 ? (
-          <p className="text-[13px] text-nexus-muted">
-            Aucun évènement prévu pour le moment.
-          </p>
+          <p className="text-[13px] text-nexus-muted">{t("noEvents")}</p>
         ) : (
           <ul className="flex flex-col gap-2">
             {upcomingOf(events.data, now).map((event) => (
@@ -263,7 +273,7 @@ export default function OrgDetailPage() {
           className="mt-3 inline-flex items-center gap-1.5 text-xs text-nexus-muted transition-colors hover:text-nexus-accent"
         >
           <ExternalLink className="size-3.5" />
-          Le calendrier complet sur le site
+          {t("fullCalendar")}
         </button>
       </section>
     </>
@@ -271,6 +281,7 @@ export default function OrgDetailPage() {
 }
 
 function MemberCard({ member, now }: { member: MemberPresence; now: number }) {
+  const t = useTranslations("Orgs.member");
   const [failed, setFailed] = useState(false);
 
   return (
@@ -301,11 +312,11 @@ function MemberCard({ member, now }: { member: MemberPresence; now: number }) {
           {member.name}
         </p>
         <p className="truncate text-xs text-nexus-muted">
-          {member.activity ?? "En jeu"}
+          {member.activity ?? t("playing")}
         </p>
       </div>
 
-      <span className="shrink-0 text-xs text-nexus-dim" title="En jeu depuis">
+      <span className="shrink-0 text-xs text-nexus-dim" title={t("since")}>
         {formatElapsed(member.since, now)}
       </span>
     </li>
@@ -326,6 +337,7 @@ function PlannedRow({
   members: MemberPlanned[];
   now: number;
 }) {
+  const t = useTranslations("Orgs.planned");
   const { planned } = members[0];
 
   return (
@@ -342,11 +354,11 @@ function PlannedRow({
             to={`/orgs/${planned.event.orgId}/events/${planned.event.eventId}`}
             className="block truncate text-xs text-nexus-accent transition-colors hover:text-nexus-bright"
           >
-            {planned.activity ?? planned.event.title} · évènement
+            {t("event", { title: planned.activity ?? planned.event.title })}
           </Link>
         ) : (
           <p className="truncate text-xs text-nexus-muted">
-            {planned.activity ?? "Session prévue"}
+            {planned.activity ?? t("noActivity")}
           </p>
         )}
       </div>
@@ -355,6 +367,7 @@ function PlannedRow({
 }
 
 function EventRow({ event, now }: { event: OrgEventView; now: number }) {
+  const t = useTranslations("OrgEvents.pill");
   const registered = isRegistered(event);
   const myRole = registered
     ? roleById(event.roles, event.myRegistration?.role ?? "")
@@ -370,7 +383,7 @@ function EventRow({ event, now }: { event: OrgEventView; now: number }) {
       >
         <div className="flex w-28 shrink-0 flex-col">
           <span className="text-[11px] font-semibold tracking-wider text-nexus-muted uppercase">
-            {SHORT_DAY.format(new Date(event.startsAt))}
+            {shortDay().format(new Date(event.startsAt))}
           </span>
           <span className="font-mono text-[13px] text-nexus-accent">
             {formatTimeRange(event)}
@@ -384,21 +397,23 @@ function EventRow({ event, now }: { event: OrgEventView; now: number }) {
           <div className="flex flex-wrap items-center gap-1.5">
             <EventPill>
               <VisibilityIcon className="size-3" />
-              {event.visibility === "public" ? "Public" : "Privé"}
+              {event.visibility === "public" ? t("public") : t("private")}
             </EventPill>
-            {live ? <EventPill tone="live">En cours</EventPill> : null}
+            {live ? <EventPill tone="live">{t("live")}</EventPill> : null}
             {registered ? (
               <EventPill tone="registered">
                 {myRole ? (
                   <RoleIcon icon={myRole.icon} className="size-3" />
                 ) : null}
-                {myRole ? `Inscrit · ${myRole.label}` : "Inscrit"}
+                {myRole
+                  ? t("registeredAs", { role: myRole.label })
+                  : t("registered")}
               </EventPill>
             ) : null}
             {missingRoles(event).map(({ role, missing }) => (
               <EventPill key={role.id} tone="missing">
                 <RoleIcon icon={role.icon} className="size-3" />
-                Il manque {missing} {role.label}
+                {t("missing", { count: missing, role: role.label })}
               </EventPill>
             ))}
           </div>

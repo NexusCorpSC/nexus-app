@@ -1,0 +1,24 @@
+{
+  "title": "Notifications",
+  "description": "Elles s'affichent par-dessus le jeu, dans le coin choisi de l'écran où se trouve le curseur, puis disparaissent d'elles-mêmes. Survolez-en une pour la garder à l'écran.",
+  "showExample": "Afficher un exemple",
+  "exampleBody": "Ceci est un exemple de notification.",
+  "display": "Affichage",
+  "corner": "Coin d'affichage",
+  "corners": {
+    "bottomRight": "En bas à droite",
+    "bottomLeft": "En bas à gauche",
+    "topRight": "En haut à droite",
+    "topLeft": "En haut à gauche"
+  },
+  "cornerApplied": {
+    "bottomRight": "Elles s'afficheront en bas à droite.",
+    "bottomLeft": "Elles s'afficheront en bas à gauche.",
+    "topRight": "Elles s'afficheront en haut à droite.",
+    "topLeft": "Elles s'afficheront en haut à gauche."
+  },
+  "cornerError": "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
+  "contrib": "Mes contributions",
+  "contribHint": "Publiée, à corriger, succès débloqué ou nouveau niveau.",
+  "contribError": "Le réglage n'a pas pu être enregistré."
+}

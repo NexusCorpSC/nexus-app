@@ -1,0 +1,163 @@
+{
+  "kinds": {
+    "item": "Item",
+    "weapon": "Weapon",
+    "vehicle": "Vehicle",
+    "resource": "Resource"
+  },
+  "list": {
+    "title": "Items",
+    "description": "Everything that exists in the game: items, weapons, vehicles and resources.",
+    "searchLabel": "Search an item",
+    "searchPlaceholder": "Name, manufacturer, variant…",
+    "category": "Category",
+    "subcategory": "Subcategory",
+    "manufacturer": "Manufacturer",
+    "all": "All",
+    "allMasculine": "All",
+    "allKinds": "All",
+    "emptyTitle": "No item found",
+    "emptyDescription": "Try another search term or widen the filters.",
+    "results": "{count, plural, one {# result} other {# results}}"
+  },
+  "card": {
+    "variant": "Variant: {name}",
+    "set": "Set: {name}"
+  },
+  "detail": {
+    "back": "Back to items",
+    "openOnWeb": "Open on the web",
+    "description": "Description",
+    "madeWith": "Crafted with",
+    "blueprintsInferred": "Blueprints sharing its name: no link has been set by hand.",
+    "usedIn": "Used in",
+    "variants": "{count, plural, one {# variant} other {# variants}}",
+    "set": "Set",
+    "setNamed": "Set: {name}",
+    "mountedOn": "{count, plural, one {Mounted on # item} other {Mounted on # items}}",
+    "mountedOnHint": "From the stock loadout listed on each item page.",
+    "sheet": "Details",
+    "rows": {
+      "type": "Kind",
+      "category": "Category",
+      "subcategory": "Subcategory",
+      "manufacturer": "Manufacturer",
+      "size": "Size",
+      "tier": "Tier",
+      "variant": "Variant",
+      "set": "Set"
+    },
+    "statistics": "Statistics",
+    "obtention": "Where to get it",
+    "characteristics": "Characteristics",
+    "slotEmpty": "Empty slot",
+    "incomplete": {
+      "title": "{kind, select, vehicle {Vehicle data to complete} weapon {Weapon data to complete} resource {Resource data to complete} other {Item data to complete}}",
+      "description": "The data specific to this kind of item has not been filled in on the site yet."
+    },
+    "plans": {
+      "title": "Plans",
+      "source": "Orthographic renders",
+      "holo": "3D view on the site",
+      "unavailable": "Plan unavailable for now.",
+      "alt": "{name}, {view, select, top {top} side {side} other {front}} view",
+      "views": {
+        "top": "Top",
+        "side": "Side",
+        "front": "Front"
+      }
+    },
+    "vehicle": {
+      "crew": "Seats",
+      "speedMax": "Top speed",
+      "speedScm": "Cruise",
+      "cargo": "Cargo",
+      "technical": "Specifications",
+      "mass": "Mass",
+      "dimensions": "Dimensions",
+      "armament": "Armament",
+      "armamentEmpty": "No hardpoint filled in.",
+      "equipment": "Equipment",
+      "equipmentEmpty": "No component filled in."
+    },
+    "weapon": {
+      "rateOfFire": "Rate of fire",
+      "rpmUnit": "rounds/min",
+      "magazine": "Magazine",
+      "reload": "Reload",
+      "mass": "Mass",
+      "damageType": "Damage type",
+      "caliber": "Caliber",
+      "damageProfile": "Damage profile",
+      "damageProfileHint": "relative to its class",
+      "average": "| avg. {value}",
+      "fireModes": "Fire modes",
+      "modeLabel": "Mode",
+      "modeRpm": "Rate of fire",
+      "modeDps": "DPS",
+      "modeAmmo": "Ammo / shot",
+      "modePellets": "Pellets",
+      "modeBurst": "Burst",
+      "spread": "Spread",
+      "spreadUnit": "degrees",
+      "spreadHip": "Hip fire",
+      "spreadAds": "Aiming",
+      "spreadEmpty": "Not filled in.",
+      "spreadRows": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "firstShot": "First shot",
+        "perShot": "Per shot",
+        "decay": "Decay"
+      },
+      "attachments": "Attachments",
+      "attachmentsEmpty": "No attachment filled in.",
+      "againstClass": "Against its class"
+    },
+    "ammo": {
+      "title": "Ammunition",
+      "damagePerShot": "Damage per shot",
+      "speed": "Speed",
+      "range": "Range",
+      "lifetime": "Flight time",
+      "capacity": "Capacity",
+      "size": "Size",
+      "penetration": "Penetration",
+      "falloffTitle": "Damage falloff",
+      "falloff": "full up to {start} m, then −{perMeter}/m",
+      "falloffWithFloor": "full up to {start} m, then −{perMeter}/m, floor {min}"
+    },
+    "resource": {
+      "characteristics": "Characteristics",
+      "form": "Form",
+      "volatile": "Volatile",
+      "volatileYes": "Yes: unstable cargo",
+      "unitVolume": "Unit volume",
+      "purity": "Purity",
+      "markets": "Prices by counter",
+      "pricesUpdated": "recorded on {date}",
+      "counter": "Counter",
+      "side": "Side",
+      "price": "Price",
+      "stock": "Stock",
+      "sides": {
+        "buy": "Buys",
+        "sell": "Sells",
+        "grey": "Grey market"
+      },
+      "marketsEmpty": "No price recorded.",
+      "refining": "Refining",
+      "process": "Process",
+      "yield": "Yield",
+      "cycleDuration": "Cycle duration",
+      "cost": "Cost",
+      "output": "Output",
+      "extraction": "Extraction sites",
+      "frequencies": {
+        "common": "Common",
+        "occasional": "Occasional",
+        "risky": "Risky"
+      }
+    }
+  }
+}

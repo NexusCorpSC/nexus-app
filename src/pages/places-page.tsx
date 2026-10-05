@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { listPlaceFacets, listPlaces } from "@/lib/api/places";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -9,8 +10,6 @@ import {
 } from "@/hooks/use-url-filters";
 import { PlaceCard } from "@/components/place-card";
 import {
-  PLACE_SERVICE_LABELS,
-  PLACE_TYPE_LABELS,
   PLACE_TYPES,
   isPlaceService,
   type PlaceService,
@@ -29,7 +28,7 @@ import {
 } from "@/components/ui";
 
 /**
- * `value in PLACE_TYPE_LABELS` dirait oui à `toString` : la chaîne des
+ * `value in { … }` dirait oui à `toString` : la chaîne des
  * prototypes en fait partie. On interroge la liste, comme `isPlaceService`.
  */
 function isPlaceType(value: string): value is PlaceType {
@@ -49,6 +48,7 @@ function isPlaceType(value: string): value is PlaceType {
  * donne l'hôpital, pas Lorville.
  */
 export default function PlacesPage() {
+  const t = useTranslations("Places");
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [type, setType] = useState<PlaceType | "">(
@@ -100,22 +100,22 @@ export default function PlacesPage() {
   return (
     <>
       <PageHeader
-        title="Lieux"
-        description="Villes, stations et avant-postes du 'verse, leurs services et leurs cartes."
+        title={t("list.title")}
+        description={t("list.description")}
       />
 
       <Toolbar className="mb-3">
         <SearchField
-          label="Rechercher un lieu"
+          label={t("list.searchLabel")}
           value={search}
-          placeholder="Nom d'un lieu…"
+          placeholder={t("list.searchPlaceholder")}
           onChange={(event) =>
             updateFilter(() => setSearch(event.target.value))
           }
         />
 
         <ToolbarSelect
-          label="Système"
+          label={t("list.system")}
           value={system}
           onChange={(event) =>
             updateFilter(() => {
@@ -125,7 +125,7 @@ export default function PlacesPage() {
             })
           }
         >
-          <option value="">Tous</option>
+          <option value="">{t("list.all")}</option>
           {facetsQuery.data?.systems.map((entry) => (
             <option key={entry.slug} value={entry.slug}>
               {entry.name}
@@ -134,12 +134,12 @@ export default function PlacesPage() {
         </ToolbarSelect>
 
         <ToolbarSelect
-          label="Planète ou lune"
+          label={t("list.body")}
           value={body}
           disabled={!bodies.length}
           onChange={(event) => updateFilter(() => setBody(event.target.value))}
         >
-          <option value="">Tous</option>
+          <option value="">{t("list.all")}</option>
           {bodies.map((entry) => (
             <option key={entry.slug} value={entry.slug}>
               {entry.name}
@@ -148,7 +148,7 @@ export default function PlacesPage() {
         </ToolbarSelect>
 
         <ToolbarSelect
-          label="Service"
+          label={t("list.service")}
           value={service}
           onChange={(event) =>
             updateFilter(() => {
@@ -157,11 +157,11 @@ export default function PlacesPage() {
             })
           }
         >
-          <option value="">Tous</option>
+          <option value="">{t("list.all")}</option>
           {facetsQuery.data?.services.map((entry) =>
             isPlaceService(entry.value) ? (
               <option key={entry.value} value={entry.value}>
-                {PLACE_SERVICE_LABELS[entry.value]} ({entry.count})
+                {t(`services.${entry.value}`)} ({entry.count})
               </option>
             ) : null,
           )}
@@ -173,7 +173,7 @@ export default function PlacesPage() {
           active={type === ""}
           onClick={() => updateFilter(() => setType(""))}
         >
-          Tous
+          {t("list.all")}
         </Chip>
         {facetsQuery.data?.types.map((entry) => {
           const value = entry.value;
@@ -183,7 +183,7 @@ export default function PlacesPage() {
               active={type === value}
               onClick={() => updateFilter(() => setType(value))}
             >
-              {PLACE_TYPE_LABELS[value]}
+              {t(`types.${value}`)}
               <span className="ml-1.5 opacity-60">{entry.count}</span>
             </Chip>
           ) : null;
@@ -199,14 +199,13 @@ export default function PlacesPage() {
         />
       ) : placesQuery.data.places.length === 0 ? (
         <EmptyState
-          title="Aucun lieu trouvé"
-          description="Essayez un autre terme de recherche ou élargissez les filtres."
+          title={t("list.emptyTitle")}
+          description={t("list.emptyDescription")}
         />
       ) : (
         <>
           <p className="mb-3 text-xs text-nexus-dim">
-            {placesQuery.data.total} résultat
-            {placesQuery.data.total > 1 ? "s" : ""}
+            {t("list.results", { count: placesQuery.data.total })}
           </p>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">

@@ -1,0 +1,6 @@
+{
+  "justNow": "justo ahora",
+  "tomorrowAt": "mañana {time}",
+  "weekdayAt": "{weekday} {time}",
+  "plannedSession": "Sesión prevista"
+}

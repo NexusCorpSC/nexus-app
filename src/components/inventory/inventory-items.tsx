@@ -6,6 +6,9 @@ import {
   type ReactNode,
 } from "react";
 import { MapPin, Minus, Plus, Trash2, X } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { cn } from "@/lib/utils";
 import { displayUnit, toDisplayQty } from "@/lib/units";
 import type { Location } from "@/types/nexus";
@@ -24,12 +27,12 @@ export type InventoryDisplayItem = {
 
 export type InventorySort = "updated" | "name" | "quantity";
 
-export const INVENTORY_SORT_OPTIONS: { value: InventorySort; label: string }[] =
-  [
-    { value: "updated", label: "Mise à jour récente" },
-    { value: "name", label: "Nom" },
-    { value: "quantity", label: "Quantité" },
-  ];
+/** The sorts offered; each is labelled by `Inventory.sort.<value>`. */
+export const INVENTORY_SORT_OPTIONS: { value: InventorySort }[] = [
+  { value: "updated" },
+  { value: "name" },
+  { value: "quantity" },
+];
 
 /** The key of the items stored nowhere known. */
 export const UNKNOWN_LOCATION = "__none__";
@@ -79,7 +82,7 @@ function timestamp(value?: string) {
 
 function compareGroups<T>(sort: InventorySort) {
   return (a: ItemGroup<T>, b: ItemGroup<T>) => {
-    if (sort === "name") return a.name.localeCompare(b.name, "fr");
+    if (sort === "name") return a.name.localeCompare(b.name, getLocale());
     if (sort === "quantity") return b.total - a.total;
     return b.updatedAt - a.updatedAt;
   };
@@ -90,6 +93,7 @@ export function groupInventory<T extends InventoryDisplayItem>(
   items: T[],
   sort: InventorySort = "updated",
 ): LocationSection<T>[] {
+  const t = translator("Inventory");
   const sections = new Map<string, LocationSection<T>>();
 
   for (const item of items) {
@@ -98,7 +102,7 @@ export function groupInventory<T extends InventoryDisplayItem>(
     if (!section) {
       section = {
         key,
-        name: item.location?.name ?? "Lieu inconnu",
+        name: item.location?.name ?? t("locationUnknown"),
         groups: [],
         scu: 0,
       };
@@ -137,7 +141,7 @@ export function groupInventory<T extends InventoryDisplayItem>(
   return [...sections.values()].sort((a, b) => {
     if (a.key === UNKNOWN_LOCATION) return 1;
     if (b.key === UNKNOWN_LOCATION) return -1;
-    return a.name.localeCompare(b.name, "fr");
+    return a.name.localeCompare(b.name, getLocale());
   });
 }
 
@@ -147,7 +151,7 @@ export function groupInventory<T extends InventoryDisplayItem>(
 
 function formatShortDate(value: number) {
   if (!value) return "—";
-  return new Date(value).toLocaleString("fr-FR", {
+  return new Date(value).toLocaleString(getLocale(), {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -156,7 +160,7 @@ function formatShortDate(value: number) {
 }
 
 function formatQuantity(value: number) {
-  return value.toLocaleString("fr-FR", { maximumFractionDigits: 3 });
+  return value.toLocaleString(getLocale(), { maximumFractionDigits: 3 });
 }
 
 /** Out of 1000: gold from 700, blue from 500, grey below. */
@@ -171,11 +175,12 @@ function qualityTier(quality: number) {
 }
 
 function QualityBadge({ quality }: { quality: number }) {
+  const t = useTranslations("Inventory");
   const tier = qualityTier(quality);
   return (
     <span
       className="flex items-center gap-2"
-      title={`Qualité ${quality} / 1000`}
+      title={t("qualityTitle", { quality })}
     >
       <span
         className={cn(
@@ -211,12 +216,13 @@ export function LocationGroupHeading({
   count: number;
   scu?: number;
 }) {
+  const t = useTranslations("Inventory");
   return (
     <div className="mb-3 flex items-center gap-2">
       <MapPin className="size-3.5 shrink-0 text-nexus-dim" />
       <h2 className="text-[13.5px] font-semibold text-nexus-white">{name}</h2>
       <span className="font-mono text-xs text-nexus-dim">
-        {count} objet{count > 1 ? "s" : ""}
+        {t("sectionCount", { count })}
         {scu ? ` · ${formatQuantity(scu)} SCU` : ""}
       </span>
       <span className="h-px flex-1 bg-nexus-accent/12" />
@@ -283,6 +289,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
   renderLotActions?: (lot: T) => ReactNode;
   renderFooter?: (group: ItemGroup<T>, active: T) => ReactNode;
 }) {
+  const t = useTranslations("Inventory");
   const [activeId, setActiveId] = useState(group.lots[0].id);
 
   const multi = group.lots.length > 1;
@@ -299,8 +306,8 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
             {group.name}
           </h3>
           <p className="mt-1 text-xs text-nexus-dim">
-            {multi ? `${group.lots.length} lots · ` : null}
-            maj {formatShortDate(group.updatedAt)}
+            {multi ? `${t("lotsCount", { count: group.lots.length })} · ` : null}
+            {t("updatedAt", { date: formatShortDate(group.updatedAt) })}
           </p>
         </div>
         <p className="shrink-0 text-right leading-none whitespace-nowrap">
@@ -328,7 +335,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
               {lot.quality != null ? (
                 <QualityBadge quality={lot.quality} />
               ) : (
-                <span className="text-xs text-nexus-dim">Sans qualité</span>
+                <span className="text-xs text-nexus-dim">{t("noQuality")}</span>
               )}
               <span className="flex min-w-0 flex-1 items-center">
                 {renderLotMeta?.(lot)}
@@ -354,7 +361,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
                   type="button"
                   onClick={() => setActiveId(lot.id)}
                   aria-pressed={lot.id === active.id}
-                  title="Choisir ce lot pour les actions de la carte"
+                  title={t("lotSelect")}
                   className="flex min-w-0 flex-1 items-center gap-2 rounded-md py-1 text-left"
                 >
                   {detail}
@@ -402,13 +409,14 @@ export function OrgVisibleCheckbox({
   disabled?: boolean;
   onChange: (checked: boolean) => void;
 }) {
+  const t = useTranslations("Inventory");
   return (
     <label
       className={cn(
         "flex flex-1 cursor-pointer items-center gap-2 text-[13px] text-nexus-bright",
         disabled && "cursor-wait",
       )}
-      title="Rendre visible aux membres de vos organisations"
+      title={t("orgVisibleTitle")}
     >
       <input
         type="checkbox"
@@ -420,7 +428,7 @@ export function OrgVisibleCheckbox({
         onChange={(event) => onChange(event.target.checked)}
         className="size-3.5 rounded border-nexus-accent/30 bg-nexus-abyss accent-nexus-accent"
       />
-      Visible par l'org
+      {t("orgVisibleShort")}
     </label>
   );
 }
@@ -439,9 +447,10 @@ export function QualityFilter({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslations("Inventory");
   return (
     <label className="flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card pr-1.5 pl-3 text-[13px] text-nexus-muted focus-within:border-nexus-accent/50">
-      Qualité ≥
+      {t("filterQualityLabel")}
       <input
         type="number"
         min={0}
@@ -454,7 +463,7 @@ export function QualityFilter({
       {value ? (
         <button
           type="button"
-          aria-label="Effacer le filtre de qualité"
+          aria-label={t("filterQualityClear")}
           onClick={() => onChange("")}
           className="text-nexus-dim hover:text-nexus-soft"
         >
@@ -485,12 +494,14 @@ export function AdjustQuantityButton({
   max?: number;
   maxMessage?: string;
 }) {
+  const t = useTranslations("Inventory");
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const label = labelOverride ?? (mode === "add" ? "Ajouter" : "Retirer");
+  const label =
+    labelOverride ?? (mode === "add" ? t("adjust.add") : t("adjust.remove"));
   const Icon = IconOverride ?? (mode === "add" ? Plus : Minus);
 
   function close() {
@@ -519,11 +530,13 @@ export function AdjustQuantityButton({
     event.preventDefault();
     const amount = Number(value.replace(",", "."));
     if (!Number.isFinite(amount) || amount <= 0) {
-      setError("Quantité invalide");
+      setError(t("adjust.invalid"));
       return;
     }
     if (max !== undefined && amount > max) {
-      setError(maxMessage ?? `Au plus ${formatQuantity(max)}`);
+      setError(
+        maxMessage ?? t("adjust.atMost", { max: formatQuantity(max) }),
+      );
       return;
     }
     onSubmit(amount);
@@ -554,7 +567,7 @@ export function AdjustQuantityButton({
             inputMode="decimal"
             autoFocus
             value={value}
-            placeholder="Quantité"
+            placeholder={t("adjust.placeholder")}
             onChange={(event) => setValue(event.target.value)}
             className="h-8 w-full rounded-md border border-nexus-accent/20 bg-nexus-abyss px-2 font-mono text-[13px] text-nexus-white focus:border-nexus-accent/50 focus:outline-none"
           />
@@ -563,7 +576,7 @@ export function AdjustQuantityButton({
             type="submit"
             className="h-7 w-full rounded-md bg-nexus-accent text-xs font-semibold text-nexus-abyss hover:bg-nexus-bright"
           >
-            Valider
+            {t("adjust.submit")}
           </button>
         </form>
       ) : null}
@@ -580,11 +593,12 @@ export function DeleteIconButton({
   disabled?: boolean;
   onClick: () => void;
 }) {
+  const t = useTranslations("Inventory");
   return (
     <button
       type="button"
-      aria-label="Supprimer"
-      title={`Supprimer ${itemName}`}
+      aria-label={t("delete")}
+      title={t("deleteItem", { name: itemName })}
       disabled={disabled}
       onClick={onClick}
       className={cn(ICON_BUTTON, "hover:bg-red-500/15 hover:text-red-300")}

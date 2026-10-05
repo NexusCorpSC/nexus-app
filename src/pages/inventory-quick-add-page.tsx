@@ -7,6 +7,8 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
 import { BackLink } from "@/components/layout/back-link";
 import { lastListUrl } from "@/lib/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,7 +63,11 @@ type Status =
 const CELL =
   "h-10 w-full rounded-none border-0 bg-transparent px-3 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/70 focus:bg-nexus-panel focus:outline-2 focus:-outline-offset-2 focus:outline-nexus-accent";
 
-const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
+function formatNumber(value: number) {
+  return new Intl.NumberFormat(getLocale(), {
+    maximumFractionDigits: 3,
+  }).format(value);
+}
 
 /**
  * A number as a French spreadsheet writes it too: "1 234,5", thousands split
@@ -89,6 +95,7 @@ function roundQty(value: number) {
  * Rows in error stay in the table once the others are added.
  */
 export default function InventoryQuickAddPage() {
+  const t = useTranslations("QuickAdd");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -196,7 +203,7 @@ export default function InventoryQuickAddPage() {
       if (item.location) byId.set(item.location.id, item.location);
     }
     return [...byId.values()].sort((a, b) =>
-      a.name.localeCompare(b.name, "fr"),
+      a.name.localeCompare(b.name, getLocale()),
     );
   }, [existing]);
 
@@ -227,7 +234,7 @@ export default function InventoryQuickAddPage() {
   const knownNames = useMemo(
     () =>
       [...new Set(existing.map((item) => item.name))].sort((a, b) =>
-        a.localeCompare(b, "fr"),
+        a.localeCompare(b, getLocale()),
       ),
     [existing],
   );
@@ -254,7 +261,7 @@ export default function InventoryQuickAddPage() {
     if (blank) return { kind: "empty" };
 
     const name = row.name.trim();
-    if (!name) return { kind: "error", message: "Nom requis", field: "name" };
+    if (!name) return { kind: "error", message: t("errors.name"), field: "name" };
 
     // A blank quality takes the default one, if any.
     const qualityText = row.quality.trim() || defaultQuality.trim();
@@ -264,8 +271,8 @@ export default function InventoryQuickAddPage() {
         return {
           kind: "error",
           message: row.quality.trim()
-            ? "Qualité : entier ≥ 0"
-            : "Qualité par défaut : entier ≥ 0",
+            ? t("errors.quality")
+            : t("errors.qualityDefault"),
           field: "quality",
         };
       }
@@ -275,25 +282,33 @@ export default function InventoryQuickAddPage() {
     if (row.fromCapture && !row.quantity.trim()) {
       return {
         kind: "error",
-        message: "Rendement illisible sur la capture",
+        message: t("errors.yieldUnreadable"),
         field: "quantity",
       };
     }
     const quantity = row.quantity.trim() ? parseNumber(row.quantity) : 1;
     if (!Number.isFinite(quantity) || quantity <= 0) {
-      return { kind: "error", message: "Quantité invalide", field: "quantity" };
+      return {
+        kind: "error",
+        message: t("errors.quantity"),
+        field: "quantity",
+      };
     }
 
     if (!row.locationId && row.locationText) {
       return {
         kind: "error",
-        message: `Lieu introuvable : ${row.locationText}`,
+        message: t("errors.locationUnknown", { name: row.locationText }),
         field: "location",
       };
     }
     const locationId = row.locationId || defaultLocationId;
     if (!locationId) {
-      return { kind: "error", message: "Lieu requis", field: "location" };
+      return {
+        kind: "error",
+        message: t("errors.location"),
+        field: "location",
+      };
     }
 
     const unit = unitOf(row);
@@ -328,7 +343,7 @@ export default function InventoryQuickAddPage() {
     return {
       kind: "new",
       row: payload,
-      message: held ? "Nouveau lot" : "Nouvel objet",
+      message: held ? t("status.newLot") : t("status.newItem"),
     };
   };
 
@@ -350,7 +365,7 @@ export default function InventoryQuickAddPage() {
       }
       setRows(kept);
       setNotice(
-        `${result.created} créé(s), ${result.merged} fusionné(s). Les lignes en erreur restent à corriger.`,
+        t("done", { created: result.created, merged: result.merged }),
       );
     },
   });
@@ -463,36 +478,35 @@ export default function InventoryQuickAddPage() {
 
   return (
     <>
-      <BackLink to="/inventory">Retour à l'inventaire</BackLink>
-      <PageHeader
-        title="Ajout en masse"
-        description="Saisissez plusieurs ressources à la suite, ou collez-les depuis un tableur."
-      />
+      <BackLink to="/inventory">{t("back")}</BackLink>
+      <PageHeader title={t("title")} description={t("description")} />
 
       {capture ? (
         <Card className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-nexus-accent/25 px-4 py-3 text-[13px] text-nexus-bright">
           <Factory className="size-4 shrink-0 text-nexus-accent" />
           <span className="flex-1">
-            {capture.lots} lot{capture.lots > 1 ? "s" : ""} lu
-            {capture.lots > 1 ? "s" : ""} sur l'ordre de travail · somme{" "}
-            {number.format(capture.sum)} cSCU
-            {capture.total !== undefined ? (
-              <span
-                className={cn(
-                  capture.total !== capture.sum && "text-amber-300",
-                )}
-              >
-                {" "}
-                · total du jeu {number.format(capture.total)} cSCU
-              </span>
-            ) : null}
-            . Choisissez le lieu et vérifiez les chiffres : l'OCR confond
-            parfois le zéro barré du jeu avec un 8.
+            {t.rich("capture.summary", {
+              count: capture.lots,
+              sum: formatNumber(capture.sum),
+              total: () =>
+                capture.total !== undefined ? (
+                  <span
+                    className={cn(
+                      capture.total !== capture.sum && "text-amber-300",
+                    )}
+                  >
+                    {" "}
+                    {t("capture.gameTotal", {
+                      total: formatNumber(capture.total),
+                    })}
+                  </span>
+                ) : null,
+            })}
           </span>
           <button
             type="button"
             onClick={() => setCapture(null)}
-            aria-label="Masquer"
+            aria-label={t("capture.dismiss")}
             className="inline-flex size-7 items-center justify-center rounded-md text-nexus-muted hover:bg-nexus-accent/10 hover:text-nexus-bright"
           >
             <X className="size-4" />
@@ -502,10 +516,10 @@ export default function InventoryQuickAddPage() {
 
       <Card className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
         <span className="font-display text-[11px] font-semibold tracking-[0.12em] text-nexus-muted uppercase">
-          Par défaut
+          {t("defaults.title")}
         </span>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
-          Lieu
+          {t("defaults.location")}
           <LocationCombobox
             value={defaultLocation}
             onChange={(location) => {
@@ -513,13 +527,13 @@ export default function InventoryQuickAddPage() {
               setDefaultLocationId(location?.id ?? "");
             }}
             preferred={held}
-            placeholder="Rechercher un lieu…"
-            aria-label="Lieu par défaut"
+            placeholder={t("locationPlaceholder")}
+            aria-label={t("defaults.locationLabel")}
             className="h-8 w-60 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
-          Qualité
+          {t("defaults.quality")}
           <Input
             inputMode="numeric"
             value={defaultQuality}
@@ -533,7 +547,7 @@ export default function InventoryQuickAddPage() {
           />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
-          Unité
+          {t("defaults.unit")}
           <Input
             value={defaultUnit}
             placeholder="SCU…"
@@ -542,10 +556,10 @@ export default function InventoryQuickAddPage() {
           />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">
-          Description
+          {t("defaults.description")}
           <Input
             value={defaultDescription}
-            placeholder="Notes sur ces objets…"
+            placeholder={t("defaults.descriptionPlaceholder")}
             onChange={(event) => setDefaultDescription(event.target.value)}
             className="h-8 w-64 py-0"
           />
@@ -563,15 +577,13 @@ export default function InventoryQuickAddPage() {
             }}
             className="size-3.5 accent-nexus-accent"
           />
-          Visible par l'org
+          {t("orgVisible")}
         </label>
         <div className="ml-auto flex flex-wrap gap-x-4 gap-y-1 text-[11.5px] text-nexus-dim">
-          <HintKey keys="Tab">cellule suivante</HintKey>
-          <HintKey keys="↵">ligne suivante</HintKey>
-          <HintKey keys="Ctrl D">dupliquer</HintKey>
-          <HintKey keys="Ctrl V">
-            coller Nom · Qualité · Quantité · Unité · Lieu
-          </HintKey>
+          <HintKey keys="Tab">{t("hints.tab")}</HintKey>
+          <HintKey keys="↵">{t("hints.enter")}</HintKey>
+          <HintKey keys="Ctrl D">{t("hints.duplicate")}</HintKey>
+          <HintKey keys="Ctrl V">{t("hints.paste")}</HintKey>
         </div>
       </Card>
 
@@ -583,28 +595,28 @@ export default function InventoryQuickAddPage() {
                 #
               </th>
               <th scope="col" className="px-3 font-semibold">
-                Nom
+                {t("columns.name")}
               </th>
               <th scope="col" className="w-24 px-3 text-right font-semibold">
-                Qualité
+                {t("columns.quality")}
               </th>
               <th scope="col" className="w-28 px-3 text-right font-semibold">
-                Quantité
+                {t("columns.quantity")}
               </th>
               <th scope="col" className="w-24 px-3 font-semibold">
-                Unité
+                {t("columns.unit")}
               </th>
               <th scope="col" className="w-56 px-3 font-semibold">
-                Lieu
+                {t("columns.location")}
               </th>
               <th scope="col" className="w-14 text-center font-semibold">
-                Org
+                {t("columns.org")}
               </th>
               <th scope="col" className="w-52 px-3 font-semibold">
-                Contrôle
+                {t("columns.status")}
               </th>
               <th scope="col" className="w-10">
-                <span className="sr-only">Supprimer la ligne</span>
+                <span className="sr-only">{t("removeRow")}</span>
               </th>
             </tr>
           </thead>
@@ -636,8 +648,8 @@ export default function InventoryQuickAddPage() {
                       held={knownNames}
                       onChange={(name) => update(row.key, { name })}
                       onPaste={handlePaste(row)}
-                      placeholder="Titanium…"
-                      aria-label="Nom"
+                      placeholder={t("namePlaceholder")}
+                      aria-label={t("columns.name")}
                       invalid={errorField === "name"}
                       className={CELL}
                     />
@@ -650,7 +662,7 @@ export default function InventoryQuickAddPage() {
                         update(row.key, { quality: e.target.value })
                       }
                       placeholder={defaultQuality.trim() || "—"}
-                      aria-label="Qualité"
+                      aria-label={t("columns.quality")}
                       aria-invalid={errorField === "quality" || undefined}
                       className={cn(
                         CELL,
@@ -667,7 +679,7 @@ export default function InventoryQuickAddPage() {
                         update(row.key, { quantity: e.target.value })
                       }
                       placeholder="1"
-                      aria-label="Quantité"
+                      aria-label={t("columns.quantity")}
                       aria-invalid={errorField === "quantity" || undefined}
                       className={cn(
                         CELL,
@@ -684,7 +696,7 @@ export default function InventoryQuickAddPage() {
                         update(row.key, { unit: e.target.value })
                       }
                       placeholder={unitOf({ ...row, unit: "" }) ?? "—"}
-                      aria-label="Unité"
+                      aria-label={t("columns.unit")}
                       className={CELL}
                     />
                   </td>
@@ -701,12 +713,14 @@ export default function InventoryQuickAddPage() {
                       preferred={held}
                       placeholder={
                         row.locationText
-                          ? `« ${row.locationText} » ?`
+                          ? t("locationUnmatched", { name: row.locationText })
                           : defaultLocation
-                            ? `Défaut · ${defaultLocation.name}`
-                            : "Rechercher un lieu…"
+                            ? t("locationDefault", {
+                                name: defaultLocation.name,
+                              })
+                            : t("locationPlaceholder")
                       }
-                      aria-label="Lieu"
+                      aria-label={t("columns.location")}
                       invalid={errorField === "location"}
                       className={cn(
                         CELL,
@@ -722,7 +736,7 @@ export default function InventoryQuickAddPage() {
                       onChange={(e) =>
                         update(row.key, { orgVisible: e.target.checked })
                       }
-                      aria-label="Visible par l'org"
+                      aria-label={t("orgVisible")}
                       className="size-3.5 accent-nexus-accent"
                     />
                   </td>
@@ -733,7 +747,7 @@ export default function InventoryQuickAddPage() {
                     <button
                       type="button"
                       onClick={() => removeRow(row.key)}
-                      aria-label="Supprimer la ligne"
+                      aria-label={t("removeRow")}
                       className="inline-flex size-8 items-center justify-center rounded-md text-nexus-dim hover:bg-red-500/10 hover:text-red-300"
                     >
                       <X className="size-4" />
@@ -750,22 +764,33 @@ export default function InventoryQuickAddPage() {
           className="flex h-11 w-full items-center gap-2 px-4 text-[13px] text-nexus-muted hover:bg-nexus-accent/5 hover:text-nexus-bright"
         >
           <Plus className="size-4" />
-          Nouvelle ligne
+          {t("addRow")}
         </button>
       </Card>
 
       <Card className="sticky bottom-4 flex flex-wrap items-center gap-x-5 gap-y-3 border-nexus-accent/20 bg-nexus-deep px-4 py-3 shadow-lg shadow-black/30">
         <div className="flex flex-wrap gap-4 text-[13px] text-nexus-bright">
           <span>
-            <strong className="text-emerald-300">{ready.length}</strong>{" "}
-            prêt{ready.length > 1 ? "s" : ""}
+            {t.rich("summary.ready", {
+              count: ready.length,
+              n: (chunks) => (
+                <strong className="text-emerald-300">{chunks}</strong>
+              ),
+            })}
           </span>
           <span>
-            <strong className="text-amber-300">{merges}</strong> fusion
-            {merges > 1 ? "s" : ""} avec un lot existant
+            {t.rich("summary.merges", {
+              count: merges,
+              n: (chunks) => (
+                <strong className="text-amber-300">{chunks}</strong>
+              ),
+            })}
           </span>
           <span>
-            <strong className="text-red-300">{errors}</strong> à corriger
+            {t.rich("summary.errors", {
+              count: errors,
+              n: (chunks) => <strong className="text-red-300">{chunks}</strong>,
+            })}
           </span>
         </div>
         <p className="flex-1 text-xs text-nexus-muted">
@@ -773,12 +798,12 @@ export default function InventoryQuickAddPage() {
             <span className="text-red-300">
               {submitMutation.error instanceof Error
                 ? submitMutation.error.message
-                : "L'ajout a échoué."}
+                : t("submitFailed")}
             </span>
           ) : (
             (notice ??
             (errors > 0
-              ? "Les lignes en erreur restent dans le tableau après l'ajout."
+              ? t("errorsKept")
               : null))
           )}
         </p>
@@ -786,17 +811,15 @@ export default function InventoryQuickAddPage() {
           variant="ghost"
           onClick={() => navigate(lastListUrl("/inventory"))}
         >
-          Annuler
+          {t("cancel")}
         </Button>
         <Button
           onClick={submit}
           disabled={ready.length === 0 || submitMutation.isPending}
         >
           {submitMutation.isPending
-            ? "Enregistrement…"
-            : ready.length === 0
-              ? "Ajouter"
-              : `Ajouter ${ready.length} objet${ready.length > 1 ? "s" : ""}`}
+            ? t("saving")
+            : t("submit", { count: ready.length })}
           <span className="font-mono text-[10.5px] opacity-60">Ctrl ↵</span>
         </Button>
       </Card>
@@ -816,6 +839,7 @@ function HintKey({ keys, children }: { keys: string; children: string }) {
 }
 
 function RowStatus({ status }: { status: Status }) {
+  const t = useTranslations("QuickAdd");
   switch (status.kind) {
     case "empty":
       return null;
@@ -831,8 +855,10 @@ function RowStatus({ status }: { status: Status }) {
         <span className="flex items-center gap-1.5 text-amber-300">
           <Merge className="size-4 shrink-0" />
           <span className="truncate">
-            Fusion : ×{number.format(status.from)} → ×
-            {number.format(status.to)}
+            {t("status.merge", {
+              from: formatNumber(status.from),
+              to: formatNumber(status.to),
+            })}
           </span>
         </span>
       );

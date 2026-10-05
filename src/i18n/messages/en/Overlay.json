@@ -1,0 +1,14 @@
+{
+  "lock": {
+    "lock": "Lock: clicks go through to the game, except on this button",
+    "unlock": "Unlock: the window takes clicks again"
+  },
+  "opacity": {
+    "action": "Background: {mode} — switch to {next}",
+    "modes": {
+      "clear": "transparent",
+      "shaded": "shaded",
+      "opaque": "opaque"
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "defaultShipName": "Nave",
+  "page": {
+    "title": "Hoja de carga",
+    "startDescription": "Reparte tus volúmenes en contenedores SCU y sigue el llenado de la nave.",
+    "noSheet": "Ninguna hoja en curso",
+    "noSheetHint": "Elige la nave que usas: su capacidad decide el resto.",
+    "createSheet": "Crear la hoja",
+    "offlineDescription": "Sin conexión: esta hoja no sale de esta máquina.",
+    "overlay": "Superposición",
+    "close": "Cerrar la hoja",
+    "emptyTitle": "Hoja vacía",
+    "emptyDescription": "Añade una línea, pega un registro de misiones o captúralo en pantalla con el atajo de captura.",
+    "settings": "Ajustes",
+    "maxContainer": "Contenedor más grande",
+    "newMission": "Nueva misión",
+    "changeShip": "Cambiar de nave",
+    "confirmClose": "Cerrar la hoja elimina todas sus líneas. ¿Continuar?"
+  },
+  "add": {
+    "title": "Añadir carga",
+    "joinsMission": "Sin misión indicada, la línea se une a «{mission}».",
+    "submit": "Añadir",
+    "pasteLabel": "Pegar un registro de misiones",
+    "import": "Importar",
+    "nothingReadable": "Nada legible: pega un registro de misiones o líneas «Destino;Contenido;Volumen;Ubicación».",
+    "added": "{count, plural, one {# línea añadida} other {# líneas añadidas}}",
+    "addedWithIgnored": "{count, plural, one {# línea añadida} other {# líneas añadidas}} · {ignored, plural, one {# ignorada} other {# ignoradas}}"
+  },
+  "overlay": {
+    "edit": "Editar",
+    "doneEditing": "Terminar la edición",
+    "close": "Cerrar",
+    "loading": "Cargando…",
+    "noSheet": "Ninguna hoja en curso. Abre «Hoja de carga» en la ventana principal o captura un registro de misiones.",
+    "empty": "Hoja vacía: nada que cargar por ahora."
+  },
+  "capture": {
+    "summary": "{count, plural, one {# objetivo de entrega} other {# objetivos de entrega}} · {volume} SCU",
+    "line": "<amount>{volume} SCU</amount> {hasContent, select, yes {de {content} } other {}}a {destination}{hasLocation, select, yes { (desde {location})} other {}}",
+    "ignored": "{count, plural, one {# línea ilegible} other {# líneas ilegibles}}: recorta de nuevo la captura para recuperarlas.",
+    "reading": "Leyendo la hoja…",
+    "added": "Añadido a la hoja de carga.",
+    "overlay": "Superposición",
+    "close": "Cerrar",
+    "failed": "No se pudo escribir la hoja.",
+    "failedWith": "No se pudo escribir la hoja: {error}.",
+    "askShip": "Ninguna hoja en curso. ¿Qué nave usas?",
+    "createAndAdd": "Crear la hoja y añadir"
+  },
+  "ships": {
+    "sourceCache": "Lista de naves en caché: el sitio no respondió.",
+    "sourceBuiltin": "Lista de naves integrada: nunca se pudo leer el sitio.",
+    "custom": "Capacidad libre",
+    "ship": "Nave",
+    "capacity": "Capacidad (SCU)",
+    "loading": "Cargando naves…"
+  },
+  "sheet": {
+    "over": "{count} de más",
+    "free": "{count, plural, one {# libre} other {# libres}}",
+    "summary": "{lines, plural, one {# línea} other {# líneas}} · {containers, plural, one {# contenedor} other {# contenedores}} · {quantities}",
+    "destination": "Destino",
+    "content": "Contenido",
+    "volumeInScu": "Volumen en SCU",
+    "volume": "Volumen (SCU)",
+    "location": "Ubicación",
+    "mission": "Misión",
+    "cancel": "Cancelar",
+    "noMission": "Sin misión",
+    "renameMission": "Renombrar la misión",
+    "deleteMission": "Eliminar la misión",
+    "save": "Guardar",
+    "from": "Desde {location}",
+    "editLine": "Editar la línea",
+    "deleteLine": "Eliminar la línea",
+    "missionName": "Nombre de la misión",
+    "saveName": "Guardar el nombre",
+    "close": "Cerrar la hoja",
+    "confirmClose": "{count, plural, one {# línea} other {# líneas}} — confirmar"
+  }
+}

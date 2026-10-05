@@ -1,0 +1,29 @@
+{
+  "title": "Account",
+  "description": "The session open on the instance set in General.",
+  "session": "Session",
+  "signedInAs": "Signed in as",
+  "signedOut": "Not signed in",
+  "profile": {
+    "title": "Profile",
+    "loadError": "Cannot read your organizations on this instance.",
+    "noOrganization": "Join an organization to show it with your name.",
+    "label": "Organization shown with my name",
+    "auto": "Automatic: the first one in common",
+    "saveError": "Saving failed. Try again.",
+    "hint": "Your friends see it next to your name. On automatic, or if you leave the chosen organization, each sees the first organization you have in common."
+  },
+  "contrib": {
+    "title": "Contributions",
+    "loadError": "Cannot read your level on this instance.",
+    "levelBadge": "L{level}",
+    "pointsOf": "{points} / {next} pts",
+    "points": "{points} pts",
+    "nextLevel": "{name} at {points} points.",
+    "lastLevel": "Last level earned through points.",
+    "achievements": "{count, plural, one {# achievement unlocked} other {# achievements unlocked}}.",
+    "siteHint": "Drawn blueprints and new items are submitted on the website, along with your history and the leaderboard.",
+    "openSite": "My contributions on the website",
+    "loading": "Loading…"
+  }
+}

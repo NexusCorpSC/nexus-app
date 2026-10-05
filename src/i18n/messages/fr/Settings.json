@@ -1,0 +1,29 @@
+{
+  "title": "Paramètres",
+  "description": "Réglages de l'application, rangés par sujet.",
+  "sectionsLabel": "Rubriques des paramètres",
+  "sections": {
+    "general": "Général",
+    "account": "Compte",
+    "shortcuts": "Raccourcis clavier",
+    "notifications": "Notifications",
+    "game": "Jeu",
+    "updates": "Mises à jour"
+  },
+  "language": {
+    "title": "Langue",
+    "hint": "La langue de toute l'application, fenêtres superposées et menu de la zone de notification compris."
+  },
+  "general": {
+    "title": "Général",
+    "description": "La langue de l'application et l'instance Nexus Tools à laquelle elle se connecte.",
+    "instance": "Instance",
+    "apiUrl": "URL de l'API Nexus Tools",
+    "localHint": "Utilisez <url></url> pour pointer vers une instance de développement locale.",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "urlNotAllowed": "Cette URL n'est pas autorisée par les permissions de l'application. Valeurs possibles : {allowed}",
+    "about": "À propos",
+    "version": "Version"
+  }
+}

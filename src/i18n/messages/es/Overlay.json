@@ -1,0 +1,14 @@
+{
+  "lock": {
+    "lock": "Bloquear: los clics pasan al juego, salvo en este botón",
+    "unlock": "Desbloquear: la ventana vuelve a recibir los clics"
+  },
+  "opacity": {
+    "action": "Fondo {mode} — pasar a {next}",
+    "modes": {
+      "clear": "transparente",
+      "shaded": "sombreado",
+      "opaque": "opaco"
+    }
+  }
+}

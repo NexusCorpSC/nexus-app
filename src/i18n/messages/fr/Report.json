@@ -1,0 +1,51 @@
+{
+  "button": "Signaler",
+  "title": {
+    "place": "Signaler ce lieu",
+    "placeMedia": "Signaler cette image",
+    "plan": "Signaler cette carte",
+    "item": "Signaler cet objet",
+    "org": "Signaler cette organisation"
+  },
+  "subtitle": "{name} · un modérateur examine chaque signalement",
+  "question": "Quel est le problème ?",
+  "comment": "Précisez (facultatif sauf « Autre »)",
+  "commentRequired": "Précisez (obligatoire pour « Autre »)",
+  "send": "Envoyer le signalement",
+  "doneTitle": "Merci, c'est noté",
+  "doneBody": "La décision s'affichera dans Mes contributions, sur le site. Si le signalement est retenu, il vous rapporte {points, plural, one {# point} other {# points}}.",
+  "reasons": {
+    "wrong": {
+      "label": "Information fausse",
+      "hint": "Un service, un nom, une valeur ou un parent incorrect"
+    },
+    "outdated": {
+      "label": "Obsolète depuis un patch",
+      "hint": "C'était vrai, ça ne l'est plus"
+    },
+    "duplicate": {
+      "label": "Doublon",
+      "hint": "Cet élément existe déjà sous un autre nom"
+    },
+    "media": {
+      "label": "Image hors sujet ou de mauvaise qualité",
+      "hint": "Hors sujet, illisible, interface personnelle visible"
+    },
+    "offensive": {
+      "label": "Contenu offensant",
+      "hint": "Insulte, propos haineux"
+    },
+    "copyright": {
+      "label": "Droits d'auteur",
+      "hint": "Reprise d'un site ou d'une image sans autorisation"
+    },
+    "spam": {
+      "label": "Spam",
+      "hint": "Publicité, liens sans rapport"
+    },
+    "other": {
+      "label": "Autre",
+      "hint": "Expliquez dans le champ ci-dessous"
+    }
+  }
+}

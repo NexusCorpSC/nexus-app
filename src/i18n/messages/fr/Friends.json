@@ -1,0 +1,43 @@
+{
+  "title": "Amis",
+  "description": "Qui est en jeu, et à quoi. Chacun le déclare depuis Nexus App ou le site.",
+  "playingCount": "{count} en jeu",
+  "total": "{count, plural, one {# ami} other {# amis}}",
+  "empty": {
+    "title": "Pas encore d'amis",
+    "description": "Partagez votre code ou saisissez celui d'un ami : vous serez ajoutés l'un à l'autre."
+  },
+  "playing": "En jeu",
+  "playingAside": "{playing} sur {total}",
+  "nobodyPlaying": "Aucun ami en jeu pour le moment.",
+  "offline": "Pas en jeu",
+  "code": {
+    "title": "Mon code ami",
+    "copy": "Copier",
+    "copied": "Copié",
+    "usage": "Usage unique : il disparaît dès qu'un ami l'utilise. Un nouveau code sera créé à votre prochaine demande.",
+    "hint": "Générez un code et partagez-le. Il ne sert qu'une fois.",
+    "generate": "Générer un code"
+  },
+  "add": {
+    "title": "Ajouter un ami",
+    "codeLabel": "Code ami",
+    "submit": "Ajouter",
+    "added": "Vous êtes maintenant ami avec {name}.",
+    "hint": "Saisissez le code qu'un ami vous a transmis. Vous serez ajoutés l'un à l'autre."
+  },
+  "card": {
+    "noActivity": "Pas d'activité précisée",
+    "noSharedOrg": "Aucune organisation commune",
+    "since": "En jeu depuis",
+    "removeLabel": "Retirer {name} de vos amis",
+    "removeTitle": "Retirer des amis"
+  },
+  "remove": {
+    "title": "Retirer {name} ?",
+    "description": "Vous disparaîtrez aussi de sa liste. Pour redevenir amis, il faudra un nouveau code.",
+    "cancel": "Annuler",
+    "confirm": "Retirer des amis",
+    "body": "Vous ne verrez plus quand {name} est en jeu."
+  }
+}

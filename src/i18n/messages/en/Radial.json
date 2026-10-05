@@ -1,0 +1,51 @@
+{
+  "readyCount": "{ready}/{total} ready",
+  "sectors": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "readyDisabled": "Unavailable: down",
+    "youAreReady": "You are: ready",
+    "youAreNotReady": "You are: not ready",
+    "alive": "ALIVE",
+    "down": "DOWN",
+    "youAreDown": "You are: down",
+    "youAreAlive": "You are: alive",
+    "mainWindow": "Main window",
+    "lock": "LOCK",
+    "unlock": "UNLOCK",
+    "overlays": "Overlays",
+    "overlaysLocked": "Overlays locked",
+    "capture": "CAPTURE",
+    "areaCapture": "Area capture"
+  },
+  "hint": {
+    "release": "release to confirm",
+    "cancel": "centre or Esc to cancel"
+  },
+  "hub": {
+    "mainTitle": "Open Nexus",
+    "mainDetail": "Shows the main window",
+    "unavailableTitle": "Unavailable",
+    "unavailableDetail": "Switch back to Alive first",
+    "goNotReady": "Go NOT READY",
+    "goReady": "Go READY",
+    "releaseToConfirm": "Release to confirm",
+    "backAlive": "Back to alive",
+    "goDown": "Mark myself down",
+    "goDownDetail": "Also drops READY",
+    "unlockTitle": "Unlock",
+    "unlockDetail": "Windows take clicks again",
+    "lockTitle": "Lock",
+    "lockDetail": "Clicks go through to the game",
+    "captureTitle": "Area capture",
+    "captureDetail": "Release to start",
+    "noneTitle": "No action",
+    "noneDetail": "Releasing here cancels"
+  },
+  "notify": {
+    "ready": "READY",
+    "notReady": "NOT READY",
+    "down": "Down",
+    "alive": "Alive"
+  }
+}

@@ -1,3 +1,5 @@
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import {
   PLANNED_SESSION_GRACE_HOURS,
   type MyPresence,
@@ -9,12 +11,9 @@ import {
  * instants, the time zone is the reader's own.
  */
 
-const TIME = new Intl.DateTimeFormat("fr-FR", {
-  hour: "2-digit",
-  minute: "2-digit",
-});
-
-const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
+function timeFormat() {
+  return new Intl.DateTimeFormat(getLocale(), { hour: "2-digit", minute: "2-digit" });
+}
 
 /** Local days from `from` to `to`, midnight to midnight. */
 export function daysBetween(from: Date, to: Date): number {
@@ -25,7 +24,7 @@ export function daysBetween(from: Date, to: Date): number {
 
 /** «21:00», from an ISO date. */
 export function formatTime(iso: string): string {
-  return TIME.format(new Date(iso));
+  return timeFormat().format(new Date(iso));
 }
 
 /**
@@ -35,16 +34,18 @@ export function formatTime(iso: string): string {
 export function formatPlannedTime(at: string, now = Date.now()): string {
   const date = new Date(at);
   const days = daysBetween(new Date(now), date);
-  const time = TIME.format(date);
+  const time = timeFormat().format(date);
+  const t = translator("Format");
 
   if (days <= 0) return time;
-  if (days === 1) return `demain ${time}`;
-  return `${WEEKDAY.format(date)} ${time}`;
+  if (days === 1) return t("tomorrowAt", { time });
+  const weekday = new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(date);
+  return t("weekdayAt", { weekday, time });
 }
 
 /** «Session prévue · 21:00 · Minage», as the menu and the friends list say it. */
 export function plannedLabel(planned: PlannedSession, now = Date.now()) {
-  const parts = ["Session prévue", formatPlannedTime(planned.at, now)];
+  const parts = [translator("Format")("plannedSession"), formatPlannedTime(planned.at, now)];
   if (planned.activity) parts.push(planned.activity);
   return parts.join(" · ");
 }

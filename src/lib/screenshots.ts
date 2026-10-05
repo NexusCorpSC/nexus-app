@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getGameLogSettings } from "@/lib/settings";
+import { translator } from "@/i18n/translate";
 
 /**
  * Screenshots sent as images of a place: the game's latest one, read from its
@@ -61,7 +62,7 @@ function toJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
       (blob) =>
         blob
           ? resolve(blob)
-          : reject(new Error("L'image n'a pas pu être encodée.")),
+          : reject(new Error(translator("Capture")("encodeFailed"))),
       "image/jpeg",
       quality,
     );
@@ -81,7 +82,7 @@ export async function prepareImage(
   try {
     bitmap = await createImageBitmap(source);
   } catch {
-    throw new Error("Cette image ne peut pas être lue.");
+    throw new Error(translator("Capture")("unreadable"));
   }
 
   try {
@@ -95,7 +96,7 @@ export async function prepareImage(
       canvas.width = width;
       canvas.height = height;
       const context = canvas.getContext("2d");
-      if (!context) throw new Error("L'image n'a pas pu être encodée.");
+      if (!context) throw new Error(translator("Capture")("encodeFailed"));
       context.imageSmoothingQuality = "high";
       context.drawImage(bitmap, 0, 0, width, height);
 
@@ -115,5 +116,5 @@ export async function prepareImage(
     bitmap.close();
   }
 
-  throw new Error("L'image reste trop lourde, même réduite.");
+  throw new Error(translator("Capture")("tooLarge"));
 }

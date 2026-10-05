@@ -1,0 +1,9 @@
+{
+  "title": "Factions",
+  "description": "The blueprints rewarded by each faction's missions.",
+  "searchLabel": "Search a faction or a blueprint",
+  "searchPlaceholder": "Faction or blueprint name…",
+  "emptyTitle": "No faction found",
+  "emptyDescription": "No faction has this name, and none of their blueprints either.",
+  "blueprintCount": "{count, plural, one {# blueprint} other {# blueprints}}"
+}
