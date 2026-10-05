@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { useAuth } from "@/auth/auth-context";
 import { Layers } from "lucide-react";
 import { NoteWorkspace } from "@/components/notes/note-workspace";
@@ -21,6 +22,7 @@ import {
 import { showOverlay } from "@/lib/windows";
 
 export default function NotesPage() {
+  const t = useTranslations("Notes");
   const { user, loading } = useAuth();
   const signedIn = Boolean(user);
   const queryClient = useQueryClient();
@@ -48,11 +50,9 @@ export default function NotesPage() {
   return (
     <div>
       <PageHeader
-        title="Bloc-notes"
+        title={t("title")}
         description={
-          signedIn
-            ? "Vos notes en ligne, partagées avec le site Nexus Tools."
-            : "Notes enregistrées sur cet ordinateur. Connectez-vous pour les retrouver sur le site et vos autres appareils."
+          signedIn ? t("descriptionOnline") : t("descriptionLocal")
         }
         actions={
           <>
@@ -66,7 +66,7 @@ export default function NotesPage() {
               }
             >
               <Layers className="size-4" />
-              Afficher par-dessus le jeu
+              {t("showOverlay")}
             </Button>
             <Kbd>{formatShortcut(shortcuts.notes)}</Kbd>
           </>

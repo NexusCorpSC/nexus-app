@@ -1,0 +1,9 @@
+{
+  "close": "Close",
+  "corners": {
+    "bottomRight": "Bottom right",
+    "bottomLeft": "Bottom left",
+    "topRight": "Top right",
+    "topLeft": "Top left"
+  }
+}

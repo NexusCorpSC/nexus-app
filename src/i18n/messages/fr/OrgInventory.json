@@ -1,0 +1,12 @@
+{
+  "back": "Retour à l'organisation",
+  "title": "Inventaire partagé",
+  "description": "Ressources rendues visibles par les membres de l'organisation.",
+  "member": "Membre",
+  "allMembers": "Tous",
+  "noResultsTitle": "Aucune ressource trouvée",
+  "noResultsDescription": "Essayez un autre nom, un autre membre, une autre qualité ou un autre lieu.",
+  "emptyTitle": "Aucune ressource partagée",
+  "emptyDescription": "Les membres doivent cocher « Visible par l'org » sur leurs ressources pour qu'elles apparaissent ici.",
+  "owner": "Propriétaire"
+}

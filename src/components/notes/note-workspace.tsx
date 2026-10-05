@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye, Pencil } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { Button, Card, Segmented } from "@/components/ui";
 import { useNoteAutosave, type SaveStatus } from "@/components/note-editor";
 import {
@@ -36,6 +37,7 @@ export function NoteWorkspace({
   className?: string;
   onSaved?: (note: Note) => void;
 }) {
+  const t = useTranslations("Notes");
   const { content, setContent, isDirty, status, error, statusLabel, saveNow } =
     useNoteAutosave({ note, signedIn, onSaved });
 
@@ -51,27 +53,27 @@ export function NoteWorkspace({
 
   const hint =
     mode === "edit"
-      ? "Markdown brut"
+      ? t("workspace.hintRaw")
       : readOnly
-        ? "Tableaux, cases à cocher, images ou HTML : modifiables en Édition"
-        : "Cliquez dans le texte pour le modifier";
+        ? t("workspace.hintReadOnly")
+        : t("workspace.hintEditable");
 
   return (
     <Card className={cn("flex min-h-0 flex-col overflow-hidden", className)}>
       <div className="flex flex-wrap items-center gap-2 border-b border-nexus-accent/12 px-3 py-2">
         <Segmented
-          label="Mode du bloc-notes"
+          label={t("workspace.modeLabel")}
           value={mode}
           onChange={setMode}
           options={[
             {
               value: "edit",
-              label: "Édition",
+              label: t("workspace.edit"),
               icon: <Pencil className="size-3.5" />,
             },
             {
               value: "preview",
-              label: "Aperçu",
+              label: t("workspace.preview"),
               icon: <Eye className="size-3.5" />,
             },
           ]}
@@ -89,8 +91,8 @@ export function NoteWorkspace({
           value={content}
           onChange={(event) => setContent(event.target.value)}
           maxLength={NOTE_CONTENT_MAX_LENGTH}
-          placeholder="Routes de minage, prix, plans de mission…"
-          aria-label="Bloc-notes"
+          placeholder={t("placeholder")}
+          aria-label={t("title")}
           autoFocus
           spellCheck={false}
           className="min-h-0 flex-1 resize-none bg-transparent px-6 py-5 font-mono text-[13.5px] leading-relaxed text-nexus-white outline-none placeholder:text-nexus-dim/80"
@@ -138,7 +140,7 @@ export function NoteWorkspace({
             onClick={saveNow}
             disabled={!isDirty || status === "saving"}
           >
-            Enregistrer
+            {t("save")}
           </Button>
         </div>
       </div>

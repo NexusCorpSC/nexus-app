@@ -1,0 +1,12 @@
+{
+  "back": "Back to the organization",
+  "title": "Shared inventory",
+  "description": "Resources made visible by the organization's members.",
+  "member": "Member",
+  "allMembers": "All",
+  "noResultsTitle": "No resources found",
+  "noResultsDescription": "Try another name, member, quality or location.",
+  "emptyTitle": "No shared resources",
+  "emptyDescription": "Members must tick “Visible to the org” on their resources for them to show up here.",
+  "owner": "Owner"
+}

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
 import {
   checkForUpdate,
   describeUpdateError,
@@ -28,11 +30,16 @@ function updateDownloadPercent(progress: UpdateProgress | null): number | null {
   );
 }
 
-function formatBytes(bytes: number): string {
-  return `${(bytes / 1_000_000).toFixed(1)} Mo`;
+/** Megabytes with one decimal, in the language on screen; the unit is the message's. */
+function formatMegabytes(bytes: number): string {
+  return (bytes / 1_000_000).toLocaleString(getLocale(), {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
 }
 
 export function UpdatesSection() {
+  const t = useTranslations("SettingsUpdates");
   const [version, setVersion] = useState("");
   const [update, setUpdate] = useState<Update | null>(null);
   const [updateState, setUpdateState] = useState<
@@ -81,7 +88,9 @@ export function UpdatesSection() {
       setUpdateState("available");
       setUpdateProgress(null);
       setUpdateError(
-        `L'installation a échoué : ${cause instanceof Error ? cause.message : String(cause)}`,
+        t("installFailed", {
+          error: cause instanceof Error ? cause.message : String(cause),
+        }),
       );
     }
   }
@@ -89,46 +98,48 @@ export function UpdatesSection() {
   return (
     <section>
       <SettingsSectionHeader
-        title="Mises à jour"
-        description="L'application regarde au démarrage, puis toutes les six heures, si une release plus récente est publiée. Rien n'est installé sans votre accord."
+        title={t("title")}
+        description={t("description")}
         actions={
           <Button
             type="button"
             size="sm"
             onClick={() => void handleUpdateCheck()}
-            disabled={updateState === "checking" || updateState === "installing"}
+            disabled={
+              updateState === "checking" || updateState === "installing"
+            }
           >
-            {updateState === "checking" ? "Recherche…" : "Vérifier maintenant"}
+            {updateState === "checking" ? t("checking") : t("check")}
           </Button>
         }
       />
 
       <div className="space-y-4">
         <Card>
-          <SettingsCardTitle>Version</SettingsCardTitle>
+          <SettingsCardTitle>{t("version")}</SettingsCardTitle>
           <div className="flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]">
-            <span className="text-nexus-muted">Installée</span>
+            <span className="text-nexus-muted">{t("installed")}</span>
             <span className="font-mono text-xs text-nexus-white">
               {version || "—"}
             </span>
           </div>
           {updateState === "latest" ? (
             <p className="border-t border-nexus-accent/6 px-4 py-2.5 text-xs text-emerald-300">
-              Vous avez la dernière version ({version || "—"}).
+              {t("latest", { version: version || "—" })}
             </p>
           ) : null}
         </Card>
 
         {update ? (
           <Card>
-            <SettingsCardTitle>Disponible</SettingsCardTitle>
+            <SettingsCardTitle>{t("available")}</SettingsCardTitle>
             <div className="space-y-3 p-4">
               <div className="flex items-baseline gap-2">
                 <p className="font-display text-[15px] font-semibold text-nexus-white">
-                  Version {update.version}
+                  {t("versionNumber", { version: update.version })}
                 </p>
                 <span className="text-xs text-nexus-dim">
-                  installée : {update.currentVersion}
+                  {t("installedVersion", { version: update.currentVersion })}
                 </span>
               </div>
 
@@ -152,11 +163,16 @@ export function UpdatesSection() {
                     </div>
                   ) : null}
                   <p className="text-xs text-nexus-muted">
-                    Téléchargement…{" "}
-                    {downloadPercent !== null
-                      ? `${downloadPercent} %`
-                      : formatBytes(updateProgress?.downloaded ?? 0)}
-                    . L'application redémarrera pour terminer.
+                    {t("downloading", {
+                      progress:
+                        downloadPercent !== null
+                          ? t("percent", { percent: downloadPercent })
+                          : t("megabytes", {
+                              size: formatMegabytes(
+                                updateProgress?.downloaded ?? 0,
+                              ),
+                            }),
+                    })}
                   </p>
                 </div>
               ) : (
@@ -165,7 +181,7 @@ export function UpdatesSection() {
                   size="sm"
                   onClick={() => void handleUpdateInstall()}
                 >
-                  Installer et redémarrer
+                  {t("install")}
                 </Button>
               )}
             </div>

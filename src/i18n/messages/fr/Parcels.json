@@ -1,0 +1,84 @@
+{
+  "remainingHours": "{hours} h {minutes}",
+  "remainingMinutes": "{minutes} min",
+  "close": "Fermer",
+  "cancelShort": "Annuler",
+  "page": {
+    "back": "Retour à l'inventaire",
+    "title": "Colis",
+    "description": "Vos colis envoyés et reçus des 30 derniers jours."
+  },
+  "package": {
+    "title": "Colis",
+    "clear": "Vider",
+    "from": "Depuis {places}",
+    "outOf": "sur {available}",
+    "quantityOf": "Quantité de {name}",
+    "remove": "Retirer {name} du colis",
+    "sending": "Envoi…",
+    "send": "Envoyer le colis",
+    "sendHint": "Crée un code à donner au destinataire. Les lots restent chez vous, réservés, jusqu'à ce qu'il l'accepte."
+  },
+  "sent": {
+    "title": "Colis scellé",
+    "description": "Donnez ce code au joueur qui doit le recevoir.",
+    "cancel": "Annuler l'envoi",
+    "seeAll": "Suivre mes colis",
+    "codeLabel": "Code {code}",
+    "codeCopied": "Code copié",
+    "copyCode": "Copier le code",
+    "waiting": "En attente du destinataire · expire dans {remaining}",
+    "contents": "Contenu",
+    "reservedHint": "Ces quantités sont réservées : elles ne peuvent pas aller dans un autre colis. Elles quittent votre inventaire quand le destinataire accepte."
+  },
+  "receive": {
+    "title": "Recevoir un colis",
+    "description": "Saisissez ou collez le code que l'expéditeur vous a donné.",
+    "someone": "un joueur",
+    "someoneStart": "Un joueur",
+    "received": "Colis de {sender} reçu",
+    "receivedAt": "Colis de {sender} reçu à {location}",
+    "receivedDescription": "{created, plural, one {# lot créé} other {# lots créés}}, {merged, plural, one {# lot complété} other {# lots complétés}}.",
+    "codeField": "Code du colis",
+    "looking": "Recherche du colis…",
+    "codeHint": "8 caractères, lettres et chiffres. Tirets, espaces et minuscules sont acceptés.",
+    "from": "{sender} vous envoie {count, plural, one {# lot} other {# lots}}.",
+    "storeAt": "Ranger à",
+    "storeAtPlaceholder": "Choisir un lieu…",
+    "orgVisible": "Visible par l'org",
+    "mergeHint": "Un lot identique déjà rangé à cet endroit sera complété.",
+    "accepting": "Réception…",
+    "accept": "Accepter le colis"
+  },
+  "status": {
+    "pending": "En attente · {remaining}",
+    "deliveredAt": "Livré · {when}",
+    "delivered": "Livré",
+    "cancelled": "Annulé",
+    "expired": "Expiré"
+  },
+  "list": {
+    "tabs": {
+      "sent": "Envoyés",
+      "received": "Reçus"
+    },
+    "emptySent": "Aucun colis envoyé. Préparez-en un depuis l'inventaire.",
+    "emptyReceived": "Aucun colis reçu.",
+    "copyCodeOf": "Copier le code {code}",
+    "hint": "Un colis annulé ou expiré n'a rien déplacé : ses lots sont restés chez l'expéditeur. Un code ne sert qu'une fois."
+  },
+  "errors": {
+    "invalid_code": "Ce n'est pas un code de colis : 8 lettres ou chiffres.",
+    "invalid_items": "Le colis contient un lot qui n'est plus dans votre inventaire.",
+    "invalid_location": "Choisissez un lieu de stockage.",
+    "not_found": "Aucun colis n'a ce code.",
+    "too_many_attempts": "Trop de codes erronés : réessayez dans quelques minutes.",
+    "own_parcel": "C'est votre propre colis : donnez ce code à un autre joueur.",
+    "delivered": "Ce colis a déjà été reçu.",
+    "cancelled": "L'expéditeur a annulé ce colis.",
+    "expired": "Ce code a expiré.",
+    "unavailable": "{item} : la quantité n'est plus disponible.",
+    "someLot": "Un lot",
+    "generic": "L'opération a échoué."
+  }
+}

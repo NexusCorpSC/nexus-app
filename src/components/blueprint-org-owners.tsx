@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { Users } from "lucide-react";
 import { listBlueprintOrgOwners } from "@/lib/api/blueprints";
 import { listOrganizations } from "@/lib/api/orgs";
@@ -20,6 +21,7 @@ import {
  * for any other, and the list it is picked from is the user's own.
  */
 export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
+  const t = useTranslations("Blueprints.orgOwners");
   const { user } = useAuth();
   const [orgId, setOrgId] = useState<string | null>(null);
 
@@ -44,8 +46,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
     return (
       <Section>
         <p className="text-xs text-nexus-dim">
-          Connectez-vous pour voir qui, dans vos organisations, possède ce
-          blueprint.
+          {t("signIn")}
         </p>
       </Section>
     );
@@ -77,7 +78,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
     return (
       <Section>
         <p className="text-xs text-nexus-dim">
-          Vous n'appartenez à aucune organisation.
+          {t("noOrgs")}
         </p>
       </Section>
     );
@@ -108,7 +109,7 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
         />
       ) : ownersQuery.data.length === 0 ? (
         <p className="text-xs text-nexus-dim">
-          Personne ne le possède dans cette organisation.
+          {t("empty")}
         </p>
       ) : (
         <ul className="space-y-1.5">
@@ -128,12 +129,13 @@ export function BlueprintOrgOwners({ blueprintId }: { blueprintId: string }) {
 }
 
 function Section({ children }: { children: React.ReactNode }) {
+  const t = useTranslations("Blueprints.orgOwners");
   return (
     <Card className="p-5">
       <SectionTitle>
         <span className="flex items-center gap-2">
           <Users className="h-3.5 w-3.5 text-nexus-dim" />
-          Dans mon organisation
+          {t("title")}
         </span>
       </SectionTitle>
       {children}

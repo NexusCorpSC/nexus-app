@@ -1,6 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { Box, Check, Share2 } from "lucide-react";
 import { getMission } from "@/lib/api/missions";
 import {
@@ -14,6 +15,7 @@ import { IllegalPill } from "@/components/missions/mission-card";
 import { formatUEC } from "@/lib/utils";
 
 export default function MissionDetailPage() {
+  const t = useTranslations("Missions");
   const { missionId = "" } = useParams();
 
   const missionQuery = useQuery({
@@ -27,7 +29,7 @@ export default function MissionDetailPage() {
   if (missionQuery.isError) {
     return (
       <>
-        <BackLink to="/missions">Retour aux missions</BackLink>
+        <BackLink to="/missions">{t("detail.back")}</BackLink>
         <ErrorState
           error={missionQuery.error}
           onRetry={() => void missionQuery.refetch()}
@@ -45,11 +47,11 @@ export default function MissionDetailPage() {
   const ownedCount = blueprints.filter((blueprint) => blueprint.owned).length;
 
   const details: { label: string; value: string; className?: string }[] = [
-    { label: "Faction", value: mission.faction?.name ?? "—" },
-    { label: "Catégorie", value: mission.category ?? "—" },
-    { label: "Type", value: mission.missionType ?? "—" },
+    { label: t("detail.faction"), value: mission.faction?.name ?? "—" },
+    { label: t("detail.category"), value: mission.category ?? "—" },
+    { label: t("detail.type"), value: mission.missionType ?? "—" },
     {
-      label: "Récompense",
+      label: t("detail.reward"),
       value: formatUEC(mission.rewardUEC),
       // Same amber as the grid card, so the reward is recognised at a glance.
       className: mission.rewardUEC
@@ -60,7 +62,7 @@ export default function MissionDetailPage() {
 
   return (
     <>
-      <BackLink to="/missions">Retour aux missions</BackLink>
+      <BackLink to="/missions">{t("detail.back")}</BackLink>
 
       {mission.missionType ? (
         <p className="mb-1 text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
@@ -77,7 +79,7 @@ export default function MissionDetailPage() {
               {mission.canBeShared ? (
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
                   <Share2 className="size-3" />
-                  Partageable
+                  {t("shareable")}
                 </span>
               ) : null}
             </>
@@ -89,7 +91,7 @@ export default function MissionDetailPage() {
         <div className="space-y-6 lg:col-span-2">
           {mission.description ? (
             <Card className="p-5">
-              <SectionTitle>Briefing</SectionTitle>
+              <SectionTitle>{t("detail.briefing")}</SectionTitle>
               <p className="text-sm leading-relaxed whitespace-pre-line text-nexus-muted">
                 {mission.description}
               </p>
@@ -102,11 +104,14 @@ export default function MissionDetailPage() {
                 !blueprints.length
                   ? undefined
                   : ownershipKnown
-                    ? `${ownedCount} / ${blueprints.length} possédé${ownedCount > 1 ? "s" : ""}`
-                    : `${blueprints.length} blueprint${blueprints.length > 1 ? "s" : ""}`
+                    ? t("detail.ownedCount", {
+                        owned: ownedCount,
+                        total: blueprints.length,
+                      })
+                    : t("blueprintCount", { count: blueprints.length })
               }
             >
-              Blueprints débloqués
+              {t("detail.blueprints")}
             </SectionTitle>
 
             {blueprints.length ? (
@@ -140,7 +145,7 @@ export default function MissionDetailPage() {
             ) : (
               <Card className="p-4">
                 <p className="text-xs text-nexus-dim">
-                  Cette mission ne débloque aucun blueprint.
+                  {t("detail.noBlueprints")}
                 </p>
               </Card>
             )}
@@ -148,7 +153,7 @@ export default function MissionDetailPage() {
         </div>
 
         <Card className="h-fit p-5">
-          <SectionTitle>Détails</SectionTitle>
+          <SectionTitle>{t("detail.details")}</SectionTitle>
           <dl className="space-y-2.5 text-[13px]">
             {details.map((detail) => (
               <div key={detail.label} className="flex justify-between gap-3">
@@ -169,14 +174,15 @@ export default function MissionDetailPage() {
 
 /** Same wording as the site's mission fiche. */
 function OwnershipPill({ owned }: { owned: boolean }) {
+  const t = useTranslations("Missions.detail");
   return owned ? (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-emerald-300/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
       <Check className="size-3" />
-      Possédé
+      {t("owned")}
     </span>
   ) : (
     <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-nexus-dim">
-      Non possédé
+      {t("notOwned")}
     </span>
   );
 }

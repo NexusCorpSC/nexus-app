@@ -35,6 +35,7 @@ import {
 } from "@/lib/api/squads";
 import { useFeedStatus } from "@/hooks/use-feed-status";
 import { notify } from "@/lib/notifications";
+import { translator } from "@/i18n/translate";
 import type {
   FeedStatus,
   Squad,
@@ -241,15 +242,18 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
   const squad = next.squad;
   if (!squad || shown.squad?.id !== squad.id) return;
 
+  const t = translator("Squad.notifications");
+  const tRaid = translator("Raid.notifications");
+
   const squadCheck = squad.readyCheck;
   if (squadCheck && squadCheck.id !== shown.squad?.readyCheck?.id) {
     void notify({
       kind: "warning",
-      title: `Ready check — ${squad.name}`,
-      body: `${squadCheck.requestedBy} demande à tout le monde de se déclarer prêt.`,
+      title: t("readyCheckTitle", { name: squad.name }),
+      body: t("readyCheckBody", { by: squadCheck.requestedBy }),
       timeoutMs: READY_CHECK_TIMEOUT_MS,
       action: {
-        label: "Prêt",
+        label: t("ready"),
         event: READY_CHECK_EVENT,
         payload: {
           squadId: squad.id,
@@ -269,11 +273,11 @@ function noticeReadyChecks(shown: SquadView, next: SquadView) {
   ) {
     void notify({
       kind: "warning",
-      title: `Ready check du raid — ${next.raid.name}`,
-      body: `${raidCheck.requestedBy} demande à tout le raid de se déclarer prêt.`,
+      title: tRaid("readyCheckTitle", { name: next.raid.name }),
+      body: tRaid("readyCheckBody", { by: raidCheck.requestedBy }),
       timeoutMs: READY_CHECK_TIMEOUT_MS,
       action: {
-        label: "Prêt",
+        label: t("ready"),
         event: READY_CHECK_EVENT,
         payload: {
           squadId: squad.id,
@@ -326,7 +330,9 @@ function announceChanges(shown: SquadView, next: SquadView) {
   ) {
     void notify({
       kind: "info",
-      title: `Annonce — ${next.squad.name}`,
+      title: translator("Squad.notifications")("announcementTitle", {
+        name: next.squad.name,
+      }),
       body: next.squad.announcements,
       timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
       placement: "top",
@@ -343,7 +349,9 @@ function announceChanges(shown: SquadView, next: SquadView) {
   ) {
     void notify({
       kind: "info",
-      title: `Annonce du raid — ${next.raid.name}`,
+      title: translator("Raid.notifications")("announcementTitle", {
+        name: next.raid.name,
+      }),
       body: next.raid.announcement,
       timeoutMs: ANNOUNCEMENT_TIMEOUT_MS,
       placement: "top",

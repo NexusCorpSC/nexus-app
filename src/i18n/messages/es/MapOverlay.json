@@ -1,0 +1,13 @@
+{
+  "title": "Mapa",
+  "pick": "Elegir un lugar",
+  "close": "Cerrar",
+  "noPinned": "No hay ningún mapa fijado. Fija uno desde la ficha de un lugar, o elige aquí.",
+  "loadFailed": "No se pudo cargar el mapa.",
+  "retry": "Reintentar",
+  "notSurveyed": "Este lugar todavía no se ha registrado.",
+  "searchPlaceholder": "Nombre de un lugar…",
+  "searchFailed": "La búsqueda ha fallado.",
+  "noResults": "No se encontró ningún lugar.",
+  "notSurveyedYet": "Aún no registrado"
+}

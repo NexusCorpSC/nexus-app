@@ -1,6 +1,7 @@
 import type { MouseEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { lastListUrl, previousPath } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { useNavigationTracker } from "@/hooks/use-navigation-tracker";
@@ -24,6 +25,7 @@ export function BackLink({
   children: ReactNode;
   className?: string;
 }) {
+  const t = useTranslations("Common");
   useNavigationTracker();
   const navigate = useNavigate();
   const previous = previousPath();
@@ -46,7 +48,7 @@ export function BackLink({
       )}
     >
       <ArrowLeft className="size-3.5" />
-      {leadsToList ? children : "Retour"}
+      {leadsToList ? children : t("back")}
     </Link>
   );
 }

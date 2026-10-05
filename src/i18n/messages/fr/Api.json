@@ -1,0 +1,37 @@
+{
+  "unreachable": "Impossible de joindre {url}. Vérifiez l'URL de l'API et votre connexion.",
+  "httpFailed": "{method} {path} a échoué (HTTP {status})",
+  "contrib": {
+    "unauthenticated": "Connectez-vous pour contribuer.",
+    "suspended": "Vos contributions sont suspendues par la modération.",
+    "placeNotFound": "Ce lieu n'existe plus.",
+    "noMedia": "Choisissez une image.",
+    "invalidMedia": "Cette image n'est pas acceptée : JPEG, PNG ou WebP.",
+    "tooManyPending": "Vous avez déjà 5 contributions en attente de relecture.",
+    "fileTooLarge": "L'image est trop lourde : 4 Mo au plus.",
+    "uploadFailed": "L'envoi de l'image a échoué. Réessayez dans un instant.",
+    "tooManyUploads": "Trop d'images envoyées cette heure-ci. Réessayez plus tard.",
+    "notFound": "Cet objet n'existe plus.",
+    "invalidInput": "La confirmation n'a pas pu être lue. Vérifiez le commentaire.",
+    "alreadyConfirmed": "Vous avez déjà confirmé ces cours cette semaine."
+  },
+  "friends": {
+    "invalid_code": "Un code ami fait 8 caractères, comme K7QD-92PX.",
+    "not_found": "Ce code n'existe pas ou a déjà été utilisé. Demandez-en un nouveau.",
+    "own_code": "C'est votre propre code : partagez-le plutôt à un ami.",
+    "already_friends": "Vous êtes déjà amis.",
+    "too_many_attempts": "Trop de codes erronés : réessayez dans quelques minutes."
+  },
+  "reports": {
+    "unauthenticated": "Connectez-vous pour signaler.",
+    "invalidTarget": "Cet élément ne peut pas être signalé.",
+    "targetNotFound": "Cet élément n'existe plus.",
+    "invalidReason": "Choisissez un motif.",
+    "commentRequired": "Précisez le problème pour le motif « Autre ».",
+    "ownContent": "On ne signale pas son propre contenu : proposez plutôt une correction sur le site.",
+    "alreadyReported": "Vous avez déjà signalé cet élément. Un modérateur s'en occupe.",
+    "dailyLimit": "Dix signalements par jour au plus. Réessayez demain.",
+    "busy": "Un modérateur tranche ce signalement en ce moment. Réessayez dans un instant.",
+    "reportingSuspended": "Trois de vos signalements ont été classés d'affilée : vous ne pouvez plus signaler pendant 7 jours."
+  }
+}

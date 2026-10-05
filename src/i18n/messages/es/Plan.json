@@ -1,0 +1,20 @@
+{
+  "title": "Plan de vuelo",
+  "openOnSite": "Abrir en el sitio",
+  "close": "Cerrar",
+  "noPlan": "Ningún plan de vuelo para esta escuadra.",
+  "noPhase": "Este plan todavía no tiene fases.",
+  "previousPhase": "Fase anterior",
+  "nextPhase": "Fase siguiente",
+  "you": "Tú",
+  "presenterLeads": "{name} dirige",
+  "followingPresenter": "Siguiendo a {name}",
+  "follow": "Seguir",
+  "frozenPhase": "Fase congelada",
+  "frozen": "Congelada",
+  "unlockToDraw": "Desbloquea para dibujar",
+  "undo": "Deshacer",
+  "redo": "Rehacer",
+  "pen": "Trazo libre",
+  "eraser": "Goma: tus trazos, y los de los demás si diriges el plan"
+}

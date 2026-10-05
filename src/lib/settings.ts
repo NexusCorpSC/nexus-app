@@ -17,6 +17,7 @@ import {
   type RaidLayout,
 } from "@/lib/raid-layout";
 import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note } from "@/types/nexus";
 
 /**
@@ -432,14 +433,16 @@ export async function setCachedCargoShips(ships: unknown): Promise<void> {
   await store.set(KEY_CARGO_SHIPS, ships);
 }
 
-/** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display. */
+/** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display (in French). */
 export function formatShortcut(accelerator: string): string {
+  const t = translator("Shortcuts");
+
   return accelerator
     .split("+")
     .map((token) => {
       switch (token) {
         case "Shift":
-          return "Maj";
+          return t("keys.shift");
         case "Super":
           return "Win";
         default:

@@ -1,0 +1,163 @@
+{
+  "kinds": {
+    "item": "Objet",
+    "weapon": "Arme",
+    "vehicle": "Véhicule",
+    "resource": "Ressource"
+  },
+  "list": {
+    "title": "Objets",
+    "description": "Tout ce qui existe en jeu : objets, armes, véhicules et ressources.",
+    "searchLabel": "Rechercher un objet",
+    "searchPlaceholder": "Nom, fabricant, variante…",
+    "category": "Catégorie",
+    "subcategory": "Sous-catégorie",
+    "manufacturer": "Fabricant",
+    "all": "Toutes",
+    "allMasculine": "Tous",
+    "allKinds": "Tous",
+    "emptyTitle": "Aucun objet trouvé",
+    "emptyDescription": "Essayez un autre terme de recherche ou élargissez les filtres.",
+    "results": "{count, plural, one {# résultat} other {# résultats}}"
+  },
+  "card": {
+    "variant": "Variante : {name}",
+    "set": "Ensemble : {name}"
+  },
+  "detail": {
+    "back": "Retour aux objets",
+    "openOnWeb": "Ouvrir sur le web",
+    "description": "Description",
+    "madeWith": "Fabriqué avec",
+    "blueprintsInferred": "Blueprints du même nom : aucun lien n'a été posé à la main.",
+    "usedIn": "Utilisé dans",
+    "variants": "{count, plural, one {# variante} other {# variantes}}",
+    "set": "Ensemble",
+    "setNamed": "Ensemble : {name}",
+    "mountedOn": "{count, plural, one {Monté sur # objet} other {Monté sur # objets}}",
+    "mountedOnHint": "D'après l'équipement d'origine renseigné sur chaque fiche.",
+    "sheet": "Fiche",
+    "rows": {
+      "type": "Type",
+      "category": "Catégorie",
+      "subcategory": "Sous-catégorie",
+      "manufacturer": "Fabricant",
+      "size": "Taille",
+      "tier": "Tier",
+      "variant": "Variante",
+      "set": "Ensemble"
+    },
+    "statistics": "Statistiques",
+    "obtention": "Où l'obtenir",
+    "characteristics": "Caractéristiques",
+    "slotEmpty": "Emplacement vide",
+    "incomplete": {
+      "title": "{kind, select, vehicle {Fiche véhicule à compléter} weapon {Fiche arme à compléter} resource {Fiche ressource à compléter} other {Fiche objet à compléter}}",
+      "description": "Les données propres à ce type d'objet n'ont pas encore été renseignées sur le site."
+    },
+    "plans": {
+      "title": "Plans",
+      "source": "Rendus orthographiques",
+      "holo": "Vue 3D sur le site",
+      "unavailable": "Plan indisponible pour le moment.",
+      "alt": "{name}, vue de {view, select, top {dessus} side {côté} other {face}}",
+      "views": {
+        "top": "Dessus",
+        "side": "Côté",
+        "front": "Face"
+      }
+    },
+    "vehicle": {
+      "crew": "Places",
+      "speedMax": "Vitesse max",
+      "speedScm": "Croisière",
+      "cargo": "Soute",
+      "technical": "Fiche technique",
+      "mass": "Masse",
+      "dimensions": "Dimensions",
+      "armament": "Armement",
+      "armamentEmpty": "Aucun point d'emport renseigné.",
+      "equipment": "Équipements",
+      "equipmentEmpty": "Aucun composant renseigné."
+    },
+    "weapon": {
+      "rateOfFire": "Cadence",
+      "rpmUnit": "coups/min",
+      "magazine": "Chargeur",
+      "reload": "Rechargement",
+      "mass": "Masse",
+      "damageType": "Type de dégâts",
+      "caliber": "Calibre",
+      "damageProfile": "Profil de dégâts",
+      "damageProfileHint": "rapporté à sa classe",
+      "average": "| moy. {value}",
+      "fireModes": "Modes de tir",
+      "modeLabel": "Mode",
+      "modeRpm": "Cadence",
+      "modeDps": "DPS",
+      "modeAmmo": "Mun. / tir",
+      "modePellets": "Projectiles",
+      "modeBurst": "Rafale",
+      "spread": "Dispersion",
+      "spreadUnit": "degrés",
+      "spreadHip": "À la hanche",
+      "spreadAds": "En visée",
+      "spreadEmpty": "Non renseignée.",
+      "spreadRows": {
+        "min": "Minimum",
+        "max": "Maximum",
+        "firstShot": "Premier tir",
+        "perShot": "Par tir",
+        "decay": "Décroissance"
+      },
+      "attachments": "Accessoires",
+      "attachmentsEmpty": "Aucun accessoire renseigné.",
+      "againstClass": "Face à sa classe"
+    },
+    "ammo": {
+      "title": "Munitions",
+      "damagePerShot": "Dégâts par tir",
+      "speed": "Vitesse",
+      "range": "Portée",
+      "lifetime": "Durée de vol",
+      "capacity": "Capacité",
+      "size": "Taille",
+      "penetration": "Pénétration",
+      "falloffTitle": "Chute des dégâts",
+      "falloff": "pleins jusqu'à {start} m, puis −{perMeter}/m",
+      "falloffWithFloor": "pleins jusqu'à {start} m, puis −{perMeter}/m, plancher {min}"
+    },
+    "resource": {
+      "characteristics": "Caractéristiques",
+      "form": "Forme",
+      "volatile": "Volatile",
+      "volatileYes": "Oui : cargaison instable",
+      "unitVolume": "Volume unitaire",
+      "purity": "Pureté",
+      "markets": "Cours par comptoir",
+      "pricesUpdated": "relevés le {date}",
+      "counter": "Comptoir",
+      "side": "Sens",
+      "price": "Prix",
+      "stock": "Stock",
+      "sides": {
+        "buy": "Achète",
+        "sell": "Vend",
+        "grey": "Marché gris"
+      },
+      "marketsEmpty": "Aucun cours relevé.",
+      "refining": "Raffinage",
+      "process": "Procédé",
+      "yield": "Rendement",
+      "cycleDuration": "Durée du cycle",
+      "cost": "Coût",
+      "output": "Produit",
+      "extraction": "Lieux d'extraction",
+      "frequencies": {
+        "common": "Courant",
+        "occasional": "Occasionnel",
+        "risky": "Risqué"
+      }
+    }
+  }
+}

@@ -1,3 +1,6 @@
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { Card, Modal } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -30,7 +33,7 @@ const TONE_TEXT = {
   top: "text-amber-300",
 };
 
-const formatRep = (value: number) => value.toLocaleString("fr-FR");
+const formatRep = (value: number) => value.toLocaleString(getLocale());
 
 function rankTitle(level: FactionLevel): string {
   return level.minReputation && level.minReputation > 0
@@ -40,15 +43,16 @@ function rankTitle(level: FactionLevel): string {
 
 /** Focus, legality and removal, as one line under the faction name. */
 export function factionMeta(faction: RepFaction): string {
+  const t = translator("Reputations.card");
   return [
     faction.focus,
     faction.lawful === undefined
       ? undefined
       : faction.lawful
-        ? "légale"
-        : "illégale",
+        ? t("lawful")
+        : t("unlawful"),
     faction.removedInVersion
-      ? `retirée du jeu en ${faction.removedInVersion}`
+      ? t("removed", { version: faction.removedInVersion })
       : undefined,
   ]
     .filter(Boolean)
@@ -68,6 +72,7 @@ export function FactionRepCard({
   onOpen: () => void;
   onLevel: LevelChange;
 }) {
+  const t = useTranslations("Reputations.card");
   const started = isStarted(faction, reputations);
   const maxed = isMaxed(faction, reputations);
   const meta = factionMeta(faction);
@@ -94,7 +99,7 @@ export function FactionRepCard({
         </div>
         {maxed ? (
           <span className="inline-flex h-6 shrink-0 items-center rounded-full border border-amber-300/55 bg-amber-300/15 px-2 text-[11px] font-semibold text-amber-200">
-            Rang max
+            {t("maxBadge")}
           </span>
         ) : showsStanding(faction) &&
           standing &&
@@ -105,7 +110,7 @@ export function FactionRepCard({
 
       {faction.careers.length === 0 ? (
         <p className="text-xs text-nexus-dim">
-          Aucune carrière pour cette faction.
+          {t("noCareer")}
         </p>
       ) : (
         faction.careers.map((career) => (
@@ -143,6 +148,7 @@ function CareerLadder({
   disabled: boolean;
   onLevel: (level: FactionLevel) => void;
 }) {
+  const t = useTranslations("Reputations.card");
   const tone = levelTone(career, level);
   const index = level
     ? career.levels.findIndex((option) => option.name === level.name)
@@ -158,7 +164,7 @@ function CareerLadder({
         </span>
         {/* The rank name is the select itself: what you read is what you change. */}
         <select
-          aria-label={`Rang ${career.name} chez ${faction.name}`}
+          aria-label={t("rankOf", { career: career.name, faction: faction.name })}
           className={cn(COMPACT_SELECT, TONE_TEXT[tone])}
           value={level?.name ?? ""}
           disabled={disabled}
@@ -179,7 +185,7 @@ function CareerLadder({
 
       <div
         role="group"
-        aria-label={`Barème ${career.name}`}
+        aria-label={t("ladderOf", { career: career.name })}
         className="flex gap-0.5"
       >
         {career.levels.map((option, position) => {
@@ -212,9 +218,12 @@ function CareerLadder({
       <span className="text-xs text-nexus-dim">
         {next
           ? next.minReputation && next.minReputation >= 10
-            ? `Prochain rang : ${next.name} · ${formatRep(next.minReputation)} de réputation`
-            : `Prochain rang : ${next.name}`
-          : "Plus haut rang de ce barème."}
+            ? t("nextRankWithRep", {
+                rank: next.name,
+                rep: formatRep(next.minReputation),
+              })
+            : t("nextRank", { rank: next.name })
+          : t("topRank")}
       </span>
     </div>
   );
@@ -236,6 +245,7 @@ export function FactionRepModal({
   onLevel: LevelChange;
   onStanding: (standing: string) => void;
 }) {
+  const t = useTranslations("Reputations.card");
   if (!faction) return null;
   const meta = [factionMeta(faction), faction.headquarters]
     .filter(Boolean)
@@ -260,7 +270,7 @@ export function FactionRepModal({
         {showsStanding(faction) ? (
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-2 text-[13px] font-semibold text-nexus-bright">
-              Standing
+              {t("standing")}
             </legend>
             <div className="flex gap-1.5">
               {faction.standings.map((option) => (
@@ -299,7 +309,7 @@ export function FactionRepModal({
               <legend className="mb-2 flex w-full justify-between text-[13px] font-semibold text-nexus-bright">
                 <span>{career.name}</span>
                 <span className="font-medium text-nexus-dim">
-                  réputation requise
+                  {t("requiredRep")}
                 </span>
               </legend>
               {[...career.levels].reverse().map((option) => {
@@ -337,7 +347,7 @@ export function FactionRepModal({
                       {option.name}
                       {option.isDefault ? (
                         <span className="ml-2 text-xs font-normal text-nexus-dim">
-                          au départ
+                          {t("startingRank")}
                         </span>
                       ) : null}
                     </span>

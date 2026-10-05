@@ -1,0 +1,84 @@
+{
+  "remainingHours": "{hours} h {minutes}",
+  "remainingMinutes": "{minutes} min",
+  "close": "Close",
+  "cancelShort": "Cancel",
+  "page": {
+    "back": "Back to inventory",
+    "title": "Parcels",
+    "description": "Your parcels sent and received over the last 30 days."
+  },
+  "package": {
+    "title": "Package",
+    "clear": "Clear",
+    "from": "From {places}",
+    "outOf": "of {available}",
+    "quantityOf": "Quantity of {name}",
+    "remove": "Remove {name} from the package",
+    "sending": "Sending…",
+    "send": "Send the package",
+    "sendHint": "Creates a code to give the recipient. The lots stay with you, reserved, until they accept it."
+  },
+  "sent": {
+    "title": "Parcel sealed",
+    "description": "Give this code to the player who should receive it.",
+    "cancel": "Cancel sending",
+    "seeAll": "Track my parcels",
+    "codeLabel": "Code {code}",
+    "codeCopied": "Code copied",
+    "copyCode": "Copy code",
+    "waiting": "Waiting for the recipient · expires in {remaining}",
+    "contents": "Contents",
+    "reservedHint": "These quantities are reserved: they cannot go in another parcel. They leave your inventory when the recipient accepts."
+  },
+  "receive": {
+    "title": "Receive a parcel",
+    "description": "Type or paste the code the sender gave you.",
+    "someone": "a player",
+    "someoneStart": "A player",
+    "received": "Parcel from {sender} received",
+    "receivedAt": "Parcel from {sender} received at {location}",
+    "receivedDescription": "{created, plural, one {# lot created} other {# lots created}}, {merged, plural, one {# lot topped up} other {# lots topped up}}.",
+    "codeField": "Parcel code",
+    "looking": "Looking for the parcel…",
+    "codeHint": "8 characters, letters and digits. Dashes, spaces and lower case are fine.",
+    "from": "{sender} is sending you {count, plural, one {# lot} other {# lots}}.",
+    "storeAt": "Store at",
+    "storeAtPlaceholder": "Pick a location…",
+    "orgVisible": "Visible to the org",
+    "mergeHint": "A matching lot already stored there will be topped up.",
+    "accepting": "Receiving…",
+    "accept": "Accept the parcel"
+  },
+  "status": {
+    "pending": "Waiting · {remaining}",
+    "deliveredAt": "Delivered · {when}",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "expired": "Expired"
+  },
+  "list": {
+    "tabs": {
+      "sent": "Sent",
+      "received": "Received"
+    },
+    "emptySent": "No parcel sent. Prepare one from the inventory.",
+    "emptyReceived": "No parcel received.",
+    "copyCodeOf": "Copy code {code}",
+    "hint": "A cancelled or expired parcel moved nothing: its lots stayed with the sender. A code works once."
+  },
+  "errors": {
+    "invalid_code": "That is not a parcel code: 8 letters or digits.",
+    "invalid_items": "The package holds a lot that is no longer in your inventory.",
+    "invalid_location": "Pick a storage location.",
+    "not_found": "No parcel has this code.",
+    "too_many_attempts": "Too many wrong codes: try again in a few minutes.",
+    "own_parcel": "This is your own parcel: give the code to another player.",
+    "delivered": "This parcel was already received.",
+    "cancelled": "The sender cancelled this parcel.",
+    "expired": "This code has expired.",
+    "unavailable": "{item}: the quantity is no longer available.",
+    "someLot": "A lot",
+    "generic": "The operation failed."
+  }
+}

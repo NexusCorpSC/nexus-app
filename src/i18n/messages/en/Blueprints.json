@@ -1,0 +1,55 @@
+{
+  "list": {
+    "title": "Blueprints",
+    "description": "Crafting recipes, and the ones you own.",
+    "searchLabel": "Search a blueprint",
+    "searchPlaceholder": "Blueprint name…",
+    "subcategory": "Subcategory",
+    "allSubcategories": "All",
+    "allCategories": "All",
+    "ownership": "Ownership",
+    "ownedAll": "All",
+    "ownedOwned": "Owned",
+    "ownedNotOwned": "Not owned",
+    "emptyTitle": "No blueprint found",
+    "emptyDescription": "Try another search term or widen the filters.",
+    "results": "{count, plural, one {# result} other {# results}}",
+    "owned": "Owned"
+  },
+  "detail": {
+    "back": "Back to blueprints",
+    "openOnWeb": "Open on the web",
+    "craftingTime": "Crafting",
+    "tier": "Tier",
+    "ownership": "Ownership",
+    "owned": "Owned",
+    "notOwned": "Not owned",
+    "description": "Description",
+    "recipe": "Recipe",
+    "minQuality": "quality ≥ {quality}",
+    "noRecipe": "No recipe filled in for this blueprint.",
+    "statistics": "Statistics",
+    "obtention": "Where to obtain"
+  },
+  "orgOwners": {
+    "title": "In my organization",
+    "signIn": "Sign in to see who, in your organizations, owns this blueprint.",
+    "noOrgs": "You are not a member of any organization.",
+    "empty": "Nobody owns it in this organization."
+  },
+  "ownership": {
+    "add": "Add to my blueprints",
+    "remove": "Remove from my blueprints",
+    "ownedRemove": "Owned — remove from my blueprints",
+    "retry": "Retry",
+    "added": "Added",
+    "addedTitle": "Added to your blueprints",
+    "alreadyIn": "Already there",
+    "alreadyInTitle": "Already in your blueprints",
+    "removed": "Removed",
+    "removedTitle": "Removed from your blueprints",
+    "alreadyOut": "Already removed",
+    "alreadyOutTitle": "Was not in your blueprints",
+    "failed": "Failed — {message}"
+  }
+}

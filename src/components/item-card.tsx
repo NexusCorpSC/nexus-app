@@ -1,11 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Crosshair, Gem, Package, Plane } from "lucide-react";
-import {
-  ITEM_KIND_LABELS,
-  type ItemKind,
-  type ItemSummary,
-} from "@/types/nexus";
+import { useTranslations } from "use-intl";
+import { type ItemKind, type ItemSummary } from "@/types/nexus";
 import { Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +22,7 @@ const KIND_ICONS: Record<ItemKind, typeof Package> = {
 };
 
 export function KindBadge({ kind }: { kind: ItemKind }) {
+  const tKinds = useTranslations("Items.kinds");
   const accent = KIND_ACCENT[kind];
   return (
     <span
@@ -35,7 +33,7 @@ export function KindBadge({ kind }: { kind: ItemKind }) {
         backgroundColor: `${accent}1a`,
       }}
     >
-      {ITEM_KIND_LABELS[kind]}
+      {tKinds(kind)}
     </span>
   );
 }
@@ -115,13 +113,15 @@ export function ItemCard({
   trailing?: ReactNode;
   layout?: "tile" | "row";
 }) {
+  const t = useTranslations("Items.card");
+  const tKinds = useTranslations("Items.kinds");
   const subtitle = [item.category, item.subcategory]
     .filter(Boolean)
     .join(" · ");
   const detail = item.variantName
-    ? `Variante : ${item.variantName}`
+    ? t("variant", { name: item.variantName })
     : item.setName
-      ? `Ensemble : ${item.setName}`
+      ? t("set", { name: item.setName })
       : item.manufacturer;
 
   const content =
@@ -143,7 +143,7 @@ export function ItemCard({
             className="truncate text-[10.5px] font-semibold tracking-wider uppercase"
             style={{ color: `${KIND_ACCENT[item.kind]}cc` }}
           >
-            {ITEM_KIND_LABELS[item.kind]}
+            {tKinds(item.kind)}
             {subtitle ? (
               <span className="text-sky-300/60"> · {subtitle}</span>
             ) : null}

@@ -1,0 +1,81 @@
+{
+  "title": "Escouade",
+  "live": "En direct",
+  "reconnecting": "Reconnexion…",
+  "openPlan": "Ouvrir le plan de vol",
+  "close": "Fermer",
+  "back": "Retour",
+  "cancel": "Annuler",
+  "session": "Session…",
+  "loading": "Chargement…",
+  "renameSquad": "Renommer l'escouade",
+  "renameRaid": "Renommer le raid",
+  "nameLabel": "Nom",
+  "copyCode": "Copier le code",
+  "codePlaceholder": "CODE",
+  "view": {
+    "label": "Vue",
+    "squad": "Escouade",
+    "raid": "Raid"
+  },
+  "switcher": {
+    "label": "Changer d'escouade",
+    "mine": "Mes escouades"
+  },
+  "signedOut": {
+    "finishInBrowser": "Terminez la connexion dans votre navigateur.",
+    "connectToUse": "Connectez-vous pour créer une escouade ou en rejoindre une.",
+    "reopenBrowser": "Rouvrir le navigateur",
+    "signIn": "Se connecter"
+  },
+  "noSquad": {
+    "intro": "Créez une escouade et partagez son code, ou saisissez celui qu'on vous a donné.",
+    "create": "Créer une escouade",
+    "codeLabel": "Code de l'escouade",
+    "join": "Rejoindre"
+  },
+  "board": {
+    "announcementPlaceholder": "Annonce à l'escouade",
+    "readyCheck": "Ready check",
+    "readyCheckHint": "Tout le monde repasse « non prêt » et reçoit une notification",
+    "manageRaid": "Gérer le raid",
+    "createRaid": "Créer un raid",
+    "leave": "Quitter"
+  },
+  "member": {
+    "leader": "Chef de l'escouade",
+    "lieutenant": "Lieutenant",
+    "role": "Rôle : {label}",
+    "noRole": "Aucun rôle",
+    "pickRole": "Choisir un rôle",
+    "ready": "Prêt",
+    "notReady": "Pas prêt",
+    "down": "Éliminé",
+    "alive": "Actif",
+    "actions": "Actions",
+    "actionsOn": "Actions sur {name}"
+  },
+  "menu": {
+    "position": "Position",
+    "appointLieutenant": "Nommer lieutenant",
+    "dismissLieutenant": "Retirer le grade",
+    "makeLeader": "Passer chef",
+    "remove": "Retirer de l'escouade"
+  },
+  "footer": {
+    "ready": "{ready}/{total} prêts",
+    "down": "{count, plural, one {# éliminé} other {# éliminés}}"
+  },
+  "announcement": {
+    "send": "Envoyer",
+    "sendHint": "Envoyer (Entrée)",
+    "clickToEdit": "{text}\n\nCliquer pour modifier",
+    "resend": "Renvoyer la notification à tous"
+  },
+  "notifications": {
+    "readyCheckTitle": "Ready check — {name}",
+    "readyCheckBody": "{by} demande à tout le monde de se déclarer prêt.",
+    "ready": "Prêt",
+    "announcementTitle": "Annonce — {name}"
+  }
+}

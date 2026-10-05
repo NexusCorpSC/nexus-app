@@ -1,0 +1,16 @@
+{
+  "available": "Mise à jour {version} disponible",
+  "clickToInstall": "Cliquez pour l'installer.",
+  "noRelease": "Aucune release publiée n'annonce de mise à jour.",
+  "checkFailed": "Impossible de vérifier les mises à jour : {message}",
+  "contrib": {
+    "published": "Contribution publiée",
+    "publishedBody": "{name} · +{points, plural, one {# point} other {# points}}",
+    "changesRequested": "Contribution à corriger",
+    "changesRequestedBody": "{name} : « {message} »",
+    "achievement": "Succès débloqué",
+    "level": "Nouveau niveau",
+    "backlogTitle": "Contributions",
+    "backlog": "{count, plural, one {# autre nouvelle sur vos contributions.} other {# autres nouvelles sur vos contributions.}}"
+  }
+}

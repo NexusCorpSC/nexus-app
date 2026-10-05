@@ -1,0 +1,51 @@
+{
+  "button": "Report",
+  "title": {
+    "place": "Report this place",
+    "placeMedia": "Report this image",
+    "plan": "Report this map",
+    "item": "Report this item",
+    "org": "Report this organization"
+  },
+  "subtitle": "{name} · a moderator reviews every report",
+  "question": "What's wrong?",
+  "comment": "Details (optional except for “Other”)",
+  "commentRequired": "Details (required for “Other”)",
+  "send": "Send report",
+  "doneTitle": "Thanks, noted",
+  "doneBody": "The decision will show in My contributions, on the site. If the report is upheld, it earns you {points, plural, one {# point} other {# points}}.",
+  "reasons": {
+    "wrong": {
+      "label": "Wrong information",
+      "hint": "A wrong service, name, value or parent"
+    },
+    "outdated": {
+      "label": "Outdated since a patch",
+      "hint": "It was true, it isn't anymore"
+    },
+    "duplicate": {
+      "label": "Duplicate",
+      "hint": "This already exists under another name"
+    },
+    "media": {
+      "label": "Off-topic or poor-quality image",
+      "hint": "Off topic, unreadable, personal UI visible"
+    },
+    "offensive": {
+      "label": "Offensive content",
+      "hint": "Insults, hate speech"
+    },
+    "copyright": {
+      "label": "Copyright",
+      "hint": "Taken from a site or image without permission"
+    },
+    "spam": {
+      "label": "Spam",
+      "hint": "Advertising, unrelated links"
+    },
+    "other": {
+      "label": "Other",
+      "hint": "Explain in the field below"
+    }
+  }
+}

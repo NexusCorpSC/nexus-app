@@ -1,0 +1,28 @@
+{
+  "title": "Rôles",
+  "newRole": "Nouveau rôle",
+  "editRole": "Modifier un rôle",
+  "intro": "Partagés par toute l'escouade. Les sept fournis se renomment et changent d'icône, mais ne s'effacent pas.",
+  "base": "fourni",
+  "custom": "perso",
+  "edit": "Modifier {label}",
+  "delete": "Supprimer {label}",
+  "none": "Aucun",
+  "manage": "Gérer les rôles…",
+  "editor": {
+    "name": "Nom du rôle",
+    "namePlaceholder": "Sniper, Boarder, Quartier-maître…",
+    "icon": "Icône",
+    "preview": "Sur la ligne",
+    "unnamed": "nommez-le",
+    "cancel": "Annuler",
+    "save": "Enregistrer"
+  },
+  "groups": {
+    "combat": "Combat",
+    "vol": "Vol",
+    "soutien": "Soutien",
+    "metier": "Métier",
+    "reperes": "Repères"
+  }
+}

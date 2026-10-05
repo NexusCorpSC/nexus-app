@@ -1,4 +1,5 @@
 import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import type {
   ConfirmationInput,
@@ -66,34 +67,40 @@ export function confirmPrices(
 
 /* The site answers a refusal with an error code; these are its words. */
 
-const SHARED_MESSAGES: Record<string, string> = {
-  unauthenticated: "Connectez-vous pour contribuer.",
-  suspended: "Vos contributions sont suspendues par la modération.",
-};
+const SHARED_CODES = ["unauthenticated", "suspended"] as const;
 
-const MEDIA_MESSAGES: Record<string, string> = {
-  ...SHARED_MESSAGES,
-  placeNotFound: "Ce lieu n'existe plus.",
-  noMedia: "Choisissez une image.",
-  invalidMedia: "Cette image n'est pas acceptée : JPEG, PNG ou WebP.",
-  tooManyPending: "Vous avez déjà 5 contributions en attente de relecture.",
-  fileTooLarge: "L'image est trop lourde : 4 Mo au plus.",
-  uploadFailed: "L'envoi de l'image a échoué. Réessayez dans un instant.",
-  tooManyUploads: "Trop d'images envoyées cette heure-ci. Réessayez plus tard.",
-};
+const MEDIA_CODES = [
+  ...SHARED_CODES,
+  "placeNotFound",
+  "noMedia",
+  "invalidMedia",
+  "tooManyPending",
+  "fileTooLarge",
+  "uploadFailed",
+  "tooManyUploads",
+] as const;
 
-const CONFIRMATION_MESSAGES: Record<string, string> = {
-  ...SHARED_MESSAGES,
-  notFound: "Cet objet n'existe plus.",
-  invalidInput: "La confirmation n'a pas pu être lue. Vérifiez le commentaire.",
-  alreadyConfirmed: "Vous avez déjà confirmé ces cours cette semaine.",
-};
+const CONFIRMATION_CODES = [
+  ...SHARED_CODES,
+  "notFound",
+  "invalidInput",
+  "alreadyConfirmed",
+] as const;
+
+type ContribCode = (typeof MEDIA_CODES | typeof CONFIRMATION_CODES)[number];
+
+/** The wording of each code, in the language on screen. */
+function messagesOf(codes: readonly ContribCode[]): Record<string, string> {
+  const t = translator("Api.contrib");
+  return Object.fromEntries(codes.map((code) => [code, t(code)]));
+}
 
 function messageFor(
-  messages: Record<string, string>,
+  codes: readonly ContribCode[],
   error: unknown,
   fallback: string,
 ): string {
+  const messages = messagesOf(codes);
   if (error instanceof ApiError) {
     if (error.isUnauthorized) return messages.unauthenticated;
     const body = error.body as { error?: string } | undefined;
@@ -106,9 +113,13 @@ function messageFor(
 }
 
 export function mediaErrorMessage(error: unknown): string {
-  return messageFor(MEDIA_MESSAGES, error, "L'envoi a échoué.");
+  return messageFor(MEDIA_CODES, error, translator("Common")("sendFailed"));
 }
 
 export function confirmationErrorMessage(error: unknown): string {
-  return messageFor(CONFIRMATION_MESSAGES, error, "L'envoi a échoué.");
+  return messageFor(
+    CONFIRMATION_CODES,
+    error,
+    translator("Common")("sendFailed"),
+  );
 }

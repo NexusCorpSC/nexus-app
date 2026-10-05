@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslations } from "use-intl";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 
 type Point = { x: number; y: number };
@@ -15,6 +16,7 @@ const MIN_DRAG_PX = 8;
  * fractions of the window, which keeps DPI scaling out of the protocol.
  */
 export default function CapturePage() {
+  const t = useTranslations("Capture");
   const [origin, setOrigin] = useState<Point | null>(null);
   const [cursor, setCursor] = useState<Point | null>(null);
   const [busy, setBusy] = useState(false);
@@ -133,13 +135,13 @@ export default function CapturePage() {
 
       {!box && !busy && (
         <p className="pointer-events-none absolute inset-x-0 top-10 text-center text-sm text-white/80 drop-shadow">
-          Tracez une zone pour en lire le texte · Échap pour annuler
+          {t("hint")}
         </p>
       )}
 
       {busy && (
         <p className="pointer-events-none absolute inset-x-0 top-10 text-center text-sm text-white/80 drop-shadow">
-          Lecture du texte…
+          {t("reading")}
         </p>
       )}
     </div>

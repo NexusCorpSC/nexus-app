@@ -1,0 +1,46 @@
+{
+  "title": "Réputations",
+  "description": "Votre rang auprès de chaque faction, tel qu'il s'affiche dans le mobiGlas. {started, plural, one {# faction suivie} other {# factions suivies}} sur {total}, {maxed} au rang max.",
+  "updateFailed": "La mise à jour a échoué.",
+  "noFactions": "Aucune faction configurée",
+  "searchLabel": "Rechercher une faction, une carrière ou un rang",
+  "searchPlaceholder": "Faction, carrière ou rang…",
+  "progressLabel": "Progression",
+  "progress": {
+    "all": "Toutes",
+    "started": "Commencées",
+    "todo": "À commencer"
+  },
+  "familyLabel": "Type de carrière",
+  "allFamilies": "Toutes",
+  "family": {
+    "guild": "Guildes",
+    "hauling": "Transport",
+    "faction": "Contrats de faction",
+    "trade": "Commerce"
+  },
+  "group": {
+    "guild": "Guildes et métiers",
+    "hauling": "Transport",
+    "faction": "Contrats de faction",
+    "trade": "Commerce"
+  },
+  "count": "{count, plural, one {# faction} other {# factions}}",
+  "noMatchTitle": "Aucune faction ne correspond",
+  "noMatchHint": "Essayez un autre nom, ou affichez toutes les factions.",
+  "card": {
+    "lawful": "légale",
+    "unlawful": "illégale",
+    "removed": "retirée du jeu en {version}",
+    "maxBadge": "Rang max",
+    "noCareer": "Aucune carrière pour cette faction.",
+    "rankOf": "Rang {career} chez {faction}",
+    "ladderOf": "Barème {career}",
+    "nextRank": "Prochain rang : {rank}",
+    "nextRankWithRep": "Prochain rang : {rank} · {rep} de réputation",
+    "topRank": "Plus haut rang de ce barème.",
+    "standing": "Standing",
+    "requiredRep": "réputation requise",
+    "startingRank": "au départ"
+  }
+}

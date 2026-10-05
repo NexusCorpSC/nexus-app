@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { listBlueprintCategories, listBlueprints } from "@/lib/api/blueprints";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -34,6 +35,7 @@ const QUICK_CONTROL =
   "absolute right-2 top-2 bg-nexus-abyss/70 backdrop-blur-sm";
 
 export default function BlueprintsPage() {
+  const t = useTranslations("Blueprints.list");
   const { user } = useAuth();
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
@@ -103,15 +105,15 @@ export default function BlueprintsPage() {
   return (
     <>
       <PageHeader
-        title="Blueprints"
-        description="Les recettes de fabrication, et celles que vous possédez."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Toolbar className={categoriesQuery.data?.length ? "mb-3" : undefined}>
         <SearchField
-          label="Rechercher un blueprint"
+          label={t("searchLabel")}
           value={search}
-          placeholder="Nom du blueprint…"
+          placeholder={t("searchPlaceholder")}
           onChange={(event) =>
             updateFilter(() => setSearch(event.target.value))
           }
@@ -119,13 +121,13 @@ export default function BlueprintsPage() {
 
         {subcategories.length ? (
           <ToolbarSelect
-            label="Sous-catégorie"
+            label={t("subcategory")}
             value={subcategory}
             onChange={(event) =>
               updateFilter(() => setSubcategory(event.target.value))
             }
           >
-            <option value="">Toutes</option>
+            <option value="">{t("allSubcategories")}</option>
             {subcategories.map((sub) => (
               <option key={sub} value={sub}>
                 {sub}
@@ -137,7 +139,7 @@ export default function BlueprintsPage() {
         {/* The `owned` filter is resolved server-side from the session. */}
         {user ? (
           <ToolbarSelect
-            label="Possession"
+            label={t("ownership")}
             value={owned}
             onChange={(event) =>
               updateFilter(() =>
@@ -145,9 +147,9 @@ export default function BlueprintsPage() {
               )
             }
           >
-            <option value="">Tous</option>
-            <option value="true">Possédés</option>
-            <option value="false">Non possédés</option>
+            <option value="">{t("ownedAll")}</option>
+            <option value="true">{t("ownedOwned")}</option>
+            <option value="false">{t("ownedNotOwned")}</option>
           </ToolbarSelect>
         ) : null}
       </Toolbar>
@@ -163,7 +165,7 @@ export default function BlueprintsPage() {
               })
             }
           >
-            Toutes
+            {t("allCategories")}
           </Chip>
           {categoriesQuery.data.map((c) => (
             <Chip
@@ -191,14 +193,13 @@ export default function BlueprintsPage() {
         />
       ) : blueprintsQuery.data.blueprints.length === 0 ? (
         <EmptyState
-          title="Aucun blueprint trouvé"
-          description="Essayez un autre terme de recherche ou élargissez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <>
           <p className="mb-3 text-xs text-nexus-dim">
-            {blueprintsQuery.data.total} résultat
-            {blueprintsQuery.data.total > 1 ? "s" : ""}
+            {t("results", { count: blueprintsQuery.data.total })}
           </p>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">
@@ -248,7 +249,7 @@ export default function BlueprintsPage() {
                           </span>
                           {blueprint.owned ? (
                             <span className="rounded-full bg-emerald-300/14 px-2 py-0.5 text-[11px] font-medium text-emerald-300">
-                              Possédé
+                              {t("owned")}
                             </span>
                           ) : null}
                         </div>

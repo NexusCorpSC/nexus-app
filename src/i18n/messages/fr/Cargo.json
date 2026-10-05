@@ -1,0 +1,82 @@
+{
+  "defaultShipName": "Vaisseau",
+  "page": {
+    "title": "Feuille de cargo",
+    "startDescription": "Répartissez vos volumes en conteneurs SCU et suivez le remplissage du vaisseau.",
+    "noSheet": "Aucune feuille en cours",
+    "noSheetHint": "Choisissez le vaisseau que vous utilisez : c'est sa capacité qui décide du reste.",
+    "createSheet": "Créer la feuille",
+    "offlineDescription": "Hors ligne : cette feuille ne quitte pas cette machine.",
+    "overlay": "Superposition",
+    "close": "Clôturer",
+    "emptyTitle": "Feuille vide",
+    "emptyDescription": "Ajoutez une ligne, collez un journal de mission, ou capturez-le à l'écran avec le raccourci de capture.",
+    "settings": "Réglages",
+    "maxContainer": "Plus gros conteneur",
+    "newMission": "Nouvelle mission",
+    "changeShip": "Changer de vaisseau",
+    "confirmClose": "Clôturer la feuille supprime toutes ses lignes. Continuer ?"
+  },
+  "add": {
+    "title": "Ajouter du cargo",
+    "joinsMission": "Sans mission indiquée, la ligne rejoint « {mission} ».",
+    "submit": "Ajouter",
+    "pasteLabel": "Coller un journal de mission",
+    "import": "Importer",
+    "nothingReadable": "Rien de lisible : collez un journal de mission, ou des lignes « Destination;Contenu;Volume;Emplacement ».",
+    "added": "{count, plural, one {# ligne ajoutée} other {# lignes ajoutées}}",
+    "addedWithIgnored": "{count, plural, one {# ligne ajoutée} other {# lignes ajoutées}} · {ignored, plural, one {# ignorée} other {# ignorées}}"
+  },
+  "overlay": {
+    "edit": "Modifier",
+    "doneEditing": "Terminer les modifications",
+    "close": "Fermer",
+    "loading": "Chargement…",
+    "noSheet": "Aucune feuille en cours. Ouvrez « Feuille de cargo » dans la fenêtre principale, ou capturez un journal de mission.",
+    "empty": "Feuille vide : rien à charger pour l'instant."
+  },
+  "capture": {
+    "summary": "{count, plural, one {# objectif de livraison} other {# objectifs de livraison}} · {volume} SCU",
+    "line": "<amount>{volume} SCU</amount> {hasContent, select, yes {de {content} } other {}}vers {destination}{hasLocation, select, yes { (depuis {location})} other {}}",
+    "ignored": "{count, plural, one {# ligne illisible} other {# lignes illisibles}} — recadrez la capture pour les récupérer.",
+    "reading": "Lecture de la feuille…",
+    "added": "Ajouté à la feuille de cargo.",
+    "overlay": "Superposition",
+    "close": "Fermer",
+    "failed": "La feuille n'a pas pu être écrite.",
+    "failedWith": "La feuille n'a pas pu être écrite : {error}.",
+    "askShip": "Aucune feuille en cours. Quel vaisseau utilisez-vous ?",
+    "createAndAdd": "Créer la feuille et ajouter"
+  },
+  "ships": {
+    "sourceCache": "Liste des vaisseaux en cache : le site n'a pas répondu.",
+    "sourceBuiltin": "Liste des vaisseaux intégrée : le site n'a jamais pu être lu.",
+    "custom": "Capacité libre",
+    "ship": "Vaisseau",
+    "capacity": "Capacité (SCU)",
+    "loading": "Chargement des vaisseaux…"
+  },
+  "sheet": {
+    "over": "{count} en trop",
+    "free": "{count, plural, one {# libre} other {# libres}}",
+    "summary": "{lines, plural, one {# ligne} other {# lignes}} · {containers, plural, one {# conteneur} other {# conteneurs}} · {quantities}",
+    "destination": "Destination",
+    "content": "Contenu",
+    "volumeInScu": "Volume en SCU",
+    "volume": "Volume (SCU)",
+    "location": "Emplacement",
+    "mission": "Mission",
+    "cancel": "Annuler",
+    "noMission": "Sans mission",
+    "renameMission": "Renommer la mission",
+    "deleteMission": "Supprimer la mission",
+    "save": "Enregistrer",
+    "from": "Depuis {location}",
+    "editLine": "Modifier la ligne",
+    "deleteLine": "Supprimer la ligne",
+    "missionName": "Nom de la mission",
+    "saveName": "Enregistrer le nom",
+    "close": "Clôturer",
+    "confirmClose": "{count, plural, one {# ligne} other {# lignes}} — confirmer"
+  }
+}

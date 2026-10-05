@@ -1,0 +1,13 @@
+{
+  "title": "Map",
+  "pick": "Choose a location",
+  "close": "Close",
+  "noPinned": "No map pinned. Pin one from a location's page, or choose here.",
+  "loadFailed": "The map could not be loaded.",
+  "retry": "Retry",
+  "notSurveyed": "This location has not been surveyed yet.",
+  "searchPlaceholder": "Location name…",
+  "searchFailed": "The search failed.",
+  "noResults": "No location found.",
+  "notSurveyedYet": "Not surveyed yet"
+}

@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { translator } from "@/i18n/translate";
 import { apiRequest } from "@/lib/api-client";
 import { getApiBaseUrl, setSessionCookie } from "@/lib/settings";
 import type { CurrentUser } from "@/types/nexus";
@@ -53,9 +54,7 @@ export async function signInWithBrowser(): Promise<CurrentUser> {
   });
 
   if (callback.state !== state) {
-    throw new Error(
-      "La réponse du navigateur ne correspond pas à cette connexion.",
-    );
+    throw new Error(translator("Auth")("stateMismatch"));
   }
 
   await apiRequest<unknown>("/api/auth/desktop/exchange", {

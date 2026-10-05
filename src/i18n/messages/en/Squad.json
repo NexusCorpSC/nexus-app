@@ -1,0 +1,81 @@
+{
+  "title": "Squad",
+  "live": "Live",
+  "reconnecting": "Reconnecting…",
+  "openPlan": "Open the flight plan",
+  "close": "Close",
+  "back": "Back",
+  "cancel": "Cancel",
+  "session": "Session…",
+  "loading": "Loading…",
+  "renameSquad": "Rename the squad",
+  "renameRaid": "Rename the raid",
+  "nameLabel": "Name",
+  "copyCode": "Copy the code",
+  "codePlaceholder": "CODE",
+  "view": {
+    "label": "View",
+    "squad": "Squad",
+    "raid": "Raid"
+  },
+  "switcher": {
+    "label": "Switch squad",
+    "mine": "My squads"
+  },
+  "signedOut": {
+    "finishInBrowser": "Finish signing in in your browser.",
+    "connectToUse": "Sign in to create a squad or join one.",
+    "reopenBrowser": "Reopen the browser",
+    "signIn": "Sign in"
+  },
+  "noSquad": {
+    "intro": "Create a squad and share its code, or type in the one you were given.",
+    "create": "Create a squad",
+    "codeLabel": "Squad code",
+    "join": "Join"
+  },
+  "board": {
+    "announcementPlaceholder": "Squad announcement",
+    "readyCheck": "Ready check",
+    "readyCheckHint": "Everyone goes back to “not ready” and gets a notification",
+    "manageRaid": "Manage the raid",
+    "createRaid": "Create a raid",
+    "leave": "Leave"
+  },
+  "member": {
+    "leader": "Squad leader",
+    "lieutenant": "Lieutenant",
+    "role": "Role: {label}",
+    "noRole": "No role",
+    "pickRole": "Pick a role",
+    "ready": "Ready",
+    "notReady": "Not ready",
+    "down": "Down",
+    "alive": "Alive",
+    "actions": "Actions",
+    "actionsOn": "Actions on {name}"
+  },
+  "menu": {
+    "position": "Position",
+    "appointLieutenant": "Appoint lieutenant",
+    "dismissLieutenant": "Remove the rank",
+    "makeLeader": "Make leader",
+    "remove": "Remove from the squad"
+  },
+  "footer": {
+    "ready": "{ready}/{total} ready",
+    "down": "{count} down"
+  },
+  "announcement": {
+    "send": "Send",
+    "sendHint": "Send (Enter)",
+    "clickToEdit": "{text}\n\nClick to edit",
+    "resend": "Send the notification to everyone again"
+  },
+  "notifications": {
+    "readyCheckTitle": "Ready check — {name}",
+    "readyCheckBody": "{by} asks everybody to say they are ready.",
+    "ready": "Ready",
+    "announcementTitle": "Announcement — {name}"
+  }
+}

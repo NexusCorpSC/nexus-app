@@ -11,6 +11,8 @@ import {
   Send,
   X,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
 import { listInventoryItems, listLocations } from "@/lib/api/inventory";
 import {
   acceptParcel,
@@ -34,7 +36,11 @@ import type {
 /** A lot put in the package, and how much of it. */
 export type PackageEntry = { item: InventoryItem; quantity: number };
 
-const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
+function formatNumber(value: number) {
+  return new Intl.NumberFormat(getLocale(), {
+    maximumFractionDigits: 3,
+  }).format(value);
+}
 
 function roundQty(value: number) {
   return Math.round(value * 1e10) / 1e10;
@@ -50,6 +56,7 @@ export function availableOf(item: InventoryItem) {
 
 /** "23 h 58", "12 min": what is left of a code's life, kept current. */
 function useRemaining(expiresAt: string) {
+  const t = useTranslations("Parcels");
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
@@ -60,8 +67,11 @@ function useRemaining(expiresAt: string) {
     Math.floor((new Date(expiresAt).getTime() - now) / 60_000),
   );
   return minutes >= 60
-    ? `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`
-    : `${minutes} min`;
+    ? t("remainingHours", {
+        hours: Math.floor(minutes / 60),
+        minutes: String(minutes % 60).padStart(2, "0"),
+      })
+    : t("remainingMinutes", { minutes });
 }
 
 function useCopy() {
@@ -103,7 +113,7 @@ function ParcelItems({ items }: { items: ParcelItem[] }) {
             </span>
           ) : null}
           <span className="w-28 text-right font-mono font-semibold text-nexus-bright tabular-nums">
-            ×{number.format(item.quantity)}
+            ×{formatNumber(item.quantity)}
             {item.unit ? (
               <span className="ml-1 text-xs text-nexus-muted">{item.unit}</span>
             ) : null}
@@ -139,6 +149,7 @@ export function PackagePanel({
   onChange: (entries: PackageEntry[]) => void;
   onSent: (parcel: Parcel) => void;
 }) {
+  const t = useTranslations("Parcels");
   const queryClient = useQueryClient();
   const send = useMutation({
     mutationFn: () =>
@@ -165,7 +176,7 @@ export function PackagePanel({
       <div className="flex items-center gap-2">
         <Package className="size-4.5 text-nexus-accent" />
         <h2 className="font-display text-sm font-semibold text-nexus-white">
-          Colis
+          {t("package.title")}
         </h2>
         <span className="rounded-full bg-nexus-accent/15 px-1.5 py-0.5 text-xs font-medium text-nexus-accent">
           {entries.length}
@@ -175,10 +186,12 @@ export function PackagePanel({
           onClick={() => onChange([])}
           className="ml-auto text-xs text-nexus-muted hover:text-nexus-soft"
         >
-          Vider
+          {t("package.clear")}
         </button>
       </div>
-      <p className="text-xs text-nexus-muted">Depuis {places.join(", ")}</p>
+      <p className="text-xs text-nexus-muted">
+        {t("package.from", { places: places.join(", ") })}
+      </p>
 
       <ul className="max-h-80 space-y-1 overflow-y-auto pr-1">
         {entries.map((entry) => (
@@ -196,7 +209,9 @@ export function PackagePanel({
                 ) : null}
               </p>
               <p className="text-[11px] text-nexus-dim">
-                sur {number.format(availableOf(entry.item))}
+                {t("package.outOf", {
+                  available: formatNumber(availableOf(entry.item)),
+                })}
               </p>
             </div>
             <input
@@ -205,7 +220,7 @@ export function PackagePanel({
               max={availableOf(entry.item)}
               step="any"
               value={entry.quantity}
-              aria-label={`Quantité de ${entry.item.name}`}
+              aria-label={t("package.quantityOf", { name: entry.item.name })}
               onChange={(event) => {
                 const value = Number(event.target.value);
                 if (!Number.isFinite(value) || value <= 0) return;
@@ -229,7 +244,7 @@ export function PackagePanel({
             ) : null}
             <button
               type="button"
-              aria-label={`Retirer ${entry.item.name} du colis`}
+              aria-label={t("package.remove", { name: entry.item.name })}
               onClick={() =>
                 onChange(
                   entries.filter((other) => other.item.id !== entry.item.id),
@@ -254,11 +269,10 @@ export function PackagePanel({
           onClick={() => send.mutate()}
         >
           <Send className="size-4" />
-          {send.isPending ? "Envoi…" : "Envoyer le colis"}
+          {send.isPending ? t("package.sending") : t("package.send")}
         </Button>
         <p className="text-[11px] leading-relaxed text-nexus-muted">
-          Crée un code à donner au destinataire. Les lots restent chez vous,
-          réservés, jusqu'à ce qu'il l'accepte.
+          {t("package.sendHint")}
         </p>
       </div>
     </aside>
@@ -276,6 +290,7 @@ export function SentParcelModal({
   parcel: Parcel | null;
   onClose: () => void;
 }) {
+  const t = useTranslations("Parcels");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const cancel = useMutation({
@@ -292,8 +307,8 @@ export function SentParcelModal({
       open={parcel !== null}
       onClose={onClose}
       icon={<Package className="size-5" />}
-      title="Colis scellé"
-      description="Donnez ce code au joueur qui doit le recevoir."
+      title={t("sent.title")}
+      description={t("sent.description")}
       footer={
         <>
           <Button
@@ -302,7 +317,7 @@ export function SentParcelModal({
             disabled={cancel.isPending}
             onClick={() => cancel.mutate()}
           >
-            Annuler l'envoi
+            {t("sent.cancel")}
           </Button>
           <span className="flex-1" />
           <Button
@@ -313,10 +328,10 @@ export function SentParcelModal({
               navigate("/inventory/parcels");
             }}
           >
-            Suivre mes colis
+            {t("sent.seeAll")}
           </Button>
           <Button variant="outline" size="sm" onClick={onClose}>
-            Fermer
+            {t("close")}
           </Button>
         </>
       }
@@ -332,6 +347,7 @@ export function SentParcelModal({
 }
 
 function SentParcelBody({ parcel }: { parcel: Parcel }) {
+  const t = useTranslations("Parcels");
   const remaining = useRemaining(parcel.expiresAt);
   const { copied, copy } = useCopy();
 
@@ -339,7 +355,7 @@ function SentParcelBody({ parcel }: { parcel: Parcel }) {
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-4 rounded-xl border border-nexus-accent/15 bg-nexus-abyss p-5">
         <p
-          aria-label={`Code ${parcel.code}`}
+          aria-label={t("sent.codeLabel", { code: parcel.code })}
           className="flex items-center gap-1.5"
         >
           {parcel.code.split("").map((char, index) => (
@@ -362,23 +378,21 @@ function SentParcelBody({ parcel }: { parcel: Parcel }) {
           ) : (
             <Clipboard className="size-4" />
           )}
-          {copied === parcel.code ? "Code copié" : "Copier le code"}
+          {copied === parcel.code ? t("sent.codeCopied") : t("sent.copyCode")}
         </Button>
         <p className="flex items-center gap-1.5 text-[13px] text-amber-300">
           <Clock className="size-4" />
-          En attente du destinataire · expire dans {remaining}
+          {t("sent.waiting", { remaining })}
         </p>
       </div>
 
       <div className="space-y-2">
         <p className="font-display text-[11px] font-semibold tracking-[0.12em] text-nexus-muted uppercase">
-          Contenu
+          {t("sent.contents")}
         </p>
         <ParcelItems items={parcel.items} />
         <p className="text-xs text-nexus-muted">
-          Ces quantités sont réservées : elles ne peuvent pas aller dans un
-          autre colis. Elles quittent votre inventaire quand le destinataire
-          accepte.
+          {t("sent.reservedHint")}
         </p>
       </div>
     </div>
@@ -400,13 +414,14 @@ export function ReceiveParcelModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("Parcels");
   return (
     <Modal
       open={open}
       onClose={onClose}
       icon={<Download className="size-5" />}
-      title="Recevoir un colis"
-      description="Saisissez ou collez le code que l'expéditeur vous a donné."
+      title={t("receive.title")}
+      description={t("receive.description")}
     >
       <ReceiveParcelForm onClose={onClose} />
     </Modal>
@@ -414,6 +429,7 @@ export function ReceiveParcelModal({
 }
 
 function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("Parcels");
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -448,7 +464,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
       if (!byId.has(location.id)) byId.set(location.id, location);
     }
     return [...byId.values()].sort((a, b) =>
-      a.name.localeCompare(b.name, "fr"),
+      a.name.localeCompare(b.name, getLocale()),
     );
   }, [itemsQuery.data, locationsQuery.data]);
 
@@ -470,20 +486,22 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
           <Check className="mt-0.5 size-5 shrink-0 text-emerald-300" />
           <div>
             <p className="text-sm font-semibold text-nexus-white">
-              Colis de {received.senderName ?? "un joueur"} reçu
               {received.deliveredLocationName
-                ? ` à ${received.deliveredLocationName}`
-                : null}
+                ? t("receive.receivedAt", {
+                    sender: received.senderName ?? t("receive.someone"),
+                    location: received.deliveredLocationName,
+                  })
+                : t("receive.received", {
+                    sender: received.senderName ?? t("receive.someone"),
+                  })}
             </p>
             <p className="text-xs text-emerald-200/90">
-              {created} lot{created > 1 ? "s" : ""} créé
-              {created > 1 ? "s" : ""}, {merged} lot{merged > 1 ? "s" : ""}{" "}
-              complété{merged > 1 ? "s" : ""}.
+              {t("receive.receivedDescription", { created, merged })}
             </p>
           </div>
         </div>
         <div className="flex justify-end">
-          <Button onClick={onClose}>Fermer</Button>
+          <Button onClick={onClose}>{t("close")}</Button>
         </div>
       </div>
     );
@@ -497,7 +515,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
         if (parcel && locationId && !accept.isPending) accept.mutate();
       }}
     >
-      <Field label="Code du colis">
+      <Field label={t("receive.codeField")}>
         <div className="relative">
           <Input
             value={formatParcelCode(code)}
@@ -521,8 +539,8 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
       </Field>
       <p className="-mt-2 text-xs text-nexus-muted">
         {complete && preview.isFetching
-          ? "Recherche du colis…"
-          : "8 caractères, lettres et chiffres. Tirets, espaces et minuscules sont acceptés."}
+          ? t("receive.looking")
+          : t("receive.codeHint")}
       </p>
 
       {complete && preview.isError ? (
@@ -533,19 +551,21 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
         <>
           <div className="space-y-3 rounded-xl border border-nexus-accent/15 bg-nexus-abyss p-4">
             <p className="text-[13px] text-nexus-bright">
-              {parcel.senderName ?? "Un joueur"} vous envoie{" "}
-              {parcel.items.length} lot{parcel.items.length > 1 ? "s" : ""}.
+              {t("receive.from", {
+                sender: parcel.senderName ?? t("receive.someoneStart"),
+                count: parcel.items.length,
+              })}
             </p>
             <ParcelItems items={parcel.items} />
           </div>
 
-          <Field label="Ranger à">
+          <Field label={t("receive.storeAt")}>
             <Select
               value={locationId}
               required
               onChange={(event) => setLocationId(event.target.value)}
             >
-              <option value="">Choisir un lieu…</option>
+              <option value="">{t("receive.storeAtPlaceholder")}</option>
               {locations.map((location) => (
                 <option key={location.id} value={location.id}>
                   {location.name}
@@ -560,7 +580,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
               onChange={(event) => setOrgVisible(event.target.checked)}
               className="size-3.5 accent-nexus-accent"
             />
-            Visible par l'org
+            {t("receive.orgVisible")}
           </label>
 
           <ErrorLine>
@@ -569,10 +589,10 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
 
           <div className="flex items-center gap-2 border-t border-nexus-accent/12 pt-3">
             <p className="flex-1 text-xs text-nexus-muted">
-              Un lot identique déjà rangé à cet endroit sera complété.
+              {t("receive.mergeHint")}
             </p>
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
-              Annuler
+              {t("cancelShort")}
             </Button>
             <Button
               type="submit"
@@ -580,7 +600,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
               disabled={!locationId || accept.isPending}
             >
               <Check className="size-4" />
-              {accept.isPending ? "Réception…" : "Accepter le colis"}
+              {accept.isPending ? t("receive.accepting") : t("receive.accept")}
             </Button>
           </div>
         </>
@@ -601,9 +621,10 @@ const STATUS_STYLE: Record<Parcel["status"], string> = {
 };
 
 function ParcelStatusBadge({ parcel }: { parcel: Parcel }) {
+  const t = useTranslations("Parcels");
   const remaining = useRemaining(parcel.expiresAt);
   const when = parcel.deliveredAt
-    ? new Intl.DateTimeFormat("fr-FR", {
+    ? new Intl.DateTimeFormat(getLocale(), {
         day: "2-digit",
         month: "2-digit",
         hour: "2-digit",
@@ -612,12 +633,17 @@ function ParcelStatusBadge({ parcel }: { parcel: Parcel }) {
     : "";
   const [Icon, label] =
     parcel.status === "pending"
-      ? [Clock, `En attente · ${remaining}`]
+      ? [Clock, t("status.pending", { remaining })]
       : parcel.status === "delivered"
-        ? [Check, when ? `Livré · ${when}` : "Livré"]
+        ? [
+            Check,
+            when
+              ? t("status.deliveredAt", { when })
+              : t("status.delivered"),
+          ]
         : parcel.status === "cancelled"
-          ? [X, "Annulé"]
-          : [MinusCircle, "Expiré"];
+          ? [X, t("status.cancelled")]
+          : [MinusCircle, t("status.expired")];
 
   return (
     <span
@@ -634,6 +660,7 @@ function ParcelStatusBadge({ parcel }: { parcel: Parcel }) {
 
 /** The reader's parcels, sent and received, with what can still be done. */
 export function ParcelList() {
+  const t = useTranslations("Parcels");
   const queryClient = useQueryClient();
   const [direction, setDirection] = useState<"sent" | "received">("sent");
   const { copied, copy } = useCopy();
@@ -660,12 +687,7 @@ export function ParcelList() {
         role="tablist"
         className="inline-flex rounded-lg border border-nexus-accent/15 bg-nexus-card p-1"
       >
-        {(
-          [
-            ["sent", "Envoyés"],
-            ["received", "Reçus"],
-          ] as const
-        ).map(([tab, label]) => (
+        {(["sent", "received"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
@@ -679,7 +701,7 @@ export function ParcelList() {
                 : "text-nexus-muted hover:text-nexus-soft",
             )}
           >
-            {label}
+            {t(`list.tabs.${tab}`)}
           </button>
         ))}
       </div>
@@ -697,8 +719,8 @@ export function ParcelList() {
       ) : shown.length === 0 ? (
         <Card className="py-12 text-center text-[13px] text-nexus-muted">
           {direction === "sent"
-            ? "Aucun colis envoyé. Préparez-en un depuis l'inventaire."
-            : "Aucun colis reçu."}
+            ? t("list.emptySent")
+            : t("list.emptyReceived")}
         </Card>
       ) : (
         <Card className="divide-y divide-nexus-accent/10 overflow-hidden">
@@ -720,7 +742,7 @@ export function ParcelList() {
               <span className="min-w-48 flex-1 text-[13px] text-nexus-bright">
                 {parcel.items
                   .map(
-                    (item) => `${item.name} ×${number.format(item.quantity)}`,
+                    (item) => `${item.name} ×${formatNumber(item.quantity)}`,
                   )
                   .join(", ")}
                 <span className="text-nexus-muted">
@@ -745,7 +767,7 @@ export function ParcelList() {
                   <Button
                     variant="outline"
                     size="sm"
-                    aria-label={`Copier le code ${parcel.code}`}
+                    aria-label={t("list.copyCodeOf", { code: parcel.code })}
                     onClick={() => copy(parcel.code)}
                   >
                     {copied === parcel.code ? (
@@ -760,7 +782,7 @@ export function ParcelList() {
                     disabled={cancel.isPending}
                     onClick={() => cancel.mutate(parcel.code)}
                   >
-                    Annuler
+                    {t("cancelShort")}
                   </Button>
                 </span>
               ) : (
@@ -772,8 +794,7 @@ export function ParcelList() {
       )}
 
       <p className="text-xs text-nexus-muted">
-        Un colis annulé ou expiré n'a rien déplacé : ses lots sont restés chez
-        l'expéditeur. Un code ne sert qu'une fois.
+        {t("list.hint")}
       </p>
     </div>
   );

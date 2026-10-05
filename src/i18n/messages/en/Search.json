@@ -1,0 +1,20 @@
+{
+  "placeholder": "Search…",
+  "unavailable": "Search unavailable — check the API URL in Settings.",
+  "noResults": "No results.",
+  "minLength": "{count, plural, one {Type at least # character.} other {Type at least # characters.}}",
+  "idleHint": "Type to search, or capture an area of the screen with <kbd>{shortcut}</kbd> to read the text on it.",
+  "footer": "↑↓ navigate · ⏎ open · Esc close",
+  "types": {
+    "blueprint": "Blueprint",
+    "item": "Item",
+    "place": "Place",
+    "mission": "Mission",
+    "faction": "Faction",
+    "shopItem": "Listing",
+    "shop": "Shop",
+    "organization": "Organization",
+    "cargoShip": "Cargo",
+    "inventoryItem": "Inventory"
+  }
+}

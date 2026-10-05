@@ -1,0 +1,43 @@
+{
+  "title": "Friends",
+  "description": "Who is playing, and what. Everyone declares it from Nexus App or the site.",
+  "playingCount": "{count} playing",
+  "total": "{count, plural, one {# friend} other {# friends}}",
+  "empty": {
+    "title": "No friends yet",
+    "description": "Share your code or enter a friend's: you will be added to each other."
+  },
+  "playing": "Playing",
+  "playingAside": "{playing} of {total}",
+  "nobodyPlaying": "No friend is playing right now.",
+  "offline": "Not playing",
+  "code": {
+    "title": "My friend code",
+    "copy": "Copy",
+    "copied": "Copied",
+    "usage": "Single use: it disappears as soon as a friend uses it. A new code is created the next time you ask.",
+    "hint": "Generate a code and share it. It works only once.",
+    "generate": "Generate a code"
+  },
+  "add": {
+    "title": "Add a friend",
+    "codeLabel": "Friend code",
+    "submit": "Add",
+    "added": "You are now friends with {name}.",
+    "hint": "Enter the code a friend gave you. You will be added to each other."
+  },
+  "card": {
+    "noActivity": "No activity given",
+    "noSharedOrg": "No shared organization",
+    "since": "Playing since",
+    "removeLabel": "Remove {name} from your friends",
+    "removeTitle": "Remove friend"
+  },
+  "remove": {
+    "title": "Remove {name}?",
+    "description": "You will disappear from their list too. To be friends again, you will need a new code.",
+    "cancel": "Cancel",
+    "confirm": "Remove friend",
+    "body": "You will no longer see when {name} is playing."
+  }
+}

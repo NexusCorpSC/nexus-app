@@ -1,0 +1,37 @@
+{
+  "unreachable": "Can't reach {url}. Check the API URL and your connection.",
+  "httpFailed": "{method} {path} failed (HTTP {status})",
+  "contrib": {
+    "unauthenticated": "Sign in to contribute.",
+    "suspended": "Your contributions are suspended by moderation.",
+    "placeNotFound": "This place no longer exists.",
+    "noMedia": "Choose an image.",
+    "invalidMedia": "This image isn't accepted: JPEG, PNG or WebP.",
+    "tooManyPending": "You already have 5 contributions awaiting review.",
+    "fileTooLarge": "The image is too large: 4 MB at most.",
+    "uploadFailed": "The image upload failed. Try again in a moment.",
+    "tooManyUploads": "Too many images sent this hour. Try again later.",
+    "notFound": "This item no longer exists.",
+    "invalidInput": "The confirmation couldn't be read. Check the comment.",
+    "alreadyConfirmed": "You already confirmed these prices this week."
+  },
+  "friends": {
+    "invalid_code": "A friend code has 8 characters, like K7QD-92PX.",
+    "not_found": "This code does not exist or was already used. Ask for a new one.",
+    "own_code": "This is your own code: share it with a friend instead.",
+    "already_friends": "You are already friends.",
+    "too_many_attempts": "Too many wrong codes: try again in a few minutes."
+  },
+  "reports": {
+    "unauthenticated": "Sign in to report.",
+    "invalidTarget": "This can't be reported.",
+    "targetNotFound": "This no longer exists.",
+    "invalidReason": "Pick a reason.",
+    "commentRequired": "Describe the problem for “Other”.",
+    "ownContent": "You can't report your own content: suggest a fix on the site instead.",
+    "alreadyReported": "You already reported this. A moderator is on it.",
+    "dailyLimit": "Ten reports a day at most. Try again tomorrow.",
+    "busy": "A moderator is deciding this report right now. Try again in a moment.",
+    "reportingSuspended": "Three of your reports in a row were dismissed: you can't report for 7 days."
+  }
+}

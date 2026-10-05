@@ -1,0 +1,31 @@
+{
+  "illegal": "Illégale",
+  "shareable": "Partageable",
+  "blueprintCount": "{count, plural, one {# blueprint} other {# blueprints}}",
+  "list": {
+    "title": "Missions",
+    "description": "Parcourez les missions, leurs factions et les blueprints qu'elles débloquent.",
+    "searchLabel": "Rechercher une mission",
+    "searchPlaceholder": "Titre ou description…",
+    "faction": "Faction",
+    "all": "Toutes",
+    "withBlueprints": "Avec blueprints",
+    "count": "{shown} sur {total, number} {total, plural, one {mission} other {missions}}",
+    "emptyTitle": "Aucune mission trouvée",
+    "emptyDescription": "Modifiez la recherche ou changez de faction."
+  },
+  "detail": {
+    "back": "Retour aux missions",
+    "faction": "Faction",
+    "category": "Catégorie",
+    "type": "Type",
+    "reward": "Récompense",
+    "briefing": "Briefing",
+    "blueprints": "Blueprints débloqués",
+    "ownedCount": "{owned} / {total} {owned, plural, one {possédé} other {possédés}}",
+    "noBlueprints": "Cette mission ne débloque aucun blueprint.",
+    "details": "Détails",
+    "owned": "Possédé",
+    "notOwned": "Non possédé"
+  }
+}

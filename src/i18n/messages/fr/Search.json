@@ -1,0 +1,20 @@
+{
+  "placeholder": "Rechercher…",
+  "unavailable": "Recherche indisponible — vérifiez l'URL de l'API dans Paramètres.",
+  "noResults": "Aucun résultat.",
+  "minLength": "{count, plural, one {Tapez au moins # caractère.} other {Tapez au moins # caractères.}}",
+  "idleHint": "Tapez pour rechercher, ou capturez une zone de l'écran avec <kbd>{shortcut}</kbd> pour lire le texte à l'écran.",
+  "footer": "↑↓ naviguer · ⏎ ouvrir · Échap fermer",
+  "types": {
+    "blueprint": "Blueprint",
+    "item": "Objet",
+    "place": "Lieu",
+    "mission": "Mission",
+    "faction": "Faction",
+    "shopItem": "Article",
+    "shop": "Boutique",
+    "organization": "Organisation",
+    "cargoShip": "Cargo",
+    "inventoryItem": "Inventaire"
+  }
+}

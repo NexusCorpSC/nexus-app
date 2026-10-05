@@ -1,0 +1,81 @@
+{
+  "title": "Escuadra",
+  "live": "En directo",
+  "reconnecting": "Reconectando…",
+  "openPlan": "Abrir el plan de vuelo",
+  "close": "Cerrar",
+  "back": "Volver",
+  "cancel": "Cancelar",
+  "session": "Sesión…",
+  "loading": "Cargando…",
+  "renameSquad": "Renombrar la escuadra",
+  "renameRaid": "Renombrar el raid",
+  "nameLabel": "Nombre",
+  "copyCode": "Copiar el código",
+  "codePlaceholder": "CÓDIGO",
+  "view": {
+    "label": "Vista",
+    "squad": "Escuadra",
+    "raid": "Raid"
+  },
+  "switcher": {
+    "label": "Cambiar de escuadra",
+    "mine": "Mis escuadras"
+  },
+  "signedOut": {
+    "finishInBrowser": "Termina de iniciar sesión en tu navegador.",
+    "connectToUse": "Inicia sesión para crear una escuadra o unirte a una.",
+    "reopenBrowser": "Volver a abrir el navegador",
+    "signIn": "Iniciar sesión"
+  },
+  "noSquad": {
+    "intro": "Crea una escuadra y comparte su código, o introduce el que te hayan dado.",
+    "create": "Crear una escuadra",
+    "codeLabel": "Código de la escuadra",
+    "join": "Unirse"
+  },
+  "board": {
+    "announcementPlaceholder": "Anuncio a la escuadra",
+    "readyCheck": "Ready check",
+    "readyCheckHint": "Todos vuelven a «no listo» y reciben una notificación",
+    "manageRaid": "Gestionar el raid",
+    "createRaid": "Crear un raid",
+    "leave": "Salir"
+  },
+  "member": {
+    "leader": "Líder de la escuadra",
+    "lieutenant": "Teniente",
+    "role": "Rol: {label}",
+    "noRole": "Sin rol",
+    "pickRole": "Elegir un rol",
+    "ready": "Listo",
+    "notReady": "No listo",
+    "down": "Abatido",
+    "alive": "Activo",
+    "actions": "Acciones",
+    "actionsOn": "Acciones sobre {name}"
+  },
+  "menu": {
+    "position": "Posición",
+    "appointLieutenant": "Nombrar teniente",
+    "dismissLieutenant": "Retirar el rango",
+    "makeLeader": "Hacer líder",
+    "remove": "Expulsar de la escuadra"
+  },
+  "footer": {
+    "ready": "{ready}/{total} listos",
+    "down": "{count, plural, one {# abatido} other {# abatidos}}"
+  },
+  "announcement": {
+    "send": "Enviar",
+    "sendHint": "Enviar (Intro)",
+    "clickToEdit": "{text}\n\nHaz clic para editar",
+    "resend": "Reenviar la notificación a todos"
+  },
+  "notifications": {
+    "readyCheckTitle": "Ready check — {name}",
+    "readyCheckBody": "{by} pide a todos que se declaren listos.",
+    "ready": "Listo",
+    "announcementTitle": "Anuncio — {name}"
+  }
+}

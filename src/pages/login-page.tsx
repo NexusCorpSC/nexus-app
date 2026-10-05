@@ -1,4 +1,5 @@
 import { Navigate, useLocation } from "react-router-dom";
+import { useTranslations } from "use-intl";
 import { useAuth } from "@/auth/auth-context";
 import { Button, Card } from "@/components/ui";
 
@@ -8,6 +9,8 @@ import { Button, Card } from "@/components/ui";
  * `signInWithBrowser` in `src/lib/api/auth.ts`.
  */
 export default function LoginPage() {
+  const t = useTranslations("Auth.login");
+  const common = useTranslations("Common");
   const { user, signingIn, signInError, signIn, cancelSignIn } = useAuth();
   const location = useLocation();
 
@@ -23,19 +26,17 @@ export default function LoginPage() {
       <Card className="w-full max-w-md space-y-4 p-7">
         <div className="mb-2 text-center">
           <h1 className="font-display text-[28px] leading-tight font-bold text-nexus-white">
-            Connexion
+            {t("title")}
           </h1>
           <p className="mt-1 text-sm text-nexus-muted">
-            Connectez-vous pour accéder à vos réputations, votre inventaire et
-            vos organisations.
+            {t("description")}
           </p>
         </div>
 
         {signingIn ? (
           <>
             <p className="text-center text-xs leading-relaxed text-nexus-dim">
-              Terminez la connexion dans votre navigateur : Nexus App reprendra
-              la main dès que ce sera fait.
+              {t("waiting")}
             </p>
 
             <Button
@@ -45,7 +46,7 @@ export default function LoginPage() {
               className="w-full"
               onClick={() => void signIn()}
             >
-              Rouvrir le navigateur
+              {t("reopen")}
             </Button>
 
             <Button
@@ -55,14 +56,13 @@ export default function LoginPage() {
               className="w-full"
               onClick={() => void cancelSignIn()}
             >
-              Annuler
+              {common("cancel")}
             </Button>
           </>
         ) : (
           <>
             <p className="text-center text-xs leading-relaxed text-nexus-dim">
-              La connexion se fait sur Nexus Tools, dans votre navigateur. Si
-              vous y êtes déjà connecté, il n'y a rien d'autre à faire.
+              {t("intro")}
             </p>
 
             <Button
@@ -70,7 +70,7 @@ export default function LoginPage() {
               className="w-full"
               onClick={() => void signIn()}
             >
-              Se connecter avec Nexus Tools
+              {t("signIn")}
             </Button>
           </>
         )}

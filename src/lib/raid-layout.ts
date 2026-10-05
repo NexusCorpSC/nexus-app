@@ -12,6 +12,8 @@
  * nothing they do here is visible to anybody else.
  */
 
+import { translator } from "@/i18n/translate";
+
 /** What the picker cycles through. More than four would be legible on nothing. */
 export const RAID_COLUMN_CHOICES = [1, 2, 3, 4] as const;
 
@@ -55,7 +57,7 @@ export function nextColumns(columns: RaidColumns): RaidColumns {
 }
 
 export function columnsLabel(columns: RaidColumns): string {
-  return columns === 1 ? "Une colonne" : `${columns} colonnes`;
+  return translator("Raid")("columns", { count: columns });
 }
 
 type Identified = { id: string };

@@ -1,0 +1,49 @@
+{
+  "greeting": "Hola, {name}",
+  "welcome": "Bienvenido",
+  "intro": "Todo lo necesario antes de lanzar el juego, y las ventanas que conviene mantener por encima.",
+  "overlays": {
+    "title": "Superposiciones",
+    "radialHint": "En el juego, mantén <key>{shortcut}</key> para el menú radial",
+    "search": "Búsqueda",
+    "squad": "Escuadra",
+    "map": "Mapa",
+    "plan": "Plan de vuelo",
+    "notes": "Bloc de notas",
+    "cargo": "Cargo"
+  },
+  "database": {
+    "title": "Base de datos",
+    "blueprints": {
+      "title": "Blueprints",
+      "detail": "Recetas y posesión"
+    },
+    "items": {
+      "title": "Objetos",
+      "detail": "Dónde comprarlos y a qué precio"
+    },
+    "places": {
+      "title": "Lugares",
+      "detail": "Estaciones, ciudades, mapas"
+    },
+    "missions": {
+      "title": "Misiones",
+      "detail": "Recompensas y blueprints"
+    }
+  },
+  "squad": {
+    "title": "Escuadra",
+    "inviteCode": "Código de invitación <mono>{code}</mono>",
+    "ready": "{ready}/{total} listos",
+    "signedOut": "Inicia sesión para encontrar tu escuadra.",
+    "none": "No estás en ninguna escuadra. Crea una o únete a una desde la superposición.",
+    "openOverlay": "Abrir la superposición",
+    "plan": "Plan de vuelo"
+  },
+  "notes": {
+    "title": "Bloc de notas",
+    "saved": "Guardado {date}",
+    "empty": "Nada anotado por ahora.",
+    "open": "Abrir el bloc de notas"
+  }
+}

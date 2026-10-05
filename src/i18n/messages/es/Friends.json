@@ -1,0 +1,43 @@
+{
+  "title": "Amigos",
+  "description": "Quién está jugando, y a qué. Cada uno lo declara desde Nexus App o el sitio.",
+  "playingCount": "{count} jugando",
+  "total": "{count, plural, one {# amigo} other {# amigos}}",
+  "empty": {
+    "title": "Todavía no tienes amigos",
+    "description": "Comparte tu código o introduce el de un amigo: os añadiréis el uno al otro."
+  },
+  "playing": "Jugando",
+  "playingAside": "{playing} de {total}",
+  "nobodyPlaying": "Ningún amigo está jugando ahora mismo.",
+  "offline": "No están jugando",
+  "code": {
+    "title": "Mi código de amigo",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "usage": "Un solo uso: desaparece en cuanto un amigo lo utiliza. Se creará un código nuevo la próxima vez que lo pidas.",
+    "hint": "Genera un código y compártelo. Solo sirve una vez.",
+    "generate": "Generar un código"
+  },
+  "add": {
+    "title": "Añadir un amigo",
+    "codeLabel": "Código de amigo",
+    "submit": "Añadir",
+    "added": "Ahora eres amigo de {name}.",
+    "hint": "Introduce el código que te ha pasado un amigo. Os añadiréis el uno al otro."
+  },
+  "card": {
+    "noActivity": "Sin actividad indicada",
+    "noSharedOrg": "Ninguna organización en común",
+    "since": "Jugando desde",
+    "removeLabel": "Quitar a {name} de tus amigos",
+    "removeTitle": "Quitar de amigos"
+  },
+  "remove": {
+    "title": "¿Quitar a {name}?",
+    "description": "Tú también desaparecerás de su lista. Para volver a ser amigos, hará falta un código nuevo.",
+    "cancel": "Cancelar",
+    "confirm": "Quitar de amigos",
+    "body": "Ya no verás cuándo {name} está jugando."
+  }
+}

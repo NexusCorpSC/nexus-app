@@ -1,0 +1,36 @@
+{
+  "title": "Bloc de notas",
+  "descriptionOnline": "Tus notas en línea, compartidas con el sitio Nexus Tools.",
+  "descriptionLocal": "Notas guardadas en este ordenador. Inicia sesión para consultarlas en el sitio y en tus otros dispositivos.",
+  "showOverlay": "Mostrar sobre el juego",
+  "localBadge": "local",
+  "close": "Cerrar",
+  "placeholder": "Rutas de minería, precios, planes de misión…",
+  "save": "Guardar",
+  "status": {
+    "savedAt": "Guardado {date}",
+    "unsaved": "Cambios sin guardar",
+    "saving": "Guardando…",
+    "error": "Error al guardar",
+    "saveFailed": "No se puede guardar por el momento."
+  },
+  "workspace": {
+    "modeLabel": "Modo del bloc de notas",
+    "edit": "Edición",
+    "preview": "Vista previa",
+    "hintRaw": "Markdown sin formato",
+    "hintReadOnly": "Tablas, casillas, imágenes o HTML: editables en Edición",
+    "hintEditable": "Haz clic en el texto para editarlo"
+  },
+  "toolbar": {
+    "bold": "Negrita",
+    "italic": "Cursiva",
+    "heading": "Título",
+    "list": "Lista",
+    "link": "Enlace",
+    "removeLink": "Quitar el enlace",
+    "linkPlaceholder": "https://… y luego Intro",
+    "linkAddress": "Dirección del enlace",
+    "openLinkHint": "Ctrl + clic para abrir el enlace"
+  }
+}

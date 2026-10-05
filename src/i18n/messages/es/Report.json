@@ -1,0 +1,51 @@
+{
+  "button": "Reportar",
+  "title": {
+    "place": "Reportar este lugar",
+    "placeMedia": "Reportar esta imagen",
+    "plan": "Reportar este plano",
+    "item": "Reportar este objeto",
+    "org": "Reportar esta organización"
+  },
+  "subtitle": "{name} · un moderador revisa cada reporte",
+  "question": "¿Cuál es el problema?",
+  "comment": "Especifica (opcional salvo para «Otro»)",
+  "commentRequired": "Especifica (obligatorio para «Otro»)",
+  "send": "Enviar el reporte",
+  "doneTitle": "Gracias, queda anotado",
+  "doneBody": "La decisión aparecerá en Mis contribuciones, en la web. Si el reporte se acepta, te dará {points, plural, one {# punto} other {# puntos}}.",
+  "reasons": {
+    "wrong": {
+      "label": "Información falsa",
+      "hint": "Un servicio, un nombre, un valor o un elemento padre incorrecto"
+    },
+    "outdated": {
+      "label": "Obsoleto desde un parche",
+      "hint": "Era cierto, pero ya no lo es"
+    },
+    "duplicate": {
+      "label": "Duplicado",
+      "hint": "Este elemento ya existe con otro nombre"
+    },
+    "media": {
+      "label": "Imagen fuera de tema o de mala calidad",
+      "hint": "Fuera de tema, ilegible, interfaz personal visible"
+    },
+    "offensive": {
+      "label": "Contenido ofensivo",
+      "hint": "Insultos, discurso de odio"
+    },
+    "copyright": {
+      "label": "Derechos de autor",
+      "hint": "Copia de un sitio o de una imagen sin autorización"
+    },
+    "spam": {
+      "label": "Spam",
+      "hint": "Publicidad, enlaces sin relación"
+    },
+    "other": {
+      "label": "Otro",
+      "hint": "Explícalo en el campo de abajo"
+    }
+  }
+}

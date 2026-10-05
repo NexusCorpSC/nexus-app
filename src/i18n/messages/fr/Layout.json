@@ -1,0 +1,42 @@
+{
+  "search": "Rechercher…",
+  "mainNav": "Navigation principale",
+  "groups": {
+    "database": "Base de données",
+    "mySpace": "Mon espace",
+    "inGame": "En jeu"
+  },
+  "nav": {
+    "home": "Accueil",
+    "blueprints": "Blueprints",
+    "items": "Objets",
+    "places": "Lieux",
+    "missions": "Missions",
+    "factions": "Factions",
+    "inventory": "Inventaire",
+    "reputations": "Réputations",
+    "friends": "Amis",
+    "notes": "Bloc-notes",
+    "cargo": "Cargo",
+    "orgs": "Organisations"
+  },
+  "friendsPlaying": "{count} en jeu",
+  "overlays": {
+    "squad": "Escouade",
+    "map": "Carte"
+  },
+  "showOverlay": "Afficher la superposition {name}",
+  "sessionLoading": "Session…",
+  "signIn": "Se connecter",
+  "settings": "Paramètres",
+  "checkingSession": "Vérification de la session…",
+  "session": {
+    "playing": "En jeu",
+    "playingActivity": "En jeu · {activity}",
+    "off": "Hors jeu",
+    "declare": "Déclarer ce que vous faites en jeu",
+    "title": "Ma session de jeu",
+    "hint": "Vos amis et vos organisations voient que vous jouez, ou quand vous comptez jouer, et à quoi.",
+    "signOut": "Se déconnecter"
+  }
+}

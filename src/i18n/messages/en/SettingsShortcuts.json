@@ -1,0 +1,58 @@
+{
+  "title": "Keyboard shortcuts",
+  "description": "Active even while the app is minimized. Click a combination, then press the new one.",
+  "applied": "Applied",
+  "defaults": "Defaults",
+  "apply": "Apply",
+  "windows": "Windows",
+  "inGame": "In game",
+  "applyError": "The shortcuts could not be applied. They will be at the next startup.",
+  "rejected": "These combinations could not be taken. They stay saved but are inactive: pick other ones.",
+  "rejection": "{label} — {accelerator}: {reason}",
+  "rows": {
+    "search": {
+      "label": "Search",
+      "hint": "Quick search as an overlay."
+    },
+    "capture": {
+      "label": "Screen capture",
+      "hint": "Select an area of the screen to capture."
+    },
+    "notes": {
+      "label": "Scratch pad",
+      "hint": "Scratch pad as an overlay."
+    },
+    "cargo": {
+      "label": "Cargo sheet",
+      "hint": "Cargo sheet as an overlay."
+    },
+    "squad": {
+      "label": "Squad",
+      "hint": "Squad as an overlay."
+    },
+    "plan": {
+      "label": "Flight plan",
+      "hint": "Flight plan as an overlay."
+    },
+    "map": {
+      "label": "Map",
+      "hint": "The map pinned from a place, or picked in the window.",
+      "detail": "Shows the map pinned from a place's page, or picked in the window itself."
+    },
+    "radial": {
+      "label": "Hold the quick radial menu",
+      "hint": "Hold, aim at an action with the mouse, release. Esc cancels.",
+      "detail": "Hold the combination to show the menu in the middle of the screen, flick the mouse toward an action, then release to run it. Releasing without moving, or Esc, cancels. READY and Down/Up only appear in a squad; lock and screen capture, always."
+    },
+    "lock": {
+      "label": "Lock",
+      "hint": "Clicks go through to the game; the radial menu stays usable.",
+      "detail": "Locks every overlay on screen — clicks go through to the game — or, if one is already locked, unlocks them all. The radial menu is not affected: it stays usable."
+    },
+    "opacity": {
+      "label": "Opacity",
+      "hint": "Clears the overlays, the game seen through, or brings them back.",
+      "detail": "Clears every overlay at once — the game seen through — or gives them back their panel. Each one also has the button, which goes through the shaded background in between."
+    }
+  }
+}

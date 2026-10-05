@@ -1,0 +1,23 @@
+{
+  "labels": {
+    "search": "Quick search",
+    "capture": "Screen capture",
+    "notes": "Scratch pad",
+    "cargo": "Cargo sheet",
+    "squad": "Squad",
+    "plan": "Flight plan",
+    "map": "Map",
+    "opacity": "Overlay opacity",
+    "lock": "Overlay lock",
+    "radial": "Quick radial menu"
+  },
+  "keys": {
+    "shift": "Shift"
+  },
+  "rejections": {
+    "duplicate": "already used by another Nexus shortcut",
+    "unavailable": "global shortcuts are unavailable on this system",
+    "invalid": "invalid combination: {error}",
+    "refused": "refused by the system ({error})"
+  }
+}

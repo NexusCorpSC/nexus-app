@@ -1,0 +1,41 @@
+{
+  "manage": "Gérer le raid",
+  "create": "Créer un raid",
+  "announcement": "Annonce à tout le raid",
+  "announcementTo": "Annonce à {name}",
+  "readyCheck": "Ready check",
+  "readyCheckHint": "Tout le raid repasse « non prêt » et reçoit une notification",
+  "columns": "{count, plural, one {Une colonne} other {# colonnes}}",
+  "columnsCycle": "{current} — passer à {next}",
+  "squad": {
+    "fold": "Replier {name}",
+    "unfold": "Déplier {name}",
+    "lead": "Escouade meneuse du raid",
+    "pip": "{name} — {state, select, down {éliminé} ready {prêt} other {pas prêt}}",
+    "move": "Déplacer {name}",
+    "earlier": "Avancer {name}",
+    "later": "Reculer {name}"
+  },
+  "sheet": {
+    "intro": "Un raid regroupe plusieurs escouades sous une même annonce. Chacune garde son code, son chef et ses rôles.",
+    "linked": "Escouades liées",
+    "summary": "{squads} · {players, plural, one {# joueur} other {# joueurs}}",
+    "lead": "Escouade meneuse",
+    "players": "{count, plural, one {# joueur} other {# joueurs}}",
+    "switchTo": "Passer sur {name}",
+    "unlink": "Retirer {name} du raid",
+    "full": "Un raid tient au plus {max} escouades",
+    "newSquadHint": "Ouvrir une escouade de plus dans le raid",
+    "newSquad": "Nouvelle escouade",
+    "code": "Code du raid : <value>{code}</value>",
+    "leave": "Quitter le raid",
+    "codeLabel": "Code du raid",
+    "link": "Lier mon escouade",
+    "onlyCommanders": "Seuls le chef de l'escouade et ses lieutenants peuvent l'emmener dans un raid."
+  },
+  "notifications": {
+    "readyCheckTitle": "Ready check du raid — {name}",
+    "readyCheckBody": "{by} demande à tout le raid de se déclarer prêt.",
+    "announcementTitle": "Annonce du raid — {name}"
+  }
+}

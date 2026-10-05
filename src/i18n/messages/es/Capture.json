@@ -1,0 +1,7 @@
+{
+  "hint": "Traza una zona para leer su texto · Esc para cancelar",
+  "reading": "Leyendo el texto…",
+  "encodeFailed": "No se pudo codificar la imagen.",
+  "unreadable": "Esta imagen no se puede leer.",
+  "tooLarge": "La imagen sigue siendo demasiado pesada, incluso reducida."
+}

@@ -1,0 +1,23 @@
+{
+  "labels": {
+    "search": "Búsqueda rápida",
+    "capture": "Captura de zona",
+    "notes": "Bloc de notas",
+    "cargo": "Hoja de cargo",
+    "squad": "Escuadra",
+    "plan": "Plan de vuelo",
+    "map": "Mapa",
+    "opacity": "Opacidad de las superposiciones",
+    "lock": "Bloqueo de las superposiciones",
+    "radial": "Menú radial rápido"
+  },
+  "keys": {
+    "shift": "Mayús"
+  },
+  "rejections": {
+    "duplicate": "ya la usa otro atajo de Nexus",
+    "unavailable": "los atajos globales no están disponibles en este sistema",
+    "invalid": "combinación no válida: {error}",
+    "refused": "rechazada por el sistema ({error})"
+  }
+}

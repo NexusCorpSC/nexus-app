@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { listItemFacets, listItems } from "@/lib/api/items";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -8,7 +9,7 @@ import {
   useUrlFilters,
 } from "@/hooks/use-url-filters";
 import { ItemCard } from "@/components/item-card";
-import { ITEM_KIND_LABELS, ITEM_KINDS, type ItemKind } from "@/types/nexus";
+import { ITEM_KINDS, type ItemKind } from "@/types/nexus";
 import {
   Chip,
   EmptyState,
@@ -27,6 +28,8 @@ import {
  * the API takes; the values they offer come from `/api/items/facets`.
  */
 export default function ItemsPage() {
+  const t = useTranslations("Items.list");
+  const tKinds = useTranslations("Items.kinds");
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [kind, setKind] = useState<ItemKind | "">(
@@ -80,22 +83,22 @@ export default function ItemsPage() {
   return (
     <>
       <PageHeader
-        title="Objets"
-        description="Tout ce qui existe en jeu : objets, armes, véhicules et ressources."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Toolbar className="mb-3">
         <SearchField
-          label="Rechercher un objet"
+          label={t("searchLabel")}
           value={search}
-          placeholder="Nom, fabricant, variante…"
+          placeholder={t("searchPlaceholder")}
           onChange={(event) =>
             updateFilter(() => setSearch(event.target.value))
           }
         />
 
         <ToolbarSelect
-          label="Catégorie"
+          label={t("category")}
           value={category}
           onChange={(event) =>
             updateFilter(() => {
@@ -104,7 +107,7 @@ export default function ItemsPage() {
             })
           }
         >
-          <option value="">Toutes</option>
+          <option value="">{t("all")}</option>
           {facetsQuery.data?.categories.map((c) => (
             <option key={c.category} value={c.category}>
               {c.category}
@@ -114,13 +117,13 @@ export default function ItemsPage() {
 
         {subcategories.length ? (
           <ToolbarSelect
-            label="Sous-catégorie"
+            label={t("subcategory")}
             value={subcategory}
             onChange={(event) =>
               updateFilter(() => setSubcategory(event.target.value))
             }
           >
-            <option value="">Toutes</option>
+            <option value="">{t("all")}</option>
             {subcategories.map((sub) => (
               <option key={sub} value={sub}>
                 {sub}
@@ -130,14 +133,14 @@ export default function ItemsPage() {
         ) : null}
 
         <ToolbarSelect
-          label="Fabricant"
+          label={t("manufacturer")}
           value={manufacturer}
           disabled={!facetsQuery.data?.manufacturers.length}
           onChange={(event) =>
             updateFilter(() => setManufacturer(event.target.value))
           }
         >
-          <option value="">Tous</option>
+          <option value="">{t("allMasculine")}</option>
           {facetsQuery.data?.manufacturers.map((name) => (
             <option key={name} value={name}>
               {name}
@@ -151,7 +154,7 @@ export default function ItemsPage() {
           active={kind === ""}
           onClick={() => updateFilter(() => setKind(""))}
         >
-          Tous
+          {t("allKinds")}
         </Chip>
         {ITEM_KINDS.map((value) => (
           <Chip
@@ -159,7 +162,7 @@ export default function ItemsPage() {
             active={kind === value}
             onClick={() => updateFilter(() => setKind(value))}
           >
-            {ITEM_KIND_LABELS[value]}
+            {tKinds(value)}
           </Chip>
         ))}
       </div>
@@ -173,14 +176,13 @@ export default function ItemsPage() {
         />
       ) : itemsQuery.data.items.length === 0 ? (
         <EmptyState
-          title="Aucun objet trouvé"
-          description="Essayez un autre terme de recherche ou élargissez les filtres."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <>
           <p className="mb-3 text-xs text-nexus-dim">
-            {itemsQuery.data.total} résultat
-            {itemsQuery.data.total > 1 ? "s" : ""}
+            {t("results", { count: itemsQuery.data.total })}
           </p>
 
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4">

@@ -2,6 +2,8 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Download, Inbox, Package, Plus, Send, Table2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useTranslations } from "use-intl";
+import { getLocale } from "@/i18n/locale";
 import {
   adjustInventoryItem,
   createInventoryItem,
@@ -58,9 +60,14 @@ import type {
   Parcel,
 } from "@/types/nexus";
 
-const number = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 3 });
+function formatNumber(value: number) {
+  return new Intl.NumberFormat(getLocale(), {
+    maximumFractionDigits: 3,
+  }).format(value);
+}
 
 export default function InventoryPage() {
+  const t = useTranslations("Inventory");
   const queryClient = useQueryClient();
 
   const params = useInitialParams();
@@ -137,14 +144,14 @@ export default function InventoryPage() {
       if (item.location) byId.set(item.location.id, item.location);
     }
     return [...byId.values()].sort((a, b) =>
-      a.name.localeCompare(b.name, "fr"),
+      a.name.localeCompare(b.name, getLocale()),
     );
   }, [itemsQuery.data]);
 
   const heldNames = useMemo(
     () =>
       [...new Set((itemsQuery.data ?? []).map((item) => item.name))].sort(
-        (a, b) => a.localeCompare(b, "fr"),
+        (a, b) => a.localeCompare(b, getLocale()),
       ),
     [itemsQuery.data],
   );
@@ -197,18 +204,18 @@ export default function InventoryPage() {
   return (
     <>
       <PageHeader
-        title="Inventaire"
-        description="Vos ressources, par lieu de stockage."
+        title={t("title")}
+        description={t("description")}
         actions={
           <>
             <Button variant="outline" onClick={() => setReceiveOpen(true)}>
               <Download className="size-4" />
-              Recevoir un colis
+              {t("receiveParcel")}
             </Button>
             <Link
               to="/inventory/parcels"
-              title="Mes colis"
-              aria-label="Mes colis"
+              title={t("parcelsLink")}
+              aria-label={t("parcelsLink")}
               className="inline-flex h-9.5 w-9.5 items-center justify-center rounded-lg text-nexus-accent/80 transition-colors hover:bg-nexus-accent/10 hover:text-nexus-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
             >
               <Inbox className="size-4.5" />
@@ -218,14 +225,14 @@ export default function InventoryPage() {
               onClick={() => setShowForm((open) => !open)}
             >
               <Plus className="size-4" />
-              Ajouter
+              {t("add")}
             </Button>
             <Link
               to="/inventory/quick-add"
               className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent bg-nexus-accent px-4 text-[13px] font-semibold text-nexus-abyss transition-colors hover:bg-nexus-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
             >
               <Table2 className="size-4" />
-              Ajout en masse
+              {t("quickAdd")}
             </Link>
           </>
         }
@@ -236,7 +243,7 @@ export default function InventoryPage() {
           <p className="text-xs text-red-200">
             {mutationError instanceof Error
               ? mutationError.message
-              : "L'opération a échoué."}
+              : t("errorGeneric")}
           </p>
         </Card>
       ) : null}
@@ -253,20 +260,20 @@ export default function InventoryPage() {
 
       <Toolbar className="mb-3">
         <SearchField
-          label="Rechercher une ressource"
+          label={t("searchLabel")}
           value={search}
-          placeholder="Nom de la ressource…"
+          placeholder={t("searchPlaceholder")}
           onChange={(event) => setSearch(event.target.value)}
         />
         <QualityFilter value={minQuality} onChange={setMinQuality} />
         <ToolbarSelect
-          label="Tri"
+          label={t("sortLabel")}
           value={sort}
           onChange={(event) => setSort(event.target.value as InventorySort)}
         >
           {INVENTORY_SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(`sort.${option.value}`)}
             </option>
           ))}
         </ToolbarSelect>
@@ -275,14 +282,14 @@ export default function InventoryPage() {
       {totalCount > 0 ? (
         <div
           role="group"
-          aria-label="Filtrer par lieu"
+          aria-label={t("filterByLocation")}
           className="mb-6 flex flex-wrap gap-2"
         >
           <Chip
             active={activeLocation === ""}
             onClick={() => setLocationFilter("")}
           >
-            Tous · {totalCount}
+            {t("filterAll", { count: totalCount })}
           </Chip>
           {sections.map((section) => (
             <Chip
@@ -308,13 +315,13 @@ export default function InventoryPage() {
           ) : visibleSections.length === 0 ? (
             query || quality ? (
               <EmptyState
-                title="Aucune ressource trouvée"
-                description="Essayez un autre nom, une autre qualité ou un autre lieu."
+                title={t("noResultsTitle")}
+                description={t("noResultsDescription")}
               />
             ) : (
               <EmptyState
-                title="Inventaire vide"
-                description="Ajoutez une première ressource pour la retrouver depuis le bureau."
+                title={t("emptyTitle")}
+                description={t("emptyDescription")}
               />
             )
           ) : (
@@ -326,26 +333,38 @@ export default function InventoryPage() {
                   {lot.reserved !== undefined ? (
                     <span
                       className="flex items-center gap-1 text-xs text-amber-300"
-                      title={`${number.format(toDisplayQty(lot.reserved, lot.unit))} réservés dans un colis en attente`}
+                      title={t("reservedInParcel", {
+                        quantity: formatNumber(
+                          toDisplayQty(lot.reserved, lot.unit),
+                        ),
+                      })}
                     >
                       <Send className="size-3.5" aria-hidden />
                       <span className="sr-only">
-                        {number.format(toDisplayQty(lot.reserved, lot.unit))}{" "}
-                        réservés dans un colis en attente
+                        {t("reservedInParcel", {
+                          quantity: formatNumber(
+                            toDisplayQty(lot.reserved, lot.unit),
+                          ),
+                        })}
                       </span>
                     </span>
                   ) : null}
                   {packaged.has(lot.id) ? (
                     <span
                       className="flex items-center gap-1 text-xs text-nexus-accent"
-                      title={`${number.format(toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit))} dans le colis`}
+                      title={t("inPackage", {
+                        quantity: formatNumber(
+                          toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit),
+                        ),
+                      })}
                     >
                       <Package className="size-3.5" aria-hidden />
                       <span className="sr-only">
-                        {number.format(
-                          toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit),
-                        )}{" "}
-                        dans le colis
+                        {t("inPackage", {
+                          quantity: formatNumber(
+                            toDisplayQty(packaged.get(lot.id) ?? 0, lot.unit),
+                          ),
+                        })}
                       </span>
                     </span>
                   ) : null}
@@ -399,13 +418,19 @@ export default function InventoryPage() {
                     />
                     <AdjustQuantityButton
                       mode="add"
-                      label="Ajouter au colis"
+                      label={t("packageAdd")}
                       icon={Package}
                       max={available}
                       maxMessage={
                         active.reserved !== undefined
-                          ? `Seuls ${number.format(available)} sont disponibles : le reste est réservé.`
-                          : `Au plus ${number.format(toDisplayQty(active.quantity, active.unit))}`
+                          ? t("exceedsAvailable", {
+                              available: formatNumber(available),
+                            })
+                          : t("adjust.atMost", {
+                              max: formatNumber(
+                                toDisplayQty(active.quantity, active.unit),
+                              ),
+                            })
                       }
                       disabled={available <= 0}
                       onSubmit={(amount) =>
@@ -466,6 +491,7 @@ function NewItemForm({
   onCancel: () => void;
   onSubmit: (input: InventoryItemInput) => void;
 }) {
+  const t = useTranslations("Inventory");
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unit, setUnit] = useState("");
@@ -495,22 +521,22 @@ function NewItemForm({
   return (
     <Card className="mb-6 p-5">
       <h2 className="mb-4 text-sm font-semibold text-nexus-bright">
-        Nouvelle ressource
+        {t("form.title")}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Field label="Nom" className="sm:col-span-2">
+          <Field label={t("form.name")} className="sm:col-span-2">
             <ItemNameCombobox
               value={name}
               required
               held={heldNames}
-              placeholder="Titanium…"
+              placeholder={t("form.namePlaceholder")}
               onChange={setName}
               className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </Field>
-          <Field label="Quantité">
+          <Field label={t("form.quantity")}>
             <Input
               type="number"
               min="0"
@@ -520,14 +546,14 @@ function NewItemForm({
               onChange={(event) => setQuantity(event.target.value)}
             />
           </Field>
-          <Field label="Unité">
+          <Field label={t("form.unit")}>
             <Input
               value={unit}
               placeholder="SCU"
               onChange={(event) => setUnit(event.target.value)}
             />
           </Field>
-          <Field label="Qualité">
+          <Field label={t("form.quality")}>
             <Input
               type="number"
               min="0"
@@ -536,7 +562,7 @@ function NewItemForm({
               onChange={(event) => setQuality(event.target.value)}
             />
           </Field>
-          <Field label="Lieu" className="sm:col-span-2">
+          <Field label={t("form.location")} className="sm:col-span-2">
             <LocationCombobox
               value={location}
               onChange={(picked) => {
@@ -544,7 +570,7 @@ function NewItemForm({
                 if (picked) setLocationMissing(false);
               }}
               preferred={held}
-              placeholder="Rechercher un lieu…"
+              placeholder={t("form.locationPlaceholder")}
               invalid={locationMissing}
               className={cn(
                 "w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none",
@@ -553,7 +579,7 @@ function NewItemForm({
             />
             {locationMissing ? (
               <span className="block text-xs text-red-300">
-                Choisissez ou créez un lieu.
+                {t("form.locationMissing")}
               </span>
             ) : null}
           </Field>
@@ -564,16 +590,16 @@ function NewItemForm({
               onChange={(event) => setOrgVisible(event.target.checked)}
               className="h-4 w-4 rounded border-nexus-accent/30 bg-nexus-abyss accent-nexus-accent"
             />
-            Visible par l'organisation
+            {t("form.orgVisible")}
           </label>
         </div>
 
         <div className="flex gap-2">
           <Button type="submit" size="sm" disabled={pending}>
-            {pending ? "Enregistrement…" : "Enregistrer"}
+            {pending ? t("form.saving") : t("form.save")}
           </Button>
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
-            Annuler
+            {t("form.cancel")}
           </Button>
         </div>
       </form>

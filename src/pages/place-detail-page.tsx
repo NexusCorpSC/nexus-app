@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ExternalLink, Map as MapIcon, Pin } from "lucide-react";
 import { getPlace } from "@/lib/api/places";
@@ -14,11 +15,7 @@ import {
 import { getApiBaseUrl } from "@/lib/settings";
 import { MapLegend, MapView } from "@/components/place/map-view";
 import { PlaceCard, PlaceTypeBadge } from "@/components/place-card";
-import {
-  PLACE_SERVICE_LABELS,
-  type PlaceDetails,
-  type PlacePlan,
-} from "@/types/nexus";
+import { type PlaceDetails, type PlacePlan } from "@/types/nexus";
 import { ReportButton } from "@/components/report-button";
 import { AddMediaButton } from "@/components/place/add-media-button";
 import { useAuth } from "@/auth/auth-context";
@@ -40,6 +37,7 @@ import {
  * déjà le plan de vol d'une escouade. Voir `PlacePlan` dans `types/nexus.ts`.
  */
 export default function PlaceDetailPage() {
+  const t = useTranslations("Places");
   const { slug = "" } = useParams();
   const { user } = useAuth();
 
@@ -59,7 +57,7 @@ export default function PlaceDetailPage() {
   if (placeQuery.isError) {
     return (
       <>
-        <BackLink to="/places">Retour aux lieux</BackLink>
+        <BackLink to="/places">{t("detail.back")}</BackLink>
         <ErrorState
           error={placeQuery.error}
           onRetry={() => void placeQuery.refetch()}
@@ -74,7 +72,7 @@ export default function PlaceDetailPage() {
 
   return (
     <>
-      <BackLink to="/places">Retour aux lieux</BackLink>
+      <BackLink to="/places">{t("detail.back")}</BackLink>
 
       <PageHeader
         title={place.name}
@@ -89,7 +87,7 @@ export default function PlaceDetailPage() {
               onClick={() => void openOnWeb()}
             >
               <ExternalLink className="h-3.5 w-3.5" />
-              Ouvrir sur le web
+              {t("detail.openOnWeb")}
             </Button>
           </>
         }
@@ -102,7 +100,7 @@ export default function PlaceDetailPage() {
           <HeroImage place={place} />
 
           {place.description ? (
-            <Section title="Description">
+            <Section title={t("detail.description")}>
               <p className="whitespace-pre-line text-sm leading-relaxed text-nexus-muted">
                 {place.description}
               </p>
@@ -113,7 +111,7 @@ export default function PlaceDetailPage() {
 
           {place.children.length > 0 ? (
             <Section
-              title="Ce qu'il contient"
+              title={t("detail.contents")}
               aside={`${place.children.length}`}
             >
               <div className="grid gap-2 sm:grid-cols-2">
@@ -125,7 +123,7 @@ export default function PlaceDetailPage() {
           ) : null}
 
           {place.shops.length > 0 ? (
-            <Section title="Magasins" aside={`${place.shops.length}`}>
+            <Section title={t("detail.shops")} aside={`${place.shops.length}`}>
               {/* Tout le sous-arbre, pas seulement les enfants directs : les
                   magasins de Lorville se tiennent dans ses quartiers. */}
               <div className="grid gap-2 sm:grid-cols-2">
@@ -138,27 +136,27 @@ export default function PlaceDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <Section title="Fiche">
+          <Section title={t("detail.sheet")}>
             <dl className="divide-y divide-nexus-accent/8 text-sm">
-              <Row label="Type">
+              <Row label={t("detail.type")}>
                 <PlaceTypeBadge type={place.type} />
               </Row>
               {place.systemName ? (
-                <Row label="Système">{place.systemName}</Row>
+                <Row label={t("detail.system")}>{place.systemName}</Row>
               ) : null}
               {place.bodyName ? (
-                <Row label="Corps">{place.bodyName}</Row>
+                <Row label={t("detail.body")}>{place.bodyName}</Row>
               ) : null}
               {place.parentName ? (
-                <Row label="Dans">{place.parentName}</Row>
+                <Row label={t("detail.inside")}>{place.parentName}</Row>
               ) : null}
             </dl>
           </Section>
 
-          <Section title="Services" aside={services.length ? undefined : "—"}>
+          <Section title={t("detail.services")} aside={services.length ? undefined : "—"}>
             {services.length === 0 ? (
               <p className="text-xs text-nexus-dim">
-                Aucun service relevé pour l'instant.
+                {t("detail.noServices")}
               </p>
             ) : (
               <ul className="flex flex-wrap gap-1.5">
@@ -167,7 +165,7 @@ export default function PlaceDetailPage() {
                     key={service}
                     className="rounded-full bg-nexus-accent/10 px-2.5 py-1 text-xs text-nexus-bright"
                   >
-                    {PLACE_SERVICE_LABELS[service]}
+                    {t(`services.${service}`)}
                   </li>
                 ))}
               </ul>
@@ -231,6 +229,7 @@ function MapsSection({
   place: PlaceDetails;
   plans: PlacePlan[];
 }) {
+  const t = useTranslations("Places");
   const [activeId, setActiveId] = useState<string | null>(plans[0]?.id ?? null);
   const [pinned, setPinned] = useState<string | null>(null);
 
@@ -256,10 +255,8 @@ function MapsSection({
 
   if (plans.length === 0) {
     return (
-      <Section title="Cartes">
-        <p className="text-xs text-nexus-dim">
-          Ce lieu n'a pas encore été relevé.
-        </p>
+      <Section title={t("detail.maps")}>
+        <p className="text-xs text-nexus-dim">{t("detail.notSurveyed")}</p>
       </Section>
     );
   }
@@ -269,7 +266,7 @@ function MapsSection({
 
   return (
     <Section
-      title="Cartes"
+      title={t("detail.maps")}
       aside={plans.length > 1 ? `${plans.length}` : undefined}
     >
       {plans.length > 1 ? (
@@ -294,7 +291,7 @@ function MapsSection({
 
       {active.borrowedFrom ? (
         <p className="mt-2 text-xs text-nexus-dim">
-          Carte empruntée à {active.borrowedFrom.name}.
+          {t("detail.borrowed", { name: active.borrowedFrom.name })}
         </p>
       ) : null}
 
@@ -315,12 +312,12 @@ function MapsSection({
           {isPinned ? (
             <>
               <Pin className="h-3.5 w-3.5" />
-              Retirer de l'overlay
+              {t("detail.unpin")}
             </>
           ) : (
             <>
               <MapIcon className="h-3.5 w-3.5" />
-              Afficher dans l'overlay
+              {t("detail.pin")}
             </>
           )}
         </Button>

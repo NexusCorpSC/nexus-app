@@ -1,0 +1,26 @@
+{
+  "loading": "Chargement…",
+  "error": "Une erreur est survenue.",
+  "retry": "Réessayer",
+  "close": "Fermer",
+  "cancel": "Annuler",
+  "send": "Envoyer",
+  "sending": "Envoi…",
+  "back": "Retour",
+  "sendFailed": "L'envoi a échoué.",
+  "operationFailed": "L'opération a échoué.",
+  "pagination": {
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page {page} / {total}"
+  },
+  "view": {
+    "label": "Affichage",
+    "grid": "Grille",
+    "list": "Liste"
+  },
+  "shortcutInput": {
+    "recording": "Appuyez sur une combinaison…",
+    "missingModifier": "Ajoutez au moins un modificateur : Ctrl, Alt ou Maj."
+  }
+}

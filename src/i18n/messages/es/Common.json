@@ -1,0 +1,26 @@
+{
+  "loading": "Cargando…",
+  "error": "Se ha producido un error.",
+  "retry": "Reintentar",
+  "close": "Cerrar",
+  "cancel": "Cancelar",
+  "send": "Enviar",
+  "sending": "Enviando…",
+  "back": "Volver",
+  "sendFailed": "El envío ha fallado.",
+  "operationFailed": "La operación ha fallado.",
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página {page} / {total}"
+  },
+  "view": {
+    "label": "Vista",
+    "grid": "Cuadrícula",
+    "list": "Lista"
+  },
+  "shortcutInput": {
+    "recording": "Pulsa una combinación…",
+    "missingModifier": "Añade al menos un modificador: Ctrl, Alt o Mayús."
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { translator } from "@/i18n/translate";
 import { getMyContrib } from "@/lib/api/contrib";
 import { notify, type NotificationInput } from "@/lib/notifications";
 import {
@@ -15,37 +16,41 @@ const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const MAX_TOASTS = 3;
 
 function toNotification(event: ContribEvent): NotificationInput {
+  const t = translator("Updates.contrib");
   switch (event.type) {
     case "published":
       return {
         kind: "success",
-        title: "Contribution publiée",
+        title: t("published"),
         body:
           event.points > 0
-            ? `${event.name} · +${event.points} points`
+            ? t("publishedBody", { name: event.name, points: event.points })
             : event.name,
         route: "/settings?section=account",
       };
     case "changesRequested":
       return {
         kind: "warning",
-        title: "Contribution à corriger",
+        title: t("changesRequested"),
         body: event.message
-          ? `${event.name} : « ${event.message} »`
+          ? t("changesRequestedBody", {
+              name: event.name,
+              message: event.message,
+            })
           : event.name,
         route: "/settings?section=account",
       };
     case "achievement":
       return {
         kind: "success",
-        title: "Succès débloqué",
+        title: t("achievement"),
         body: event.title,
         route: "/settings?section=account",
       };
     case "level":
       return {
         kind: "success",
-        title: "Nouveau niveau",
+        title: t("level"),
         body: event.title,
         route: "/settings?section=account",
       };
@@ -78,9 +83,10 @@ export function useContribWatcher(userId: string | null) {
         const events = summary.events;
         const shown = events.slice(-MAX_TOASTS);
         if (events.length > shown.length) {
+          const t = translator("Updates.contrib");
           await notify({
-            title: "Contributions",
-            body: `${events.length - shown.length} autres nouvelles sur vos contributions.`,
+            title: t("backlogTitle"),
+            body: t("backlog", { count: events.length - shown.length }),
             route: "/settings?section=account",
           });
         }

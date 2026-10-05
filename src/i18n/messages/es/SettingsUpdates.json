@@ -1,0 +1,17 @@
+{
+  "title": "Actualizaciones",
+  "description": "La aplicación comprueba al iniciarse, y luego cada seis horas, si se ha publicado una versión más reciente. No se instala nada sin tu permiso.",
+  "check": "Comprobar ahora",
+  "checking": "Buscando…",
+  "version": "Versión",
+  "installed": "Instalada",
+  "latest": "Tienes la última versión ({version}).",
+  "available": "Disponible",
+  "versionNumber": "Versión {version}",
+  "installedVersion": "instalada: {version}",
+  "downloading": "Descargando… {progress}. La aplicación se reiniciará para terminar.",
+  "percent": "{percent} %",
+  "megabytes": "{size} MB",
+  "install": "Instalar y reiniciar",
+  "installFailed": "La instalación ha fallado: {error}"
+}

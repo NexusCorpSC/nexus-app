@@ -1,10 +1,11 @@
+import { translator } from "@/i18n/translate";
 import { ApiError, apiRequest } from "@/lib/api-client";
 import type { ReportInput, SubmitReportResult } from "@/types/nexus";
 
 /**
  * Reports: the same form as the site's « Signaler » entry (see
  * `lib/reports.ts` in Nexus Tools). The site answers a refusal with an error
- * code, which `reportErrorMessage` turns into its French wording.
+ * code, which `reportErrorMessage` turns into a sentence.
  */
 
 export function submitReport(input: ReportInput) {
@@ -14,27 +15,34 @@ export function submitReport(input: ReportInput) {
   });
 }
 
-const MESSAGES: Record<string, string> = {
-  unauthenticated: "Connectez-vous pour signaler.",
-  invalidTarget: "Cet élément ne peut pas être signalé.",
-  targetNotFound: "Cet élément n'existe plus.",
-  invalidReason: "Choisissez un motif.",
-  commentRequired: "Précisez le problème pour le motif « Autre ».",
-  ownContent:
-    "On ne signale pas son propre contenu : proposez plutôt une correction sur le site.",
-  alreadyReported:
-    "Vous avez déjà signalé cet élément. Un modérateur s'en occupe.",
-  dailyLimit: "Dix signalements par jour au plus. Réessayez demain.",
-  busy: "Un modérateur tranche ce signalement en ce moment. Réessayez dans un instant.",
-  reportingSuspended:
-    "Trois de vos signalements ont été classés d'affilée : vous ne pouvez plus signaler pendant 7 jours.",
-};
+/** The refusals the site answers with a code of its own. */
+const CODES = [
+  "unauthenticated",
+  "invalidTarget",
+  "targetNotFound",
+  "invalidReason",
+  "commentRequired",
+  "ownContent",
+  "alreadyReported",
+  "dailyLimit",
+  "busy",
+  "reportingSuspended",
+] as const;
+
+type ReportErrorCode = (typeof CODES)[number];
+
+function isReportErrorCode(value: unknown): value is ReportErrorCode {
+  return (CODES as readonly unknown[]).includes(value);
+}
 
 export function reportErrorMessage(error: unknown): string {
+  const t = translator("Api.reports");
   if (error instanceof ApiError) {
-    if (error.isUnauthorized) return MESSAGES.unauthenticated;
+    if (error.isUnauthorized) return t("unauthenticated");
     const body = error.body as { error?: string } | undefined;
-    return (body?.error && MESSAGES[body.error]) || error.message;
+    return isReportErrorCode(body?.error) ? t(body.error) : error.message;
   }
-  return error instanceof Error ? error.message : "L'envoi a échoué.";
+  return error instanceof Error
+    ? error.message
+    : translator("Common")("sendFailed");
 }

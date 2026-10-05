@@ -1,4 +1,5 @@
 import { emit } from "@tauri-apps/api/event";
+import { translator } from "@/i18n/translate";
 import {
   getStoredCargoSheet,
   setStoredCargoSheet,
@@ -114,7 +115,9 @@ function sanitizeSheet(raw: unknown): CargoSheet | null {
 
   return {
     transportId: sheet.transportId,
-    shipName: typeof sheet.shipName === "string" ? sheet.shipName : "Vaisseau",
+    shipName: typeof sheet.shipName === "string"
+        ? sheet.shipName
+        : translator("Cargo")("defaultShipName"),
     capacity:
       Number.isFinite(capacity) && capacity > 0
         ? Math.floor(capacity)

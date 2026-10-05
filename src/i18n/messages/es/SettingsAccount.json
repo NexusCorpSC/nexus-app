@@ -1,0 +1,29 @@
+{
+  "title": "Cuenta",
+  "description": "La sesión abierta en la instancia configurada en General.",
+  "session": "Sesión",
+  "signedInAs": "Sesión iniciada como",
+  "signedOut": "Sesión no iniciada",
+  "profile": {
+    "title": "Perfil",
+    "loadError": "No se pueden leer tus organizaciones en esta instancia.",
+    "noOrganization": "Únete a una organización para mostrarla junto a tu apodo.",
+    "label": "Organización mostrada junto a mi apodo",
+    "auto": "Automático: la primera en común",
+    "saveError": "No se pudo guardar. Inténtalo de nuevo.",
+    "hint": "Tus amigos la ven junto a tu apodo. En automático, o si dejas la organización elegida, cada uno ve la primera organización que tienen en común."
+  },
+  "contrib": {
+    "title": "Contribuciones",
+    "loadError": "No se puede leer tu nivel en esta instancia.",
+    "levelBadge": "N{level}",
+    "pointsOf": "{points} / {next} pts",
+    "points": "{points} pts",
+    "nextLevel": "{name} a los {points} puntos.",
+    "lastLevel": "Último nivel que se gana con puntos.",
+    "achievements": "{count, plural, one {# logro desbloqueado} other {# logros desbloqueados}}.",
+    "siteHint": "Los planos dibujados y los nuevos objetos se proponen en la web, junto con tu historial y la clasificación.",
+    "openSite": "Mis contribuciones en la web",
+    "loading": "Cargando…"
+  }
+}

@@ -10,6 +10,7 @@ import {
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MapPin, Plus } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { createLocation, listLocations } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ export function LocationCombobox({
   invalid?: boolean;
   "aria-label"?: string;
 }) {
+  const t = useTranslations("Inventory");
   const queryClient = useQueryClient();
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -290,8 +292,8 @@ export function LocationCombobox({
                       <Plus className="size-3.5 shrink-0" />
                       <span className="truncate">
                         {createMutation.isPending
-                          ? "Création…"
-                          : `Créer « ${option.name} »`}
+                          ? t("location.creating")
+                          : t("location.create", { name: option.name })}
                       </span>
                     </>
                   )}
@@ -299,14 +301,16 @@ export function LocationCombobox({
               ))}
               {options.length === 0 ? (
                 <p className="px-3 py-1.5 text-nexus-muted">
-                  {remoteQuery.isFetching ? "Recherche…" : "Aucun lieu"}
+                  {remoteQuery.isFetching
+                    ? t("location.searching")
+                    : t("location.none")}
                 </p>
               ) : null}
               {createMutation.error ? (
                 <p className="px-3 py-1.5 text-xs text-red-300">
                   {createMutation.error instanceof Error
                     ? createMutation.error.message
-                    : "Création impossible."}
+                    : t("location.createFailed")}
                 </p>
               ) : null}
             </div>,

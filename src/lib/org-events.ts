@@ -1,4 +1,5 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { translator } from "@/i18n/translate";
 import { formatTime } from "@/lib/presence";
 import { getApiBaseUrl } from "@/lib/settings";
 import type { OrgEventRole, OrgEventView } from "@/types/nexus";
@@ -42,8 +43,7 @@ export function isRegistered(event: OrgEventView): boolean {
 
 /** «Aucun inscrit», «1 inscrit», «3 inscrits». */
 export function registrationsLabel(count: number): string {
-  if (count === 0) return "Aucun inscrit";
-  return `${count} ${count > 1 ? "inscrits" : "inscrit"}`;
+  return translator("OrgEvents")("registrations", { count });
 }
 
 /** «21:00 → 23:30», in the reader's time zone. */
@@ -56,8 +56,11 @@ export function formatSpan(ms: number): string {
   const minutes = Math.max(0, Math.round(ms / 60_000));
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
-  if (hours === 0) return `${rest} min`;
-  return rest ? `${hours} h ${String(rest).padStart(2, "0")}` : `${hours} h`;
+  const t = translator("OrgEvents");
+  if (hours === 0) return t("span.minutes", { minutes: rest });
+  return rest
+    ? t("span.hoursMinutes", { hours, minutes: String(rest).padStart(2, "0") })
+    : t("span.hours", { hours });
 }
 
 /** «Paris» for Europe/Paris: what the reader recognises of their time zone. */

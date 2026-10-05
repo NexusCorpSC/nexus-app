@@ -12,6 +12,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { translator } from "@/i18n/translate";
 import * as authApi from "@/lib/api/auth";
 import { ApiError } from "@/lib/api-client";
 import { getSessionCookie, setSessionCookie } from "@/lib/settings";
@@ -184,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ? error.message
           : typeof error === "string"
             ? error
-            : "La connexion a échoué.",
+            : translator("Auth")("signInFailed"),
       );
     } finally {
       if (mine === attempt.current) setSigningIn(false);

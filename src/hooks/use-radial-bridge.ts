@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { emitTo, listen, type UnlistenFn } from "@tauri-apps/api/event";
+import { translator } from "@/i18n/translate";
 import { notify } from "@/lib/notifications";
 import {
   RADIAL_SQUAD_ACTION_EVENT,
@@ -123,7 +124,9 @@ export function useRadialBridge(
         patchRef.current.mutate({ squadId, userId, patch: { ready } });
         void notify({
           kind: ready ? "success" : "info",
-          title: ready ? "READY" : "NOT READY",
+          title: translator("Radial")(
+            ready ? "notify.ready" : "notify.notReady",
+          ),
           body: squad.name,
           timeoutMs: CONFIRMATION_TIMEOUT_MS,
         });
@@ -138,7 +141,9 @@ export function useRadialBridge(
         patchRef.current.mutate({ squadId, userId, patch });
         void notify({
           kind: me.alive ? "warning" : "success",
-          title: me.alive ? "Éliminé" : "Actif",
+          title: translator("Radial")(
+            me.alive ? "notify.down" : "notify.alive",
+          ),
           body: squad.name,
           timeoutMs: CONFIRMATION_TIMEOUT_MS,
         });

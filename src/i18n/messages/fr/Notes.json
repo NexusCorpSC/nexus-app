@@ -1,0 +1,36 @@
+{
+  "title": "Bloc-notes",
+  "descriptionOnline": "Vos notes en ligne, partagées avec le site Nexus Tools.",
+  "descriptionLocal": "Notes enregistrées sur cet ordinateur. Connectez-vous pour les retrouver sur le site et vos autres appareils.",
+  "showOverlay": "Afficher par-dessus le jeu",
+  "localBadge": "local",
+  "close": "Fermer",
+  "placeholder": "Routes de minage, prix, plans de mission…",
+  "save": "Enregistrer",
+  "status": {
+    "savedAt": "Enregistré {date}",
+    "unsaved": "Modifications non enregistrées",
+    "saving": "Enregistrement…",
+    "error": "Échec de l'enregistrement",
+    "saveFailed": "Enregistrement impossible pour le moment."
+  },
+  "workspace": {
+    "modeLabel": "Mode du bloc-notes",
+    "edit": "Édition",
+    "preview": "Aperçu",
+    "hintRaw": "Markdown brut",
+    "hintReadOnly": "Tableaux, cases à cocher, images ou HTML : modifiables en Édition",
+    "hintEditable": "Cliquez dans le texte pour le modifier"
+  },
+  "toolbar": {
+    "bold": "Gras",
+    "italic": "Italique",
+    "heading": "Titre",
+    "list": "Liste",
+    "link": "Lien",
+    "removeLink": "Retirer le lien",
+    "linkPlaceholder": "https://… puis Entrée",
+    "linkAddress": "Adresse du lien",
+    "openLinkHint": "Ctrl + clic pour ouvrir le lien"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "list": {
+    "title": "Organizations",
+    "description": "Your organizations and the community's public organizations.",
+    "mine": "My organizations",
+    "playing": "Playing",
+    "inventory": "Inventory",
+    "editor": "Editor",
+    "public": "Public organizations",
+    "searchLabel": "Search for an organization",
+    "searchPlaceholder": "Name or tag…",
+    "noPublic": "No public organization found"
+  },
+  "detail": {
+    "back": "Back to organizations",
+    "fallbackTitle": "Organization",
+    "rank": "Your rank: {rank}",
+    "description": "Your teammates in game.",
+    "planOnSite": "Plan on the site",
+    "planOnSiteTitle": "Opens the form in the browser",
+    "sharedInventory": "Shared inventory",
+    "mySession": "My session",
+    "youArePlaying": "You are playing",
+    "youAreNotPlaying": "You are not playing",
+    "playingNow": "Playing now",
+    "playingCount": "{playing} of {total}",
+    "nobodyTitle": "Nobody is playing right now",
+    "nobodyDescription": "Everyone declares it from Nexus App or the site, with what they are doing if they wish.",
+    "plannedTitle": "Planned sessions",
+    "events": "Events",
+    "upcomingCount": "{count} upcoming",
+    "loading": "Loading…",
+    "eventsError": "The events could not be loaded.",
+    "retry": "Retry",
+    "noEvents": "No event planned yet.",
+    "fullCalendar": "The full calendar on the site"
+  },
+  "member": {
+    "playing": "Playing",
+    "since": "Playing since"
+  },
+  "planned": {
+    "event": "{title} · event",
+    "noActivity": "Planned session"
+  }
+}

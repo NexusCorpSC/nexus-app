@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
+import { useTranslations } from "use-intl";
 import {
   Container,
   Map as MapIcon,
@@ -11,6 +12,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { getLocale } from "@/i18n/locale";
 import { useAuth } from "@/auth/auth-context";
 import { Button, Card, Kbd, SectionTitle } from "@/components/ui";
 import { getMySquad } from "@/lib/api/squads";
@@ -28,23 +30,27 @@ import type { Squad } from "@/types/nexus";
 /** The windows worth opening before the game, with the shortcut each has. */
 const LAUNCHERS: {
   label: OverlayLabel;
-  title: string;
+  title: "search" | "squad" | "map" | "plan" | "notes" | "cargo";
   icon: LucideIcon;
   shortcut: keyof Shortcuts;
 }[] = [
-  { label: "overlay", title: "Recherche", icon: Search, shortcut: "search" },
-  { label: "squad", title: "Escouade", icon: Users, shortcut: "squad" },
-  { label: "map", title: "Carte", icon: MapIcon, shortcut: "map" },
-  { label: "plan", title: "Plan de vol", icon: RouteIcon, shortcut: "plan" },
-  { label: "notes", title: "Bloc-notes", icon: NotebookPen, shortcut: "notes" },
-  { label: "cargo", title: "Cargo", icon: Container, shortcut: "cargo" },
+  { label: "overlay", title: "search", icon: Search, shortcut: "search" },
+  { label: "squad", title: "squad", icon: Users, shortcut: "squad" },
+  { label: "map", title: "map", icon: MapIcon, shortcut: "map" },
+  { label: "plan", title: "plan", icon: RouteIcon, shortcut: "plan" },
+  { label: "notes", title: "notes", icon: NotebookPen, shortcut: "notes" },
+  { label: "cargo", title: "cargo", icon: Container, shortcut: "cargo" },
 ];
 
-const DATABASE: { to: string; title: string; detail: string }[] = [
-  { to: "/blueprints", title: "Blueprints", detail: "Recettes et possession" },
-  { to: "/items", title: "Objets", detail: "Où les acheter, à quel prix" },
-  { to: "/places", title: "Lieux", detail: "Stations, villes, cartes" },
-  { to: "/missions", title: "Missions", detail: "Récompenses et blueprints" },
+/** The sections of the database, by their key in `Home.database`. */
+const DATABASE: {
+  to: string;
+  key: "blueprints" | "items" | "places" | "missions";
+}[] = [
+  { to: "/blueprints", key: "blueprints" },
+  { to: "/items", key: "items" },
+  { to: "/places", key: "places" },
+  { to: "/missions", key: "missions" },
 ];
 
 /** How often the squad card rereads the squad while the page is open. */
@@ -61,6 +67,7 @@ function open(label: OverlayLabel) {
  * squad stands, the start of the notes, and the way into the database.
  */
 export default function HomePage() {
+  const t = useTranslations("Home");
   const { user, loading } = useAuth();
   const signedIn = Boolean(user);
 
@@ -79,11 +86,10 @@ export default function HomePage() {
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-[30px] leading-tight font-bold text-nexus-white">
-            {user ? `Bonjour, ${user.name}` : "Bienvenue"}
+            {user ? t("greeting", { name: user.name }) : t("welcome")}
           </h1>
           <p className="mt-1 text-sm text-nexus-muted">
-            Tout ce qu'il faut avant de lancer le jeu, et les fenêtres à garder
-            par-dessus.
+            {t("intro")}
           </p>
         </div>
         {version ? (
@@ -97,15 +103,16 @@ export default function HomePage() {
         <SectionTitle
           aside={
             <>
-              En jeu, maintenez{" "}
-              <span className="font-mono text-nexus-bright">
-                {formatShortcut(shortcuts.radial)}
-              </span>{" "}
-              pour le menu radial
+              {t.rich("overlays.radialHint", {
+                shortcut: formatShortcut(shortcuts.radial),
+                key: (chunks) => (
+                  <span className="font-mono text-nexus-bright">{chunks}</span>
+                ),
+              })}
             </>
           }
         >
-          Superpositions
+          {t("overlays.title")}
         </SectionTitle>
         <div className="grid grid-cols-3 gap-3 xl:grid-cols-6">
           {LAUNCHERS.map(({ label, title, icon: Icon, shortcut }) => (
@@ -118,7 +125,7 @@ export default function HomePage() {
               <Icon className="size-5 text-nexus-accent" />
               <span className="flex flex-col gap-0.5">
                 <span className="text-sm font-semibold text-nexus-white">
-                  {title}
+                  {t(`overlays.${title}`)}
                 </span>
                 <Kbd>{formatShortcut(shortcuts[shortcut])}</Kbd>
               </span>
@@ -133,18 +140,20 @@ export default function HomePage() {
       </div>
 
       <section>
-        <SectionTitle>Base de données</SectionTitle>
+        <SectionTitle>{t("database.title")}</SectionTitle>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {DATABASE.map(({ to, title, detail }) => (
+          {DATABASE.map(({ to, key }) => (
             <Link
               key={to}
               to={to}
               className="flex flex-col gap-1 rounded-xl border border-nexus-accent/10 bg-nexus-accent/5 px-4 py-3.5 transition-colors hover:border-nexus-accent/30"
             >
               <span className="text-sm font-semibold text-nexus-white">
-                {title}
+                {t(`database.${key}.title`)}
               </span>
-              <span className="text-xs text-nexus-muted">{detail}</span>
+              <span className="text-xs text-nexus-muted">
+                {t(`database.${key}.detail`)}
+              </span>
             </Link>
           ))}
         </div>
@@ -167,6 +176,8 @@ function SquadCard({
   signedIn: boolean;
   sessionLoading: boolean;
 }) {
+  const t = useTranslations("Home.squad");
+  const common = useTranslations("Common");
   const query = useQuery({
     queryKey: ["home", "squad"],
     queryFn: () => getMySquad(null),
@@ -184,32 +195,35 @@ function SquadCard({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2 className="truncate font-display text-lg font-semibold text-nexus-white">
-            {squad ? squad.name : "Escouade"}
+            {squad ? squad.name : t("title")}
           </h2>
           {squad ? (
             <p className="text-xs text-nexus-muted">
-              Code d'invitation{" "}
-              <span className="font-mono text-nexus-bright">{squad.code}</span>
+              {t.rich("inviteCode", {
+                code: squad.code,
+                mono: (chunks) => (
+                  <span className="font-mono text-nexus-bright">{chunks}</span>
+                ),
+              })}
             </p>
           ) : null}
         </div>
         {squad ? (
           <span className="shrink-0 rounded-full bg-emerald-300/12 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-            {ready}/{squad.members.length} prêts
+            {t("ready", { ready, total: squad.members.length })}
           </span>
         ) : null}
       </div>
 
       {sessionLoading || (signedIn && query.isPending) ? (
-        <p className="text-sm text-nexus-dim">Chargement…</p>
+        <p className="text-sm text-nexus-dim">{common("loading")}</p>
       ) : !signedIn ? (
         <p className="text-sm text-nexus-muted">
-          Connectez-vous pour retrouver votre escouade.
+          {t("signedOut")}
         </p>
       ) : !squad ? (
         <p className="text-sm text-nexus-muted">
-          Vous n'êtes dans aucune escouade. Créez-en une ou rejoignez-la depuis
-          la superposition.
+          {t("none")}
         </p>
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[13px]">
@@ -247,11 +261,11 @@ function SquadCard({
 
       <div className="mt-auto flex gap-2 pt-1">
         <Button size="sm" onClick={() => open("squad")}>
-          Ouvrir la superposition
+          {t("openOverlay")}
         </Button>
         {squad ? (
           <Button size="sm" variant="outline" onClick={() => open("plan")}>
-            Plan de vol
+            {t("plan")}
           </Button>
         ) : null}
       </div>
@@ -267,6 +281,8 @@ function NotesCard({
   signedIn: boolean;
   sessionLoading: boolean;
 }) {
+  const t = useTranslations("Home.notes");
+  const common = useTranslations("Common");
   const query = useQuery({
     queryKey: noteQueryKey(signedIn),
     queryFn: () => readNote(signedIn),
@@ -280,7 +296,7 @@ function NotesCard({
     .slice(0, 5);
 
   const saved = query.data?.updatedAt
-    ? new Date(query.data.updatedAt).toLocaleString("fr-FR", {
+    ? new Date(query.data.updatedAt).toLocaleString(getLocale(), {
         dateStyle: "short",
         timeStyle: "short",
       })
@@ -290,10 +306,12 @@ function NotesCard({
     <Card className="flex flex-col gap-3 px-5 py-4.5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-lg font-semibold text-nexus-white">
-          Bloc-notes
+          {t("title")}
         </h2>
         {saved ? (
-          <span className="text-xs text-nexus-dim">Enregistré {saved}</span>
+          <span className="text-xs text-nexus-dim">
+            {t("saved", { date: saved })}
+          </span>
         ) : null}
       </div>
 
@@ -301,8 +319,8 @@ function NotesCard({
         <p className="text-sm text-nexus-muted">
           {/* The query waits for the session, and is not pending meanwhile. */}
           {sessionLoading || query.isPending
-            ? "Chargement…"
-            : "Rien de noté pour l'instant."}
+            ? common("loading")
+            : t("empty")}
         </p>
       ) : (
         <div className="flex min-w-0 flex-col gap-1.5 text-[13.5px] leading-relaxed text-nexus-bright">
@@ -334,7 +352,7 @@ function NotesCard({
           to="/notes"
           className="inline-flex h-8 items-center rounded-lg border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
         >
-          Ouvrir le bloc-notes
+          {t("open")}
         </Link>
       </div>
     </Card>

@@ -1,0 +1,66 @@
+{
+  "back": "Retour à l'inventaire",
+  "title": "Ajout en masse",
+  "description": "Saisissez plusieurs ressources à la suite, ou collez-les depuis un tableur.",
+  "capture": {
+    "summary": "{count, plural, one {# lot lu} other {# lots lus}} sur l'ordre de travail · somme {sum} cSCU<total></total>. Choisissez le lieu et vérifiez les chiffres : l'OCR confond parfois le zéro barré du jeu avec un 8.",
+    "gameTotal": "· total du jeu {total} cSCU",
+    "dismiss": "Masquer"
+  },
+  "defaults": {
+    "title": "Par défaut",
+    "location": "Lieu",
+    "locationLabel": "Lieu par défaut",
+    "quality": "Qualité",
+    "unit": "Unité",
+    "description": "Description",
+    "descriptionPlaceholder": "Notes sur ces objets…"
+  },
+  "orgVisible": "Visible par l'org",
+  "hints": {
+    "tab": "cellule suivante",
+    "enter": "ligne suivante",
+    "duplicate": "dupliquer",
+    "paste": "coller Nom · Qualité · Quantité · Unité · Lieu"
+  },
+  "columns": {
+    "name": "Nom",
+    "quality": "Qualité",
+    "quantity": "Quantité",
+    "unit": "Unité",
+    "location": "Lieu",
+    "org": "Org",
+    "status": "Contrôle"
+  },
+  "namePlaceholder": "Titanium…",
+  "locationPlaceholder": "Rechercher un lieu…",
+  "locationUnmatched": "« {name} » ?",
+  "locationDefault": "Défaut · {name}",
+  "removeRow": "Supprimer la ligne",
+  "addRow": "Nouvelle ligne",
+  "errors": {
+    "name": "Nom requis",
+    "quality": "Qualité : entier ≥ 0",
+    "qualityDefault": "Qualité par défaut : entier ≥ 0",
+    "yieldUnreadable": "Rendement illisible sur la capture",
+    "quantity": "Quantité invalide",
+    "locationUnknown": "Lieu introuvable : {name}",
+    "location": "Lieu requis"
+  },
+  "status": {
+    "newLot": "Nouveau lot",
+    "newItem": "Nouvel objet",
+    "merge": "Fusion : ×{from} → ×{to}"
+  },
+  "done": "{created, plural, one {# créé} other {# créés}}, {merged, plural, one {# fusionné} other {# fusionnés}}. Les lignes en erreur restent à corriger.",
+  "summary": {
+    "ready": "<n>{count}</n> {count, plural, one {prêt} other {prêts}}",
+    "merges": "<n>{count}</n> {count, plural, one {fusion avec un lot existant} other {fusions avec un lot existant}}",
+    "errors": "<n>{count}</n> à corriger"
+  },
+  "submitFailed": "L'ajout a échoué.",
+  "errorsKept": "Les lignes en erreur restent dans le tableau après l'ajout.",
+  "cancel": "Annuler",
+  "saving": "Enregistrement…",
+  "submit": "{count, plural, =0 {Ajouter} one {Ajouter # objet} other {Ajouter # objets}}"
+}

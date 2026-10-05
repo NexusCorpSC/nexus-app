@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Camera, FolderOpen, ImagePlus, RefreshCw } from "lucide-react";
+import { useTranslations } from "use-intl";
+import { translator } from "@/i18n/translate";
 import { mediaErrorMessage, uploadPlaceMedia } from "@/lib/api/contrib";
 import { notify } from "@/lib/notifications";
 import { getLatestScreenshot, prepareImage } from "@/lib/screenshots";
@@ -22,13 +24,14 @@ type Source = "game" | "file";
  * niveau 2, relue avant sinon — c'est le site qui en décide.
  */
 export function AddMediaButton({ place }: { place: PlaceDetails }) {
+  const t = useTranslations("Places.media");
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <ImagePlus className="h-3.5 w-3.5" />
-        Ajouter une capture
+        {t("button")}
       </Button>
       {open ? (
         <AddMediaModal place={place} onClose={() => setOpen(false)} />
@@ -61,6 +64,7 @@ function AddMediaModal({
   place: PlaceDetails;
   onClose: () => void;
 }) {
+  const t = useTranslations("Places.media");
   const queryClient = useQueryClient();
   const [source, setSource] = useState<Source>("game");
   const [file, setFile] = useState<File | null>(null);
@@ -94,7 +98,7 @@ function AddMediaModal({
 
   const send = useMutation({
     mutationFn: async () => {
-      if (!chosen) throw new Error("Choisissez une image.");
+      if (!chosen) throw new Error(translator("Places.media")("chooseImage"));
       const image = await prepareImage(chosen.blob, chosen.name);
       return uploadPlaceMedia(place.slug, {
         file: image.blob,
@@ -107,13 +111,14 @@ function AddMediaModal({
     },
     onSuccess: async ({ contribution }) => {
       const published = contribution.status === "published";
+      const tm = translator("Places.media");
       await notify({
         kind: "success",
         title: published
           ? contribution.points > 0
-            ? `Image publiée, +${contribution.points} points`
-            : "Image publiée"
-          : "Image envoyée : elle sera relue avant publication.",
+            ? tm("publishedPoints", { points: contribution.points })
+            : tm("published")
+          : tm("sent"),
         body: place.name,
         route: `/places/${place.slug}`,
       });
@@ -126,8 +131,8 @@ function AddMediaModal({
   return (
     <Modal
       open
-      title="Ajouter une capture"
-      description={`${place.name} · votre image rejoint la galerie du lieu`}
+      title={t("title")}
+      description={t("description", { place: place.name })}
       icon={<Camera className="size-5" />}
       onClose={onClose}
       footer={
@@ -136,38 +141,38 @@ function AddMediaModal({
             className="rounded-full bg-amber-300/12 px-2.5 py-1 font-mono text-xs font-bold text-amber-200"
             title={
               isFirst
-                ? `Dont +${PLACE_FIRST_MEDIA_BONUS} : la première image du lieu`
-                : `+${PLACE_FIRST_MEDIA_BONUS} si c'est la première du lieu`
+                ? t("firstBonusIncluded", { bonus: PLACE_FIRST_MEDIA_BONUS })
+                : t("firstBonusIf", { bonus: PLACE_FIRST_MEDIA_BONUS })
             }
           >
-            +{points} points
+            {t("points", { points })}
           </span>
           <Button variant="outline" onClick={onClose} className="ml-auto">
-            Annuler
+            {t("cancel")}
           </Button>
           <Button
             onClick={() => send.mutate()}
             disabled={!chosen || send.isPending}
           >
-            {send.isPending ? "Envoi…" : "Envoyer l'image"}
+            {send.isPending ? t("sending") : t("send")}
           </Button>
         </>
       }
     >
       <div className="space-y-4">
         <Segmented<Source>
-          label="Source de l'image"
+          label={t("source")}
           value={source}
           onChange={setSource}
           options={[
             {
               value: "game",
-              label: "Dernière capture du jeu",
+              label: t("fromGame"),
               icon: <Camera className="size-3.5" />,
             },
             {
               value: "file",
-              label: "Choisir un fichier",
+              label: t("fromFile"),
               icon: <FolderOpen className="size-3.5" />,
             },
           ]}
@@ -176,7 +181,7 @@ function AddMediaModal({
         {source === "game" ? (
           latest.isPending ? (
             <p className="text-[13px] text-nexus-muted">
-              Recherche de la dernière capture…
+              {t("searching")}
             </p>
           ) : latest.isError ? (
             <div className="space-y-2">
@@ -186,8 +191,7 @@ function AddMediaModal({
                   : String(latest.error)}
               </p>
               <p className="text-xs text-nexus-dim">
-                Le dossier du jeu, celui du Game.log, se règle dans Paramètres ›
-                Jeu. En jeu, une capture se prend avec la touche Impr. écran.
+                {t("folderHint")}
               </p>
             </div>
           ) : (
@@ -195,7 +199,7 @@ function AddMediaModal({
               <span className="min-w-0 truncate text-nexus-muted">
                 <span className="text-nexus-white">{latest.data.name}</span>
                 {" · "}
-                prise {formatAgo(latest.data.modifiedMs)}
+                {t("taken", { ago: formatAgo(latest.data.modifiedMs) })}
               </span>
               <Button
                 variant="ghost"
@@ -204,7 +208,7 @@ function AddMediaModal({
                 disabled={latest.isFetching}
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-                Relire
+                {t("reread")}
               </Button>
             </div>
           )
@@ -220,33 +224,33 @@ function AddMediaModal({
         {preview ? (
           <img
             src={preview}
-            alt="Aperçu de l'image envoyée"
+            alt={t("previewAlt")}
             className="max-h-64 w-full rounded-lg border border-nexus-accent/12 bg-nexus-abyss object-contain"
           />
         ) : null}
 
-        <Field label="Légende (facultatif)">
+        <Field label={t("caption")}>
           <Input
             value={caption}
             maxLength={MAX_MEDIA_CAPTION_LENGTH}
             onChange={(event) => setCaption(event.target.value)}
-            placeholder="Le hall d'arrivée, vu des quais"
+            placeholder={t("captionPlaceholder")}
           />
         </Field>
-        <Field label="Crédit (facultatif)">
+        <Field label={t("credit")}>
           <Input
             value={credit}
             maxLength={MAX_MEDIA_CREDIT_LENGTH}
             onChange={(event) => setCredit(event.target.value)}
-            placeholder="Votre pseudo, ou l'auteur de l'image"
+            placeholder={t("creditPlaceholder")}
           />
         </Field>
 
         <p className="text-xs leading-relaxed text-nexus-dim">
-          +{PLACE_MEDIA_POINTS} points par image publiée, +
-          {PLACE_FIRST_MEDIA_BONUS} si c'est la première du lieu. L'image est
-          réduite à 2560 pixels avant l'envoi ; évitez l'interface personnelle
-          (pseudo, messages) dans le cadre.
+          {t("help", {
+            points: PLACE_MEDIA_POINTS,
+            bonus: PLACE_FIRST_MEDIA_BONUS,
+          })}
         </p>
 
         {send.isError ? (

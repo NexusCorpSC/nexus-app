@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslations } from "use-intl";
 import { PanelRight, Plus } from "lucide-react";
 import {
   CONTAINER_SIZES,
@@ -23,7 +24,7 @@ import { parseQuickEntry } from "@/lib/mission-objectives";
 import { useCargoSheet } from "@/hooks/use-cargo-sheet";
 import {
   ShipPicker,
-  TRANSPORT_SOURCE_LABELS,
+  transportSourceLabel,
   useTransports,
 } from "@/components/cargo/ship-picker";
 import {
@@ -51,32 +52,32 @@ import {
  * the least of the worries.
  */
 export default function CargoPage() {
+  const t = useTranslations("Cargo.page");
   const { sheet, loading } = useCargoSheet();
   const { transports, source, loading: loadingTransports } = useTransports();
   const [changingShip, setChangingShip] = useState(false);
 
   if (loading || loadingTransports || !transports) return <LoadingState />;
 
-  const sourceWarning = TRANSPORT_SOURCE_LABELS[source];
+  const sourceWarning = transportSourceLabel(source);
 
   if (!sheet) {
     return (
       <>
         <PageHeader
-          title="Feuille de cargo"
-          description="Répartissez vos volumes en conteneurs SCU et suivez le remplissage du vaisseau."
+          title={t("title")}
+          description={t("startDescription")}
         />
 
         <Card className="max-w-md p-6">
-          <SectionTitle className="mb-1">Aucune feuille en cours</SectionTitle>
+          <SectionTitle className="mb-1">{t("noSheet")}</SectionTitle>
           <p className="mb-4 text-xs text-nexus-muted">
-            Choisissez le vaisseau que vous utilisez : c'est sa capacité qui
-            décide du reste.
+            {t("noSheetHint")}
           </p>
 
           <ShipPicker
             transports={transports}
-            submitLabel="Créer la feuille"
+            submitLabel={t("createSheet")}
             onSubmit={(ship) => void startSheet(ship)}
           />
 
@@ -93,8 +94,8 @@ export default function CargoPage() {
   return (
     <>
       <PageHeader
-        title="Feuille de cargo"
-        description="Hors ligne : cette feuille ne quitte pas cette machine."
+        title={t("title")}
+        description={t("offlineDescription")}
         actions={
           <>
             <Button
@@ -103,17 +104,19 @@ export default function CargoPage() {
               onClick={() => void invoke("toggle_cargo_overlay")}
             >
               <PanelRight className="h-3.5 w-3.5" />
-              Superposition
+              {t("overlay")}
             </Button>
             <Button
               variant="danger"
               size="sm"
               onClick={() => {
-                if (sheet.lines.length > 0 && !confirmClose()) return;
+                if (sheet.lines.length > 0 && !window.confirm(t("confirmClose"))) {
+                  return;
+                }
                 void closeSheet();
               }}
             >
-              Clôturer
+              {t("close")}
             </Button>
           </>
         }
@@ -137,8 +140,8 @@ export default function CargoPage() {
 
           {sheet.lines.length === 0 ? (
             <EmptyState
-              title="Feuille vide"
-              description="Ajoutez une ligne, collez un journal de mission, ou capturez-le à l'écran avec le raccourci de capture."
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
             />
           ) : (
             <MissionGroups
@@ -156,10 +159,10 @@ export default function CargoPage() {
           <AddLineCard currentMission={missionName(sheet.missionCounter)} />
 
           <Card className="p-5">
-            <SectionTitle>Réglages</SectionTitle>
+            <SectionTitle>{t("settings")}</SectionTitle>
 
             <div className="space-y-3">
-              <Field label="Plus gros conteneur">
+              <Field label={t("maxContainer")}>
                 <Select
                   value={String(sheet.maxContainer)}
                   onChange={(event) => {
@@ -183,7 +186,7 @@ export default function CargoPage() {
                 variant="outline"
                 onClick={() => void startNewMission()}
               >
-                Nouvelle mission
+                {t("newMission")}
               </Button>
 
               {changingShip ? (
@@ -191,7 +194,7 @@ export default function CargoPage() {
                   transports={transports}
                   initialTransportId={sheet.transportId}
                   initialCapacity={sheet.capacity}
-                  submitLabel="Changer de vaisseau"
+                  submitLabel={t("changeShip")}
                   onSubmit={(ship) => {
                     void setShip(ship);
                     setChangingShip(false);
@@ -204,7 +207,7 @@ export default function CargoPage() {
                   variant="outline"
                   onClick={() => setChangingShip(true)}
                 >
-                  Changer de vaisseau
+                  {t("changeShip")}
                 </Button>
               )}
             </div>
@@ -215,14 +218,9 @@ export default function CargoPage() {
   );
 }
 
-function confirmClose(): boolean {
-  return window.confirm(
-    "Clôturer la feuille supprime toutes ses lignes. Continuer ?",
-  );
-}
-
 /** Manual entry, and the paste that accepts a whole mission log at once. */
 function AddLineCard({ currentMission }: { currentMission: string }) {
+  const t = useTranslations("Cargo.add");
   const [paste, setPaste] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -230,31 +228,31 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
     const result = parseQuickEntry(paste);
 
     if (result.parsed.length === 0) {
-      setFeedback(
-        "Rien de lisible : collez un journal de mission, ou des lignes « Destination;Contenu;Volume;Emplacement ».",
-      );
+      setFeedback(t("nothingReadable"));
       return;
     }
 
     void addLines(result.parsed);
     setPaste("");
     setFeedback(
-      `${result.parsed.length} ligne${result.parsed.length > 1 ? "s" : ""} ajoutée${result.parsed.length > 1 ? "s" : ""}` +
-        (result.invalid.length > 0
-          ? ` · ${result.invalid.length} ignorée${result.invalid.length > 1 ? "s" : ""}`
-          : ""),
+      result.invalid.length > 0
+        ? t("addedWithIgnored", {
+            count: result.parsed.length,
+            ignored: result.invalid.length,
+          })
+        : t("added", { count: result.parsed.length }),
     );
   }
 
   return (
     <Card className="p-5">
-      <SectionTitle className="mb-1">Ajouter du cargo</SectionTitle>
+      <SectionTitle className="mb-1">{t("title")}</SectionTitle>
       <p className="mb-3 text-xs text-nexus-dim">
-        Sans mission indiquée, la ligne rejoint « {currentMission} ».
+        {t("joinsMission", { mission: currentMission })}
       </p>
 
       <CargoLineForm
-        submitLabel="Ajouter"
+        submitLabel={t("submit")}
         submitIcon={<Plus className="h-3.5 w-3.5" />}
         onSubmit={(line) => {
           void addLines([line]);
@@ -263,7 +261,7 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
       />
 
       <div className="mt-4 space-y-2 border-t border-nexus-accent/8 pt-4">
-        <Field label="Coller un journal de mission">
+        <Field label={t("pasteLabel")}>
           <textarea
             value={paste}
             onChange={(event) => setPaste(event.target.value)}
@@ -281,7 +279,7 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
           disabled={paste.trim() === ""}
           onClick={importPaste}
         >
-          Importer
+          {t("import")}
         </Button>
 
         {feedback ? (

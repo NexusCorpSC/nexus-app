@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslations } from "use-intl";
 import { Boxes, PanelRight } from "lucide-react";
 import {
   addLines,
@@ -10,8 +11,8 @@ import {
 import { type ParsedBulkLine } from "@/lib/cargo";
 import {
   ShipPicker,
-  TRANSPORT_SOURCE_LABELS,
   TransportsLoading,
+  transportSourceLabel,
   useTransports,
 } from "@/components/cargo/ship-picker";
 import { Button } from "@/components/ui";
@@ -37,6 +38,7 @@ export function CargoCaptureImport({
   ignored: number;
   onDone: () => void;
 }) {
+  const t = useTranslations("Cargo.capture");
   const [state, setState] = useState<"reading" | "ship" | "added" | "failed">(
     "reading",
   );
@@ -84,31 +86,36 @@ export function CargoCaptureImport({
       <div className="flex items-center gap-2">
         <Boxes className="size-4 shrink-0 text-sky-300" />
         <p className="text-sm font-medium text-slate-100">
-          {lines.length} objectif{lines.length > 1 ? "s" : ""} de livraison ·{" "}
-          {volume} SCU
+          {t("summary", { count: lines.length, volume })}
         </p>
       </div>
 
       <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-slate-300">
         {lines.map((line, index) => (
           <li key={`${line.destination}-${index}`} className="truncate">
-            <span className="text-slate-100">{line.volume} SCU</span>{" "}
-            {line.content ? `de ${line.content} ` : ""}
-            vers {line.destination}
-            {line.location ? ` (depuis ${line.location})` : ""}
+            {t.rich("line", {
+              volume: line.volume,
+              content: line.content,
+              hasContent: line.content ? "yes" : "no",
+              destination: line.destination,
+              location: line.location,
+              hasLocation: line.location ? "yes" : "no",
+              amount: (chunks) => (
+                <span className="text-slate-100">{chunks}</span>
+              ),
+            })}
           </li>
         ))}
       </ul>
 
       {ignored > 0 ? (
         <p className="text-xs text-amber-300/90">
-          {ignored} ligne{ignored > 1 ? "s" : ""} illisible
-          {ignored > 1 ? "s" : ""} — recadrez la capture pour les récupérer.
+          {t("ignored", { count: ignored })}
         </p>
       ) : null}
 
       {state === "reading" ? (
-        <p className="text-xs text-slate-400">Lecture de la feuille…</p>
+        <p className="text-xs text-slate-400">{t("reading")}</p>
       ) : null}
 
       {/* Rendered only when a ship is actually needed: loading it is what
@@ -118,7 +125,7 @@ export function CargoCaptureImport({
       {state === "added" ? (
         <div className="flex items-center gap-2">
           <p className="flex-1 text-xs text-emerald-300">
-            Ajouté à la feuille de cargo.
+            {t("added")}
           </p>
           <Button
             type="button"
@@ -130,17 +137,17 @@ export function CargoCaptureImport({
             }}
           >
             <PanelRight className="h-3.5 w-3.5" />
-            Superposition
+            {t("overlay")}
           </Button>
           <Button type="button" size="sm" onClick={onDone}>
-            Fermer
+            {t("close")}
           </Button>
         </div>
       ) : null}
 
       {state === "failed" ? (
         <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs text-red-200">
-          La feuille n'a pas pu être écrite{error ? ` : ${error}` : ""}.
+          {error ? t("failedWith", { error }) : t("failed")}
         </p>
       ) : null}
     </div>
@@ -148,12 +155,14 @@ export function CargoCaptureImport({
 }
 
 function ShipPrompt({ onSubmit }: { onSubmit: (ship: SheetShip) => void }) {
+  const t = useTranslations("Cargo.capture");
   const { transports, source, loading } = useTransports();
+  const sourceWarning = transportSourceLabel(source);
 
   return (
     <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
       <p className="text-xs text-slate-300">
-        Aucune feuille en cours. Quel vaisseau utilisez-vous ?
+        {t("askShip")}
       </p>
 
       {loading || !transports ? (
@@ -162,12 +171,12 @@ function ShipPrompt({ onSubmit }: { onSubmit: (ship: SheetShip) => void }) {
         <>
           <ShipPicker
             transports={transports}
-            submitLabel="Créer la feuille et ajouter"
+            submitLabel={t("createAndAdd")}
             onSubmit={onSubmit}
           />
-          {TRANSPORT_SOURCE_LABELS[source] ? (
+          {sourceWarning ? (
             <p className="text-[11px] text-amber-300/80">
-              {TRANSPORT_SOURCE_LABELS[source]}
+              {sourceWarning}
             </p>
           ) : null}
         </>

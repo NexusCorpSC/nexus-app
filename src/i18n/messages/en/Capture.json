@@ -1,0 +1,7 @@
+{
+  "hint": "Draw an area to read its text · Esc to cancel",
+  "reading": "Reading the text…",
+  "encodeFailed": "The image could not be encoded.",
+  "unreadable": "This image cannot be read.",
+  "tooLarge": "The image is still too large, even scaled down."
+}

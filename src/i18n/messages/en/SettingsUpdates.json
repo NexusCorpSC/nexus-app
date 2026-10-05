@@ -1,0 +1,17 @@
+{
+  "title": "Updates",
+  "description": "The app checks at startup, then every six hours, whether a newer release has been published. Nothing is installed without your consent.",
+  "check": "Check now",
+  "checking": "Checking…",
+  "version": "Version",
+  "installed": "Installed",
+  "latest": "You have the latest version ({version}).",
+  "available": "Available",
+  "versionNumber": "Version {version}",
+  "installedVersion": "installed: {version}",
+  "downloading": "Downloading… {progress}. The app will restart to finish.",
+  "percent": "{percent}%",
+  "megabytes": "{size} MB",
+  "install": "Install and restart",
+  "installFailed": "Installation failed: {error}"
+}

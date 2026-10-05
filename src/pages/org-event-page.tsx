@@ -13,6 +13,7 @@ import {
   User,
   Users,
 } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { EventPill } from "@/components/org-event-pill";
 import { RoleIcon } from "@/components/squad/role-icon";
 import {
@@ -23,6 +24,8 @@ import {
   LoadingState,
 } from "@/components/ui";
 import { MY_EVENTS_KEY, useMyPresence } from "@/hooks/use-presence";
+import { getLocale } from "@/i18n/locale";
+import { translator } from "@/i18n/translate";
 import { ApiError } from "@/lib/api-client";
 import {
   createOrgEventSquad,
@@ -51,42 +54,38 @@ import {
   type OrgEventView,
 } from "@/types/nexus";
 
-const MONTH = new Intl.DateTimeFormat("fr-FR", { month: "short" });
-const WEEKDAY = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
-const LONG_DAY = new Intl.DateTimeFormat("fr-FR", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-});
+function dateFormat(options: Intl.DateTimeFormatOptions) {
+  return new Intl.DateTimeFormat(getLocale(), options);
+}
 
 /** Where the event stands: to come (and in how long), under way, over. */
 function countdown(event: OrgEventView, now: number) {
+  const t = translator("OrgEvents.status");
   const start = Date.parse(event.startsAt);
   if (Date.parse(event.endsAt) <= now) {
-    return { state: "over" as const, label: "Terminé" };
+    return { state: "over" as const, label: t("over") };
   }
-  if (start <= now) return { state: "live" as const, label: "En cours" };
+  if (start <= now) return { state: "live" as const, label: t("live") };
 
   const days = daysBetween(new Date(now), new Date(start));
   return {
     state: "soon" as const,
     label:
       start - now < 24 * 3_600_000
-        ? `Commence dans ${formatSpan(start - now)}`
-        : `Dans ${days} ${days > 1 ? "jours" : "jour"}`,
+        ? t("startsIn", { duration: formatSpan(start - now) })
+        : t("inDays", { count: days }),
   };
 }
 
 /** The squad refusals the API words in English, said the app's way. */
 function squadErrorMessage(error: unknown): string {
+  const t = translator("OrgEvents.squad");
   if (error instanceof ApiError && error.status === 409) {
-    return /nobody/i.test(error.message)
-      ? "Personne n'est inscrit à l'évènement."
-      : "L'escouade de l'évènement existe déjà.";
+    return /nobody/i.test(error.message) ? t("nobody") : t("exists");
   }
   return error instanceof Error
-    ? `La création de l'escouade a échoué : ${error.message}`
-    : "La création de l'escouade a échoué.";
+    ? t("error", { message: error.message })
+    : t("errorUnknown");
 }
 
 /**
@@ -98,6 +97,7 @@ function squadErrorMessage(error: unknown): string {
  * is built from here: it lands in the squad overlay.
  */
 export default function OrgEventPage() {
+  const t = useTranslations("OrgEvents");
   const { orgId = "", eventId = "" } = useParams();
 
   // As on the organization page: the name comes from the cached list.
@@ -123,7 +123,7 @@ export default function OrgEventPage() {
   }, []);
 
   const back = (
-    <BackLink to={`/orgs/${orgId}`}>{org?.name ?? "Organisation"}</BackLink>
+    <BackLink to={`/orgs/${orgId}`}>{org?.name ?? t("orgFallback")}</BackLink>
   );
 
   if (event.isPending) return <LoadingState />;
@@ -134,8 +134,8 @@ export default function OrgEventPage() {
         {back}
         {event.error instanceof ApiError && event.error.status === 404 ? (
           <EmptyState
-            title="Évènement introuvable."
-            description="Il a peut-être été supprimé, ou il est réservé aux membres de l'organisation."
+            title={t("notFound.title")}
+            description={t("notFound.description")}
           />
         ) : (
           <ErrorState
@@ -164,10 +164,10 @@ export default function OrgEventPage() {
             <EventPill>
               <VisibilityIcon className="size-3" />
               {view.visibility === "public"
-                ? "Public"
+                ? t("pill.public")
                 : org
-                  ? `Privé · membres de ${org.name}`
-                  : "Privé"}
+                  ? t("pill.privateTo", { org: org.name })
+                  : t("pill.private")}
             </EventPill>
             <EventPill
               tone={
@@ -190,18 +190,18 @@ export default function OrgEventPage() {
             <Button
               variant="outline"
               onClick={() => void openOnSite(`${sitePath}/summary`)}
-              title="Ouvre le résumé de l'organisateur dans le navigateur"
+              title={t("header.summaryTitle")}
             >
               <ClipboardList className="size-4" />
-              Résumé
+              {t("header.summary")}
             </Button>
             <Button
               variant="outline"
               onClick={() => void openOnSite(`${sitePath}/edit`)}
-              title="Ouvre le formulaire dans le navigateur"
+              title={t("header.editTitle")}
             >
               <Pencil className="size-4" />
-              Modifier
+              {t("header.edit")}
             </Button>
           </div>
         ) : null}
@@ -214,7 +214,7 @@ export default function OrgEventPage() {
           {view.description ? (
             <section>
               <h2 className="mb-2 font-display text-base font-semibold text-nexus-white">
-                Le plan
+                {t("thePlan")}
               </h2>
               <p className="text-[13.5px] leading-relaxed whitespace-pre-wrap text-nexus-soft">
                 {view.description}
@@ -246,13 +246,13 @@ function DateBlock({ startsAt }: { startsAt: string }) {
       className="flex w-16 shrink-0 flex-col items-center rounded-xl border border-nexus-accent/30 bg-nexus-panel py-1.5"
     >
       <span className="text-[11px] font-semibold text-nexus-accent uppercase">
-        {MONTH.format(date)}
+        {dateFormat({ month: "short" }).format(date)}
       </span>
       <span className="font-display text-2xl leading-tight font-bold text-nexus-white">
         {date.getDate()}
       </span>
       <span className="text-[11px] text-nexus-muted uppercase">
-        {WEEKDAY.format(date)}
+        {dateFormat({ weekday: "short" }).format(date)}
       </span>
     </div>
   );
@@ -288,27 +288,36 @@ function Fact({
 }
 
 function Facts({ event }: { event: OrgEventView }) {
+  const t = useTranslations("OrgEvents.facts");
   const where = event.meetingPoint || event.meetingPlace?.name || null;
-  const day = LONG_DAY.format(new Date(event.startsAt));
+  const day = dateFormat({
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(new Date(event.startsAt));
 
   return (
     <section
-      aria-label="En bref"
+      aria-label={t("label")}
       className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3"
     >
       <Fact
         icon={<CalendarClock className="size-4.5" />}
-        label="Quand"
+        label={t("when")}
         value={formatTimeRange(event)}
       >
-        {day.charAt(0).toUpperCase() + day.slice(1)} ·{" "}
-        {formatSpan(Date.parse(event.endsAt) - Date.parse(event.startsAt))} ·
-        heure de {timeZoneCity()}
+        {t("whenDetail", {
+          day: day.charAt(0).toUpperCase() + day.slice(1),
+          duration: formatSpan(
+            Date.parse(event.endsAt) - Date.parse(event.startsAt),
+          ),
+          city: timeZoneCity(),
+        })}
       </Fact>
       <Fact
         icon={<MapPin className="size-4.5" />}
-        label="Rendez-vous"
-        value={where ?? "À préciser"}
+        label={t("where")}
+        value={where ?? t("whereUnknown")}
       >
         {event.meetingPlace ? (
           <Link
@@ -316,14 +325,14 @@ function Facts({ event }: { event: OrgEventView }) {
             className="text-nexus-accent transition-colors hover:text-nexus-bright"
           >
             {event.meetingPoint
-              ? `${event.meetingPlace.name} · voir le lieu`
-              : "Voir le lieu"}
+              ? t("seePlaceNamed", { place: event.meetingPlace.name })
+              : t("seePlace")}
           </Link>
         ) : null}
       </Fact>
       <Fact
         icon={<User className="size-4.5" />}
-        label="Organisé par"
+        label={t("organizer")}
         value={event.createdBy.name}
       />
     </section>
@@ -337,6 +346,7 @@ function Person({
   participant: OrgEventParticipant;
   me: boolean;
 }) {
+  const t = useTranslations("OrgEvents.whoComes");
   return (
     <span
       className={cn(
@@ -349,13 +359,14 @@ function Person({
       <span className="flex size-5.5 items-center justify-center rounded-full bg-nexus-panel text-[10px] font-semibold text-nexus-accent">
         {participant.name.slice(0, 1).toUpperCase()}
       </span>
-      {me ? `Vous (${participant.name})` : participant.name}
+      {me ? t("you", { name: participant.name }) : participant.name}
     </span>
   );
 }
 
 /** Who comes, by role, with each role's count against what is wanted. */
 function WhoComes({ event }: { event: OrgEventView }) {
+  const t = useTranslations("OrgEvents.whoComes");
   const me = event.myRegistration?.userId ?? null;
 
   const groups: { role: OrgEventRole | null; people: OrgEventParticipant[] }[] =
@@ -380,7 +391,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
     <section>
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <h2 className="font-display text-base font-semibold text-nexus-white">
-          Qui vient
+          {t("title")}
         </h2>
         <span className="text-xs text-nexus-muted">
           {registrationsLabel(event.registrationCount)}
@@ -389,7 +400,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
 
       {!event.canRegister && event.registrationCount > 0 ? (
         <p className="mb-3 text-[13px] text-nexus-muted">
-          La liste des inscrits est réservée aux membres de l'organisation.
+          {t("listMembersOnly")}
         </p>
       ) : null}
 
@@ -397,7 +408,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
         event.canRegister ? (
           event.participants.length === 0 ? (
             <p className="text-[13px] text-nexus-muted">
-              Personne n'est encore inscrit.
+              {t("noParticipants")}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -426,7 +437,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
                     className="size-4 text-nexus-accent"
                   />
                   <span className="text-sm font-semibold text-nexus-white">
-                    {role?.label ?? "Sans rôle"}
+                    {role?.label ?? t("noRole")}
                   </span>
                   <span
                     className={cn(
@@ -435,7 +446,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
                     )}
                   >
                     {role && role.wanted !== null
-                      ? `${count} sur ${role.wanted} ${role.wanted > 1 ? "souhaités" : "souhaité"}`
+                      ? t("countOfWanted", { count, wanted: role.wanted })
                       : count}
                   </span>
                 </div>
@@ -450,9 +461,7 @@ function WhoComes({ event }: { event: OrgEventView }) {
                     ))}
                   </div>
                 ) : event.canRegister && count === 0 ? (
-                  <p className="text-xs text-nexus-dim">
-                    Personne pour l'instant.
-                  </p>
+                  <p className="text-xs text-nexus-dim">{t("nobodyInRole")}</p>
                 ) : null}
               </div>
             );
@@ -485,6 +494,7 @@ function RegistrationPanel({
   event: OrgEventView;
   ended: boolean;
 }) {
+  const t = useTranslations("OrgEvents.registration");
   const mine = event.myRegistration;
   const active = !!mine && !mine.withdrawn;
   const settle = useEventSettle(event);
@@ -513,8 +523,9 @@ function RegistrationPanel({
   const error = register.error ?? withdraw.error ?? plan.error;
   const errorLine = error ? (
     <p className="text-xs text-red-300">
-      L'inscription a échoué :{" "}
-      {error instanceof Error ? error.message : "erreur inconnue"}
+      {t("error", {
+        message: error instanceof Error ? error.message : t("unknownError"),
+      })}
     </p>
   ) : null;
 
@@ -524,12 +535,10 @@ function RegistrationPanel({
     return (
       <Card className={box}>
         <h2 className="font-display text-base font-semibold text-nexus-white">
-          Inscription
+          {t("title")}
         </h2>
         <p className="text-[13px] text-nexus-muted">
-          {ended
-            ? "Cet évènement est terminé : les inscriptions sont closes."
-            : "L'inscription est réservée aux membres de l'organisation."}
+          {ended ? t("ended") : t("membersOnly")}
         </p>
       </Card>
     );
@@ -552,10 +561,13 @@ function RegistrationPanel({
           </span>
           <div className="min-w-0">
             <h2 className="font-display text-base font-semibold text-nexus-white">
-              Vous êtes inscrit
+              {t("registered")}
             </h2>
             <p className="text-[13px] text-nexus-muted">
-              {[myRole ? `Rôle : ${myRole.label}` : null, firstAnswer]
+              {[
+                myRole ? t("roleIs", { role: myRole.label }) : null,
+                firstAnswer,
+              ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
@@ -569,14 +581,13 @@ function RegistrationPanel({
             className="flex items-center gap-2 rounded-lg bg-emerald-400/10 px-3 py-2.5 text-left text-[13px] text-emerald-100 transition-colors hover:bg-emerald-400/18"
           >
             <Users className="size-4 shrink-0" />
-            L'escouade de l'évènement est prête : l'ouvrir
+            {t("squadReady")}
           </button>
         ) : null}
 
         {shownAsPlanned ? (
           <p className="rounded-lg bg-nexus-abyss/70 px-3 py-2.5 text-[13px] text-amber-200">
-            Ajouté à votre statut comme session prévue. Vos amis et l'orga le
-            voient.
+            {t("shownAsPlanned")}
           </p>
         ) : (
           <button
@@ -588,7 +599,7 @@ function RegistrationPanel({
             className="flex w-full items-center gap-2 rounded-lg border border-dashed border-amber-300/45 px-3 py-2.5 text-left text-[13px] text-amber-200 transition-colors hover:border-amber-300 disabled:opacity-50"
           >
             <CalendarClock className="size-4 shrink-0" />
-            L'afficher comme ma prochaine session
+            {t("showAsPlanned")}
           </button>
         )}
 
@@ -596,14 +607,14 @@ function RegistrationPanel({
 
         <div className="flex flex-col gap-2">
           <Button variant="outline" onClick={() => setEditing(true)}>
-            Modifier mes réponses
+            {t("editAnswers")}
           </Button>
           <Button
             variant="ghost"
             disabled={pending}
             onClick={() => withdraw.mutate()}
           >
-            Se désinscrire
+            {t("withdraw")}
           </Button>
         </div>
       </Card>
@@ -621,18 +632,17 @@ function RegistrationPanel({
       >
         <div>
           <h2 className="font-display text-base font-semibold text-nexus-white">
-            {active ? "Modifier mon inscription" : "S'inscrire"}
+            {active ? t("editTitle") : t("register")}
           </h2>
           <p className="mt-0.5 text-xs text-nexus-muted">
-            Modifiable jusqu'à la fin de l'évènement. {event.createdBy.name}{" "}
-            voit vos réponses.
+            {t("hint", { name: event.createdBy.name })}
           </p>
         </div>
 
         {event.roles.length > 0 ? (
           <fieldset>
             <legend className="mb-2 text-[13px] font-medium text-nexus-bright">
-              Votre rôle
+              {t("role")}
             </legend>
             <div className="grid grid-cols-2 gap-2">
               {event.roles.map((candidate) => {
@@ -672,9 +682,9 @@ function RegistrationPanel({
                       )}
                     >
                       {missing > 0 && count === 0
-                        ? `On en cherche ${missing}`
+                        ? t("lookingFor", { count: missing })
                         : missing > 0
-                          ? `${registrationsLabel(count)} · il en manque ${missing}`
+                          ? t("countMissing", { count, missing })
                           : registrationsLabel(count)}
                     </span>
                   </label>
@@ -689,7 +699,7 @@ function RegistrationPanel({
             <span className="text-[13px] font-medium text-nexus-bright">
               {question.label}{" "}
               <span className="font-normal text-nexus-dim">
-                · {question.required ? "obligatoire" : "facultatif"}
+                · {question.required ? t("required") : t("optional")}
               </span>
             </span>
             <textarea
@@ -712,11 +722,7 @@ function RegistrationPanel({
 
         <div className="flex flex-col gap-2">
           <Button type="submit" disabled={pending}>
-            {active
-              ? "Enregistrer mes réponses"
-              : mine
-                ? "Se réinscrire"
-                : "S'inscrire"}
+            {active ? t("update") : mine ? t("reRegister") : t("register")}
           </Button>
           {active ? (
             <Button
@@ -728,16 +734,13 @@ function RegistrationPanel({
                 setEditing(false);
               }}
             >
-              Annuler
+              {t("cancel")}
             </Button>
           ) : null}
         </div>
 
         {mine?.withdrawn ? (
-          <p className="text-xs text-nexus-muted">
-            Vous vous êtes désinscrit. Vos réponses sont gardées si vous
-            revenez.
-          </p>
+          <p className="text-xs text-nexus-muted">{t("withdrawn")}</p>
         ) : null}
       </form>
     </Card>
@@ -750,6 +753,7 @@ function RegistrationPanel({
  * event stream tells it — and the code is here for anyone to join by hand.
  */
 function SquadCard({ event }: { event: OrgEventView }) {
+  const t = useTranslations("OrgEvents.squad");
   const queryClient = useQueryClient();
   const settle = useEventSettle(event);
   const [created, setCreated] = useState<OrgEventSquadResult | null>(null);
@@ -771,27 +775,25 @@ function SquadCard({ event }: { event: OrgEventView }) {
         <div className="flex items-center gap-2">
           <Users className="size-4 text-emerald-300" />
           <h2 className="font-display text-base font-semibold text-nexus-white">
-            L'escouade est prête
+            {t("ready")}
           </h2>
         </div>
         <p className="text-[13px] text-nexus-muted">
-          {created.squadCount > 1
-            ? `${created.squadCount} escouades réunies en raid, la première avec le code`
-            : `${created.squad.name}, code`}{" "}
+          {t("createdDetail", {
+            count: created.squadCount,
+            name: created.squad.name,
+          })}{" "}
           <span className="font-mono font-semibold tracking-[0.12em] text-nexus-white select-all">
             {created.squad.code}
           </span>
         </p>
         {created.leftOut > 0 ? (
           <p className="text-xs text-amber-200">
-            {created.leftOut > 1
-              ? `${created.leftOut} inscrits n'ont pas trouvé de place`
-              : "1 inscrit n'a pas trouvé de place"}{" "}
-            : un raid compte au plus 6 escouades.
+            {t("leftOut", { count: created.leftOut })}
           </p>
         ) : null}
         <Button variant="outline" onClick={() => void showOverlay("squad")}>
-          Ouvrir l'escouade
+          {t("open")}
         </Button>
       </Card>
     );
@@ -807,24 +809,18 @@ function SquadCard({ event }: { event: OrgEventView }) {
       <div className="flex items-center gap-2">
         <Users className="size-4 text-nexus-accent" />
         <h2 className="font-display text-base font-semibold text-nexus-white">
-          Créer l'escouade de l'évènement
+          {t("title")}
         </h2>
       </div>
       {event.squadId ? (
-        <p className="text-[13px] text-nexus-muted">
-          Une escouade a déjà été tirée de cet évènement. Si elle a été
-          dissoute, vous pouvez en créer une nouvelle.
-        </p>
+        <p className="text-[13px] text-nexus-muted">{t("alreadyDrawn")}</p>
       ) : (
         <p className="text-[13px] text-nexus-muted">
-          {count > 1
-            ? `Une escouade de ${count} inscrits`
-            : `Une escouade de ${count} inscrit`}{" "}
-          menée par vous
-          {roles.length > 0 ? `, avec les rôles ${roles.join(", ")}` : ""}.
-          Chacun garde le rôle choisi à l'inscription et la retrouve dans sa
-          liste d'escouades, sans quitter la sienne. Au-delà de 20, plusieurs
-          escouades réunies en raid.
+          {t("hint", {
+            count,
+            hasRoles: roles.length > 0 ? "yes" : "no",
+            roles: roles.join(", "),
+          })}
         </p>
       )}
       {create.isError ? (
@@ -838,11 +834,11 @@ function SquadCard({ event }: { event: OrgEventView }) {
           disabled={create.isPending || count === 0}
           onClick={() => create.mutate()}
         >
-          Créer l'escouade
+          {t("create")}
         </Button>
         {event.squadId ? (
           <Button variant="ghost" onClick={() => void showOverlay("squad")}>
-            Ouvrir l'escouade
+            {t("open")}
           </Button>
         ) : null}
       </div>

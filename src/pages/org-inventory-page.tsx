@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { BackLink } from "@/components/layout/back-link";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
+import { useTranslations } from "use-intl";
 import { listOrgInventory } from "@/lib/api/orgs";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
@@ -34,6 +35,8 @@ import {
  * lot per quality — read-only, each lot saying whose it is.
  */
 export default function OrgInventoryPage() {
+  const t = useTranslations("OrgInventory");
+  const tInventory = useTranslations("Inventory");
   const { orgId = "" } = useParams();
 
   const params = useInitialParams();
@@ -94,26 +97,26 @@ export default function OrgInventoryPage() {
 
   return (
     <>
-      <BackLink to={`/orgs/${orgId}`}>Retour à l'organisation</BackLink>
+      <BackLink to={`/orgs/${orgId}`}>{t("back")}</BackLink>
 
       <PageHeader
-        title="Inventaire partagé"
-        description="Ressources rendues visibles par les membres de l'organisation."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Toolbar className="mb-3">
         <SearchField
-          label="Rechercher une ressource"
+          label={tInventory("searchLabel")}
           value={search}
-          placeholder="Nom de la ressource…"
+          placeholder={tInventory("searchPlaceholder")}
           onChange={(event) => setSearch(event.target.value)}
         />
         <ToolbarSelect
-          label="Membre"
+          label={t("member")}
           value={memberId}
           onChange={(event) => setMemberId(event.target.value)}
         >
-          <option value="">Tous</option>
+          <option value="">{t("allMembers")}</option>
           {inventoryQuery.data?.members.map((member) => (
             <option key={member.id} value={member.id}>
               {member.name}
@@ -122,13 +125,13 @@ export default function OrgInventoryPage() {
         </ToolbarSelect>
         <QualityFilter value={minQuality} onChange={setMinQuality} />
         <ToolbarSelect
-          label="Tri"
+          label={tInventory("sortLabel")}
           value={sort}
           onChange={(event) => setSort(event.target.value as InventorySort)}
         >
           {INVENTORY_SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {tInventory(`sort.${option.value}`)}
             </option>
           ))}
         </ToolbarSelect>
@@ -137,14 +140,14 @@ export default function OrgInventoryPage() {
       {totalCount > 0 ? (
         <div
           role="group"
-          aria-label="Filtrer par lieu"
+          aria-label={tInventory("filterByLocation")}
           className="mb-6 flex flex-wrap gap-2"
         >
           <Chip
             active={activeLocation === ""}
             onClick={() => setLocationFilter("")}
           >
-            Tous · {totalCount}
+            {tInventory("filterAll", { count: totalCount })}
           </Chip>
           {sections.map((section) => (
             <Chip
@@ -168,13 +171,13 @@ export default function OrgInventoryPage() {
       ) : visibleSections.length === 0 ? (
         query || quality || memberId ? (
           <EmptyState
-            title="Aucune ressource trouvée"
-            description="Essayez un autre nom, un autre membre, une autre qualité ou un autre lieu."
+            title={t("noResultsTitle")}
+            description={t("noResultsDescription")}
           />
         ) : (
           <EmptyState
-            title="Aucune ressource partagée"
-            description="Les membres doivent cocher « Visible par l'org » sur leurs ressources pour qu'elles apparaissent ici."
+            title={t("emptyTitle")}
+            description={t("emptyDescription")}
           />
         )
       ) : (
@@ -183,7 +186,7 @@ export default function OrgInventoryPage() {
           renderLotMeta={(lot) => (
             <span
               className="flex min-w-0 items-center gap-1 text-xs text-nexus-muted"
-              title="Propriétaire"
+              title={t("owner")}
             >
               <User className="size-3.5 shrink-0 text-nexus-dim" />
               <span className="truncate">{lot.ownerName}</span>

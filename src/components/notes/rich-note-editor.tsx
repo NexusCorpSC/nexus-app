@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { useTranslations } from "use-intl";
 import {
   EditorContent,
   Extension,
@@ -113,6 +114,8 @@ export function useRichNoteEditor({
   /** Hidden, the editor does not follow `markdown`; it catches up when shown. */
   active: boolean;
 }): { editor: Editor; readOnly: boolean } {
+  const t = useTranslations("Notes");
+
   // The last Markdown the editor and the caller agreed on. Echoes of the
   // editor's own edits come back through `markdown`; reloading them would
   // reset the cursor on every keystroke.
@@ -134,7 +137,7 @@ export function useRichNoteEditor({
           openOnClick: false,
           autolink: true,
           linkOnPaste: true,
-          HTMLAttributes: { title: "Ctrl + clic pour ouvrir le lien" },
+          HTMLAttributes: { title: t("toolbar.openLinkHint") },
         },
       }),
       Markdown,
@@ -145,7 +148,7 @@ export function useRichNoteEditor({
     editorProps: {
       attributes: {
         class: "nexus-rich-note",
-        "aria-label": "Bloc-notes",
+        "aria-label": t("title"),
         spellcheck: "false",
       },
       handleClick(_view, _pos, event) {
@@ -244,6 +247,7 @@ export function RichNoteToolbar({
   editor: Editor;
   disabled?: boolean;
 }) {
+  const t = useTranslations("Notes.toolbar");
   const state = useEditorState({
     editor,
     selector: ({ editor }) => ({
@@ -296,7 +300,7 @@ export function RichNoteToolbar({
   return (
     <div className="flex items-center gap-0.5 border-l border-nexus-accent/12 pl-2">
       <ToolbarButton
-        label="Gras"
+        label={t("bold")}
         active={state.bold}
         disabled={disabled}
         onClick={() => editor.chain().focus().toggleBold().run()}
@@ -304,7 +308,7 @@ export function RichNoteToolbar({
         <Bold className="size-4" />
       </ToolbarButton>
       <ToolbarButton
-        label="Italique"
+        label={t("italic")}
         active={state.italic}
         disabled={disabled}
         onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -312,7 +316,7 @@ export function RichNoteToolbar({
         <Italic className="size-4" />
       </ToolbarButton>
       <ToolbarButton
-        label="Titre"
+        label={t("heading")}
         active={state.heading}
         disabled={disabled}
         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
@@ -320,7 +324,7 @@ export function RichNoteToolbar({
         <Heading2 className="size-4" />
       </ToolbarButton>
       <ToolbarButton
-        label="Liste"
+        label={t("list")}
         active={state.list}
         disabled={disabled}
         onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -328,7 +332,7 @@ export function RichNoteToolbar({
         <List className="size-4" />
       </ToolbarButton>
       <ToolbarButton
-        label={state.link ? "Retirer le lien" : "Lien"}
+        label={state.link ? t("removeLink") : t("link")}
         active={state.link || linkDraft !== null}
         disabled={disabled}
         onClick={toggleLink}
@@ -356,8 +360,8 @@ export function RichNoteToolbar({
             }
           }}
           onBlur={() => setLinkDraft(null)}
-          placeholder="https://… puis Entrée"
-          aria-label="Adresse du lien"
+          placeholder={t("linkPlaceholder")}
+          aria-label={t("linkAddress")}
           className="ml-1 h-7 w-56 rounded-md border border-nexus-accent/25 bg-nexus-abyss/60 px-2 text-[12.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
         />
       ) : null}
@@ -373,6 +377,7 @@ export function RichNoteContent({
   editor: Editor;
   className?: string;
 }) {
+  const t = useTranslations("Notes");
   const empty = useEditorState({
     editor,
     selector: ({ editor }) => editor.isEmpty,
@@ -382,7 +387,7 @@ export function RichNoteContent({
     <div className={cn("relative", className)}>
       {empty ? (
         <p className="pointer-events-none absolute top-5 left-6 text-[15px] text-nexus-dim/80">
-          Routes de minage, prix, plans de mission…
+          {t("placeholder")}
         </p>
       ) : null}
       <EditorContent editor={editor} />

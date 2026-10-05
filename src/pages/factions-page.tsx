@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import { ChevronRight } from "lucide-react";
 import { listFactionBlueprints } from "@/lib/api/factions";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -25,6 +26,7 @@ import type { FactionWithBlueprints } from "@/types/nexus";
  * get this thing» is the question this screen exists for.
  */
 export default function FactionsPage() {
+  const t = useTranslations("Factions");
   // The search palette links here with a faction id when it finds one.
   const { factionId } = useParams();
   const params = useInitialParams();
@@ -56,23 +58,23 @@ export default function FactionsPage() {
   return (
     <>
       <PageHeader
-        title="Factions"
-        description="Les blueprints récompensés par les missions de chaque faction."
+        title={t("title")}
+        description={t("description")}
       />
 
       <Toolbar>
         <SearchField
-          label="Rechercher une faction ou un blueprint"
+          label={t("searchLabel")}
           value={search}
-          placeholder="Nom de faction ou de blueprint…"
+          placeholder={t("searchPlaceholder")}
           onChange={(event) => setSearch(event.target.value)}
         />
       </Toolbar>
 
       {factions.length === 0 ? (
         <EmptyState
-          title="Aucune faction trouvée"
-          description="Aucune faction ne porte ce nom, et aucun de leurs blueprints non plus."
+          title={t("emptyTitle")}
+          description={t("emptyDescription")}
         />
       ) : (
         <div className="space-y-4">
@@ -96,6 +98,7 @@ function FactionCard({
   faction: FactionWithBlueprints;
   highlighted: boolean;
 }) {
+  const t = useTranslations("Factions");
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Arrived from the palette: the faction asked for may be far down the list.
@@ -118,8 +121,7 @@ function FactionCard({
             {faction.name}
           </h2>
           <span className="text-xs text-nexus-dim">
-            {faction.blueprints.length} blueprint
-            {faction.blueprints.length > 1 ? "s" : ""}
+            {t("blueprintCount", { count: faction.blueprints.length })}
           </span>
         </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslations } from "use-intl";
 import { listTransports, type TransportSource } from "@/lib/api/cargo-ships";
 import {
   CUSTOM_TRANSPORT_ID,
@@ -7,6 +8,7 @@ import {
   type Transport,
 } from "@/lib/cargo";
 import { DEFAULT_CUSTOM_CAPACITY, type SheetShip } from "@/lib/cargo-sheet";
+import { translator } from "@/i18n/translate";
 import { Button, Field, Input, Select, Spinner } from "@/components/ui";
 
 /**
@@ -37,11 +39,19 @@ export function useTransports() {
   return { transports, source, loading: transports === null };
 }
 
-export const TRANSPORT_SOURCE_LABELS: Record<TransportSource, string> = {
-  network: "",
-  cache: "Liste des vaisseaux en cache : le site n'a pas répondu.",
-  builtin: "Liste des vaisseaux intégrée : le site n'a jamais pu être lu.",
-};
+/** Where the ship list came from, when it is worth a warning; empty otherwise. */
+export function transportSourceLabel(source: TransportSource): string {
+  const t = translator("Cargo.ships");
+
+  switch (source) {
+    case "cache":
+      return t("sourceCache");
+    case "builtin":
+      return t("sourceBuiltin");
+    default:
+      return "";
+  }
+}
 
 /**
  * Picks a ship, and its capacity when «Capacité libre» is chosen.
@@ -62,6 +72,7 @@ export function ShipPicker({
   submitLabel: string;
   onSubmit: (ship: SheetShip) => void;
 }) {
+  const t = useTranslations("Cargo.ships");
   const fallbackId =
     initialTransportId ??
     (findTransport(transports, DEFAULT_TRANSPORT_ID)
@@ -84,7 +95,7 @@ export function ShipPicker({
       custom || !selected
         ? {
             id: CUSTOM_TRANSPORT_ID,
-            name: "Capacité libre",
+            name: t("custom"),
             capacity: parsedCapacity,
           }
         : selected,
@@ -93,7 +104,7 @@ export function ShipPicker({
 
   return (
     <div className="space-y-3">
-      <Field label="Vaisseau">
+      <Field label={t("ship")}>
         <Select
           value={transportId}
           onChange={(event) => setTransportId(event.target.value)}
@@ -103,12 +114,12 @@ export function ShipPicker({
               {transport.name} — {transport.capacity} SCU
             </option>
           ))}
-          <option value={CUSTOM_TRANSPORT_ID}>Capacité libre</option>
+          <option value={CUSTOM_TRANSPORT_ID}>{t("custom")}</option>
         </Select>
       </Field>
 
       {custom ? (
-        <Field label="Capacité (SCU)">
+        <Field label={t("capacity")}>
           <Input
             value={capacity}
             inputMode="numeric"
@@ -125,10 +136,12 @@ export function ShipPicker({
 }
 
 export function TransportsLoading() {
+  const t = useTranslations("Cargo.ships");
+
   return (
     <div className="flex items-center gap-2 text-xs text-nexus-accent/60">
       <Spinner />
-      Chargement des vaisseaux…
+      {t("loading")}
     </div>
   );
 }

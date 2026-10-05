@@ -48,12 +48,7 @@ export function nextOverlayMode(mode: OverlayMode): OverlayMode {
   return OVERLAY_MODES[(index + 1) % OVERLAY_MODES.length];
 }
 
-/** How each mode is named to the user. */
-export const OVERLAY_MODE_LABELS: Record<OverlayMode, string> = {
-  clear: "transparent",
-  shaded: "ombré",
-  opaque: "opaque",
-};
+/* How each mode is named to the user: `Overlay.opacity.modes` in the messages. */
 
 /**
  * What each overlay has always looked like, and what they open on until the

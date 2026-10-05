@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "use-intl";
 import { invoke } from "@tauri-apps/api/core";
 import {
   ArrowLeft,
@@ -115,6 +116,7 @@ const SHEET =
 type Sheet = { kind: "roles"; squadId: string } | { kind: "raid" } | null;
 
 export default function SquadOverlayPage() {
+  const t = useTranslations("Squad");
   const { user, loading: session } = useAuth();
 
   /**
@@ -245,10 +247,10 @@ export default function SquadOverlayPage() {
               "pointer-events-none size-1.5 shrink-0 rounded-full",
               state.connected ? "bg-emerald-400" : "bg-amber-400",
             )}
-            title={state.connected ? "En direct" : "Reconnexion…"}
+            title={state.connected ? t("live") : t("reconnecting")}
           >
             <span className="sr-only">
-              {state.connected ? "En direct" : "Reconnexion…"}
+              {state.connected ? t("live") : t("reconnecting")}
             </span>
           </span>
         ) : null}
@@ -287,7 +289,7 @@ export default function SquadOverlayPage() {
         {/* The squad's flight plan, one click from the roster it is drawn for. */}
         {squad ? (
           <IconButton
-            label="Ouvrir le plan de vol"
+            label={t("openPlan")}
             onClick={() =>
               void showOverlay("plan").catch((error) =>
                 console.error("cannot open the flight plan", error),
@@ -310,18 +312,18 @@ export default function SquadOverlayPage() {
           className="text-nexus-accent/70 hover:bg-nexus-abyss/60 hover:text-nexus-bright"
         />
 
-        <IconButton label="Fermer" onClick={close}>
+        <IconButton label={t("close")} onClick={close}>
           <X className="size-4" />
         </IconButton>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-2.5">
         {session ? (
-          <p className="text-xs text-nexus-accent/70">Session…</p>
+          <p className="text-xs text-nexus-accent/70">{t("session")}</p>
         ) : !user ? (
           <SignedOut />
         ) : state.loading ? (
-          <p className="text-xs text-nexus-accent/70">Chargement…</p>
+          <p className="text-xs text-nexus-accent/70">{t("loading")}</p>
         ) : !squad ? (
           <NoSquad
             onCreate={() => squadApi.create.mutate(undefined)}
@@ -435,14 +437,12 @@ function NoSquad({
   joining: boolean;
   joinError: unknown;
 }) {
+  const t = useTranslations("Squad.noSquad");
   const [code, setCode] = useState("");
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-nexus-accent/70">
-        Créez une escouade et partagez son code, ou saisissez celui qu'on vous a
-        donné.
-      </p>
+      <p className="text-xs text-nexus-accent/70">{t("intro")}</p>
 
       <OverlayButton onClick={onCreate} disabled={creating}>
         {creating ? (
@@ -450,7 +450,7 @@ function NoSquad({
         ) : (
           <Plus className="size-3.5" />
         )}
-        Créer une escouade
+        {t("create")}
       </OverlayButton>
 
       <form
@@ -463,10 +463,10 @@ function NoSquad({
           if (typed) onJoin(typed);
         }}
       >
-        <CodeInput value={code} onChange={setCode} label="Code de l'escouade" />
+        <CodeInput value={code} onChange={setCode} label={t("codeLabel")} />
         <OverlayButton type="submit" disabled={joining || !code.trim()}>
           {joining ? <Loader2 className="size-3.5 animate-spin" /> : null}
-          Rejoindre
+          {t("join")}
         </OverlayButton>
       </form>
 
@@ -498,6 +498,7 @@ function SquadBoard({
   onRoles: (squadId: string) => void;
   onLeave: () => void;
 }) {
+  const t = useTranslations("Squad.board");
   const commands = commandsSquad(squad, userId);
   const counts = tally([squad]);
 
@@ -511,7 +512,7 @@ function SquadBoard({
         onCommit={(announcements) =>
           api.announce.mutate({ squadId: squad.id, announcements })
         }
-        placeholder="Annonce à l'escouade"
+        placeholder={t("announcementPlaceholder")}
       />
 
       <MemberList
@@ -527,20 +528,20 @@ function SquadBoard({
           <OverlayButton
             onClick={() => api.readyCheck.mutate(squad.id)}
             disabled={api.readyCheck.isPending}
-            title="Tout le monde repasse « non prêt » et reçoit une notification"
+            title={t("readyCheckHint")}
           >
             {api.readyCheck.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <ListChecks className="size-3.5" />
             )}
-            Ready check
+            {t("readyCheck")}
           </OverlayButton>
         ) : null}
 
         <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />
-          {raid ? "Gérer le raid" : "Créer un raid"}
+          {raid ? t("manageRaid") : t("createRaid")}
         </OverlayButton>
 
         <OverlayButton
@@ -553,7 +554,7 @@ function SquadBoard({
           ) : (
             <LogOut className="size-3.5" />
           )}
-          Quitter
+          {t("leave")}
         </OverlayButton>
       </Footer>
     </>
@@ -673,6 +674,7 @@ function MemberRow({
   onRank?: (lieutenant: boolean) => void;
   onRoles: () => void;
 }) {
+  const t = useTranslations("Squad.member");
   const [picking, setPicking] = useState(false);
   const [menu, setMenu] = useState(false);
   const [editingPosition, setEditingPosition] = useState(false);
@@ -703,14 +705,14 @@ function MemberRow({
       <div className="flex items-center gap-1.5">
         <span className="flex size-3 shrink-0 items-center justify-center">
           {isLeader ? (
-            <span title="Chef de l'escouade">
+            <span title={t("leader")}>
               <Crown className="size-3 text-amber-300" />
-              <span className="sr-only">Chef de l'escouade</span>
+              <span className="sr-only">{t("leader")}</span>
             </span>
           ) : member.lieutenant ? (
-            <span title="Lieutenant">
+            <span title={t("lieutenant")}>
               <Shield className="size-3 text-sky-300" />
-              <span className="sr-only">Lieutenant</span>
+              <span className="sr-only">{t("lieutenant")}</span>
             </span>
           ) : null}
         </span>
@@ -718,7 +720,7 @@ function MemberRow({
         <button
           ref={roleButton}
           type="button"
-          title={role ? `Rôle : ${role.label}` : "Aucun rôle"}
+          title={role ? t("role", { label: role.label }) : t("noRole")}
           disabled={!editable}
           onClick={() => setPicking((open) => !open)}
           className={cn(
@@ -729,7 +731,7 @@ function MemberRow({
           )}
         >
           <span className="sr-only">
-            {role ? `Rôle : ${role.label}` : "Choisir un rôle"}
+            {role ? t("role", { label: role.label }) : t("pickRole")}
           </span>
           <RoleIcon icon={role?.icon} />
         </button>
@@ -749,7 +751,7 @@ function MemberRow({
         </p>
 
         <RowToggle
-          title={ready ? "Prêt" : "Pas prêt"}
+          title={ready ? t("ready") : t("notReady")}
           // A member who is down is not «prêt»: the toggle says so by refusing
           // rather than by hiding, so the row keeps its shape as people fall.
           disabled={!editable || down}
@@ -764,7 +766,7 @@ function MemberRow({
         </RowToggle>
 
         <RowToggle
-          title={down ? "Éliminé" : "Actif"}
+          title={down ? t("down") : t("alive")}
           disabled={!editable}
           // Tomber retire «prêt» dans le même patch : le serveur le fait de
           // toute façon, et l'envoyer rend la supposition optimiste cohérente
@@ -785,14 +787,16 @@ function MemberRow({
           <button
             ref={menuButton}
             type="button"
-            title="Actions"
+            title={t("actions")}
             onClick={() => setMenu((open) => !open)}
             className={cn(
               "flex h-5 w-4 shrink-0 items-center justify-center rounded text-nexus-accent/70 transition hover:bg-nexus-accent/15",
               menu ? "opacity-100" : "opacity-0 group-hover:opacity-100",
             )}
           >
-            <span className="sr-only">Actions sur {member.name}</span>
+            <span className="sr-only">
+              {t("actionsOn", { name: member.name })}
+            </span>
             <MoreHorizontal className="size-3.5" />
           </button>
         ) : (
@@ -873,13 +877,14 @@ function RolePicker({
   onClose: () => void;
   canManage: boolean;
 }) {
+  const t = useTranslations("SquadRoles");
   const roles = rolesOf(squad);
 
   return (
     <Popover anchor={anchor} onClose={onClose} className="w-64">
       <div className="grid grid-cols-2 gap-0.5">
         <RoleChip
-          label="Aucun"
+          label={t("none")}
           selected={!current}
           onClick={() => onPick("")}
         />
@@ -902,7 +907,7 @@ function RolePicker({
           className="mt-1 flex w-full items-center gap-1.5 border-t border-nexus-accent/15 px-1.5 pt-1.5 text-[11px] text-nexus-accent/70 transition hover:text-nexus-bright"
         >
           <Tag className="size-3" />
-          Gérer les rôles…
+          {t("manage")}
         </button>
       ) : null}
     </Popover>
@@ -955,6 +960,8 @@ function RowMenu({
   onMakeLeader?: () => void;
   onRemove?: () => void;
 }) {
+  const t = useTranslations("Squad.menu");
+
   return (
     <Popover anchor={anchor} align="end" onClose={onClose} className="w-48">
       <MenuItem
@@ -964,7 +971,7 @@ function RowMenu({
           onClose();
         }}
       >
-        Position
+        {t("position")}
       </MenuItem>
 
       {onRank ? (
@@ -975,7 +982,7 @@ function RowMenu({
             onClose();
           }}
         >
-          {member.lieutenant ? "Retirer le grade" : "Nommer lieutenant"}
+          {member.lieutenant ? t("dismissLieutenant") : t("appointLieutenant")}
         </MenuItem>
       ) : null}
 
@@ -987,7 +994,7 @@ function RowMenu({
             onClose();
           }}
         >
-          Passer chef
+          {t("makeLeader")}
         </MenuItem>
       ) : null}
 
@@ -1000,7 +1007,7 @@ function RowMenu({
             onClose();
           }}
         >
-          Retirer de l'escouade
+          {t("remove")}
         </MenuItem>
       ) : null}
     </Popover>
@@ -1037,6 +1044,7 @@ function RaidBoard({
   onManageRaid: () => void;
   onRoles: (squadId: string) => void;
 }) {
+  const t = useTranslations("Raid");
   const commands = commandsSquad(squad, userId);
   const leads = raid.leadSquadId === squad.id && commands;
   const counts = tally(raid.squads);
@@ -1146,7 +1154,7 @@ function RaidBoard({
                     onCommit={(announcements) =>
                       api.announce.mutate({ squadId: sub.id, announcements })
                     }
-                    placeholder={`Annonce à ${sub.name}`}
+                    placeholder={t("announcementTo", { name: sub.name })}
                     compact
                   />
                 </div>
@@ -1169,9 +1177,10 @@ function RaidBoard({
 
       <Footer counts={counts}>
         <IconButton
-          label={`${columnsLabel(layout.columns)} — passer à ${columnsLabel(
-            nextColumns(layout.columns),
-          ).toLowerCase()}`}
+          label={t("columnsCycle", {
+            current: columnsLabel(layout.columns),
+            next: columnsLabel(nextColumns(layout.columns)).toLowerCase(),
+          })}
           onClick={layout.cycleColumns}
         >
           <span className="flex items-center gap-1">
@@ -1184,20 +1193,20 @@ function RaidBoard({
           <OverlayButton
             onClick={() => api.raidReadyCheck.mutate(squad.id)}
             disabled={api.raidReadyCheck.isPending}
-            title="Tout le raid repasse « non prêt » et reçoit une notification"
+            title={t("readyCheckHint")}
           >
             {api.raidReadyCheck.isPending ? (
               <Loader2 className="size-3.5 animate-spin" />
             ) : (
               <ListChecks className="size-3.5" />
             )}
-            Ready check
+            {t("readyCheck")}
           </OverlayButton>
         ) : null}
 
         <OverlayButton onClick={onManageRaid}>
           <Flag className="size-3.5" />
-          Gérer le raid
+          {t("manage")}
         </OverlayButton>
       </Footer>
     </>
@@ -1251,6 +1260,7 @@ function SubSquadHeader({
   onDragEnd: () => void;
   onToggle: () => void;
 }) {
+  const t = useTranslations("Raid.squad");
   const counts = tally([squad]);
 
   // Laid out in a column, «earlier» is up; laid out in a grid, it is left.
@@ -1289,12 +1299,18 @@ function SubSquadHeader({
     >
       <button
         type="button"
-        title={open ? `Replier ${squad.name}` : `Déplier ${squad.name}`}
+        title={
+          open
+            ? t("fold", { name: squad.name })
+            : t("unfold", { name: squad.name })
+        }
         onClick={onToggle}
         className="flex size-4 shrink-0 items-center justify-center text-nexus-accent/65 transition hover:text-nexus-bright"
       >
         <span className="sr-only">
-          {open ? `Replier ${squad.name}` : `Déplier ${squad.name}`}
+          {open
+            ? t("fold", { name: squad.name })
+            : t("unfold", { name: squad.name })}
         </span>
         {open ? (
           <ChevronDown className="size-3" />
@@ -1318,9 +1334,9 @@ function SubSquadHeader({
       </span>
 
       {isLead ? (
-        <span title="Escouade meneuse du raid">
+        <span title={t("lead")}>
           <Crown className="size-3 shrink-0 text-amber-300" />
-          <span className="sr-only">Escouade meneuse du raid</span>
+          <span className="sr-only">{t("lead")}</span>
         </span>
       ) : null}
 
@@ -1332,9 +1348,14 @@ function SubSquadHeader({
             .map((member) => (
               <span
                 key={member.userId}
-                title={`${member.name} — ${
-                  !member.alive ? "éliminé" : member.ready ? "prêt" : "pas prêt"
-                }`}
+                title={t("pip", {
+                  name: member.name,
+                  state: !member.alive
+                    ? "down"
+                    : member.ready
+                      ? "ready"
+                      : "notReady",
+                })}
                 className={cn(
                   "size-1.5 rounded-full",
                   !member.alive
@@ -1380,32 +1401,32 @@ function SubSquadHeader({
         )}
       >
         <span
-          title={`Déplacer ${squad.name}`}
+          title={t("move", { name: squad.name })}
           className="flex size-4 cursor-grab items-center justify-center text-nexus-accent/50"
         >
-          <span className="sr-only">Déplacer {squad.name}</span>
+          <span className="sr-only">{t("move", { name: squad.name })}</span>
           <GripVertical className="size-3" />
         </span>
 
         <button
           type="button"
-          title={`Avancer ${squad.name}`}
+          title={t("earlier", { name: squad.name })}
           disabled={!canMoveEarlier}
           onClick={() => onMove(-1)}
           className="flex size-4 items-center justify-center text-nexus-accent/65 transition hover:text-nexus-bright disabled:cursor-default disabled:opacity-25"
         >
-          <span className="sr-only">Avancer {squad.name}</span>
+          <span className="sr-only">{t("earlier", { name: squad.name })}</span>
           <Earlier className="size-3" />
         </button>
 
         <button
           type="button"
-          title={`Reculer ${squad.name}`}
+          title={t("later", { name: squad.name })}
           disabled={!canMoveLater}
           onClick={() => onMove(1)}
           className="flex size-4 items-center justify-center text-nexus-accent/65 transition hover:text-nexus-bright disabled:cursor-default disabled:opacity-25"
         >
-          <span className="sr-only">Reculer {squad.name}</span>
+          <span className="sr-only">{t("later", { name: squad.name })}</span>
           <Later className="size-3" />
         </button>
       </span>
@@ -1441,6 +1462,8 @@ function RaidBanner({
   editable: boolean;
   onCommit?: (text: string) => void;
 }) {
+  const t = useTranslations("Raid");
+
   if (!editable && !raid.announcement) return null;
 
   return (
@@ -1449,7 +1472,7 @@ function RaidBanner({
         value={raid.announcement}
         editable={editable}
         onCommit={onCommit ?? (() => undefined)}
-        placeholder="Annonce à tout le raid"
+        placeholder={t("announcement")}
         icon={<Megaphone className="mt-0.5 size-3 shrink-0 text-amber-300/80" />}
       />
     </div>
@@ -1472,6 +1495,7 @@ function RolesSheet({
   api: SquadApi;
   onClose: () => void;
 }) {
+  const t = useTranslations("SquadRoles");
   const roles = rolesOf(squad);
   const [draft, setDraft] = useState<Draft | null>(null);
 
@@ -1483,7 +1507,7 @@ function RolesSheet({
       <SheetHeader
         icon={<Tag className="size-4 text-nexus-accent/70" />}
         title={
-          draft ? (draft.id ? "Modifier un rôle" : "Nouveau rôle") : "Rôles"
+          draft ? (draft.id ? t("editRole") : t("newRole")) : t("title")
         }
         onBack={draft ? () => setDraft(null) : undefined}
         onClose={onClose}
@@ -1515,8 +1539,7 @@ function RolesSheet({
       ) : (
         <div className="flex min-h-0 flex-1 flex-col px-3 pb-3">
           <p className="mb-2 text-[11px] leading-relaxed text-nexus-accent/65">
-            Partagés par toute l'escouade. Les sept fournis se renomment et
-            changent d'icône, mais ne s'effacent pas.
+            {t("intro")}
           </p>
 
           <ul className="min-h-0 flex-1 space-y-px overflow-y-auto">
@@ -1530,13 +1553,13 @@ function RolesSheet({
                   {role.label}
                 </span>
                 <span className="shrink-0 text-[9.5px] uppercase tracking-wider text-nexus-accent/35">
-                  {role.base ? "fourni" : "perso"}
+                  {role.base ? t("base") : t("custom")}
                 </span>
 
                 {editable ? (
                   <button
                     type="button"
-                    title={`Modifier ${role.label}`}
+                    title={t("edit", { label: role.label })}
                     onClick={() =>
                       setDraft({
                         id: role.id,
@@ -1547,7 +1570,9 @@ function RolesSheet({
                     }
                     className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 opacity-0 transition hover:bg-nexus-accent/15 group-hover:opacity-100"
                   >
-                    <span className="sr-only">Modifier {role.label}</span>
+                    <span className="sr-only">
+                      {t("edit", { label: role.label })}
+                    </span>
                     <Pencil className="size-3" />
                   </button>
                 ) : null}
@@ -1556,7 +1581,7 @@ function RolesSheet({
                   {editable && !role.base ? (
                     <button
                       type="button"
-                      title={`Supprimer ${role.label}`}
+                      title={t("delete", { label: role.label })}
                       onClick={() =>
                         api.removeRole.mutate({
                           squadId: squad.id,
@@ -1565,7 +1590,9 @@ function RolesSheet({
                       }
                       className="flex size-5 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
                     >
-                      <span className="sr-only">Supprimer {role.label}</span>
+                      <span className="sr-only">
+                        {t("delete", { label: role.label })}
+                      </span>
                       <Trash2 className="size-3" />
                     </button>
                   ) : null}
@@ -1582,7 +1609,7 @@ function RolesSheet({
               }
             >
               <Plus className="size-3.5" />
-              Nouveau rôle
+              {t("newRole")}
             </OverlayButton>
           ) : null}
 
@@ -1627,6 +1654,7 @@ function RoleEditor({
   onCancel: () => void;
   onSave: () => void;
 }) {
+  const t = useTranslations("SquadRoles");
   const group =
     ROLE_ICON_GROUPS.find((candidate) => candidate.id === draft.group) ??
     ROLE_ICON_GROUPS[0];
@@ -1643,13 +1671,13 @@ function RoleEditor({
     >
       <label className="block shrink-0 space-y-1">
         <span className="text-[10px] font-medium uppercase tracking-wider text-nexus-accent/55">
-          Nom du rôle
+          {t("editor.name")}
         </span>
         <input
           value={draft.label}
           maxLength={ROLE_LABEL_MAX_LENGTH}
           autoFocus
-          placeholder="Sniper, Boarder, Quartier-maître…"
+          placeholder={t("editor.namePlaceholder")}
           onChange={(event) => onChange({ ...draft, label: event.target.value })}
           className={cn(
             "w-full rounded px-2 py-1 text-[13px]",
@@ -1661,7 +1689,7 @@ function RoleEditor({
 
       <div className="flex shrink-0 flex-col">
         <span className="mb-1 shrink-0 text-[10px] font-medium uppercase tracking-wider text-nexus-accent/55">
-          Icône
+          {t("editor.icon")}
         </span>
 
         <div className="mb-1.5 flex shrink-0 flex-wrap gap-1">
@@ -1677,7 +1705,7 @@ function RoleEditor({
                   : "bg-nexus-abyss/50 text-nexus-accent/65 hover:text-nexus-bright",
               )}
             >
-              {candidate.label}
+              {t(`groups.${candidate.id}`)}
             </button>
           ))}
         </div>
@@ -1706,7 +1734,7 @@ function RoleEditor({
       {/* The preview is the real row, because that is where it will be read. */}
       <div className="flex shrink-0 items-center gap-2 rounded border border-dashed border-nexus-accent/20 px-2 py-1.5">
         <span className="shrink-0 text-[10px] uppercase tracking-wider text-nexus-accent/45">
-          Sur la ligne
+          {t("editor.preview")}
         </span>
         <RoleIcon icon={draft.icon} className="size-3.5 shrink-0 text-nexus-accent/90" />
         <span className="shrink-0 text-[13px] text-emerald-300">Kalaghan</span>
@@ -1716,7 +1744,7 @@ function RoleEditor({
             named ? "text-nexus-accent/70" : "text-nexus-accent/35",
           )}
         >
-          — {draft.label.trim() || "nommez-le"}
+          — {draft.label.trim() || t("editor.unnamed")}
         </span>
       </div>
 
@@ -1726,7 +1754,7 @@ function RoleEditor({
           onClick={onCancel}
           className="rounded px-2.5 py-1 text-xs text-nexus-accent/70 transition hover:text-nexus-bright"
         >
-          Annuler
+          {t("editor.cancel")}
         </button>
 
         <OverlayButton type="submit" disabled={!named || busy}>
@@ -1735,7 +1763,7 @@ function RoleEditor({
           ) : (
             <Check className="size-3.5 text-emerald-300" />
           )}
-          Enregistrer
+          {t("editor.save")}
         </OverlayButton>
       </div>
     </form>
@@ -1770,6 +1798,7 @@ function RaidSheet({
   onSwitch: (squadId: string) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("Raid");
   const [code, setCode] = useState("");
   const leads = Boolean(raid && raid.leadSquadId === squad.id && editable);
 
@@ -1789,14 +1818,13 @@ function RaidSheet({
     <div className={SHEET}>
       <SheetHeader
         icon={<Flag className="size-4 text-nexus-accent/70" />}
-        title={raid ? "Gérer le raid" : "Créer un raid"}
+        title={raid ? t("manage") : t("create")}
         onClose={onClose}
       />
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 px-3 pb-3">
         <p className="shrink-0 text-[11px] leading-relaxed text-nexus-accent/65">
-          Un raid regroupe plusieurs escouades sous une même annonce. Chacune
-          garde son code, son chef et ses rôles.
+          {t("sheet.intro")}
         </p>
 
         {raid ? (
@@ -1804,15 +1832,16 @@ function RaidSheet({
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="mb-1 flex shrink-0 items-baseline justify-between">
                 <span className="text-[10px] font-medium uppercase tracking-wider text-nexus-accent/55">
-                  Escouades liées
+                  {t("sheet.linked")}
                 </span>
                 <span className="text-[10px] text-nexus-accent/45">
-                  {raid.squads.length} ·{" "}
-                  {raid.squads.reduce(
-                    (total, sub) => total + sub.members.length,
-                    0,
-                  )}{" "}
-                  joueurs
+                  {t("sheet.summary", {
+                    squads: raid.squads.length,
+                    players: raid.squads.reduce(
+                      (total, sub) => total + sub.members.length,
+                      0,
+                    ),
+                  })}
                 </span>
               </div>
 
@@ -1840,15 +1869,14 @@ function RaidSheet({
                       </span>
 
                       {raid.leadSquadId === sub.id ? (
-                        <span title="Escouade meneuse">
+                        <span title={t("sheet.lead")}>
                           <Crown className="size-3 shrink-0 text-amber-300" />
-                          <span className="sr-only">Escouade meneuse</span>
+                          <span className="sr-only">{t("sheet.lead")}</span>
                         </span>
                       ) : null}
 
                       <span className="min-w-0 flex-1 truncate text-[11px] text-nexus-accent/60">
-                        {sub.members.length} joueur
-                        {sub.members.length > 1 ? "s" : ""}
+                        {t("sheet.players", { count: sub.members.length })}
                       </span>
 
                       {/* Only the codes of the squads you are in are yours to
@@ -1861,11 +1889,13 @@ function RaidSheet({
                       {mine && sub.id !== squad.id ? (
                         <button
                           type="button"
-                          title={`Passer sur ${sub.name}`}
+                          title={t("sheet.switchTo", { name: sub.name })}
                           onClick={() => onSwitch(sub.id)}
                           className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
                         >
-                          <span className="sr-only">Passer sur {sub.name}</span>
+                          <span className="sr-only">
+                            {t("sheet.switchTo", { name: sub.name })}
+                          </span>
                           <ArrowLeftRight className="size-3" />
                         </button>
                       ) : null}
@@ -1873,7 +1903,7 @@ function RaidSheet({
                       {leads && sub.id !== squad.id ? (
                         <button
                           type="button"
-                          title={`Retirer ${sub.name} du raid`}
+                          title={t("sheet.unlink", { name: sub.name })}
                           onClick={() =>
                             api.unlinkSquad.mutate({
                               squadId: squad.id,
@@ -1883,7 +1913,7 @@ function RaidSheet({
                           className="flex size-5 shrink-0 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
                         >
                           <span className="sr-only">
-                            Retirer {sub.name} du raid
+                            {t("sheet.unlink", { name: sub.name })}
                           </span>
                           <Unlink className="size-3" />
                         </button>
@@ -1907,8 +1937,8 @@ function RaidSheet({
                   disabled={api.openRaidSquad.isPending || full}
                   title={
                     full
-                      ? `Un raid tient au plus ${RAID_MAX_SQUADS} escouades`
-                      : "Ouvrir une escouade de plus dans le raid"
+                      ? t("sheet.full", { max: RAID_MAX_SQUADS })
+                      : t("sheet.newSquadHint")
                   }
                 >
                   {api.openRaidSquad.isPending ? (
@@ -1916,7 +1946,7 @@ function RaidSheet({
                   ) : (
                     <Plus className="size-3.5" />
                   )}
-                  Nouvelle escouade
+                  {t("sheet.newSquad")}
                 </OverlayButton>
               ) : null}
             </div>
@@ -1924,10 +1954,14 @@ function RaidSheet({
             <div className="shrink-0 space-y-1.5">
               <p className="flex items-center gap-1.5 text-[10.5px] text-nexus-accent/55">
                 <Copy className="size-3" />
-                Code du raid :{" "}
-                <span className="font-mono tracking-widest text-nexus-bright">
-                  {raid.code}
-                </span>
+                {t.rich("sheet.code", {
+                  code: raid.code,
+                  value: (chunks) => (
+                    <span className="font-mono tracking-widest text-nexus-bright">
+                      {chunks}
+                    </span>
+                  ),
+                })}
               </p>
 
               {editable ? (
@@ -1940,7 +1974,7 @@ function RaidSheet({
                   disabled={api.quitRaid.isPending}
                 >
                   <Unlink className="size-3.5" />
-                  Quitter le raid
+                  {t("sheet.leave")}
                 </OverlayButton>
               ) : null}
             </div>
@@ -1956,7 +1990,7 @@ function RaidSheet({
               ) : (
                 <Plus className="size-3.5" />
               )}
-              Créer un raid
+              {t("create")}
             </OverlayButton>
 
             <form
@@ -1970,7 +2004,7 @@ function RaidSheet({
               <CodeInput
                 value={code}
                 onChange={setCode}
-                label="Code du raid"
+                label={t("sheet.codeLabel")}
               />
               <OverlayButton
                 type="submit"
@@ -1979,14 +2013,13 @@ function RaidSheet({
                 {api.enterRaid.isPending ? (
                   <Loader2 className="size-3.5 animate-spin" />
                 ) : null}
-                Lier mon escouade
+                {t("sheet.link")}
               </OverlayButton>
             </form>
           </div>
         ) : (
           <p className="shrink-0 text-[11px] text-nexus-accent/70">
-            Seuls le chef de l'escouade et ses lieutenants peuvent l'emmener
-            dans un raid.
+            {t("sheet.onlyCommanders")}
           </p>
         )}
 
@@ -2009,10 +2042,12 @@ function SheetHeader({
   onBack?: () => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("Squad");
+
   return (
     <div className="flex shrink-0 items-center gap-2 px-3 py-2">
       {onBack ? (
-        <IconButton label="Retour" onClick={onBack}>
+        <IconButton label={t("back")} onClick={onBack}>
           <ArrowLeft className="size-4" />
         </IconButton>
       ) : (
@@ -2023,7 +2058,7 @@ function SheetHeader({
         {title}
       </p>
 
-      <IconButton label="Fermer" onClick={onClose}>
+      <IconButton label={t("close")} onClick={onClose}>
         <X className="size-4" />
       </IconButton>
     </div>
@@ -2097,13 +2132,14 @@ function Title({
   editable: boolean;
   onRename: (name: string) => void;
 }) {
+  const t = useTranslations("Squad");
   const [editing, setEditing] = useState(false);
-  const name = raiding && raid ? raid.name : (squad?.name ?? "Escouade");
+  const name = raiding && raid ? raid.name : (squad?.name ?? t("title"));
 
   if (!squad) {
     return (
       <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
-        Escouade
+        {t("title")}
       </p>
     );
   }
@@ -2137,7 +2173,7 @@ function Title({
 
       {editable ? (
         <IconButton
-          label={raiding ? "Renommer le raid" : "Renommer l'escouade"}
+          label={raiding ? t("renameRaid") : t("renameSquad")}
           onClick={() => setEditing(true)}
         >
           <Pencil className="size-3" />
@@ -2160,11 +2196,12 @@ function NameField({
   max: number;
   onDone: (value: string) => void;
 }) {
+  const t = useTranslations("Squad");
   const [draft, setDraft] = useState(value);
 
   return (
     <input
-      aria-label="Nom"
+      aria-label={t("nameLabel")}
       value={draft}
       maxLength={max}
       autoFocus
@@ -2198,11 +2235,12 @@ function PositionField({
   onCommit: (value: string) => void;
   onDone: () => void;
 }) {
+  const t = useTranslations("Squad.menu");
   const field = useTypedField(value, onCommit);
 
   return (
     <input
-      aria-label="Position"
+      aria-label={t("position")}
       value={field.draft}
       maxLength={POSITION_MAX_LENGTH}
       autoFocus
@@ -2216,7 +2254,7 @@ function PositionField({
         event.preventDefault();
         event.currentTarget.blur();
       }}
-      placeholder="Position"
+      placeholder={t("position")}
       spellCheck={false}
       className={cn(
         "ml-[44px] w-[calc(100%-44px)] rounded px-1.5 py-px text-[11px]",
@@ -2256,6 +2294,7 @@ function Announcement({
   /** A squad's line on the raid board: smaller, and kept to two lines. */
   compact?: boolean;
 }) {
+  const t = useTranslations("Squad");
   /** `null` while nobody is writing. */
   const [draft, setDraft] = useState<string | null>(null);
   const [resent, setResent] = useState(false);
@@ -2314,11 +2353,11 @@ function Announcement({
 
         <div className="flex items-center justify-end gap-1">
           <OverlayButton type="button" onClick={cancel}>
-            Annuler
+            {t("cancel")}
           </OverlayButton>
-          <OverlayButton type="submit" title="Envoyer (Entrée)">
+          <OverlayButton type="submit" title={t("announcement.sendHint")}>
             <Send className="size-3.5" />
-            Envoyer
+            {t("announcement.send")}
           </OverlayButton>
         </div>
       </form>
@@ -2360,7 +2399,9 @@ function Announcement({
     <div className="flex shrink-0 items-start gap-0.5">
       <button
         type="button"
-        title={value ? `${value}\n\nCliquer pour modifier` : placeholder}
+        title={
+          value ? t("announcement.clickToEdit", { text: value }) : placeholder
+        }
         onClick={() => setDraft(value)}
         className="flex min-w-0 flex-1 items-start gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-nexus-accent/10"
       >
@@ -2371,14 +2412,14 @@ function Announcement({
       {value.trim() ? (
         <button
           type="button"
-          title="Renvoyer la notification à tous"
+          title={t("announcement.resend")}
           onClick={() => {
             onCommit(value);
             setResent(true);
           }}
           className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/60 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
         >
-          <span className="sr-only">Renvoyer la notification à tous</span>
+          <span className="sr-only">{t("announcement.resend")}</span>
           {resent ? (
             <Check className="size-3 text-emerald-300" />
           ) : (
@@ -2410,22 +2451,24 @@ function ViewSwitch({
   view: "squad" | "raid";
   onChange: (view: "squad" | "raid") => void;
 }) {
+  const t = useTranslations("Squad.view");
+
   return (
     <div
       role="group"
-      aria-label="Vue"
+      aria-label={t("label")}
       className={cn("flex shrink-0 items-center rounded-md p-px", SURFACE)}
     >
       <Segment
         active={view === "squad"}
-        label="Escouade"
+        label={t("squad")}
         onClick={() => onChange("squad")}
       >
         <Users className="size-3.5" />
       </Segment>
       <Segment
         active={view === "raid"}
-        label="Raid"
+        label={t("raid")}
         onClick={() => onChange("raid")}
       >
         <Flag className="size-3.5" />
@@ -2478,6 +2521,7 @@ function SquadSwitcher({
   memberships: SquadMembership[];
   onPick: (squadId: string) => void;
 }) {
+  const t = useTranslations("Squad.switcher");
   const [open, setOpen] = useState(false);
   const anchor = useRef<HTMLSpanElement>(null);
 
@@ -2485,7 +2529,7 @@ function SquadSwitcher({
     <>
       <span ref={anchor} className="shrink-0">
         <IconButton
-          label="Changer d'escouade"
+          label={t("label")}
           onClick={() => setOpen((was) => !was)}
         >
           <ChevronsUpDown className="size-3.5" />
@@ -2499,7 +2543,7 @@ function SquadSwitcher({
           className="w-56"
         >
           <p className="px-2 pb-1 text-[9.5px] font-medium uppercase tracking-wider text-nexus-accent/45">
-            Mes escouades
+            {t("mine")}
           </p>
 
           {memberships.map((membership) => (
@@ -2539,16 +2583,18 @@ function Footer({
   counts: { ready: number; total: number; down: number };
   children: React.ReactNode;
 }) {
+  const t = useTranslations("Squad.footer");
+
   return (
     <div className="flex shrink-0 items-center justify-between gap-2">
       {/* Not dimmed like a caption would be on a panel: over a bright scene
           there is nothing to be quiet against. */}
       <p className="text-[11px] text-nexus-accent/80">
-        {counts.ready}/{counts.total} prêts
+        {t("ready", { ready: counts.ready, total: counts.total })}
         {counts.down ? (
           <span className="text-red-300">
             {" · "}
-            {counts.down} éliminé{counts.down > 1 ? "s" : ""}
+            {t("down", { count: counts.down })}
           </span>
         ) : null}
       </p>
@@ -2768,12 +2814,14 @@ function CodeInput({
   onChange: (value: string) => void;
   label: string;
 }) {
+  const t = useTranslations("Squad");
+
   return (
     <input
       aria-label={label}
       value={value}
       onChange={(event) => onChange(event.target.value.toUpperCase())}
-      placeholder="CODE"
+      placeholder={t("codePlaceholder")}
       spellCheck={false}
       className={cn(
         "w-28 rounded px-2 py-1 font-mono text-sm uppercase tracking-widest",
@@ -2786,6 +2834,7 @@ function CodeInput({
 
 /** The code, and a click to put it on the clipboard for whoever asks. */
 function CodeButton({ code, tone }: { code: string; tone?: "raid" }) {
+  const t = useTranslations("Squad");
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -2797,7 +2846,7 @@ function CodeButton({ code, tone }: { code: string; tone?: "raid" }) {
   return (
     <button
       type="button"
-      title="Copier le code"
+      title={t("copyCode")}
       onClick={() => {
         void navigator.clipboard
           .writeText(code)
@@ -2850,14 +2899,15 @@ function IconButton({
  * that comes back is broadcast to every window, this one included.
  */
 function SignedOut() {
+  const t = useTranslations("Squad");
   const { signingIn, signInError, signIn, cancelSignIn } = useAuth();
 
   return (
     <div className="space-y-3">
       <p className="text-xs text-nexus-accent/80">
         {signingIn
-          ? "Terminez la connexion dans votre navigateur."
-          : "Connectez-vous pour créer une escouade ou en rejoindre une."}
+          ? t("signedOut.finishInBrowser")
+          : t("signedOut.connectToUse")}
       </p>
 
       <div className="flex items-center gap-1.5">
@@ -2867,12 +2917,12 @@ function SignedOut() {
           ) : (
             <LogIn className="size-3.5" />
           )}
-          {signingIn ? "Rouvrir le navigateur" : "Se connecter"}
+          {signingIn ? t("signedOut.reopenBrowser") : t("signedOut.signIn")}
         </OverlayButton>
 
         {signingIn ? (
           <OverlayButton onClick={() => void cancelSignIn()}>
-            Annuler
+            {t("cancel")}
           </OverlayButton>
         ) : null}
       </div>

@@ -6,6 +6,7 @@ import {
   type CSSProperties,
 } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useTranslations } from "use-intl";
 import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
@@ -241,6 +242,7 @@ function Toast({
   from: { x: string; y: string };
   onDismiss: (id: number) => void;
 }) {
+  const t = useTranslations("Notifications");
   const [paused, setPaused] = useState(false);
   const timeout = notificationTimeout(notification);
   const { id, kind, title, body } = notification;
@@ -352,10 +354,10 @@ function Toast({
         <button
           type="button"
           onClick={() => onDismiss(id)}
-          title="Fermer"
+          title={t("close")}
           className="rounded p-1 text-slate-500 transition hover:bg-white/10 hover:text-slate-200"
         >
-          <span className="sr-only">Fermer</span>
+          <span className="sr-only">{t("close")}</span>
           <X className={large ? "size-4" : "size-3.5"} />
         </button>
       </div>

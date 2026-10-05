@@ -1,0 +1,58 @@
+{
+  "title": "Atajos de teclado",
+  "description": "Activos incluso con la aplicación minimizada. Haz clic en una combinación y pulsa la nueva.",
+  "applied": "Aplicado",
+  "defaults": "Valores predeterminados",
+  "apply": "Aplicar",
+  "windows": "Ventanas",
+  "inGame": "En el juego",
+  "applyError": "No se pudieron aplicar los atajos. Se aplicarán en el próximo inicio.",
+  "rejected": "Estas combinaciones no se pudieron asignar. Siguen guardadas pero están inactivas: elige otras.",
+  "rejection": "{label} — {accelerator}: {reason}",
+  "rows": {
+    "search": {
+      "label": "Búsqueda",
+      "hint": "Búsqueda rápida en superposición."
+    },
+    "capture": {
+      "label": "Captura de zona",
+      "hint": "Selecciona una zona de la pantalla para capturarla."
+    },
+    "notes": {
+      "label": "Bloc de notas",
+      "hint": "Bloc de notas en superposición."
+    },
+    "cargo": {
+      "label": "Hoja de cargo",
+      "hint": "Hoja de cargo en superposición."
+    },
+    "squad": {
+      "label": "Escuadra",
+      "hint": "Escuadra en superposición."
+    },
+    "plan": {
+      "label": "Plan de vuelo",
+      "hint": "Plan de vuelo en superposición."
+    },
+    "map": {
+      "label": "Mapa",
+      "hint": "El mapa fijado desde un lugar, o elegido en la ventana.",
+      "detail": "Muestra el mapa fijado desde la ficha de un lugar, o elegido en la propia ventana."
+    },
+    "radial": {
+      "label": "Mantener el menú radial rápido",
+      "hint": "Mantén pulsado, apunta a una acción con el ratón, suelta. Esc cancela.",
+      "detail": "Mantén pulsada la combinación para mostrar el menú en el centro de la pantalla, mueve el ratón hacia una acción y suelta para lanzarla. Soltar sin moverse, o Esc, cancela. READY y Abatido/Activo solo aparecen en una escuadra; el bloqueo y la captura de zona, siempre."
+    },
+    "lock": {
+      "label": "Bloqueo",
+      "hint": "Los clics pasan al juego; el menú radial sigue disponible.",
+      "detail": "Bloquea todas las superposiciones visibles — los clics pasan al juego — o, si alguna ya lo está, las desbloquea todas. El menú radial no se ve afectado: sigue disponible."
+    },
+    "opacity": {
+      "label": "Opacidad",
+      "hint": "Borra las superposiciones, con el juego visible a través, o las devuelve.",
+      "detail": "Borra todas las superposiciones de golpe — con el juego visible a través — o les devuelve su panel. Cada una tiene también el botón, que pasa por el fondo sombreado entre ambos."
+    }
+  }
+}

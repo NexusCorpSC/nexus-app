@@ -1,0 +1,82 @@
+{
+  "defaultShipName": "Ship",
+  "page": {
+    "title": "Cargo sheet",
+    "startDescription": "Split your volumes into SCU containers and track how full the ship is.",
+    "noSheet": "No sheet in progress",
+    "noSheetHint": "Choose the ship you are flying: its capacity decides the rest.",
+    "createSheet": "Create the sheet",
+    "offlineDescription": "Offline: this sheet never leaves this machine.",
+    "overlay": "Overlay",
+    "close": "Close out",
+    "emptyTitle": "Empty sheet",
+    "emptyDescription": "Add a line, paste a mission log, or capture it on screen with the capture shortcut.",
+    "settings": "Settings",
+    "maxContainer": "Largest container",
+    "newMission": "New mission",
+    "changeShip": "Change ship",
+    "confirmClose": "Closing out the sheet deletes all its lines. Continue?"
+  },
+  "add": {
+    "title": "Add cargo",
+    "joinsMission": "With no mission given, the line joins “{mission}”.",
+    "submit": "Add",
+    "pasteLabel": "Paste a mission log",
+    "import": "Import",
+    "nothingReadable": "Nothing readable: paste a mission log, or lines like “Destination;Content;Volume;Location”.",
+    "added": "{count, plural, one {# line added} other {# lines added}}",
+    "addedWithIgnored": "{count, plural, one {# line added} other {# lines added}} · {ignored} ignored"
+  },
+  "overlay": {
+    "edit": "Edit",
+    "doneEditing": "Finish editing",
+    "close": "Close",
+    "loading": "Loading…",
+    "noSheet": "No sheet in progress. Open “Cargo sheet” in the main window, or capture a mission log.",
+    "empty": "Empty sheet: nothing to load for now."
+  },
+  "capture": {
+    "summary": "{count, plural, one {# delivery objective} other {# delivery objectives}} · {volume} SCU",
+    "line": "<amount>{volume} SCU</amount> {hasContent, select, yes {of {content} } other {}}to {destination}{hasLocation, select, yes { (from {location})} other {}}",
+    "ignored": "{count, plural, one {# unreadable line} other {# unreadable lines}} — crop the screenshot again to recover them.",
+    "reading": "Reading the sheet…",
+    "added": "Added to the cargo sheet.",
+    "overlay": "Overlay",
+    "close": "Close",
+    "failed": "The sheet could not be written.",
+    "failedWith": "The sheet could not be written: {error}.",
+    "askShip": "No sheet in progress. Which ship are you flying?",
+    "createAndAdd": "Create the sheet and add"
+  },
+  "ships": {
+    "sourceCache": "Cached ship list: the site did not respond.",
+    "sourceBuiltin": "Built-in ship list: the site could never be reached.",
+    "custom": "Custom capacity",
+    "ship": "Ship",
+    "capacity": "Capacity (SCU)",
+    "loading": "Loading ships…"
+  },
+  "sheet": {
+    "over": "{count} over",
+    "free": "{count} free",
+    "summary": "{lines, plural, one {# line} other {# lines}} · {containers, plural, one {# container} other {# containers}} · {quantities}",
+    "destination": "Destination",
+    "content": "Content",
+    "volumeInScu": "Volume in SCU",
+    "volume": "Volume (SCU)",
+    "location": "Location",
+    "mission": "Mission",
+    "cancel": "Cancel",
+    "noMission": "No mission",
+    "renameMission": "Rename mission",
+    "deleteMission": "Delete mission",
+    "save": "Save",
+    "from": "From {location}",
+    "editLine": "Edit line",
+    "deleteLine": "Delete line",
+    "missionName": "Mission name",
+    "saveName": "Save name",
+    "close": "Close out",
+    "confirmClose": "{count, plural, one {# line} other {# lines}} — confirm"
+  }
+}

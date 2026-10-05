@@ -1,0 +1,41 @@
+{
+  "manage": "Gestionar el raid",
+  "create": "Crear un raid",
+  "announcement": "Anuncio a todo el raid",
+  "announcementTo": "Anuncio a {name}",
+  "readyCheck": "Ready check",
+  "readyCheckHint": "Todo el raid vuelve a «no listo» y recibe una notificación",
+  "columns": "{count, plural, one {Una columna} other {# columnas}}",
+  "columnsCycle": "{current} — cambiar a {next}",
+  "squad": {
+    "fold": "Plegar {name}",
+    "unfold": "Desplegar {name}",
+    "lead": "Escuadra líder del raid",
+    "pip": "{name} — {state, select, down {abatido} ready {listo} other {no listo}}",
+    "move": "Mover {name}",
+    "earlier": "Subir {name}",
+    "later": "Bajar {name}"
+  },
+  "sheet": {
+    "intro": "Un raid agrupa varias escuadras bajo un mismo anuncio. Cada una conserva su código, su líder y sus roles.",
+    "linked": "Escuadras vinculadas",
+    "summary": "{squads} · {players, plural, one {# jugador} other {# jugadores}}",
+    "lead": "Escuadra líder",
+    "players": "{count, plural, one {# jugador} other {# jugadores}}",
+    "switchTo": "Cambiar a {name}",
+    "unlink": "Quitar {name} del raid",
+    "full": "Un raid admite como máximo {max} escuadras",
+    "newSquadHint": "Abrir una escuadra más en el raid",
+    "newSquad": "Nueva escuadra",
+    "code": "Código del raid: <value>{code}</value>",
+    "leave": "Salir del raid",
+    "codeLabel": "Código del raid",
+    "link": "Vincular mi escuadra",
+    "onlyCommanders": "Solo el líder de la escuadra y sus tenientes pueden llevarla a un raid."
+  },
+  "notifications": {
+    "readyCheckTitle": "Ready check del raid — {name}",
+    "readyCheckBody": "{by} pide a todo el raid que se declare listo.",
+    "announcementTitle": "Anuncio del raid — {name}"
+  }
+}

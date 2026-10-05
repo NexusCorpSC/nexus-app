@@ -77,13 +77,6 @@ export function isItemKind(value: string): value is ItemKind {
   return (ITEM_KINDS as readonly string[]).includes(value);
 }
 
-export const ITEM_KIND_LABELS: Record<ItemKind, string> = {
-  item: "Objet",
-  weapon: "Arme",
-  vehicle: "Véhicule",
-  resource: "Ressource",
-};
-
 export type ItemStatistics = BlueprintStatistics;
 
 /**
@@ -685,7 +678,6 @@ export const RAID_MAX_SQUADS = 6;
 export const ROLE_ICON_GROUPS = [
   {
     id: "combat",
-    label: "Combat",
     icons: [
       "crosshair",
       "target",
@@ -700,7 +692,6 @@ export const ROLE_ICON_GROUPS = [
   },
   {
     id: "vol",
-    label: "Vol",
     icons: [
       "navigation",
       "rocket",
@@ -714,7 +705,6 @@ export const ROLE_ICON_GROUPS = [
   },
   {
     id: "soutien",
-    label: "Soutien",
     icons: [
       "cross",
       "heart-pulse",
@@ -728,7 +718,6 @@ export const ROLE_ICON_GROUPS = [
   },
   {
     id: "metier",
-    label: "Métier",
     icons: [
       "wrench",
       "hammer",
@@ -742,7 +731,6 @@ export const ROLE_ICON_GROUPS = [
   },
   {
     id: "reperes",
-    label: "Repères",
     icons: [
       "eye",
       "search",
@@ -1150,19 +1138,6 @@ export const PLACE_TYPES = [
 
 export type PlaceType = (typeof PLACE_TYPES)[number];
 
-export const PLACE_TYPE_LABELS: Record<PlaceType, string> = {
-  star: "Système",
-  planet: "Planète",
-  moon: "Lune",
-  city: "Ville",
-  station: "Station",
-  outpost: "Avant-poste",
-  spaceport: "Spatioport",
-  district: "Quartier",
-  building: "Bâtiment",
-  shop: "Magasin",
-};
-
 export const PLACE_SERVICES = [
   "asop",
   "restock",
@@ -1179,21 +1154,6 @@ export const PLACE_SERVICES = [
 ] as const;
 
 export type PlaceService = (typeof PLACE_SERVICES)[number];
-
-export const PLACE_SERVICE_LABELS: Record<PlaceService, string> = {
-  asop: "Terminal ASOP",
-  restock: "Réapprovisionnement",
-  medical: "Médical",
-  armory: "Armurerie",
-  cargo: "Fret",
-  refinery: "Raffinerie",
-  rental: "Location",
-  habitation: "Habitation",
-  crafting: "Fabrication",
-  missions: "Missions",
-  transit: "Transit",
-  hangar: "Hangar",
-};
 
 export function isPlaceService(value: string): value is PlaceService {
   return (PLACE_SERVICES as readonly string[]).includes(value);
@@ -1380,17 +1340,17 @@ export type PlacePlansResponse = {
 export const PRESENCE_ACTIVITY_MAX_LENGTH = 80;
 
 export const PRESENCE_ACTIVITY_SUGGESTIONS = [
-  "Minage",
-  "Commerce",
-  "Transport",
-  "Chasse de primes",
-  "Combat",
-  "Exploration",
-  "Récupération",
-  "Industrie",
-  "Missions",
-  "Course",
-  "Social",
+  "mining",
+  "trading",
+  "hauling",
+  "bountyHunting",
+  "combat",
+  "exploration",
+  "salvage",
+  "industry",
+  "missions",
+  "racing",
+  "social",
 ] as const;
 
 /**
@@ -1656,35 +1616,8 @@ export const REPORT_REASONS = [
 
 export type ReportReason = (typeof REPORT_REASONS)[number];
 
-/** The same wording as the site's report form (`Reports.reasons`). */
-export const REPORT_REASON_LABELS: Record<
-  ReportReason,
-  { label: string; hint: string }
-> = {
-  wrong: {
-    label: "Information fausse",
-    hint: "Un service, un nom, une valeur ou un parent incorrect",
-  },
-  outdated: {
-    label: "Obsolète depuis un patch",
-    hint: "C'était vrai, ça ne l'est plus",
-  },
-  duplicate: {
-    label: "Doublon",
-    hint: "Cet élément existe déjà sous un autre nom",
-  },
-  media: {
-    label: "Image hors sujet ou de mauvaise qualité",
-    hint: "Hors sujet, illisible, interface personnelle visible",
-  },
-  offensive: { label: "Contenu offensant", hint: "Insulte, propos haineux" },
-  copyright: {
-    label: "Droits d'auteur",
-    hint: "Reprise d'un site ou d'une image sans autorisation",
-  },
-  spam: { label: "Spam", hint: "Publicité, liens sans rapport" },
-  other: { label: "Autre", hint: "Expliquez dans le champ ci-dessous" },
-};
+/* Their wording is the site's report form (`Reports.reasons`), in the
+   `Report.reasons` messages. */
 
 /** `other` needs a comment; the site cuts it at 500 characters. */
 export const MAX_REPORT_COMMENT_LENGTH = 500;

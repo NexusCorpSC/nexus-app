@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { translator } from "@/i18n/translate";
 import { notify } from "@/lib/notifications";
 import { checkForUpdate } from "@/lib/updates";
 
@@ -30,9 +31,10 @@ export function useUpdateWatcher() {
 
         announced.current = update.version;
 
+        const t = translator("Updates");
         await notify({
-          title: `Mise à jour ${update.version} disponible`,
-          body: "Cliquez pour l'installer.",
+          title: t("available", { version: update.version }),
+          body: t("clickToInstall"),
           route: "/settings",
         });
       } catch (error) {

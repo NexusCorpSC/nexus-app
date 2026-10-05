@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "use-intl";
 import {
   getPlayerReputations,
   listRepFactions,
@@ -40,21 +41,8 @@ import {
 
 type Progress = "all" | "started" | "todo";
 
-const FAMILY_LABELS: Record<CareerFamily, string> = {
-  guild: "Guildes",
-  hauling: "Transport",
-  faction: "Contrats de faction",
-  trade: "Commerce",
-};
-
-const GROUP_LABELS: Record<CareerFamily, string> = {
-  guild: "Guildes et métiers",
-  hauling: "Transport",
-  faction: "Contrats de faction",
-  trade: "Commerce",
-};
-
 export default function ReputationsPage() {
+  const t = useTranslations("Reputations");
   const queryClient = useQueryClient();
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
@@ -162,8 +150,12 @@ export default function ReputationsPage() {
   return (
     <>
       <PageHeader
-        title="Réputations"
-        description={`Votre rang auprès de chaque faction, tel qu'il s'affiche dans le mobiGlas. ${startedCount} faction${startedCount > 1 ? "s" : ""} suivie${startedCount > 1 ? "s" : ""} sur ${listed.length}, ${maxedCount} au rang max.`}
+        title={t("title")}
+        description={t("description", {
+          started: startedCount,
+          total: listed.length,
+          maxed: maxedCount,
+        })}
         actions={mutation.isPending ? <Spinner /> : undefined}
       />
 
@@ -172,43 +164,43 @@ export default function ReputationsPage() {
           <p className="text-xs text-red-200">
             {mutation.error instanceof Error
               ? mutation.error.message
-              : "La mise à jour a échoué."}
+              : t("updateFailed")}
           </p>
         </Card>
       ) : null}
 
       {listed.length === 0 ? (
-        <EmptyState title="Aucune faction configurée" />
+        <EmptyState title={t("noFactions")} />
       ) : (
         <>
           <Toolbar>
             <SearchField
-              label="Rechercher une faction, une carrière ou un rang"
-              placeholder="Faction, carrière ou rang…"
+              label={t("searchLabel")}
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />
             <Segmented
-              label="Progression"
+              label={t("progressLabel")}
               value={progress}
               onChange={setProgress}
               options={[
-                { value: "all", label: "Toutes" },
-                { value: "started", label: "Commencées" },
-                { value: "todo", label: "À commencer" },
+                { value: "all", label: t("progress.all") },
+                { value: "started", label: t("progress.started") },
+                { value: "todo", label: t("progress.todo") },
               ]}
             />
             {presentFamilies.length > 1 ? (
               <div
                 role="group"
-                aria-label="Type de carrière"
+                aria-label={t("familyLabel")}
                 className="flex flex-wrap gap-1.5"
               >
                 <Chip
                   active={family === "all"}
                   onClick={() => setFamily("all")}
                 >
-                  Toutes
+                  {t("allFamilies")}
                 </Chip>
                 {presentFamilies.map((key) => (
                   <Chip
@@ -216,27 +208,27 @@ export default function ReputationsPage() {
                     active={family === key}
                     onClick={() => setFamily(key)}
                   >
-                    {FAMILY_LABELS[key]}
+                    {t(`family.${key}`)}
                   </Chip>
                 ))}
               </div>
             ) : null}
             <span className="ml-auto text-xs text-nexus-dim">
-              {count} faction{count > 1 ? "s" : ""}
+              {t("count", { count })}
             </span>
           </Toolbar>
 
           {count === 0 ? (
             <EmptyState
-              title="Aucune faction ne correspond"
-              description="Essayez un autre nom, ou affichez toutes les factions."
+              title={t("noMatchTitle")}
+              description={t("noMatchHint")}
             />
           ) : (
             <div className="flex flex-col gap-6">
               {groups.map((group) => (
                 <section key={group.key} className="flex flex-col gap-3">
                   <h2 className="flex items-baseline gap-2.5 font-display text-[12px] font-semibold uppercase tracking-[0.12em] text-nexus-dim">
-                    {GROUP_LABELS[group.key]}
+                    {t(`group.${group.key}`)}
                     <span className="font-mono tracking-normal">
                       {group.factions.length}
                     </span>
