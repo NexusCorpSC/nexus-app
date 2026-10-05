@@ -1,9 +1,3 @@
 {
-  "close": "Fermer",
-  "corners": {
-    "bottomRight": "En bas à droite",
-    "bottomLeft": "En bas à gauche",
-    "topRight": "En haut à droite",
-    "topLeft": "En haut à gauche"
-  }
+  "close": "Fermer"
 }

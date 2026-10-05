@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { translator } from "@/i18n/translate";
 
 /**
  * Notifications are drawn by windows of their own: one hung from a corner of
@@ -90,21 +89,6 @@ export type NotificationCorner = (typeof NOTIFICATION_CORNERS)[number];
 
 /** Where Windows shows its own notifications, so it is where users look. */
 export const DEFAULT_NOTIFICATION_CORNER: NotificationCorner = "bottom-right";
-
-export function notificationCornerLabel(corner: NotificationCorner): string {
-  const t = translator("Notifications.corners");
-
-  switch (corner) {
-    case "bottom-right":
-      return t("bottomRight");
-    case "bottom-left":
-      return t("bottomLeft");
-    case "top-right":
-      return t("topRight");
-    case "top-left":
-      return t("topLeft");
-  }
-}
 
 /**
  * How long a toast stays up, by severity: long enough to read a failure, short
