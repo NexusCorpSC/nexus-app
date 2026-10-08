@@ -366,7 +366,7 @@ export async function setContribNotifications(enabled: boolean): Promise<void> {
  * machine, or the same player on another instance, starts from their own
  * first read rather than from someone else's clock.
  */
-async function contribSinceKey(userId: string): Promise<string> {
+async function accountInstanceKey(userId: string): Promise<string> {
   return `${await getApiBaseUrl()}|${userId}`;
 }
 
@@ -375,7 +375,7 @@ export async function getContribSince(userId: string): Promise<string | null> {
   const marks = await store.get<unknown>(KEY_CONTRIB_SINCE);
   if (!marks || typeof marks !== "object") return null;
   const value = (marks as Record<string, unknown>)[
-    await contribSinceKey(userId)
+    await accountInstanceKey(userId)
   ];
   return typeof value === "string" ? value : null;
 }
@@ -389,7 +389,7 @@ export async function setContribSince(
   await store.set(KEY_CONTRIB_SINCE, {
     // A mark from before this format was a bare string: it is dropped.
     ...(marks && typeof marks === "object" ? marks : {}),
-    [await contribSinceKey(userId)]: since,
+    [await accountInstanceKey(userId)]: since,
   });
 }
 
@@ -417,7 +417,7 @@ export async function getOrdersSince(userId: string): Promise<string | null> {
   const marks = await store.get<unknown>(KEY_ORDERS_SINCE);
   if (!marks || typeof marks !== "object") return null;
   const value = (marks as Record<string, unknown>)[
-    await contribSinceKey(userId)
+    await accountInstanceKey(userId)
   ];
   return typeof value === "string" ? value : null;
 }
@@ -430,7 +430,7 @@ export async function setOrdersSince(
   const marks = await store.get<unknown>(KEY_ORDERS_SINCE);
   await store.set(KEY_ORDERS_SINCE, {
     ...(marks && typeof marks === "object" ? marks : {}),
-    [await contribSinceKey(userId)]: since,
+    [await accountInstanceKey(userId)]: since,
   });
 }
 
