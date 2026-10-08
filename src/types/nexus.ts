@@ -1772,6 +1772,7 @@ export type NpsBody = {
   slug: string;
   name: string;
   systemSlug?: string;
+  systemName?: string;
   /** The centre, in metres, in the frame of the star system. */
   x: number;
   y: number;
@@ -1791,6 +1792,8 @@ export type NpsPlace = {
   slug: string;
   name: string;
   type: PlaceType;
+  /** Each system has its own frame: a position means nothing in another. */
+  systemSlug?: string;
   systemName?: string;
   bodyName?: string;
   parentName?: string;

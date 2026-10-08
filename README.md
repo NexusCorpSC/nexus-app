@@ -167,8 +167,12 @@ d'orientation : la commande `/showlocation`, tapée dans le chat, copie
 - Les planètes tournent : un lieu posé sur un corps est rangé dans le repère
   de ce corps, rotation annulée, et la géométrie (`src/lib/nps.ts`) le
   replace dans le repère du système à l'instant du relevé. Le modèle de
-  rotation et les paramètres des corps viennent de l'outil communautaire de
-  Valalol (MIT), posés côté site par `npm run import:celestial-bodies`.
+  rotation vient de l'outil communautaire de Valalol (MIT) ; les paramètres
+  des corps (Stanton, Pyro, Nyx) de starmap.space, posés côté site par
+  `npm run import:celestial-bodies`.
+- Chaque système a son repère, centré sur son étoile : la fenêtre retient le
+  dernier système où un corps a été reconnu, ne guide que vers les lieux de
+  ce système et refuse d'enregistrer une position pour un lieu d'un autre.
 - Sur le même corps, la fenêtre donne la distance au sol, le cap à suivre
   (0° = nord) et, dès deux relevés distants d'au moins 20 m, de combien
   tourner par rapport à la trajectoire. Dans l'espace, l'écart avec la

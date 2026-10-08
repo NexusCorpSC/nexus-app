@@ -45,6 +45,7 @@ const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_PINNED_MAP = "pinnedMap";
 const KEY_NPS_DESTINATION = "npsDestination";
+const KEY_NPS_SYSTEM = "npsSystem";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
@@ -210,9 +211,10 @@ function storedMode(value: unknown, label: OverlayLabel): OverlayMode {
  */
 export async function getOverlayOpacity(): Promise<OverlayOpacity> {
   const store = await getStore();
-  const stored = await store.get<Partial<Record<OverlayLabel, unknown>>>(
-    KEY_OVERLAY_OPACITY,
-  );
+  const stored =
+    await store.get<Partial<Record<OverlayLabel, unknown>>>(
+      KEY_OVERLAY_OPACITY,
+    );
 
   return {
     notes: storedMode(stored?.notes, "notes"),
@@ -438,6 +440,20 @@ export async function setNpsDestination(slug: string | null): Promise<void> {
 
   if (slug === null) await store.delete(KEY_NPS_DESTINATION);
   else await store.set(KEY_NPS_DESTINATION, slug);
+}
+
+/**
+ * The star system the NPS last saw the player in. Out in space, far from any
+ * body, a reading does not say which system it belongs to: this one is kept.
+ */
+export async function getNpsSystem(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(KEY_NPS_SYSTEM)) ?? null;
+}
+
+export async function setNpsSystem(slug: string): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_NPS_SYSTEM, slug);
 }
 
 /**

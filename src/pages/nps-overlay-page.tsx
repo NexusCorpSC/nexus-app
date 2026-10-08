@@ -32,6 +32,7 @@ import {
   compassPoint,
   geoOf,
   guide,
+  inSystem,
   MIN_CLOSING_SPEED,
   nearestPlaces,
   positionOf,
@@ -44,6 +45,7 @@ import {
   setDestination,
 } from "@/lib/nps-destination";
 import { overlaySkin } from "@/lib/overlay-opacity";
+import { getNpsSystem, setNpsSystem } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import type { NpsPlace } from "@/types/nexus";
 
@@ -91,6 +93,9 @@ export default function NpsOverlayPage() {
   const [now, setNow] = useState(() => Date.now());
   const [panel, setPanel] = useState<Panel>("guide");
   const [destinationSlug, setDestinationSlug] = useState<string | null>(null);
+  // Where the player was last seen near a body: in open space, a reading does
+  // not tell Stanton from Pyro, each centred on its own star.
+  const [lastSystem, setLastSystem] = useState<string | null>(null);
 
   const data = useQuery({
     queryKey: ["nps"],
@@ -135,6 +140,18 @@ export default function NpsOverlayPage() {
   }, []);
 
   useEffect(() => {
+    let alive = true;
+    void getNpsSystem()
+      .then((slug) => {
+        if (alive && slug) setLastSystem((seen) => seen ?? slug);
+      })
+      .catch((error) => console.error("cannot read the NPS system", error));
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(timer);
   }, []);
@@ -146,12 +163,28 @@ export default function NpsOverlayPage() {
 
   const destination = places.find((place) => place.slug === destinationSlug);
   const body = fix ? bodyAt(fix, bodies) : null;
+  const system = body?.systemSlug ?? lastSystem;
+  const systemName = bodies.find(
+    (one) => one.systemSlug === system,
+  )?.systemName;
   const geo = fix && body ? geoOf(toBodyFrame(fix, body), body) : null;
+  const elsewhere = destination ? !inSystem(destination, system) : false;
   const guidance =
-    fix && destination
+    fix && destination && !elsewhere
       ? guide(fix, previous, destination.position, bodies)
       : null;
-  const nearest = fix ? nearestPlaces(fix, places, bodies, 1)[0] : undefined;
+  const nearest = fix
+    ? nearestPlaces(fix, places, bodies, system, 1)[0]
+    : undefined;
+
+  useEffect(() => {
+    const seen = body?.systemSlug;
+    if (!seen || seen === lastSystem) return;
+    setLastSystem(seen);
+    void setNpsSystem(seen).catch((error) =>
+      console.error("cannot save the NPS system", error),
+    );
+  }, [body?.systemSlug, lastSystem]);
 
   async function refreshPosition() {
     setCopyError(false);
@@ -220,6 +253,7 @@ export default function NpsOverlayPage() {
       ) : open && panel === "record" && fix ? (
         <RecordPanel
           fix={fix}
+          system={system}
           onDone={() => setPanel("guide")}
           positionFor={() => positionOf(fix, bodies)}
         />
@@ -250,6 +284,12 @@ export default function NpsOverlayPage() {
               </p>
               <p className="font-medium">
                 {body ? body.name : t("space")}
+                {systemName ? (
+                  <span className="font-normal text-slate-400">
+                    {" · "}
+                    {systemName}
+                  </span>
+                ) : null}
                 <span className="ml-2 font-normal text-slate-400">
                   {t("age", { age: formatAge(now - fix.at, t) })}
                 </span>
@@ -316,7 +356,13 @@ export default function NpsOverlayPage() {
                 <p className="truncate text-[13px] font-medium">
                   {destination.name}
                 </p>
-                {!fix ? (
+                {elsewhere ? (
+                  <p className="text-[12px] text-slate-400">
+                    {t("otherSystem", {
+                      system: destination.systemName ?? "?",
+                    })}
+                  </p>
+                ) : !fix ? (
                   <p className="text-[12px] text-slate-400">{t("needFix")}</p>
                 ) : !guidance ? (
                   <p className="text-[12px] text-slate-400">
@@ -546,10 +592,13 @@ function DestinationPicker({
  */
 function RecordPanel({
   fix,
+  system,
   positionFor,
   onDone,
 }: {
   fix: Fix;
+  /** Where the player is, if known: a place of another system is refused. */
+  system: string | null;
   positionFor: () => ReturnType<typeof positionOf>;
   onDone: () => void;
 }) {
@@ -557,9 +606,13 @@ function RecordPanel({
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const query = useDebounced(search);
-  const [picked, setPicked] = useState<{ slug: string; name: string } | null>(
-    null,
-  );
+  const [picked, setPicked] = useState<{
+    slug: string;
+    name: string;
+    systemSlug?: string;
+    systemName?: string;
+  } | null>(null);
+  const elsewhere = picked ? !inSystem(picked, system) : false;
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<
     { ok: true; published: boolean } | { ok: false; message: string } | null
@@ -572,7 +625,7 @@ function RecordPanel({
   });
 
   async function send() {
-    if (!picked) return;
+    if (!picked || elsewhere) return;
     setSending(true);
     try {
       const answer = await submitPlacePosition(picked.slug, positionFor());
@@ -609,13 +662,18 @@ function RecordPanel({
           <p className="text-[11px] text-slate-400">
             {t("recordHint", { age: Math.round((Date.now() - fix.at) / 1000) })}
           </p>
+          {elsewhere ? (
+            <p className="text-[12px] text-red-300">
+              {t("recordOtherSystem", { system: picked.systemName ?? "?" })}
+            </p>
+          ) : null}
           {result && !result.ok ? (
             <p className="text-[12px] text-red-300">{result.message}</p>
           ) : null}
           <div className="flex gap-2">
             <button
               type="button"
-              disabled={sending}
+              disabled={sending || elsewhere}
               onClick={() => void send()}
               className="rounded-lg border border-sky-300/40 bg-sky-300/10 px-3 py-1 text-[12px] font-medium transition hover:bg-sky-300/20 disabled:opacity-50"
             >
@@ -659,7 +717,12 @@ function RecordPanel({
                   key={place.id}
                   type="button"
                   onClick={() =>
-                    setPicked({ slug: place.slug, name: place.name })
+                    setPicked({
+                      slug: place.slug,
+                      name: place.name,
+                      systemSlug: place.systemSlug,
+                      systemName: place.systemName,
+                    })
                   }
                   className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
                 >

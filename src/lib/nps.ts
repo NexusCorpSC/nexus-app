@@ -14,7 +14,8 @@ import type { NpsBody, NpsPlace, PlacePosition } from "@/types/nexus";
  * (MIT): a body turns at a constant rate, and its angle on 2020-01-01 00:00
  * UTC — `rotationAdjust` — pins it to the clock. A slightly wrong constant
  * shifts every place of that body by the same angle, recorded and read back
- * through the same model: distances between places stay right.
+ * through the same model: distances between places stay right. The bodies'
+ * values themselves come from starmap.space, through the site.
  *
  * Coordinates are metres throughout; angles are degrees at the edges.
  */
@@ -261,14 +262,28 @@ export function guide(
   return guidance;
 }
 
-/** The recorded places nearest to a reading, closest first. */
+/**
+ * Whether a place can be reached from `system`: each system has its own frame,
+ * centred on its star, so coordinates from two of them do not compare. An
+ * unknown side does not rule anything out.
+ */
+export function inSystem(
+  place: { systemSlug?: string },
+  system: string | null,
+): boolean {
+  return !place.systemSlug || !system || place.systemSlug === system;
+}
+
+/** The recorded places of `system` nearest to a reading, closest first. */
 export function nearestPlaces(
   fix: Fix,
   places: NpsPlace[],
   bodies: NpsBody[],
+  system: string | null,
   count: number,
 ): { place: NpsPlace; distance: number }[] {
   return places
+    .filter((place) => inSystem(place, system))
     .flatMap((place) => {
       const point = systemPositionOf(place.position, bodies, fix.at);
       return point ? [{ place, distance: length(sub(point, fix)) }] : [];
