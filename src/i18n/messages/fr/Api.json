@@ -1,6 +1,7 @@
 {
   "unreachable": "Impossible de joindre {url}. Vérifiez l'URL de l'API et votre connexion.",
   "httpFailed": "{method} {path} a échoué (HTTP {status})",
+  "unexpectedPage": "{method} {path} : le site a répondu par une page au lieu de données. Il n'est peut-être pas encore à jour.",
   "contrib": {
     "unauthenticated": "Connectez-vous pour contribuer.",
     "suspended": "Vos contributions sont suspendues par la modération.",

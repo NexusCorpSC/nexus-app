@@ -1,6 +1,7 @@
 {
   "unreachable": "Can't reach {url}. Check the API URL and your connection.",
   "httpFailed": "{method} {path} failed (HTTP {status})",
+  "unexpectedPage": "{method} {path}: the site answered with a page instead of data. It may not be up to date yet.",
   "contrib": {
     "unauthenticated": "Sign in to contribute.",
     "suspended": "Your contributions are suspended by moderation.",

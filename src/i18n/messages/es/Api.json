@@ -1,6 +1,7 @@
 {
   "unreachable": "No se puede conectar con {url}. Comprueba la URL de la API y tu conexión.",
   "httpFailed": "{method} {path} ha fallado (HTTP {status})",
+  "unexpectedPage": "{method} {path}: el sitio respondió con una página en lugar de datos. Puede que aún no esté actualizado.",
   "contrib": {
     "unauthenticated": "Inicia sesión para contribuir.",
     "suspended": "La moderación ha suspendido tus contribuciones.",

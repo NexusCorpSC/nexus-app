@@ -52,10 +52,7 @@ function buildUrl(
   path: string,
   params?: RequestOptions["params"],
 ): string {
-  const url = new URL(
-    path.startsWith("/") ? path : `/${path}`,
-    `${baseUrl}/`,
-  );
+  const url = new URL(path.startsWith("/") ? path : `/${path}`, `${baseUrl}/`);
 
   if (params) {
     for (const [key, value] of Object.entries(params)) {
@@ -173,6 +170,15 @@ export async function apiRequest<T>(
       });
 
     throw new ApiError(response.status, message, payload);
+  }
+
+  // A route the site does not have (yet) can answer with its "not found"
+  // page, and a 200: an HTML page is never what the API meant.
+  if (response.headers.get("content-type")?.includes("text/html")) {
+    throw new ApiError(
+      response.status,
+      translator("Api")("unexpectedPage", { method, path }),
+    );
   }
 
   return payload as T;
