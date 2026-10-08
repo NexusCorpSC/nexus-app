@@ -26,6 +26,11 @@ function visibleSales(lot: InventoryItem): LotSale[] {
   return (lot.sales ?? []).filter((sale) => sale.onSale);
 }
 
+/** The listing's page in its shop's back office. */
+function backOfficePath(shopId: string, listingId: string): string {
+  return `/shops/${encodeURIComponent(shopId)}/bo/listings/${encodeURIComponent(listingId)}`;
+}
+
 async function openOnSite(path: string) {
   await openUrl(`${await getApiBaseUrl()}${path}`);
 }
@@ -224,7 +229,7 @@ function SalesPanel({
               title={t("openOnSite")}
               onClick={() =>
                 void openOnSite(
-                  `/shops/${sale.shopId}/bo/listings/${sale.listingId}`,
+                  backOfficePath(sale.shopId, sale.listingId),
                 )
               }
               className="inline-flex items-center gap-1 text-xs text-nexus-accent hover:underline"
@@ -370,7 +375,7 @@ function SellLotDialog({
               type="button"
               variant="outline"
               title={t("openOnSite")}
-              onClick={() => void openOnSite(`/shopping/i/${listingId}`)}
+              onClick={() => void openOnSite(`/shopping/i/${encodeURIComponent(listingId)}`)}
             >
               {t("viewListing")}
               <ExternalLink className="size-3.5" aria-hidden />
@@ -380,7 +385,7 @@ function SellLotDialog({
               variant="outline"
               title={t("openOnSite")}
               onClick={() =>
-                void openOnSite(`/shops/${shopId}/bo/listings/${listingId}`)
+                void openOnSite(backOfficePath(shopId, listingId))
               }
             >
               {t("manageListing")}
