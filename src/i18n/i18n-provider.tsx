@@ -3,7 +3,12 @@ import { IntlProvider } from "use-intl";
 import { invoke } from "@tauri-apps/api/core";
 import { emit, listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { isLocale, setActiveLocale, type Locale } from "@/i18n/locale";
+import {
+  detectSystemLocale,
+  isLocale,
+  setActiveLocale,
+  type Locale,
+} from "@/i18n/locale";
 import { MESSAGES } from "@/i18n/messages";
 import { translator } from "@/i18n/translate";
 import { getLocaleSetting, setLocaleSetting } from "@/lib/settings";
@@ -27,7 +32,7 @@ export async function changeLocale(locale: Locale): Promise<void> {
  * Hands the tray menu and the native notifications their texts. Only the
  * main window does it, so that one change does not send it ten times.
  */
-function relabelNative() {
+function relabelNative(locale: Locale) {
   if (getCurrentWindow().label !== "main") return;
   const t = translator("Native");
   void invoke("set_native_labels", {
@@ -43,10 +48,29 @@ function relabelNative() {
       quit: t("quit"),
       captureFailed: t("captureFailed"),
       ocrFailed: t("ocrFailed"),
+      // Passed on to the windows that cannot read the store (`storedLocale`).
+      locale,
     },
   }).catch((error) => {
     console.error("[i18n] tray labels not updated", error);
   });
+}
+
+/**
+ * The language to speak in this window.
+ *
+ * The radial menu, the capture and the notifications have no access to the
+ * store, which holds the session cookie: reading it is refused, and they ask
+ * the main window's language from the native side instead — the system's
+ * until the main window has spoken, which then tells them by `LOCALE_EVENT`.
+ */
+async function storedLocale(): Promise<Locale> {
+  try {
+    return await getLocaleSetting();
+  } catch {
+    const relayed = await invoke<string | null>("app_locale").catch(() => null);
+    return isLocale(relayed) ? relayed : detectSystemLocale();
+  }
 }
 
 /**
@@ -68,10 +92,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       setActiveLocale(next);
       setLocale(next);
-      relabelNative();
+      relabelNative(next);
     }
 
-    void getLocaleSetting().then(apply);
+    void storedLocale().then(apply);
 
     const unlisten = listen<string>(LOCALE_EVENT, (event) => {
       if (isLocale(event.payload)) apply(event.payload);

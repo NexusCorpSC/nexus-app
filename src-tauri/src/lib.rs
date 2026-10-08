@@ -1373,6 +1373,7 @@ pub fn run() {
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,
             native_labels::set_native_labels,
+            native_labels::app_locale,
         ])
         .on_window_event(|window, event| {
             // Dismiss the search palette when it loses focus, the way a command
