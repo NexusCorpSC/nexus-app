@@ -23,6 +23,9 @@ pub(crate) struct NativeLabels {
     pub squad: String,
     pub plan: String,
     pub map: String,
+    /// Missing from what a frontend older than the NPS sends.
+    #[serde(default = "default_nps_label")]
+    pub nps: String,
     pub quit: String,
     pub capture_failed: String,
     pub ocr_failed: String,
@@ -38,11 +41,16 @@ impl Default for NativeLabels {
             squad: "Escouade".into(),
             plan: "Plan de vol".into(),
             map: "Carte".into(),
+            nps: default_nps_label(),
             quit: "Quitter Nexus App".into(),
             capture_failed: "Capture impossible".into(),
             ocr_failed: "Lecture du texte impossible".into(),
         }
     }
+}
+
+fn default_nps_label() -> String {
+    "NPS".into()
 }
 
 #[derive(Default)]

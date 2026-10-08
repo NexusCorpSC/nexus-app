@@ -27,6 +27,7 @@ const CARGO_ITEM: &str = "tray-cargo";
 const SQUAD_ITEM: &str = "tray-squad";
 const PLAN_ITEM: &str = "tray-plan";
 const MAP_ITEM: &str = "tray-map";
+const NPS_ITEM: &str = "tray-nps";
 const QUIT_ITEM: &str = "tray-quit";
 
 const TRAY_ID: &str = "nexus-app";
@@ -40,13 +41,14 @@ fn build_menu(app: &AppHandle, labels: &NativeLabels) -> tauri::Result<Menu<Wry>
     let squad = MenuItem::with_id(app, SQUAD_ITEM, &labels.squad, true, None::<&str>)?;
     let plan = MenuItem::with_id(app, PLAN_ITEM, &labels.plan, true, None::<&str>)?;
     let map = MenuItem::with_id(app, MAP_ITEM, &labels.map, true, None::<&str>)?;
+    let nps = MenuItem::with_id(app, NPS_ITEM, &labels.nps, true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
     let quit = MenuItem::with_id(app, QUIT_ITEM, &labels.quit, true, None::<&str>)?;
 
     Menu::with_items(
         app,
         &[
-            &search, &capture, &notes, &cargo, &squad, &plan, &map, &separator, &quit,
+            &search, &capture, &notes, &cargo, &squad, &plan, &map, &nps, &separator, &quit,
         ],
     )
 }
@@ -112,6 +114,7 @@ fn on_menu(app: &AppHandle, item: &str) {
         SQUAD_ITEM => Action::Squad,
         PLAN_ITEM => Action::Plan,
         MAP_ITEM => Action::Map,
+        NPS_ITEM => Action::Nps,
         QUIT_ITEM => {
             log("quitting from the tray");
             // Closes every window and ends the process, which is the only way

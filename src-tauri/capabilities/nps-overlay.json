@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "nps-overlay",
+  "description": "NPS overlay. Like the map one it has no decorations, so its header doubles as the title bar and the webview has to be allowed to drag the window — `core:default` does not cover that. The rest — the API for the places and the positions it sends, the store for the chosen destination, the events carrying the game's position — comes from `default`, whose window list it joins.",
+  "windows": ["nps"],
+  "permissions": ["core:window:allow-start-dragging"]
+}

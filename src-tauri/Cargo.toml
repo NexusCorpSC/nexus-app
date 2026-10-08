@@ -1,6 +1,6 @@
 [package]
 name = "nexus-app"
-version = "0.33.0"
+version = "0.34.0"
 description = "Desktop client for Nexus Tools"
 authors = ["Nexus Corp"]
 edition = "2021"
@@ -60,7 +60,11 @@ windows = { version = "0.62.2", features = [
     "Win32_Foundation",
     # `WNDCLASSW` names GDI handles, so the message-only window needs this too.
     "Win32_Graphics_Gdi",
+    # The clipboard, for the NPS (`src/clipboard.rs`).
+    "Win32_System_DataExchange",
     "Win32_System_LibraryLoader",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
     "Win32_UI_Input",
     "Win32_UI_Input_KeyboardAndMouse",
     "Win32_UI_WindowsAndMessaging",

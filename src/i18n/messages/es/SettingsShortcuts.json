@@ -39,6 +39,10 @@
       "hint": "El mapa fijado desde un lugar, o elegido en la ventana.",
       "detail": "Muestra el mapa fijado desde la ficha de un lugar, o elegido en la propia ventana."
     },
+    "nps": {
+      "label": "NPS",
+      "hint": "Distancia y rumbo hacia un lugar, desde /showlocation."
+    },
     "radial": {
       "label": "Mantener el menú radial rápido",
       "hint": "Mantén pulsado, apunta a una acción con el ratón, suelta. Esc cancela.",

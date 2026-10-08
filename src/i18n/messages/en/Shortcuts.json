@@ -7,6 +7,7 @@
     "squad": "Squad",
     "plan": "Flight plan",
     "map": "Map",
+    "nps": "NPS",
     "opacity": "Overlay opacity",
     "lock": "Overlay lock",
     "radial": "Quick radial menu"

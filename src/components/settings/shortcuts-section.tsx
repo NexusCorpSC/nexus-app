@@ -44,6 +44,7 @@ const WINDOW_ROWS: ShortcutAction[] = [
   "squad",
   "plan",
   "map",
+  "nps",
 ];
 
 /** The combinations used while playing, over the overlays already shown. */

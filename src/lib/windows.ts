@@ -9,6 +9,7 @@ export type OverlayLabel =
   | "squad"
   | "plan"
   | "map"
+  | "nps"
   | "notes"
   | "cargo";
 

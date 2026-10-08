@@ -36,7 +36,7 @@ src-tauri/            binaire Tauri, plugins et permissions
 ### Fonctionnalités
 
 La fenêtre s'ouvre sur l'**accueil** : les superpositions à lancer avant le jeu
-(recherche, escouade, carte, plan de vol, bloc-notes, cargo), chacune avec son
+(recherche, escouade, carte, NPS, plan de vol, bloc-notes, cargo), chacune avec son
 raccourci, l'état de l'escouade, le début du bloc-notes et l'accès à la base de
 données. Le menu range les écrans en deux groupes — *Base de données* et *Mon
 espace* — et garde en bas deux boutons qui affichent les superpositions
@@ -61,6 +61,7 @@ contrairement au raccourci qui bascule.
 | ↳ en jeu      | `/api/orgs/:id/presence`, `/api/me/presence` (GET, PUT, DELETE) | oui          |
 | Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
 | Bloc-notes    | `/api/notes`                                                 | non³            |
+| NPS           | `/api/lieux/nps`, `/api/lieux/:slug/position` (POST)          | pour enregistrer |
 
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
@@ -150,6 +151,34 @@ La lecture se fait par sondage, une fois par seconde, plutôt que par
 notification du système : le jeu garde le fichier ouvert en écriture toute la
 session, et Windows ne signale pas de manière fiable ce qui change dans un
 fichier tenu ainsi.
+
+### NPS (Nexus Positioning System)
+
+La superposition NPS (`Ctrl+Shift+K`) dit à quelle distance est un lieu et
+dans quelle direction aller. Le jeu ne donne qu'une position, jamais
+d'orientation : la commande `/showlocation`, tapée dans le chat, copie
+`Coordinates: x:… y:… z:…` (mètres, repère du système) dans le presse-papiers.
+
+- Le bouton **Actualiser ma position** met `/showlocation` dans le
+  presse-papiers ; il reste à le coller dans le chat. La réponse du jeu est
+  repérée toute seule (`src-tauri/src/nps.rs`), horodatée au dixième de
+  seconde. Le presse-papiers n'est lu que fenêtre NPS affichée, et seulement
+  quand son contenu change (`GetClipboardSequenceNumber`).
+- Les planètes tournent : un lieu posé sur un corps est rangé dans le repère
+  de ce corps, rotation annulée, et la géométrie (`src/lib/nps.ts`) le
+  replace dans le repère du système à l'instant du relevé. Le modèle de
+  rotation et les paramètres des corps viennent de l'outil communautaire de
+  Valalol (MIT), posés côté site par `npm run import:celestial-bodies`.
+- Sur le même corps, la fenêtre donne la distance au sol, le cap à suivre
+  (0° = nord) et, dès deux relevés distants d'au moins 20 m, de combien
+  tourner par rapport à la trajectoire. Dans l'espace, l'écart avec la
+  trajectoire, sans côté.
+- Les lieux n'ont pas de coordonnées au départ : un joueur sur place
+  enregistre sa position pour un lieu, envoyée comme contribution
+  (`placeEdit`, publiée d'emblée au niveau 3, relue en dessous).
+
+La fiche d'un lieu relevé propose **Y aller (NPS)**, qui en fait la
+destination et affiche la superposition.
 
 ### Icône de notification
 

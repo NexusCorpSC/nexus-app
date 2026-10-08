@@ -1298,6 +1298,8 @@ export type PlaceDetails = PlaceSummary & {
   shops: PlaceSummary[];
   /** Les lieux que les repères ouvrent, résolus une fois pour toutes. */
   planTargets: PlaceSummary[];
+  /** Où le lieu se trouve en jeu, quand un joueur l'a relevé (NPS). */
+  position?: PlacePosition;
 };
 
 export type PlaceListResponse = {
@@ -1746,3 +1748,63 @@ export type ConfirmationResult = {
 /** What a confirmation earns, as long as the daily allowance lasts. */
 export const CONFIRMATION_POINTS = 1;
 export const MAX_CONFIRMATION_COMMENT_LENGTH = 300;
+
+/* ------------------------------------------------------------------ */
+/* NPS — Nexus Positioning System                                      */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Where a place is in game, in metres, as the site stores it.
+ *
+ * On a body that turns (`body`, the slug of a place carrying celestial
+ * parameters) it is in that body's frame, rotation undone, where it does not
+ * move. In space (`body` absent) it is in the frame of the star system.
+ */
+export type PlacePosition = {
+  body?: string;
+  x: number;
+  y: number;
+  z: number;
+};
+
+/** A planet or a moon, with what the NPS needs to find one's way on it. */
+export type NpsBody = {
+  slug: string;
+  name: string;
+  systemSlug?: string;
+  /** The centre, in metres, in the frame of the star system. */
+  x: number;
+  y: number;
+  z: number;
+  /** The ground's radius, in metres. */
+  radius: number;
+  /** How far from the centre, in metres, its frame turns with it. */
+  zoneRadius: number;
+  /** Hours for one turn on itself; 0 when it does not turn. */
+  rotationHours: number;
+  /** Its rotation on 2020-01-01T00:00:00Z, in degrees. */
+  rotationAdjust: number;
+};
+
+/** A place whose position players have recorded. */
+export type NpsPlace = {
+  slug: string;
+  name: string;
+  type: PlaceType;
+  systemName?: string;
+  bodyName?: string;
+  parentName?: string;
+  position: PlacePosition;
+};
+
+/** `GET /api/lieux/nps`. */
+export type NpsResponse = {
+  bodies: NpsBody[];
+  places: NpsPlace[];
+};
+
+/** `POST /api/lieux/{slug}/position`, 201. */
+export type PlacePositionResult = {
+  contribution: Contribution;
+  standing: ContributorStanding;
+};
