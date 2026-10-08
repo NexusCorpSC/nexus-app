@@ -52,6 +52,10 @@ import {
   type PackageEntry,
 } from "@/components/inventory/parcels";
 import { ItemNameCombobox } from "@/components/inventory/item-name-combobox";
+import {
+  LotSaleBadge,
+  SellLotButton,
+} from "@/components/inventory/sell-lot";
 import { LocationCombobox } from "@/components/inventory/location-combobox";
 import type {
   InventoryItem,
@@ -330,6 +334,7 @@ export default function InventoryPage() {
               narrow={packageEntries.length > 0}
               renderLotMeta={(lot) => (
                 <span className="flex items-center gap-2 pl-2">
+                  <LotSaleBadge lot={lot} />
                   {lot.reserved !== undefined ? (
                     <span
                       className="flex items-center gap-1 text-xs text-amber-300"
@@ -439,6 +444,10 @@ export default function InventoryPage() {
                           fromDisplayQty(amount, active.unit),
                         )
                       }
+                    />
+                    <SellLotButton
+                      lot={active}
+                      onSold={() => void invalidateItems()}
                     />
                     <DeleteIconButton
                       itemName={
