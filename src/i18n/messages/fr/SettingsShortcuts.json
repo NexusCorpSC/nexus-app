@@ -39,6 +39,10 @@
       "hint": "La carte épinglée depuis un lieu, ou choisie dans la fenêtre.",
       "detail": "Affiche la carte épinglée depuis la fiche d'un lieu, ou choisie dans la fenêtre elle-même."
     },
+    "nps": {
+      "label": "NPS",
+      "hint": "Distance et cap vers un lieu, depuis /showlocation."
+    },
     "radial": {
       "label": "Maintenir le menu radial rapide",
       "hint": "Maintenez, visez une action à la souris, relâchez. Échap annule.",

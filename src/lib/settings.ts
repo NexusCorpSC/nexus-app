@@ -36,6 +36,7 @@ const KEY_SHORTCUT_CARGO = "shortcutCargo";
 const KEY_SHORTCUT_SQUAD = "shortcutSquad";
 const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_MAP = "shortcutMap";
+const KEY_SHORTCUT_NPS = "shortcutNps";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
 const KEY_SHORTCUT_RADIAL = "shortcutRadial";
@@ -43,6 +44,8 @@ const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_PINNED_MAP = "pinnedMap";
+const KEY_NPS_DESTINATION = "npsDestination";
+const KEY_NPS_SYSTEM = "npsSystem";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
@@ -127,6 +130,7 @@ export const DEFAULT_SHORTCUTS = {
   squad: "Ctrl+Shift+KeyE",
   plan: "Ctrl+Shift+KeyP",
   map: "Ctrl+Shift+KeyM",
+  nps: "Ctrl+Shift+KeyK",
   opacity: "Ctrl+Shift+KeyO",
   lock: "Ctrl+Shift+KeyL",
   // Held, not pressed: the radial menu stays up while it is down.
@@ -156,6 +160,7 @@ export async function getShortcuts(): Promise<Shortcuts> {
     plan:
       (await store.get<string>(KEY_SHORTCUT_PLAN)) ?? DEFAULT_SHORTCUTS.plan,
     map: (await store.get<string>(KEY_SHORTCUT_MAP)) ?? DEFAULT_SHORTCUTS.map,
+    nps: (await store.get<string>(KEY_SHORTCUT_NPS)) ?? DEFAULT_SHORTCUTS.nps,
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
@@ -176,6 +181,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_SQUAD, shortcuts.squad);
   await store.set(KEY_SHORTCUT_PLAN, shortcuts.plan);
   await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
+  await store.set(KEY_SHORTCUT_NPS, shortcuts.nps);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
   await store.set(KEY_SHORTCUT_RADIAL, shortcuts.radial);
@@ -205,9 +211,10 @@ function storedMode(value: unknown, label: OverlayLabel): OverlayMode {
  */
 export async function getOverlayOpacity(): Promise<OverlayOpacity> {
   const store = await getStore();
-  const stored = await store.get<Partial<Record<OverlayLabel, unknown>>>(
-    KEY_OVERLAY_OPACITY,
-  );
+  const stored =
+    await store.get<Partial<Record<OverlayLabel, unknown>>>(
+      KEY_OVERLAY_OPACITY,
+    );
 
   return {
     notes: storedMode(stored?.notes, "notes"),
@@ -215,6 +222,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     squad: storedMode(stored?.squad, "squad"),
     plan: storedMode(stored?.plan, "plan"),
     map: storedMode(stored?.map, "map"),
+    nps: storedMode(stored?.nps, "nps"),
   };
 }
 
@@ -416,6 +424,36 @@ export async function setPinnedMap(slug: string | null): Promise<void> {
 
   if (slug === null) await store.delete(KEY_PINNED_MAP);
   else await store.set(KEY_PINNED_MAP, slug);
+}
+
+/**
+ * The place the NPS overlay guides to, kept as a slug — for the same reason
+ * as the pinned map: the overlay outlives a hide and a show.
+ */
+export async function getNpsDestination(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(KEY_NPS_DESTINATION)) ?? null;
+}
+
+export async function setNpsDestination(slug: string | null): Promise<void> {
+  const store = await getStore();
+
+  if (slug === null) await store.delete(KEY_NPS_DESTINATION);
+  else await store.set(KEY_NPS_DESTINATION, slug);
+}
+
+/**
+ * The star system the NPS last saw the player in. Out in space, far from any
+ * body, a reading does not say which system it belongs to: this one is kept.
+ */
+export async function getNpsSystem(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(KEY_NPS_SYSTEM)) ?? null;
+}
+
+export async function setNpsSystem(slug: string): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_NPS_SYSTEM, slug);
 }
 
 /**

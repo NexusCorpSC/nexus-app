@@ -39,6 +39,10 @@
       "hint": "The map pinned from a place, or picked in the window.",
       "detail": "Shows the map pinned from a place's page, or picked in the window itself."
     },
+    "nps": {
+      "label": "NPS",
+      "hint": "Distance and heading to a place, from /showlocation."
+    },
     "radial": {
       "label": "Hold the quick radial menu",
       "hint": "Hold, aim at an action with the mouse, release. Esc cancels.",

@@ -4,7 +4,7 @@ import { BackLink } from "@/components/layout/back-link";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { ExternalLink, Map as MapIcon, Pin } from "lucide-react";
+import { Compass, ExternalLink, Map as MapIcon, Pin } from "lucide-react";
 import { getPlace } from "@/lib/api/places";
 import {
   onPinnedMapChange,
@@ -12,7 +12,9 @@ import {
   readPinnedMap,
   showMapOverlay,
 } from "@/lib/pinned-map";
+import { setDestination } from "@/lib/nps-destination";
 import { getApiBaseUrl } from "@/lib/settings";
+import { showOverlay } from "@/lib/windows";
 import { MapLegend, MapView } from "@/components/place/map-view";
 import { PlaceCard, PlaceTypeBadge } from "@/components/place-card";
 import { type PlaceDetails, type PlacePlan } from "@/types/nexus";
@@ -80,6 +82,22 @@ export default function PlaceDetailPage() {
         actions={
           <>
             {user ? <AddMediaButton place={place} /> : null}
+            {place.position ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Comme épingler une carte : choisir la destination affiche
+                  // la fenêtre qui y guide.
+                  void setDestination(place.slug).then(() =>
+                    showOverlay("nps"),
+                  );
+                }}
+              >
+                <Compass className="h-3.5 w-3.5" />
+                {t("detail.guide")}
+              </Button>
+            ) : null}
             <ReportButton type="place" id={place.slug} name={place.name} />
             <Button
               variant="outline"

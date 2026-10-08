@@ -17,7 +17,13 @@ import { invoke } from "@tauri-apps/api/core";
 export const OVERLAY_OPACITY_EVENT = "overlay://opacity";
 
 /** The window labels this applies to, as declared in `tauri.conf.json`. */
-export type OverlayLabel = "notes" | "cargo" | "squad" | "plan" | "map";
+export type OverlayLabel =
+  | "notes"
+  | "cargo"
+  | "squad"
+  | "plan"
+  | "map"
+  | "nps";
 
 /**
  * The three modes, in the order the button steps through them.
@@ -65,6 +71,9 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   plan: "opaque",
   // The same, and for the same reason: a surveyed floor plan is a drawing.
   map: "opaque",
+  // A few lines of figures read over the game: a tint keeps them legible over
+  // a lit planet without hiding where one is going.
+  nps: "shaded",
 };
 
 /** Steps one overlay to its next mode. Called by the button that overlay carries. */

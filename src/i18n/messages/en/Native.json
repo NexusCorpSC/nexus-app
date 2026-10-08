@@ -6,6 +6,7 @@
   "squad": "Squad",
   "plan": "Flight plan",
   "map": "Map",
+  "nps": "NPS",
   "quit": "Quit Nexus App",
   "captureFailed": "Capture failed",
   "ocrFailed": "Could not read the text"

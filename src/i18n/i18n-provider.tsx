@@ -39,6 +39,7 @@ function relabelNative() {
       squad: t("squad"),
       plan: t("plan"),
       map: t("map"),
+      nps: t("nps"),
       quit: t("quit"),
       captureFailed: t("captureFailed"),
       ocrFailed: t("ocrFailed"),

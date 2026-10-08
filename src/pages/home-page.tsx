@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { useTranslations } from "use-intl";
 import {
+  Compass,
   Container,
   Map as MapIcon,
   NotebookPen,
@@ -30,13 +31,14 @@ import type { Squad } from "@/types/nexus";
 /** The windows worth opening before the game, with the shortcut each has. */
 const LAUNCHERS: {
   label: OverlayLabel;
-  title: "search" | "squad" | "map" | "plan" | "notes" | "cargo";
+  title: "search" | "squad" | "map" | "nps" | "plan" | "notes" | "cargo";
   icon: LucideIcon;
   shortcut: keyof Shortcuts;
 }[] = [
   { label: "overlay", title: "search", icon: Search, shortcut: "search" },
   { label: "squad", title: "squad", icon: Users, shortcut: "squad" },
   { label: "map", title: "map", icon: MapIcon, shortcut: "map" },
+  { label: "nps", title: "nps", icon: Compass, shortcut: "nps" },
   { label: "plan", title: "plan", icon: RouteIcon, shortcut: "plan" },
   { label: "notes", title: "notes", icon: NotebookPen, shortcut: "notes" },
   { label: "cargo", title: "cargo", icon: Container, shortcut: "cargo" },

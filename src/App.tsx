@@ -36,6 +36,7 @@ import CargoOverlayPage from "@/pages/cargo-overlay-page";
 import SquadOverlayPage from "@/pages/squad-overlay-page";
 import PlanOverlayPage from "@/pages/plan-overlay-page";
 import MapOverlayPage from "@/pages/map-overlay-page";
+import NpsOverlayPage from "@/pages/nps-overlay-page";
 import RadialOverlayPage from "@/pages/radial-overlay-page";
 
 export default function App() {
@@ -58,6 +59,7 @@ export default function App() {
       <Route path="squad-overlay" element={<SquadOverlayPage />} />
       <Route path="plan-overlay" element={<PlanOverlayPage />} />
       <Route path="map-overlay" element={<MapOverlayPage />} />
+      <Route path="nps-overlay" element={<NpsOverlayPage />} />
       <Route path="radial" element={<RadialOverlayPage />} />
 
       <Route element={<AppLayout />}>
