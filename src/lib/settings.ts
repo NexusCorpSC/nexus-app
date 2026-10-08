@@ -53,6 +53,8 @@ const KEY_GAME_LOG_DIR = "gameLogDir";
 const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
 const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
+const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
+const KEY_ORDERS_SINCE = "ordersSince";
 const KEY_LOCALE = "locale";
 
 /** Production Nexus Tools instance. */
@@ -386,6 +388,47 @@ export async function setContribSince(
   const marks = await store.get<unknown>(KEY_CONTRIB_SINCE);
   await store.set(KEY_CONTRIB_SINCE, {
     // A mark from before this format was a bare string: it is dropped.
+    ...(marks && typeof marks === "object" ? marks : {}),
+    [await contribSinceKey(userId)]: since,
+  });
+}
+
+/**
+ * Whether an order received by one of the reader's shops, or a step taken on
+ * one of their orders, raises a notification. On unless turned off.
+ */
+export async function getOrderNotifications(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_ORDER_NOTIFICATIONS);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setOrderNotifications(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_ORDER_NOTIFICATIONS, enabled);
+}
+
+/**
+ * The site's clock at the last read of the orders, sent back as `since`: one
+ * mark per account and per instance, like the contribution events'.
+ */
+export async function getOrdersSince(userId: string): Promise<string | null> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_ORDERS_SINCE);
+  if (!marks || typeof marks !== "object") return null;
+  const value = (marks as Record<string, unknown>)[
+    await contribSinceKey(userId)
+  ];
+  return typeof value === "string" ? value : null;
+}
+
+export async function setOrdersSince(
+  userId: string,
+  since: string,
+): Promise<void> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_ORDERS_SINCE);
+  await store.set(KEY_ORDERS_SINCE, {
     ...(marks && typeof marks === "object" ? marks : {}),
     [await contribSinceKey(userId)]: since,
   });

@@ -20,5 +20,7 @@
   "cornerError": "The display corner could not be applied. It will be at the next startup.",
   "contrib": "My contributions",
   "contribHint": "Published, needs changes, achievement unlocked or new level.",
-  "contribError": "The setting could not be saved."
+  "contribError": "The setting could not be saved.",
+  "orders": "My orders",
+  "ordersHint": "An order received by one of my shops, or a step taken on an order."
 }

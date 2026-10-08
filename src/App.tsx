@@ -21,6 +21,7 @@ import OrgInventoryPage from "@/pages/org-inventory-page";
 import OrgDetailPage from "@/pages/org-detail-page";
 import OrgEventPage from "@/pages/org-event-page";
 import FriendsPage from "@/pages/friends-page";
+import OrdersPage from "@/pages/orders-page";
 import SettingsPage from "@/pages/settings-page";
 import HomePage from "@/pages/home-page";
 import LoginPage from "@/pages/login-page";
@@ -109,6 +110,7 @@ export default function App() {
             element={<OrgEventPage />}
           />
           <Route path="friends" element={<FriendsPage />} />
+          <Route path="orders" element={<OrdersPage />} />
         </Route>
 
         <Route path="settings" element={<SettingsPage />} />

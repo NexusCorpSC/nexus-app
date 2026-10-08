@@ -1,0 +1,56 @@
+{
+  "title": "Orders",
+  "description": "Orders your shops received and orders you placed on the marketplace.",
+  "marketplace": "Marketplace",
+  "receivedTab": "Received · {shop}",
+  "placedTab": "Placed",
+  "open": "In progress",
+  "closed": "Closed in the last 14 days",
+  "nothingOpen": "No order in progress.",
+  "openOrder": "Open",
+  "empty": {
+    "placed": "No order placed",
+    "received": "No order received",
+    "description": "Orders are placed on the site's marketplace, and show up here."
+  },
+  "status": {
+    "PENDING": "Requested",
+    "QUOTED": "Quote sent",
+    "CONFIRMED": "Confirmed",
+    "ACCEPTED": "Confirmed",
+    "READY": "Ready",
+    "DELIVERED": "Delivered",
+    "REFUSED": "Refused",
+    "CANCELLED": "Cancelled"
+  },
+  "notify": {
+    "open": "Open",
+    "newTitle": "{buyer} orders {summary}",
+    "newBody": "{shop} · pickup requested at {pickup}",
+    "newBodyNoPickup": "{shop} · new order",
+    "quoteTitle": "Quote received: {amount}",
+    "body": "{name} · {summary}",
+    "placed": {
+      "PENDING": "{shop}: order requested",
+      "QUOTED": "{shop}: quote sent",
+      "CONFIRMED": "{shop} confirmed your order",
+      "ACCEPTED": "{shop} confirmed your order",
+      "READY": "Your order is ready at {shop}",
+      "DELIVERED": "{shop} delivered your order",
+      "REFUSED": "{shop} refused your order",
+      "CANCELLED": "{shop}: order cancelled"
+    },
+    "received": {
+      "PENDING": "{buyer}: order requested",
+      "QUOTED": "{buyer}: quote sent",
+      "CONFIRMED": "{buyer} accepted your quote",
+      "ACCEPTED": "{buyer} accepted your quote",
+      "READY": "{buyer}: order ready",
+      "DELIVERED": "{buyer} received their order",
+      "REFUSED": "{buyer} declined your quote",
+      "CANCELLED": "{buyer} cancelled their order"
+    },
+    "backlogTitle": "Orders",
+    "backlog": "{count, plural, one {# more update on your orders.} other {# more updates on your orders.}}"
+  }
+}

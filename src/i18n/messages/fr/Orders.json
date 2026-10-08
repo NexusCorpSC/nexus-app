@@ -1,0 +1,56 @@
+{
+  "title": "Commandes",
+  "description": "Celles que reçoivent vos magasins et celles que vous avez passées sur la marketplace.",
+  "marketplace": "Marketplace",
+  "receivedTab": "Reçues · {shop}",
+  "placedTab": "Passées",
+  "open": "En cours",
+  "closed": "Terminées ces 14 derniers jours",
+  "nothingOpen": "Aucune commande en cours.",
+  "openOrder": "Ouvrir",
+  "empty": {
+    "placed": "Aucune commande passée",
+    "received": "Aucune commande reçue",
+    "description": "Les commandes se passent sur la marketplace du site, et s'affichent ici."
+  },
+  "status": {
+    "PENDING": "Demandée",
+    "QUOTED": "Devis envoyé",
+    "CONFIRMED": "Confirmée",
+    "ACCEPTED": "Confirmée",
+    "READY": "Prête",
+    "DELIVERED": "Remise",
+    "REFUSED": "Refusée",
+    "CANCELLED": "Annulée"
+  },
+  "notify": {
+    "open": "Ouvrir",
+    "newTitle": "{buyer} commande {summary}",
+    "newBody": "{shop} · remise demandée à {pickup}",
+    "newBodyNoPickup": "{shop} · nouvelle commande",
+    "quoteTitle": "Devis reçu : {amount}",
+    "body": "{name} · {summary}",
+    "placed": {
+      "PENDING": "{shop} : commande demandée",
+      "QUOTED": "{shop} : devis envoyé",
+      "CONFIRMED": "{shop} a confirmé votre commande",
+      "ACCEPTED": "{shop} a confirmé votre commande",
+      "READY": "Votre commande est prête chez {shop}",
+      "DELIVERED": "{shop} a remis votre commande",
+      "REFUSED": "{shop} a refusé votre commande",
+      "CANCELLED": "{shop} : commande annulée"
+    },
+    "received": {
+      "PENDING": "{buyer} : commande demandée",
+      "QUOTED": "{buyer} : devis envoyé",
+      "CONFIRMED": "{buyer} a accepté votre devis",
+      "ACCEPTED": "{buyer} a accepté votre devis",
+      "READY": "{buyer} : commande prête",
+      "DELIVERED": "{buyer} a reçu sa commande",
+      "REFUSED": "{buyer} a décliné votre devis",
+      "CANCELLED": "{buyer} a annulé sa commande"
+    },
+    "backlogTitle": "Commandes",
+    "backlog": "{count, plural, one {# autre nouvelle sur vos commandes.} other {# autres nouvelles sur vos commandes.}}"
+  }
+}

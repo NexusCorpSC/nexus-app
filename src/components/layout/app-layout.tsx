@@ -30,6 +30,7 @@ import {
   Rocket,
   Search,
   Settings as SettingsIcon,
+  ShoppingBag,
   Star,
   UserRound,
   Users,
@@ -38,6 +39,7 @@ import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useContribWatcher } from "@/hooks/use-contrib-watcher";
+import { useOrdersWatcher } from "@/hooks/use-orders-watcher";
 import { usePresenceRenewal } from "@/hooks/use-presence";
 import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
@@ -57,6 +59,7 @@ type NavKey =
   | "missions"
   | "factions"
   | "inventory"
+  | "orders"
   | "reputations"
   | "friends"
   | "notes"
@@ -96,6 +99,12 @@ const NAV_GROUPS: NavGroup[] = [
         to: "/inventory",
         label: "inventory",
         icon: Archive,
+        requiresAuth: true,
+      },
+      {
+        to: "/orders",
+        label: "orders",
+        icon: ShoppingBag,
         requiresAuth: true,
       },
       {
@@ -171,6 +180,7 @@ export default function AppLayout() {
   // What became of the player's contributions on the site: published, sent
   // back, an achievement, a level. Read from here, the window with the session.
   useContribWatcher(user?.id ?? null);
+  useOrdersWatcher(user?.id ?? null);
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {
