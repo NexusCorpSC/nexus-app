@@ -1,0 +1,56 @@
+{
+  "title": "Pedidos",
+  "description": "Los que reciben tus tiendas y los que has hecho en el mercado.",
+  "marketplace": "Mercado",
+  "receivedTab": "Recibidos · {shop}",
+  "placedTab": "Realizados",
+  "open": "En curso",
+  "closed": "Terminados en los últimos 14 días",
+  "nothingOpen": "Ningún pedido en curso.",
+  "openOrder": "Abrir",
+  "empty": {
+    "placed": "Ningún pedido realizado",
+    "received": "Ningún pedido recibido",
+    "description": "Los pedidos se hacen en el mercado del sitio y aparecen aquí."
+  },
+  "status": {
+    "PENDING": "Solicitado",
+    "QUOTED": "Presupuesto enviado",
+    "CONFIRMED": "Confirmado",
+    "ACCEPTED": "Confirmado",
+    "READY": "Listo",
+    "DELIVERED": "Entregado",
+    "REFUSED": "Rechazado",
+    "CANCELLED": "Cancelado"
+  },
+  "notify": {
+    "open": "Abrir",
+    "newTitle": "{buyer} pide {summary}",
+    "newBody": "{shop} · entrega solicitada en {pickup}",
+    "newBodyNoPickup": "{shop} · nuevo pedido",
+    "quoteTitle": "Presupuesto recibido: {amount}",
+    "body": "{name} · {summary}",
+    "placed": {
+      "PENDING": "{shop}: pedido solicitado",
+      "QUOTED": "{shop}: presupuesto enviado",
+      "CONFIRMED": "{shop} ha confirmado tu pedido",
+      "ACCEPTED": "{shop} ha confirmado tu pedido",
+      "READY": "Tu pedido está listo en {shop}",
+      "DELIVERED": "{shop} ha entregado tu pedido",
+      "REFUSED": "{shop} ha rechazado tu pedido",
+      "CANCELLED": "{shop}: pedido cancelado"
+    },
+    "received": {
+      "PENDING": "{buyer}: pedido solicitado",
+      "QUOTED": "{buyer}: presupuesto enviado",
+      "CONFIRMED": "{buyer} ha aceptado tu presupuesto",
+      "ACCEPTED": "{buyer} ha aceptado tu presupuesto",
+      "READY": "{buyer}: pedido listo",
+      "DELIVERED": "{buyer} ha recibido su pedido",
+      "REFUSED": "{buyer} ha rechazado tu presupuesto",
+      "CANCELLED": "{buyer} ha cancelado su pedido"
+    },
+    "backlogTitle": "Pedidos",
+    "backlog": "{count, plural, one {# novedad más sobre tus pedidos.} other {# novedades más sobre tus pedidos.}}"
+  }
+}

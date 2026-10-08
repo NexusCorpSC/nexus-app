@@ -3,8 +3,10 @@ import { useTranslations } from "use-intl";
 import {
   getContribNotifications,
   getNotificationCorner,
+  getOrderNotifications,
   setContribNotifications,
   setNotificationCorner,
+  setOrderNotifications,
 } from "@/lib/settings";
 import {
   applyNotificationCorner,
@@ -38,16 +40,28 @@ export function NotificationsSection() {
   );
 
   const [contrib, setContrib] = useState(true);
+  const [orders, setOrders] = useState(true);
 
   useEffect(() => {
     void getNotificationCorner().then(setCorner);
     void getContribNotifications().then(setContrib);
+    void getOrderNotifications().then(setOrders);
   }, []);
 
   function handleContribChange(next: boolean) {
     setContrib(next);
     void setContribNotifications(next).catch((cause) => {
       setContrib(!next);
+      setNotificationError(
+        cause instanceof Error ? cause.message : t("contribError"),
+      );
+    });
+  }
+
+  function handleOrdersChange(next: boolean) {
+    setOrders(next);
+    void setOrderNotifications(next).catch((cause) => {
+      setOrders(!next);
       setNotificationError(
         cause instanceof Error ? cause.message : t("contribError"),
       );
@@ -133,6 +147,21 @@ export function NotificationsSection() {
               {t("contrib")}
               <small className="mt-0.5 block text-xs text-nexus-dim">
                 {t("contribHint")}
+              </small>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={orders}
+              onChange={(event) => handleOrdersChange(event.target.checked)}
+              className="mt-0.5 accent-nexus-accent"
+            />
+            <span>
+              {t("orders")}
+              <small className="mt-0.5 block text-xs text-nexus-dim">
+                {t("ordersHint")}
               </small>
             </span>
           </label>

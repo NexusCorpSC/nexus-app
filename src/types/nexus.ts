@@ -1811,3 +1811,60 @@ export type PlacePositionResult = {
   contribution: Contribution;
   standing: ContributorStanding;
 };
+
+/* ------------------------------------------------------------------ */
+/* Marketplace orders (`GET /api/me/orders`)                           */
+/* ------------------------------------------------------------------ */
+
+export type OrderStatus =
+  | "PENDING"
+  | "QUOTED"
+  | "CONFIRMED"
+  | "ACCEPTED"
+  | "READY"
+  | "DELIVERED"
+  | "REFUSED"
+  | "CANCELLED";
+
+/** An order as the app lists it: placed by the reader, or received by a shop. */
+export type AppOrder = {
+  id: string;
+  shopId: string;
+  shopName: string;
+  buyerName: string;
+  kind: "DIRECT" | "CUSTOM";
+  /** «3 × M5A Cannon», or the message of a custom request. */
+  summary: string;
+  status: OrderStatus;
+  total?: number;
+  pickup?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** The order's page on the site, the buyer's or the shop's. */
+  path: string;
+};
+
+/** An order received by a shop, or a step taken by the other party. */
+export type AppOrderEvent = {
+  orderId: string;
+  side: "placed" | "received";
+  type: "new" | "status" | "quote";
+  status: OrderStatus;
+  quote?: number;
+  shopName: string;
+  buyerName: string;
+  summary: string;
+  pickup?: string;
+  at: string;
+  path: string;
+};
+
+export type AppOrdersSummary = {
+  placed: AppOrder[];
+  /** The shops the reader sells for, to sort the orders they receive. */
+  shops: { id: string; name: string }[];
+  received: AppOrder[];
+  /** Empty without `since`: the first read only sets the mark. */
+  events: AppOrderEvent[];
+  now: string;
+};

@@ -20,6 +20,7 @@ import type Native from "./messages/fr/Native.json";
 import type Notes from "./messages/fr/Notes.json";
 import type Notifications from "./messages/fr/Notifications.json";
 import type NpsOverlay from "./messages/fr/NpsOverlay.json";
+import type Orders from "./messages/fr/Orders.json";
 import type OrgEvents from "./messages/fr/OrgEvents.json";
 import type OrgInventory from "./messages/fr/OrgInventory.json";
 import type Orgs from "./messages/fr/Orgs.json";
@@ -67,6 +68,7 @@ export type Messages = {
   Notes: typeof Notes;
   Notifications: typeof Notifications;
   NpsOverlay: typeof NpsOverlay;
+  Orders: typeof Orders;
   OrgEvents: typeof OrgEvents;
   OrgInventory: typeof OrgInventory;
   Orgs: typeof Orgs;

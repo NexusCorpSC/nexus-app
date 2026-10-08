@@ -20,5 +20,7 @@
   "cornerError": "No se pudo aplicar la esquina de visualización. Se aplicará en el próximo inicio.",
   "contrib": "Mis contribuciones",
   "contribHint": "Publicada, por corregir, logro desbloqueado o nuevo nivel.",
-  "contribError": "No se pudo guardar el ajuste."
+  "contribError": "No se pudo guardar el ajuste.",
+  "orders": "Mis pedidos",
+  "ordersHint": "Un pedido recibido por una de mis tiendas, o un paso dado en un pedido."
 }

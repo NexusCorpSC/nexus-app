@@ -20,5 +20,7 @@
   "cornerError": "Le coin d'affichage n'a pas pu être appliqué. Il le sera au prochain démarrage.",
   "contrib": "Mes contributions",
   "contribHint": "Publiée, à corriger, succès débloqué ou nouveau niveau.",
-  "contribError": "Le réglage n'a pas pu être enregistré."
+  "contribError": "Le réglage n'a pas pu être enregistré.",
+  "orders": "Mes commandes",
+  "ordersHint": "Commande reçue par un de mes magasins, ou étape franchie sur une commande."
 }
