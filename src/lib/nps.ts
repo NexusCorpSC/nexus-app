@@ -38,6 +38,9 @@ export const MIN_TRAVEL_M = 20;
 /** Past this, a reading says nothing about where one is heading now. */
 export const MAX_TRAVEL_AGE_MS = 10 * 60 * 1000;
 
+/** Under this, in metres a second, one is neither closing in nor moving away. */
+export const MIN_CLOSING_SPEED = 0.5;
+
 const DEG = Math.PI / 180;
 
 function sub(a: Vector, b: Vector): Vector {
@@ -228,7 +231,7 @@ export function guide(
     const seconds = (current.at - previous.at) / 1000;
     const speed = (before - guidance.distance) / seconds;
     guidance.closingSpeed = speed;
-    if (speed > 0.5) guidance.eta = guidance.distance / speed;
+    if (speed > MIN_CLOSING_SPEED) guidance.eta = guidance.distance / speed;
   }
 
   if (body && local && sameBody && bodyAt(previous, bodies) === body) {

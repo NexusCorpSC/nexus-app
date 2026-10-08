@@ -32,6 +32,7 @@ import {
   compassPoint,
   geoOf,
   guide,
+  MIN_CLOSING_SPEED,
   nearestPlaces,
   positionOf,
   toBodyFrame,
@@ -455,14 +456,14 @@ function Guidance({
 
       {guidance.closingSpeed !== undefined ? (
         <p className="text-[12px] text-slate-400">
-          {guidance.closingSpeed > 0.5
+          {guidance.closingSpeed > MIN_CLOSING_SPEED
             ? t("closing", {
                 speed: format.number(guidance.closingSpeed, {
                   maximumFractionDigits: 0,
                 }),
                 eta: formatDuration(guidance.eta ?? 0, t),
               })
-            : guidance.closingSpeed < -0.5
+            : guidance.closingSpeed < -MIN_CLOSING_SPEED
               ? t("receding")
               : t("steady")}
         </p>
