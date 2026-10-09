@@ -466,6 +466,34 @@ export type InventoryItem = {
   orgVisible: boolean;
   updatedAt: string;
   location: Location | null;
+  /** The marketplace listings following this lot, one per shop. */
+  sales?: LotSale[];
+};
+
+/**
+ * A marketplace listing that follows an inventory lot (`lib/lot-sales.ts` in
+ * Nexus Tools). `stock` counts what orders already reserve.
+ */
+export type LotSale = {
+  listingId: string;
+  shopId: string;
+  shopName: string;
+  price: number;
+  stock: number;
+  reserved: number;
+  /** The cap chosen when listing it; absent, the whole lot is for sale. */
+  lotLimit?: number;
+  /** Shown on the marketplace: neither taken off sale nor hidden. */
+  onSale: boolean;
+};
+
+/** A shop the reader sells in, where a lot can be put up for sale. */
+export type SellerShop = {
+  id: string;
+  name: string;
+  logo?: string;
+  /** Their default shop, picked first. */
+  isDefault: boolean;
 };
 
 export type InventoryItemInput = {

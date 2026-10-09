@@ -390,7 +390,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
 /* Controls                                                            */
 /* ------------------------------------------------------------------ */
 
-const ICON_BUTTON = cn(
+export const ICON_BUTTON = cn(
   "inline-flex size-7 shrink-0 items-center justify-center rounded-md text-nexus-muted transition-colors",
   "hover:bg-nexus-panel hover:text-nexus-soft",
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent",
