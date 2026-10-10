@@ -12,9 +12,18 @@ import { chatFetch } from "@/lib/api/chat";
 /** Longest chunk the site reads in one go (`CHAT_SPEECH_MAX_LENGTH`). */
 const SPEECH_MAX_LENGTH = 1000;
 
-/** Opens the microphone; does nothing when it is already open. */
-export function startRecording(): Promise<void> {
-  return invoke("voice_start");
+/**
+ * Opens the microphone; does nothing when it is already open. Fails with
+ * `mic_in_use` when the other window is recording.
+ */
+export async function startRecording(): Promise<void> {
+  try {
+    await invoke("voice_start");
+  } catch (cause) {
+    throw new VoiceFailure(
+      String(cause) === "busy" ? "mic_in_use" : "mic_failed",
+    );
+  }
 }
 
 /**
@@ -58,6 +67,7 @@ export type VoiceError =
   | "too_short"
   | "too_long"
   | "mic_failed"
+  | "mic_in_use"
   | "nothing_heard"
   | "generic";
 
@@ -232,7 +242,7 @@ export class SpeechPlayer {
         const blob = await next;
         if (generation !== this.generation || !blob) return;
         if (i + 1 < chunks.length) next = fetchOne(chunks[i + 1]);
-        await this.playBlob(blob, generation);
+        if (!(await this.playBlob(blob, generation))) return;
         if (generation !== this.generation) return;
       }
     } finally {
@@ -243,13 +253,20 @@ export class SpeechPlayer {
     }
   }
 
-  private async playBlob(blob: Blob, generation: number): Promise<void> {
-    if (generation !== this.generation) return;
+  /** Whether to go on: not when the other window's reading took over. */
+  private async playBlob(blob: Blob, generation: number): Promise<boolean> {
+    if (generation !== this.generation) return false;
     // Played by Rust (`voice_play`): over a game the webview never gets the
-    // click its autoplay policy waits for.
+    // click its autoplay policy waits for. The generation lets a `stop` that
+    // overtakes this call still cut it off.
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    if (generation !== this.generation) return;
-    await invoke("voice_play", bytes).catch(() => {});
+    if (generation !== this.generation) return false;
+    return invoke("voice_play", bytes, {
+      headers: { "Speech-Generation": String(generation) },
+    }).then(
+      () => true,
+      (cause) => String(cause) !== "interrupted",
+    );
   }
 
   stop(): void {
@@ -258,7 +275,9 @@ export class SpeechPlayer {
     this.controller?.abort();
     this.controller = null;
     if (wasPlaying) {
-      void invoke("voice_stop_playback").catch(() => {});
+      void invoke("voice_stop_playback", {
+        generation: this.generation,
+      }).catch(() => {});
       this.onSpeaking(false);
     }
   }

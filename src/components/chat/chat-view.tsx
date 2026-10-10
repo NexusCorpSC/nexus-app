@@ -26,6 +26,7 @@ import {
   CHAT_MESSAGE_MAX_LENGTH,
   type ChatStatus,
   type ChatUIMessage,
+  withRemaining,
 } from "@/types/chat";
 
 /** Whether the message holds a write the player confirmed: it was made. */
@@ -133,11 +134,7 @@ export function ChatView({
       }
       const remaining = message.metadata?.remainingMicros;
       if (remaining !== undefined) {
-        onStatus((current) => ({
-          ...current,
-          remainingMicros: remaining,
-          spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
-        }));
+        onStatus(withRemaining(remaining));
       }
       if (!isError) onSaved?.(id, message.metadata?.savedAt);
     },
@@ -219,6 +216,7 @@ export function ChatView({
     const text = input.trim();
     if (!text || busy || exhausted) return;
     clearError();
+    voice?.clearError();
     voiceTurns.delete(id);
     voice?.stopSpeaking();
     void sendMessage({ text });

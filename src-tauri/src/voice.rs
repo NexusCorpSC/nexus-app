@@ -14,7 +14,8 @@
 //! webview never gets the click its autoplay policy waits for before it lets
 //! a page make a sound.
 
-use std::sync::mpsc::{self, Sender};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::mpsc::{self, RecvTimeoutError, Sender};
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
@@ -31,10 +32,19 @@ const MAX_SECONDS: u32 = 60;
 /// How long the microphone gets to open before the attempt is given up.
 const START_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// Past this, a recording nobody stopped is dropped: a page that never heard
+/// of it (an event lost, a page still loading) must not leave the microphone
+/// open for good, nor hand its old audio to the next press.
+const ABANDON_AFTER: Duration = Duration::from_secs(MAX_SECONDS as u64 + 10);
+
+/// Tells recordings apart, so a stale one's thread cannot drop a newer one.
+static NEXT_ID: AtomicU64 = AtomicU64::new(1);
+
 /// One recording, owned by the window that started it: the main window and
 /// the chat overlay each have their own conversation, and neither may take
 /// or drop what the other is recording.
 struct Recording {
+    id: u64,
     owner: String,
     stop: Sender<()>,
     thread: JoinHandle<()>,
@@ -75,21 +85,33 @@ impl Opened {
 
 static RECORDING: Mutex<Option<Recording>> = Mutex::new(None);
 
-/// The window whose answer [`play`] is reading, if any.
-static PLAYING: Mutex<Option<String>> = Mutex::new(None);
+/// What is being read aloud: one sound at a time for the whole app.
+#[derive(Default)]
+struct Playback {
+    /// The window whose answer [`play`] is reading, if any.
+    playing: Option<String>,
+    /// Per window, the reading [`stop_playback`] last cut off: anything
+    /// older that arrives late is not played.
+    stopped: Option<std::collections::HashMap<String, u64>>,
+}
+
+static PLAYBACK: Mutex<Playback> = Mutex::new(Playback {
+    playing: None,
+    stopped: None,
+});
 
 /// Starts opening the microphone for `owner` and returns at once: called on
 /// the main thread by the talk shortcut, which must not wait on a slow audio
 /// driver. Starting again for the same window does nothing; for another
-/// window, it is `busy`.
-pub fn start(owner: &str) -> Result<(), String> {
+/// window, it is `busy`. `true` when this call opened it.
+pub fn start(owner: &str) -> Result<bool, String> {
     let mut slot = RECORDING
         .lock()
         .map_err(|_| "voice state is poisoned".to_string())?;
 
     if let Some(recording) = slot.as_ref() {
         return if recording.owner == owner {
-            Ok(())
+            Ok(false)
         } else {
             Err("busy".to_string())
         };
@@ -100,6 +122,7 @@ pub fn start(owner: &str) -> Result<(), String> {
     let (stop, stopped) = mpsc::channel::<()>();
     let collected = Arc::clone(&samples);
     let reported = Arc::clone(&opened);
+    let id = NEXT_ID.fetch_add(1, Ordering::Relaxed);
 
     let thread = std::thread::Builder::new()
         .name("nexus-voice".into())
@@ -116,13 +139,18 @@ pub fn start(owner: &str) -> Result<(), String> {
                 }
             };
 
-            // Until `stop` or `cancel` says so, or the sender goes away.
-            let _ = stopped.recv();
+            // Until `stop` or `cancel` says so, or the sender goes away — or
+            // nobody has for too long.
+            if let Err(RecvTimeoutError::Timeout) = stopped.recv_timeout(ABANDON_AFTER) {
+                log("microphone left open: recording dropped".to_string());
+                abandon(id);
+            }
             drop(stream);
         })
         .map_err(|error| format!("could not start the voice thread: {error}"))?;
 
     *slot = Some(Recording {
+        id,
         owner: owner.to_string(),
         stop,
         thread,
@@ -130,7 +158,16 @@ pub fn start(owner: &str) -> Result<(), String> {
         opened,
     });
 
-    Ok(())
+    Ok(true)
+}
+
+/// Drops recording `id` if it is still the one under way.
+fn abandon(id: u64) {
+    if let Ok(mut slot) = RECORDING.lock() {
+        if slot.as_ref().is_some_and(|recording| recording.id == id) {
+            slot.take();
+        }
+    }
 }
 
 /// Waits for the microphone [`start`] is opening for `owner`, and drops the
@@ -194,8 +231,10 @@ fn take(owner: &str) -> Result<Option<Recording>, String> {
 }
 
 /// Plays a WAV for `owner` to the end, or until [`stop_playback`]. Blocks:
-/// called from a worker thread.
-pub fn play(owner: &str, wav: &[u8]) -> Result<(), String> {
+/// called from a worker thread. `generation` is the page's reading: one
+/// already stopped is not played, even when it arrives after the stop.
+/// `interrupted` when the other window's reading took over.
+pub fn play(owner: &str, generation: u64, wav: &[u8]) -> Result<(), String> {
     use windows::core::PCWSTR;
     use windows::Win32::Media::Audio::{PlaySoundW, SND_MEMORY, SND_NODEFAULT, SND_SYNC};
 
@@ -203,8 +242,20 @@ pub fn play(owner: &str, wav: &[u8]) -> Result<(), String> {
         return Err("not a WAV".to_string());
     }
 
-    if let Ok(mut playing) = PLAYING.lock() {
-        *playing = Some(owner.to_string());
+    {
+        let mut playback = PLAYBACK
+            .lock()
+            .map_err(|_| "playback state is poisoned".to_string())?;
+        let stopped = playback
+            .stopped
+            .as_ref()
+            .and_then(|stopped| stopped.get(owner))
+            .copied()
+            .unwrap_or(0);
+        if generation < stopped {
+            return Err("stopped".to_string());
+        }
+        playback.playing = Some(owner.to_string());
     }
 
     // `SND_MEMORY` reads the sound from the pointer instead of a file name.
@@ -216,31 +267,43 @@ pub fn play(owner: &str, wav: &[u8]) -> Result<(), String> {
         )
     };
 
-    if let Ok(mut playing) = PLAYING.lock() {
-        if playing.as_deref() == Some(owner) {
-            *playing = None;
-        }
-    }
+    // Another sound stops this one: the other window's, or nobody's.
+    let still_mine = PLAYBACK
+        .lock()
+        .map(|mut playback| {
+            let mine = playback.playing.as_deref() == Some(owner);
+            if mine {
+                playback.playing = None;
+            }
+            mine
+        })
+        .unwrap_or(true);
 
-    if played.as_bool() {
+    if !still_mine {
+        Err("interrupted".to_string())
+    } else if played.as_bool() {
         Ok(())
     } else {
         Err("the sound could not be played".to_string())
     }
 }
 
-/// Cuts off what [`play`] is playing — only when it is `owner`'s answer:
-/// the other window's goes on.
-pub fn stop_playback(owner: &str) {
+/// Cuts off `owner`'s reading `generation` and any older one, even still on
+/// its way to [`play`]. The other window's reading goes on.
+pub fn stop_playback(owner: &str, generation: u64) {
     use windows::core::PCWSTR;
     use windows::Win32::Media::Audio::{PlaySoundW, SND_FLAGS};
 
-    let mine = PLAYING
-        .lock()
-        .map(|playing| playing.as_deref() == Some(owner))
-        .unwrap_or(false);
+    let Ok(mut playback) = PLAYBACK.lock() else {
+        return;
+    };
 
-    if mine {
+    let stopped = playback.stopped.get_or_insert_with(Default::default);
+    let entry = stopped.entry(owner.to_string()).or_insert(0);
+    *entry = (*entry).max(generation);
+
+    if playback.playing.as_deref() == Some(owner) {
+        playback.playing = None;
         unsafe {
             let _ = PlaySoundW(PCWSTR::null(), None, SND_FLAGS(0));
         }

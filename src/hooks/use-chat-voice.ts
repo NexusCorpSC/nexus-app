@@ -61,6 +61,8 @@ export function useChatVoice({
   const stateRef = useRef<VoiceState>("idle");
   const pressedAt = useRef(0);
   const starting = useRef<Promise<void> | null>(null);
+  /** The recording being closed and transcribed, until `voice_stop` is back. */
+  const stopping = useRef<Promise<unknown> | null>(null);
   const player = useRef<SpeechPlayer | null>(null);
   const latest = useRef({ conversationId, onRemaining });
 
@@ -88,7 +90,9 @@ export function useChatVoice({
     if (stateRef.current !== "recording") return;
     update("transcribing");
     try {
-      const wav = await stopRecording();
+      const stopped = stopRecording();
+      stopping.current = stopped.catch(() => {});
+      const wav = await stopped;
       if (wavSeconds(wav) < MIN_SECONDS) {
         setError("too_short");
         return;
@@ -122,12 +126,19 @@ export function useChatVoice({
         return;
       }
       if (stateRef.current !== "idle") {
-        if (opened) void cancelRecording();
+        // The shortcut opened the microphone while what was said is still
+        // being sent: closed once `voice_stop` has taken the recording, not
+        // before — that would drop what the player just said.
+        if (opened) {
+          void (stopping.current ?? Promise.resolve()).then(() =>
+            cancelRecording(),
+          );
+        }
         return;
       }
       setError(null);
       if (opened?.error) {
-        setError("mic_failed");
+        setError(opened.error === "busy" ? "mic_in_use" : "mic_failed");
         return;
       }
       pressedAt.current = Date.now();
@@ -140,9 +151,9 @@ export function useChatVoice({
       starting.current = opened ? Promise.resolve() : startRecording();
       try {
         await starting.current;
-      } catch {
+      } catch (cause) {
         update("idle");
-        setError("mic_failed");
+        setError(cause instanceof VoiceFailure ? cause.code : "mic_failed");
       }
     },
     [finish, update],

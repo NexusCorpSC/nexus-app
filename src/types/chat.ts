@@ -27,6 +27,15 @@ export interface ChatStatus {
   voice?: boolean;
 }
 
+/** The status once the server says what is left of this month's budget. */
+export function withRemaining(remainingMicros: number) {
+  return (current: ChatStatus): ChatStatus => ({
+    ...current,
+    remainingMicros,
+    spentMicros: Math.max(0, current.monthlyBudgetMicros - remainingMicros),
+  });
+}
+
 /** `GET /api/chat/conversations`. */
 export interface ChatConversationSummary {
   id: string;
