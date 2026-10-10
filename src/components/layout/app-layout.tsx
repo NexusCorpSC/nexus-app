@@ -4,12 +4,14 @@ import { listen } from "@tauri-apps/api/event";
 import { useTranslations } from "use-intl";
 import {
   formatShortcut,
+  getMicrophone,
   getNotificationCorner,
   getOverlayOpacity,
   getShortcuts,
   setOverlayOpacity,
 } from "@/lib/settings";
 import { applyNotificationCorner } from "@/lib/notifications";
+import { applyMicrophone } from "@/lib/chat-voice";
 import { applyShortcuts } from "@/lib/shortcuts";
 import {
   applyOverlayOpacity,
@@ -219,6 +221,14 @@ export default function AppLayout() {
       .catch((error) =>
         console.error("cannot apply the notification corner", error),
       );
+  }, []);
+
+  // And for the microphone Nexus Chat listens to: the system's default one
+  // until the stored choice is read.
+  useEffect(() => {
+    void getMicrophone()
+      .then(applyMicrophone)
+      .catch((error) => console.error("cannot apply the microphone", error));
   }, []);
 
   // And for the overlay opacity, with a second half the other two do not need:

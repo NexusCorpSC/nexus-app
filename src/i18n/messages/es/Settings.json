@@ -16,7 +16,7 @@
   },
   "general": {
     "title": "General",
-    "description": "El idioma de la aplicación y la instancia de Nexus Tools a la que se conecta.",
+    "description": "El idioma de la aplicación, el micrófono de Nexus Chat y la instancia de Nexus Tools a la que se conecta.",
     "instance": "Instancia",
     "apiUrl": "URL de la API de Nexus Tools",
     "localHint": "Usa <url></url> para apuntar a una instancia de desarrollo local.",
@@ -25,5 +25,18 @@
     "urlNotAllowed": "Esta URL no está permitida por los permisos de la aplicación. Valores posibles: {allowed}",
     "about": "Acerca de",
     "version": "Versión"
+  },
+  "microphone": {
+    "title": "Micrófono",
+    "label": "Micrófono de Nexus Chat",
+    "systemDefault": "Predeterminado del sistema",
+    "missing": "Micrófono elegido (desconectado)",
+    "refresh": "Actualizar",
+    "hint": "El micrófono que se escucha cuando hablas con Nexus Chat (botón de micrófono o atajo «Hablar con Nexus Chat»). Se aplica desde la próxima grabación.",
+    "missingHint": "El micrófono elegido no está conectado: el predeterminado del sistema lo sustituye hasta que vuelva.",
+    "listError": "No se pudieron listar los micrófonos.",
+    "saveError": "No se pudo guardar el micrófono elegido.",
+    "readError": "No se pudo leer el micrófono elegido.",
+    "loading": "Micrófono elegido…"
   }
 }

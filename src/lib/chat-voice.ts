@@ -43,6 +43,25 @@ export async function stopRecording(): Promise<ArrayBuffer> {
   }
 }
 
+/** A microphone the player can choose in Settings. */
+export interface Microphone {
+  id: string;
+  name: string;
+}
+
+/** The microphones plugged in right now (none outside Windows). */
+export function listMicrophones(): Promise<Microphone[]> {
+  return invoke<Microphone[]>("voice_input_devices");
+}
+
+/**
+ * Listens to `id` from the next recording on, or to the system's default
+ * microphone (`null`). Persisting the choice is `settings.ts`'s.
+ */
+export function applyMicrophone(id: string | null): Promise<void> {
+  return invoke("voice_set_input_device", { id });
+}
+
 /** Closes the microphone, keeping nothing. */
 export function cancelRecording(): Promise<void> {
   return invoke("voice_cancel");

@@ -18,8 +18,12 @@ import {
   SettingsSectionHeader,
 } from "@/components/settings/section-header";
 import { LanguageCard } from "@/components/settings/language-card";
+import { MicrophoneCard } from "@/components/settings/microphone-card";
 
-/** The language, the instance the app talks to, and what the app itself is. */
+/**
+ * The language, the microphone Nexus Chat listens to, the instance the app
+ * talks to, and what the app itself is.
+ */
 export function GeneralSection() {
   const t = useTranslations("Settings.general");
   const { refresh } = useAuth();
@@ -75,6 +79,8 @@ export function GeneralSection() {
 
       <div className="space-y-4">
         <LanguageCard />
+
+        <MicrophoneCard />
 
         <Card>
           <SettingsCardTitle>{t("instance")}</SettingsCardTitle>

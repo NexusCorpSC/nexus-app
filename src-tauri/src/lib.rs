@@ -1170,6 +1170,37 @@ fn voice_stop_playback(window: tauri::Window, generation: u64) {
     let _ = (window, generation);
 }
 
+/// A microphone Settings can offer (`voice.rs`).
+#[derive(Serialize)]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) struct InputDevice {
+    /// What to store and hand back to `voice_set_input_device`.
+    pub id: String,
+    pub name: String,
+}
+
+/// The microphones Settings can offer for talking to Nexus Chat. Listed off
+/// the main thread: a slow audio driver must not freeze the windows.
+#[tauri::command]
+async fn voice_input_devices() -> Result<Vec<InputDevice>, String> {
+    #[cfg(windows)]
+    return tauri::async_runtime::spawn_blocking(voice::input_devices)
+        .await
+        .map_err(|e| e.to_string())?;
+    #[cfg(not(windows))]
+    Ok(Vec::new())
+}
+
+/// The microphone chosen in Settings (its id), or the system's default one
+/// (`None`). Persisting it stays on the frontend, which owns the store.
+#[tauri::command]
+fn voice_set_input_device(id: Option<String>) {
+    #[cfg(windows)]
+    voice::set_input_device(id);
+    #[cfg(not(windows))]
+    let _ = id;
+}
+
 /// Brings the map overlay up — shown, never hidden.
 ///
 /// Called by the pin button on a place's page, which promises to show the map:
@@ -1497,6 +1528,8 @@ pub fn run() {
             voice_cancel,
             voice_play,
             voice_stop_playback,
+            voice_input_devices,
+            voice_set_input_device,
             nps::nps_copy_command,
             toggle_overlay_opacity,
             set_overlay_opacity,

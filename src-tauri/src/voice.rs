@@ -6,7 +6,8 @@
 //! windows are doing.
 //!
 //! One recording at a time, on its own thread (a `cpal` stream is not `Send`):
-//! [`start`] opens the default microphone, [`stop`] closes it and hands back
+//! [`start`] opens the microphone chosen in Settings (or the system's default
+//! one, [`set_input_device`]), [`stop`] closes it and hands back
 //! what it heard as a WAV the site transcribes (`POST /api/chat/transcribe`),
 //! 16-bit mono at 16 kHz — plenty for a voice, and a minute stays under 2 MB.
 //!
@@ -24,6 +25,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample};
 
 use crate::diagnostics::log;
+use crate::InputDevice;
 
 /// What the site expects, and what it accepts at most.
 const OUTPUT_RATE: u32 = 16_000;
@@ -84,6 +86,59 @@ impl Opened {
 }
 
 static RECORDING: Mutex<Option<Recording>> = Mutex::new(None);
+
+/// The microphone chosen in Settings, by its `cpal` id; `None` is the
+/// system's default one.
+static INPUT_DEVICE: Mutex<Option<String>> = Mutex::new(None);
+
+/// The microphones plugged in right now.
+pub fn input_devices() -> Result<Vec<InputDevice>, String> {
+    let devices = cpal::default_host()
+        .input_devices()
+        .map_err(|error| error.to_string())?;
+
+    Ok(devices
+        .filter_map(|device| {
+            let id = device.id().ok()?.to_string();
+            let name = device
+                .description()
+                .map(|description| description.name().to_string())
+                .unwrap_or_else(|_| id.clone());
+            Some(InputDevice { id, name })
+        })
+        .collect())
+}
+
+/// Takes the microphone chosen in Settings for the next recordings.
+pub fn set_input_device(id: Option<String>) {
+    if let Ok(mut chosen) = INPUT_DEVICE.lock() {
+        *chosen = id.filter(|id| !id.is_empty());
+    }
+}
+
+/// The chosen microphone, or the default one when none is chosen or the
+/// chosen one is not plugged in.
+fn input_device(host: &cpal::Host) -> Option<cpal::Device> {
+    let chosen = INPUT_DEVICE.lock().ok().and_then(|chosen| chosen.clone());
+
+    if let Some(id) = chosen {
+        match id.parse::<cpal::DeviceId>() {
+            Ok(parsed) => {
+                if let Some(device) = host.device_by_id(&parsed) {
+                    return Some(device);
+                }
+                log(format!(
+                    "chosen microphone not found ({id}): default one used"
+                ));
+            }
+            Err(error) => log(format!(
+                "chosen microphone unreadable ({error}): default one used"
+            )),
+        }
+    }
+
+    host.default_input_device()
+}
 
 /// What is being read aloud: one sound at a time for the whole app.
 #[derive(Default)]
@@ -310,12 +365,11 @@ pub fn stop_playback(owner: &str, generation: u64) {
     }
 }
 
-/// Opens the default microphone in its own format, collecting mono samples.
+/// Opens the chosen microphone (or the default one, [`input_device`]) in its
+/// own format, collecting mono samples.
 fn open(samples: Arc<Mutex<Vec<f32>>>) -> Result<(cpal::Stream, u32), String> {
     let host = cpal::default_host();
-    let device = host
-        .default_input_device()
-        .ok_or_else(|| "no_microphone".to_string())?;
+    let device = input_device(&host).ok_or_else(|| "no_microphone".to_string())?;
     let supported = device
         .default_input_config()
         .map_err(|error| format!("microphone_failed: {error}"))?;
