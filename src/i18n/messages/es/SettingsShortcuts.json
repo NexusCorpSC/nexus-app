@@ -52,6 +52,11 @@
       "hint": "Mantén pulsado, apunta a una acción con el ratón, suelta. Esc cancela.",
       "detail": "Mantén pulsada la combinación para mostrar el menú en el centro de la pantalla, mueve el ratón hacia una acción y suelta para lanzarla. Soltar sin moverse, o Esc, cancela. READY y Abatido/Activo solo aparecen en una escuadra; el bloqueo y la captura de zona, siempre."
     },
+    "talk": {
+      "label": "Mantener para hablar con Nexus Chat",
+      "hint": "Habla mientras mantienes, suelta para enviar. La respuesta se lee en voz alta.",
+      "detail": "Mantén la combinación y habla: el micrófono se abre, la superposición del chat aparece sin quitar el foco al juego y tu pregunta se envía al soltar. Una pulsación breve empieza a grabar y otra la envía. La respuesta se lee en voz alta (puedes silenciarla en la superposición) y cuenta en tu presupuesto del mes."
+    },
     "lock": {
       "label": "Bloqueo",
       "hint": "Los clics pasan al juego; el menú radial sigue disponible.",

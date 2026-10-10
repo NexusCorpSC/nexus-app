@@ -20,6 +20,11 @@ export interface ChatStatus {
   /** ISO date the budget starts again: the 1st of next month, UTC. */
   resetsAt: string;
   model: string;
+  /**
+   * Whether the player can talk to the chat (the admin opened voice and the
+   * site has its Google key). Missing from a site older than voice.
+   */
+  voice?: boolean;
 }
 
 /** `GET /api/chat/conversations`. */

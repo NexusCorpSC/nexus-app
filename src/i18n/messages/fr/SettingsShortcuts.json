@@ -52,6 +52,11 @@
       "hint": "Maintenez, visez une action à la souris, relâchez. Échap annule.",
       "detail": "Maintenez la combinaison pour afficher le menu au centre de l'écran, donnez un coup de souris vers une action, puis relâchez pour la lancer. Relâcher sans bouger, ou Échap, annule. READY et Éliminé/Actif n'y figurent que dans une escouade ; le verrouillage et la capture de zone, toujours."
     },
+    "talk": {
+      "label": "Maintenir pour parler à Nexus Chat",
+      "hint": "Parlez en maintenant, relâchez pour envoyer. La réponse est lue à voix haute.",
+      "detail": "Maintenez la combinaison et parlez : le micro s'ouvre, la superposition du chat s'affiche sans prendre la main au jeu, et votre question part quand vous relâchez. Un appui bref commence l'enregistrement, un second l'envoie. La réponse est lue à voix haute (coupable dans la superposition) et comptée dans votre budget du mois."
+    },
     "lock": {
       "label": "Verrouillage",
       "hint": "Les clics passent au jeu ; le menu radial reste utilisable.",
