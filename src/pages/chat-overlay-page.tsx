@@ -3,7 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
-import { AppWindow, Bot, MessageSquarePlus, X } from "lucide-react";
+import { AppWindow, MessageSquarePlus, X } from "lucide-react";
+import nexusLogo from "@/assets/nexus-logo.png";
 import { useAuth } from "@/auth/auth-context";
 import { Button, ErrorState, LoadingState } from "@/components/ui";
 import { ChatAccessPanel } from "@/components/chat/chat-access-panel";
@@ -197,13 +198,28 @@ export default function ChatOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-1.5 px-3 py-2",
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-[#8cbeff]/18" : null,
         )}
       >
-        <Bot className="pointer-events-none size-4 text-slate-400" />
-        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
+        <img
+          src={nexusLogo}
+          alt=""
+          className="pointer-events-none size-5 shrink-0"
+        />
+        <p className="pointer-events-none truncate text-sm font-semibold text-nexus-white">
           {t("title")}
         </p>
+        <span className="pointer-events-none ml-auto flex shrink-0 items-center gap-1.5 pr-1 text-[11px] text-[#4ade80]">
+          {granted && (
+            <>
+              <span
+                className="size-1.5 rounded-full bg-[#4ade80] shadow-[0_0_8px_#4ade80]"
+                aria-hidden
+              />
+              {t("online")}
+            </>
+          )}
+        </span>
         {granted && (
           <button
             type="button"
@@ -241,8 +257,8 @@ export default function ChatOverlayPage() {
       </div>
 
       {granted && status && (
-        <div className="shrink-0 px-3 pb-2">
-          <ChatBudget status={status} compact />
+        <div className="shrink-0 px-3 py-2">
+          <ChatBudget status={status} />
         </div>
       )}
 
