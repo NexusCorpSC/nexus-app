@@ -16,7 +16,7 @@
   },
   "general": {
     "title": "General",
-    "description": "The app's language and the Nexus Tools instance it connects to.",
+    "description": "The app's language, the Nexus Chat microphone and the Nexus Tools instance it connects to.",
     "instance": "Instance",
     "apiUrl": "Nexus Tools API URL",
     "localHint": "Use <url></url> to point to a local development instance.",
@@ -25,5 +25,16 @@
     "urlNotAllowed": "This URL is not allowed by the app's permissions. Possible values: {allowed}",
     "about": "About",
     "version": "Version"
+  },
+  "microphone": {
+    "title": "Microphone",
+    "label": "Nexus Chat microphone",
+    "systemDefault": "System default",
+    "missing": "Chosen microphone (unplugged)",
+    "refresh": "Refresh",
+    "hint": "The microphone listened to when you talk to Nexus Chat (mic button or the \"Talk to Nexus Chat\" shortcut). Used from the next recording on.",
+    "missingHint": "The chosen microphone is not plugged in: the system default stands in for it until it is back.",
+    "listError": "Could not list the microphones.",
+    "saveError": "Could not save the chosen microphone."
   }
 }

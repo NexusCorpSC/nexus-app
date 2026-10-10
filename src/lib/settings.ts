@@ -58,6 +58,7 @@ const KEY_CONTRIB_SINCE = "contribSince";
 const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
 const KEY_ORDERS_SINCE = "ordersSince";
 const KEY_LOCALE = "locale";
+const KEY_MICROPHONE = "microphone";
 
 /** Production Nexus Tools instance. */
 export const DEFAULT_API_BASE_URL = "https://tools.services.nexus";
@@ -317,6 +318,21 @@ export async function setNotificationCorner(
 ): Promise<void> {
   const store = await getStore();
   await store.set(KEY_NOTIFICATION_CORNER, corner);
+}
+
+/**
+ * The microphone Nexus Chat listens to, by the id Rust gave it (`voice.rs`);
+ * `null` is the system's default one.
+ */
+export async function getMicrophone(): Promise<string | null> {
+  const store = await getStore();
+  const value = await store.get<string>(KEY_MICROPHONE);
+  return typeof value === "string" && value ? value : null;
+}
+
+export async function setMicrophone(id: string | null): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_MICROPHONE, id);
 }
 
 /**

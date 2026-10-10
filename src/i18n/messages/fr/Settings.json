@@ -16,7 +16,7 @@
   },
   "general": {
     "title": "Général",
-    "description": "La langue de l'application et l'instance Nexus Tools à laquelle elle se connecte.",
+    "description": "La langue de l'application, le micro de Nexus Chat et l'instance Nexus Tools à laquelle elle se connecte.",
     "instance": "Instance",
     "apiUrl": "URL de l'API Nexus Tools",
     "localHint": "Utilisez <url></url> pour pointer vers une instance de développement locale.",
@@ -25,5 +25,16 @@
     "urlNotAllowed": "Cette URL n'est pas autorisée par les permissions de l'application. Valeurs possibles : {allowed}",
     "about": "À propos",
     "version": "Version"
+  },
+  "microphone": {
+    "title": "Micro",
+    "label": "Micro de Nexus Chat",
+    "systemDefault": "Par défaut du système",
+    "missing": "Micro choisi (débranché)",
+    "refresh": "Actualiser",
+    "hint": "Le micro écouté quand vous parlez à Nexus Chat (bouton micro ou raccourci « Parler à Nexus Chat »). Pris en compte dès le prochain enregistrement.",
+    "missingHint": "Le micro choisi n'est pas branché : celui par défaut du système le remplace jusqu'à son retour.",
+    "listError": "Impossible de lister les micros.",
+    "saveError": "Impossible d'enregistrer le micro choisi."
   }
 }
