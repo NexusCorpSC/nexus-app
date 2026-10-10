@@ -9,6 +9,7 @@ mod hotkeys;
 mod native_labels;
 mod notifications;
 mod nps;
+mod nps_screen;
 mod radial;
 mod screenshots;
 mod talk;
@@ -48,7 +49,7 @@ const PLAN_WINDOW: &str = "plan";
 const MAP_WINDOW: &str = "map";
 /// The NPS — Nexus Positioning System: distance and heading to a place, from
 /// the game's `/showlocation` (`nps.rs`).
-const NPS_WINDOW: &str = "nps";
+use nps::NPS_WINDOW;
 /// Nexus Chat: the site's assistant, over the game.
 pub(crate) const CHAT_WINDOW: &str = "chat";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
@@ -283,7 +284,18 @@ fn is_overlay(label: &str) -> bool {
 /// Frozen monitor snapshot awaiting a selection: filled when the capture
 /// shortcut fires, taken when the user releases the mouse.
 #[derive(Default)]
-struct CaptureState(Mutex<Option<Capture>>);
+struct CaptureState(Mutex<Option<(Capture, CapturePurpose)>>);
+
+/// What a selection is drawn for.
+#[derive(Clone, Copy, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+enum CapturePurpose {
+    /// Read, and searched in the palette.
+    #[default]
+    Search,
+    /// Where the NPS reads the game's debug lines (`nps_screen.rs`).
+    NpsCalibration,
+}
 
 /// What a global shortcut triggers.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -639,11 +651,11 @@ fn register_system_wide(app: &AppHandle, bound: &[(Action, Shortcut)]) -> Vec<(A
 }
 
 impl CaptureState {
-    fn take(&self) -> Result<Option<Capture>, String> {
+    fn take(&self) -> Result<Option<(Capture, CapturePurpose)>, String> {
         Ok(self.lock()?.take())
     }
 
-    fn lock(&self) -> Result<std::sync::MutexGuard<'_, Option<Capture>>, String> {
+    fn lock(&self) -> Result<std::sync::MutexGuard<'_, Option<(Capture, CapturePurpose)>>, String> {
         self.0
             .lock()
             .map_err(|_| "capture state is poisoned".to_string())
@@ -901,7 +913,30 @@ fn announce_plan_visibility(app: &AppHandle) -> Result<(), String> {
 /// fed to the OCR engine.
 fn start_capture(app: &AppHandle) -> Result<(), String> {
     hide_window(app, OVERLAY_WINDOW)?;
+    freeze_after_repaint(app, CapturePurpose::Search);
+    Ok(())
+}
 
+/// Takes the NPS window off screen, then freezes the monitor for the player
+/// to draw a box around the game's debug lines.
+#[tauri::command]
+fn nps_calibrate(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, NPS_WINDOW)?;
+    freeze_after_repaint(&app, CapturePurpose::NpsCalibration);
+    Ok(())
+}
+
+/// What the selection window is open for, so it can say what to draw.
+#[tauri::command]
+fn capture_purpose(state: State<CaptureState>) -> Result<CapturePurpose, String> {
+    Ok(state
+        .lock()?
+        .as_ref()
+        .map(|(_, purpose)| *purpose)
+        .unwrap_or_default())
+}
+
+fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose) {
     let app = app.clone();
     std::thread::spawn(move || {
         // Hiding a window only queues the repaint. Grabbing the pixels on this
@@ -909,8 +944,11 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
         // pumping messages — lets the compositor actually clear it first.
         std::thread::sleep(Duration::from_millis(120));
 
-        if let Err(error) = freeze_and_select(&app) {
+        if let Err(error) = freeze_and_select(&app, purpose) {
             log(format!("region capture failed: {error}"));
+            if purpose == CapturePurpose::NpsCalibration {
+                let _ = show_window(&app, NPS_WINDOW);
+            }
             // The shortcut fires with no window of ours on screen, so a
             // notification is the only place this can be seen.
             notifications::push(
@@ -921,16 +959,40 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
             );
         }
     });
-
-    Ok(())
 }
 
-fn freeze_and_select(app: &AppHandle) -> Result<(), String> {
-    let cursor = app.cursor_position().map_err(|e| e.to_string())?;
-    let frame = capture::grab(cursor.x as i32, cursor.y as i32)?;
+fn freeze_and_select(app: &AppHandle, purpose: CapturePurpose) -> Result<(), String> {
+    // The monitor under the cursor — but a calibration is started from the
+    // NPS window, which may sit on another screen than the game: once a box
+    // has been drawn, its monitor is the game's.
+    let saved = match purpose {
+        CapturePurpose::NpsCalibration => app.state::<nps_screen::Tracking>().region(),
+        CapturePurpose::Search => None,
+    };
+    let under_cursor = || -> Result<Capture, String> {
+        let cursor = app.cursor_position().map_err(|e| e.to_string())?;
+        capture::grab(cursor.x as i32, cursor.y as i32)
+    };
+    // A monitor since unplugged falls back on the cursor's.
+    let frame = match saved {
+        Some(region) => {
+            capture::grab(region.monitor_x, region.monitor_y).or_else(|_| under_cursor())?
+        }
+        None => under_cursor()?,
+    };
     let monitor = frame.monitor;
 
-    app.state::<CaptureState>().lock()?.replace(frame);
+    let replaced = app
+        .state::<CaptureState>()
+        .lock()?
+        .replace((frame, purpose));
+    // A search capture started over a calibration ends it: the NPS window,
+    // put away for it, comes back.
+    if matches!(replaced, Some((_, CapturePurpose::NpsCalibration)))
+        && purpose != CapturePurpose::NpsCalibration
+    {
+        show_window(app, NPS_WINDOW)?;
+    }
 
     let selection_window = window(app, CAPTURE_WINDOW)?;
     // Cover exactly the monitor that was captured, so the normalised
@@ -1443,8 +1505,13 @@ fn open_main_route(app: AppHandle, route: String) -> Result<(), String> {
 /// Drops the pending snapshot when the user abandons the selection.
 #[tauri::command]
 fn cancel_capture(app: AppHandle, state: State<CaptureState>) -> Result<(), String> {
-    state.take()?;
-    hide_window(&app, CAPTURE_WINDOW)
+    let taken = state.take()?;
+    hide_window(&app, CAPTURE_WINDOW)?;
+    // The NPS window was put away for the calibration: it comes back.
+    if matches!(taken, Some((_, CapturePurpose::NpsCalibration))) {
+        show_window(&app, NPS_WINDOW)?;
+    }
+    Ok(())
 }
 
 /// Reads the selected region and hands the text to the overlay's search bar.
@@ -1454,13 +1521,19 @@ async fn recognize_selection(
     state: State<'_, CaptureState>,
     selection: Selection,
 ) -> Result<String, String> {
-    let frame = state
+    let (frame, purpose) = state
         .take()?
         .ok_or_else(|| "no capture in progress".to_string())?;
 
     // Hide the selection window before recognising: OCR takes a moment, and a
     // fullscreen overlay left up in the meantime reads as a frozen app.
     hide_window(&app, CAPTURE_WINDOW)?;
+
+    if purpose == CapturePurpose::NpsCalibration {
+        let calibrated = nps_screen::calibrate(&app, frame, selection).await;
+        show_window(&app, NPS_WINDOW)?;
+        return calibrated.map(|()| String::new());
+    }
 
     let recognized = frame.recognize(selection).await;
 
@@ -1507,6 +1580,7 @@ pub fn run() {
         // `opener` sends external links to the user's real browser.
         .plugin(tauri_plugin_opener::init())
         .manage(CaptureState::default())
+        .manage(nps_screen::Tracking::default())
         .manage(Shortcuts::default())
         .manage(ShortcutSupport::default())
         .manage(notifications::Notifications::default())
@@ -1542,6 +1616,9 @@ pub fn run() {
             voice_input_devices,
             voice_set_input_device,
             nps::nps_copy_command,
+            nps_screen::nps_screen_configure,
+            nps_calibrate,
+            capture_purpose,
             toggle_overlay_opacity,
             set_overlay_opacity,
             overlay_mode,
@@ -1703,6 +1780,9 @@ pub fn run() {
             // Watches the clipboard for the game's `/showlocation` answer,
             // while the NPS window is on screen.
             nps::install(app.handle());
+            // Reads the game's debug lines off the screen, when the player
+            // has asked for it.
+            nps_screen::install(app.handle());
 
             Ok(())
         })

@@ -3,5 +3,6 @@
   "reading": "Lecture du texte…",
   "encodeFailed": "L'image n'a pas pu être encodée.",
   "unreadable": "Cette image ne peut pas être lue.",
-  "tooLarge": "L'image reste trop lourde, même réduite."
+  "tooLarge": "L'image reste trop lourde, même réduite.",
+  "npsHint": "Tracez une zone large autour des lignes « Zone: … Pos: » de r_displayInfo 1, jusqu'à la ligne FPS : le nombre de lignes varie · Échap pour annuler"
 }
