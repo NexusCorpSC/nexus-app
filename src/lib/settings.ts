@@ -37,6 +37,7 @@ const KEY_SHORTCUT_SQUAD = "shortcutSquad";
 const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_NPS = "shortcutNps";
+const KEY_SHORTCUT_CHAT = "shortcutChat";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
 const KEY_SHORTCUT_RADIAL = "shortcutRadial";
@@ -133,6 +134,7 @@ export const DEFAULT_SHORTCUTS = {
   plan: "Ctrl+Shift+KeyP",
   map: "Ctrl+Shift+KeyM",
   nps: "Ctrl+Shift+KeyK",
+  chat: "Ctrl+Shift+KeyH",
   opacity: "Ctrl+Shift+KeyO",
   lock: "Ctrl+Shift+KeyL",
   // Held, not pressed: the radial menu stays up while it is down.
@@ -163,6 +165,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_PLAN)) ?? DEFAULT_SHORTCUTS.plan,
     map: (await store.get<string>(KEY_SHORTCUT_MAP)) ?? DEFAULT_SHORTCUTS.map,
     nps: (await store.get<string>(KEY_SHORTCUT_NPS)) ?? DEFAULT_SHORTCUTS.nps,
+    chat:
+      (await store.get<string>(KEY_SHORTCUT_CHAT)) ?? DEFAULT_SHORTCUTS.chat,
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
@@ -184,6 +188,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_PLAN, shortcuts.plan);
   await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
   await store.set(KEY_SHORTCUT_NPS, shortcuts.nps);
+  await store.set(KEY_SHORTCUT_CHAT, shortcuts.chat);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
   await store.set(KEY_SHORTCUT_RADIAL, shortcuts.radial);
@@ -225,6 +230,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     plan: storedMode(stored?.plan, "plan"),
     map: storedMode(stored?.map, "map"),
     nps: storedMode(stored?.nps, "nps"),
+    chat: storedMode(stored?.chat, "chat"),
   };
 }
 

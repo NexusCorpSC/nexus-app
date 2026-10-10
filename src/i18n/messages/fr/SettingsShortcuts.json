@@ -43,6 +43,10 @@
       "label": "NPS",
       "hint": "Distance et cap vers un lieu, depuis /showlocation."
     },
+    "chat": {
+      "label": "Nexus Chat",
+      "hint": "L'assistant de Nexus Tools, par-dessus le jeu."
+    },
     "radial": {
       "label": "Maintenir le menu radial rapide",
       "hint": "Maintenez, visez une action à la souris, relâchez. Échap annule.",

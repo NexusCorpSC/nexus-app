@@ -39,6 +39,10 @@ import PlanOverlayPage from "@/pages/plan-overlay-page";
 import MapOverlayPage from "@/pages/map-overlay-page";
 import NpsOverlayPage from "@/pages/nps-overlay-page";
 import RadialOverlayPage from "@/pages/radial-overlay-page";
+// Loaded on first visit too: the AI SDK and the Markdown renderer are only
+// needed by the chat, in the main window and over the game.
+const ChatPage = lazy(() => import("@/pages/chat-page"));
+const ChatOverlayPage = lazy(() => import("@/pages/chat-overlay-page"));
 
 export default function App() {
   return (
@@ -62,6 +66,14 @@ export default function App() {
       <Route path="map-overlay" element={<MapOverlayPage />} />
       <Route path="nps-overlay" element={<NpsOverlayPage />} />
       <Route path="radial" element={<RadialOverlayPage />} />
+      <Route
+        path="chat-overlay"
+        element={
+          <Suspense fallback={null}>
+            <ChatOverlayPage />
+          </Suspense>
+        }
+      />
 
       <Route element={<AppLayout />}>
         <Route index element={<Navigate to="/home" replace />} />
@@ -111,6 +123,14 @@ export default function App() {
           />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route
+            path="chat"
+            element={
+              <Suspense fallback={<LoadingState />}>
+                <ChatPage />
+              </Suspense>
+            }
+          />
         </Route>
 
         <Route path="settings" element={<SettingsPage />} />

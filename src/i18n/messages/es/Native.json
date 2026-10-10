@@ -7,6 +7,7 @@
   "plan": "Plan de vuelo",
   "map": "Mapa",
   "nps": "NPS",
+  "chat": "Nexus Chat",
   "quit": "Salir de Nexus App",
   "captureFailed": "Captura imposible",
   "ocrFailed": "No se pudo leer el texto"
