@@ -17,6 +17,7 @@
     "every": "{seconds} s",
     "setup": "For continuous tracking: type r_displayInfo 1 in the game console (~ key), then calibrate by drawing a box around the “Zone: … Pos:” lines at the top right.",
     "calibrationEmpty": "Area saved, but no position could be read in it. Check that r_displayInfo 1 is on and that the area covers the “Zone: SolarSystem… Pos:” line.",
+    "tooSmall": "Area too small: draw it wider, from the first “Zone” line down to the FPS line.",
     "unreadable": "No position read on screen: is r_displayInfo 1 on? Nothing may cover the area, not even this window.",
     "failed": "Reading the screen failed: {message}",
     "reading": "Position tracked on screen."

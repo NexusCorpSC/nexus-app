@@ -17,6 +17,7 @@
     "every": "{seconds} s",
     "setup": "Pour un suivi en continu : tapez r_displayInfo 1 dans la console du jeu (touche ²), puis calibrez en traçant une zone autour des lignes « Zone: … Pos: » en haut à droite.",
     "calibrationEmpty": "Zone enregistrée, mais aucune position n'y a été lue. Vérifiez que r_displayInfo 1 est actif et que la zone couvre la ligne « Zone: SolarSystem… Pos: ».",
+    "tooSmall": "Zone trop petite : tracez-la plus large, de la première ligne « Zone » jusqu'à la ligne FPS.",
     "unreadable": "Aucune position lue à l'écran : r_displayInfo 1 est-il actif ? Rien ne doit couvrir la zone, pas même cette fenêtre.",
     "failed": "La lecture de l'écran a échoué : {message}",
     "reading": "Position suivie à l'écran."

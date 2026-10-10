@@ -49,7 +49,7 @@ const PLAN_WINDOW: &str = "plan";
 const MAP_WINDOW: &str = "map";
 /// The NPS — Nexus Positioning System: distance and heading to a place, from
 /// the game's `/showlocation` (`nps.rs`).
-const NPS_WINDOW: &str = "nps";
+use nps::NPS_WINDOW;
 /// Nexus Chat: the site's assistant, over the game.
 pub(crate) const CHAT_WINDOW: &str = "chat";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
@@ -962,13 +962,37 @@ fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose) {
 }
 
 fn freeze_and_select(app: &AppHandle, purpose: CapturePurpose) -> Result<(), String> {
-    let cursor = app.cursor_position().map_err(|e| e.to_string())?;
-    let frame = capture::grab(cursor.x as i32, cursor.y as i32)?;
+    // The monitor under the cursor — but a calibration is started from the
+    // NPS window, which may sit on another screen than the game: once a box
+    // has been drawn, its monitor is the game's.
+    let saved = match purpose {
+        CapturePurpose::NpsCalibration => app.state::<nps_screen::Tracking>().region(),
+        CapturePurpose::Search => None,
+    };
+    let under_cursor = || -> Result<Capture, String> {
+        let cursor = app.cursor_position().map_err(|e| e.to_string())?;
+        capture::grab(cursor.x as i32, cursor.y as i32)
+    };
+    // A monitor since unplugged falls back on the cursor's.
+    let frame = match saved {
+        Some(region) => {
+            capture::grab(region.monitor_x, region.monitor_y).or_else(|_| under_cursor())?
+        }
+        None => under_cursor()?,
+    };
     let monitor = frame.monitor;
 
-    app.state::<CaptureState>()
+    let replaced = app
+        .state::<CaptureState>()
         .lock()?
         .replace((frame, purpose));
+    // A search capture started over a calibration ends it: the NPS window,
+    // put away for it, comes back.
+    if matches!(replaced, Some((_, CapturePurpose::NpsCalibration)))
+        && purpose != CapturePurpose::NpsCalibration
+    {
+        show_window(app, NPS_WINDOW)?;
+    }
 
     let selection_window = window(app, CAPTURE_WINDOW)?;
     // Cover exactly the monitor that was captured, so the normalised

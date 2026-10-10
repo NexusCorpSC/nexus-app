@@ -73,8 +73,8 @@ const SCREEN_STATUS_EVENT = "nps://screen-status";
 /** The box drawn around the game's debug lines, and whether it read. */
 const CALIBRATED_EVENT = "nps://calibrated";
 
-/** Read off the screen every second, ten minutes of readings at most. */
-const MAX_HISTORY = 600;
+/** Ten minutes of readings off the screen, at the shortest interval. */
+const MAX_HISTORY = 1200;
 
 /** The intervals offered for reading the screen, in milliseconds. */
 const SCREEN_INTERVALS = [500, 1000, 2000, 5000];
@@ -124,8 +124,11 @@ export default function NpsOverlayPage() {
   const [screenStatus, setScreenStatus] = useState<ScreenStatus>({
     state: "idle",
   });
-  // Set once a box has been drawn: whether a position was read in it.
-  const [calibration, setCalibration] = useState<boolean | null>(null);
+  // Set once a box has been drawn: whether a position was read in it, or
+  // whether it was too small to keep.
+  const [calibration, setCalibration] = useState<
+    "found" | "empty" | "tooSmall" | null
+  >(null);
   const [waiting, setWaiting] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -167,23 +170,29 @@ export default function NpsOverlayPage() {
         setScreenLoaded(true);
       })
       .catch((error) => console.error("cannot read the NPS tracking", error));
-    const status = listen<ScreenStatus>(SCREEN_STATUS_EVENT, (event) =>
-      setScreenStatus(event.payload),
-    );
-    const calibrated = listen<{ region: NpsScreenRegion; found: boolean }>(
-      CALIBRATED_EVENT,
-      (event) => {
-        const { region, found } = event.payload;
-        setCalibration(found);
-        // A box that reads turns the tracking on: that is what it was drawn
-        // for.
-        setScreen((last) => ({
-          ...last,
-          region,
-          enabled: last.enabled || found,
-        }));
-      },
-    );
+    const status = listen<ScreenStatus>(SCREEN_STATUS_EVENT, (event) => {
+      setScreenStatus(event.payload);
+      // Once the reading says how it goes, that is what to show.
+      if (event.payload.state !== "idle") setCalibration(null);
+    });
+    const calibrated = listen<{
+      region: NpsScreenRegion | null;
+      found: boolean;
+    }>(CALIBRATED_EVENT, (event) => {
+      const { region, found } = event.payload;
+      if (!region) {
+        setCalibration("tooSmall");
+        return;
+      }
+      setCalibration(found ? "found" : "empty");
+      // A box that reads turns the tracking on: that is what it was drawn
+      // for.
+      setScreen((last) => ({
+        ...last,
+        region,
+        enabled: last.enabled || found,
+      }));
+    });
     return () => {
       alive = false;
       void status.then((stop) => stop()).catch(() => {});
@@ -644,7 +653,7 @@ function ScreenTracking({
 }: {
   settings: NpsScreenSettings;
   status: ScreenStatus;
-  calibration: boolean | null;
+  calibration: "found" | "empty" | "tooSmall" | null;
   locked: boolean;
   onChange: (settings: NpsScreenSettings) => void;
   onCalibrate: () => void;
@@ -653,22 +662,25 @@ function ScreenTracking({
   const format = useFormatter();
   const calibrated = settings.region !== null;
 
-  const message = !calibrated
-    ? { tone: "text-slate-400", text: t("screen.setup") }
-    : calibration === false
-      ? { tone: "text-amber-200", text: t("screen.calibrationEmpty") }
-      : !settings.enabled
-        ? null
-        : status.state === "unreadable"
-          ? { tone: "text-amber-200", text: t("screen.unreadable") }
-          : status.state === "failed"
-            ? {
-                tone: "text-red-300",
-                text: t("screen.failed", { message: status.message }),
-              }
-            : status.state === "reading"
-              ? { tone: "text-sky-200", text: t("screen.reading") }
-              : null;
+  const message =
+    calibration === "tooSmall"
+      ? { tone: "text-amber-200", text: t("screen.tooSmall") }
+      : !calibrated
+        ? { tone: "text-slate-400", text: t("screen.setup") }
+        : calibration === "empty"
+          ? { tone: "text-amber-200", text: t("screen.calibrationEmpty") }
+          : !settings.enabled
+            ? null
+            : status.state === "unreadable"
+              ? { tone: "text-amber-200", text: t("screen.unreadable") }
+              : status.state === "failed"
+                ? {
+                    tone: "text-red-300",
+                    text: t("screen.failed", { message: status.message }),
+                  }
+                : status.state === "reading"
+                  ? { tone: "text-sky-200", text: t("screen.reading") }
+                  : null;
 
   return (
     <div className="space-y-1">

@@ -30,7 +30,7 @@ use crate::diagnostics::log;
 pub(crate) const POSITION_EVENT: &str = "nps://position";
 
 /// The window whose being on screen turns the watch on.
-const NPS_WINDOW: &str = "nps";
+pub(crate) const NPS_WINDOW: &str = "nps";
 
 /// What the game understands, put on the clipboard for the player to paste.
 const SHOW_LOCATION: &str = "/showlocation";

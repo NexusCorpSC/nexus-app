@@ -261,14 +261,16 @@ pub fn grab_region(
         .map_err(|e| format!("screen capture failed: {e}"))
 }
 
-/// Reads a region grabbed by [`grab_region`], as it is or `inverted`.
+/// Reads a region twice, as it is and greyed and inverted: the two readings
+/// the NPS compares (`nps_screen.rs`). Enlarged once for both.
 #[cfg(windows)]
-pub async fn read_region(region: xcap::image::RgbaImage, inverted: bool) -> Result<String, String> {
-    let (mut pixels, width, height) = prepare(region);
-    if inverted {
-        invert(&mut pixels);
-    }
-    read_text(&pixels, width, height).await
+pub async fn read_both_ways(region: xcap::image::RgbaImage) -> Result<(String, String), String> {
+    let (pixels, width, height) = prepare(region);
+    let mut inverted = pixels.clone();
+    invert(&mut inverted);
+    let plain = read_text(&pixels, width, height).await?;
+    let inverted = read_text(&inverted, width, height).await?;
+    Ok((plain, inverted))
 }
 
 /// Whether text read looks like a completed refinery work order: its column
@@ -280,11 +282,29 @@ fn is_work_order(text: &str) -> bool {
     text.contains("yielded") || (text.contains("materials") && text.contains("quality"))
 }
 
+/// The OS engine, made once: the NPS reads the screen every second or so.
+///
+/// Follows the languages configured in Windows; recognition quality depends
+/// on the matching language pack being installed. A failure is not kept, so
+/// a language pack installed meanwhile is picked up on the next try.
+#[cfg(windows)]
+fn engine() -> Result<windows::Media::Ocr::OcrEngine, String> {
+    use std::sync::OnceLock;
+    use windows::Media::Ocr::OcrEngine;
+
+    static ENGINE: OnceLock<OcrEngine> = OnceLock::new();
+    if let Some(engine) = ENGINE.get() {
+        return Ok(engine.clone());
+    }
+    let engine = OcrEngine::TryCreateFromUserProfileLanguages()
+        .map_err(|e| format!("no OCR engine available ({e}) — install a Windows language pack"))?;
+    Ok(ENGINE.get_or_init(|| engine).clone())
+}
+
 /// Runs the OS engine over BGRA8 pixels and returns the lines it read.
 #[cfg(windows)]
 async fn read_text(pixels: &[u8], width: u32, height: u32) -> Result<String, String> {
     use windows::Graphics::Imaging::{BitmapPixelFormat, SoftwareBitmap};
-    use windows::Media::Ocr::OcrEngine;
     use windows::Storage::Streams::DataWriter;
 
     // Scoped so only `Send` values survive to the await below.
@@ -306,10 +326,7 @@ async fn read_text(pixels: &[u8], width: u32, height: u32) -> Result<String, Str
         .map_err(winerr("cannot build bitmap"))?
     };
 
-    // Follows the languages configured in Windows; recognition quality
-    // depends on the matching language pack being installed.
-    let engine = OcrEngine::TryCreateFromUserProfileLanguages()
-        .map_err(|e| format!("no OCR engine available ({e}) — install a Windows language pack"))?;
+    let engine = engine()?;
 
     let result = engine
         .RecognizeAsync(&bitmap)

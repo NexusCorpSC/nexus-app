@@ -22,6 +22,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::capture::Selection;
 use crate::diagnostics::log;
+use crate::nps::NPS_WINDOW;
 #[cfg(windows)]
 use crate::nps::{now_ms, watched, Fix, POSITION_EVENT};
 
@@ -30,9 +31,6 @@ const STATUS_EVENT: &str = "nps://screen-status";
 
 /// Carries a [`Calibrated`] to the NPS window once a box has been drawn.
 const CALIBRATED_EVENT: &str = "nps://calibrated";
-
-/// The window the calibration hands back to.
-const NPS_WINDOW: &str = "nps";
 
 /// Bounds on the reading interval: under a quarter of a second the OCR runs
 /// back to back for nothing, past ten it is no longer following anyone.
@@ -96,7 +94,8 @@ pub enum Status {
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Calibrated {
-    pub region: Region,
+    /// `None` when the box drawn was too small to keep.
+    pub region: Option<Region>,
     /// Whether a position could be read in the box straight away.
     pub found: bool,
 }
@@ -107,6 +106,10 @@ pub struct Tracking(Mutex<Settings>);
 impl Tracking {
     fn get(&self) -> Settings {
         self.0.lock().map(|s| s.clone()).unwrap_or_default()
+    }
+
+    pub(crate) fn region(&self) -> Option<Region> {
+        self.0.lock().ok().and_then(|s| s.region)
     }
 
     fn set_region(&self, region: Region) {
@@ -137,8 +140,10 @@ fn distance_pattern() -> &'static Regex {
     PATTERN.get_or_init(|| {
         // Digits and the letters the OCR takes them for; always with
         // decimals, as the game writes them, which keeps stray words out.
+        // Case-sensitive: every letter here is one the remap below turns
+        // into a digit.
         let digits = r"[0-9OoDQIil|!]";
-        Regex::new(&format!(r"(?i)(-?)\s*({digits}+\.{digits}+)\s*(km|m)\b"))
+        Regex::new(&format!(r"(-?)\s*({digits}+\.{digits}+)\s*([kK]?[mM])\b"))
             .expect("the distance pattern is valid")
     })
 }
@@ -222,7 +227,7 @@ fn same(a: Position, b: Position) -> bool {
     (a.0 - b.0).abs() <= AGREE_M && (a.1 - b.1).abs() <= AGREE_M && (a.2 - b.2).abs() <= AGREE_M
 }
 
-/// The position two independent readings agree on, or `None`.
+/// The `SolarSystem` position two independent readings agree on, or `None`.
 ///
 /// The OCR mistakes a digit for another now and then — a 2 read as a 9 — and
 /// one reading alone cannot tell. So the box is read twice, as it is and
@@ -241,11 +246,8 @@ pub fn agreed(plain: Lines, inverted: Lines) -> Option<Position> {
             return Some(solar);
         }
     }
-    // No `SolarSystem` line confirmed: both `Root` lines, then.
-    match roots {
-        [Some(a), Some(b)] if solars == [None, None] && same(a, b) => Some(a),
-        _ => None,
-    }
+    // The `Root` line alone is never taken: in Pyro it is in another frame.
+    None
 }
 
 /// Keeps the readings that agree with the way the player moves: a jump no
@@ -289,8 +291,7 @@ impl Motion {
 /// reads best one way or the other depending on the scene behind.
 #[cfg(windows)]
 async fn read_both(image: xcap::image::RgbaImage) -> Result<(Lines, Lines), String> {
-    let plain = crate::capture::read_region(image.clone(), false).await?;
-    let inverted = crate::capture::read_region(image, true).await?;
+    let (plain, inverted) = crate::capture::read_both_ways(image).await?;
     Ok((lines(&plain), lines(&inverted)))
 }
 
@@ -308,18 +309,41 @@ pub(crate) async fn calibrate(
     };
 
     #[cfg(windows)]
-    let found = match read_both(frame.crop(selection)?).await {
-        Ok((plain, inverted)) => agreed(plain, inverted).is_some(),
+    let crop = frame.crop(selection);
+    #[cfg(not(windows))]
+    let crop: Result<(), String> = Err("not on Windows".to_string());
+
+    // Too small a box is not kept: the NPS window says so, and the one
+    // before stays.
+    let calibrated = match crop {
         Err(error) => {
-            log(format!("nps: cannot read the calibrated box: {error}"));
-            false
+            log(format!("nps: calibration box refused: {error}"));
+            Calibrated {
+                region: None,
+                found: false,
+            }
+        }
+        #[cfg_attr(not(windows), allow(unused_variables))]
+        Ok(image) => {
+            #[cfg(windows)]
+            let found = match read_both(image).await {
+                Ok((plain, inverted)) => agreed(plain, inverted).is_some(),
+                Err(error) => {
+                    log(format!("nps: cannot read the calibrated box: {error}"));
+                    false
+                }
+            };
+            #[cfg(not(windows))]
+            let found = false;
+            app.state::<Tracking>().set_region(region);
+            Calibrated {
+                region: Some(region),
+                found,
+            }
         }
     };
-    #[cfg(not(windows))]
-    let found = false;
 
-    app.state::<Tracking>().set_region(region);
-    app.emit_to(NPS_WINDOW, CALIBRATED_EVENT, Calibrated { region, found })
+    app.emit_to(NPS_WINDOW, CALIBRATED_EVENT, calibrated)
         .map_err(|e| e.to_string())
 }
 
@@ -411,10 +435,9 @@ async fn read_once(region: Region) -> Result<Option<Fix>, String> {
 mod tests {
     use super::*;
 
-    /// What one reading gives: the `SolarSystem` line, or the `Root` line.
+    /// The `SolarSystem` line of one reading.
     fn parse(text: &str) -> Option<Position> {
-        let found = lines(text);
-        found.solar.or(found.root)
+        lines(text).solar
     }
 
     const DISPLAY_INFO: &str = "\
@@ -454,9 +477,13 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
     }
 
     #[test]
-    fn falls_back_on_the_root_line() {
+    fn the_root_line_alone_is_no_position() {
+        // In Pyro, `Root` is not the frame of the system.
         let text = "Zone: So1arSystem Pos: garbled\nZone: Root Pos: 1.5km -2.25km 3.0m";
-        assert!(close(parse(text).unwrap(), (1_500.0, -2_250.0, 3.0)));
+        let found = lines(text);
+        assert!(close(found.root.unwrap(), (1_500.0, -2_250.0, 3.0)));
+        assert_eq!(parse(text), None);
+        assert_eq!(agreed(found, found), None);
     }
 
     #[test]
@@ -495,11 +522,9 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
     }
 
     #[test]
-    fn roots_alone_need_each_other() {
-        let root = Some((1.0, 2.0, 3.0));
-        let only = Lines { solar: None, root };
-        assert_eq!(agreed(only, Lines::default()), None);
-        assert_eq!(agreed(only, only), root);
+    fn reads_capital_units() {
+        let found = lines("Zone: SolarSystem_1 Pos: 1.5KM -2.0Km 3.0M");
+        assert!(close(found.solar.unwrap(), (1_500.0, -2_000.0, 3.0)));
     }
 
     #[test]
