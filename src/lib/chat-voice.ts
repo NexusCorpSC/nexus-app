@@ -36,9 +36,11 @@ export async function stopRecording(): Promise<ArrayBuffer> {
   } catch (cause) {
     const reason = String(cause);
     throw new VoiceFailure(
-      reason.startsWith("microphone") || reason.startsWith("no_microphone")
-        ? "mic_failed"
-        : "generic",
+      reason === "microphone_silent"
+        ? "mic_silent"
+        : reason.startsWith("microphone") || reason.startsWith("no_microphone")
+          ? "mic_failed"
+          : "generic",
     );
   }
 }
@@ -67,6 +69,33 @@ export function cancelRecording(): Promise<void> {
   return invoke("voice_cancel");
 }
 
+/** The loudest sample of a 16-bit WAV, as a fraction of full scale. */
+export function wavPeak(wav: ArrayBuffer): number {
+  const samples = new Int16Array(
+    wav.slice(44, 44 + ((wav.byteLength - 44) & ~1)),
+  );
+  let peak = 0;
+  for (const sample of samples) peak = Math.max(peak, Math.abs(sample));
+  return peak / 32768;
+}
+
+/**
+ * Readings are numbered across the window and its reloads (hence the clock):
+ * Rust keeps the last one stopped for each window, and refuses older ones.
+ */
+let lastGeneration = Date.now();
+
+function nextGeneration(): number {
+  return ++lastGeneration;
+}
+
+/** Plays a WAV through Rust, to the end. */
+export function playWav(wav: ArrayBuffer): Promise<void> {
+  return invoke("voice_play", new Uint8Array(wav), {
+    headers: { "Speech-Generation": String(nextGeneration()) },
+  });
+}
+
 /** Seconds of audio in a 16-bit mono WAV at 16 kHz. */
 export function wavSeconds(wav: ArrayBuffer): number {
   return Math.max(0, wav.byteLength - 44) / (16_000 * 2);
@@ -87,6 +116,7 @@ export type VoiceError =
   | "too_long"
   | "mic_failed"
   | "mic_in_use"
+  | "mic_silent"
   | "nothing_heard"
   | "generic";
 
@@ -238,7 +268,7 @@ export function splitForSpeech(text: string): string[] {
  * stop there). A new `play` or a `stop` cuts off what was playing.
  */
 export class SpeechPlayer {
-  private generation = 0;
+  private generation = nextGeneration();
   private controller: AbortController | null = null;
 
   constructor(private readonly onSpeaking: (speaking: boolean) => void) {}
@@ -249,7 +279,7 @@ export class SpeechPlayer {
   ): Promise<void> {
     this.stop();
     if (chunks.length === 0) return;
-    const generation = ++this.generation;
+    const generation = (this.generation = nextGeneration());
     const controller = new AbortController();
     this.controller = controller;
     this.onSpeaking(true);
@@ -290,7 +320,7 @@ export class SpeechPlayer {
 
   stop(): void {
     const wasPlaying = this.controller !== null;
-    this.generation++;
+    this.generation = nextGeneration();
     this.controller?.abort();
     this.controller = null;
     if (wasPlaying) {

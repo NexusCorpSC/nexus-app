@@ -37,6 +37,14 @@
     "listError": "Could not list the microphones.",
     "saveError": "Could not save the chosen microphone.",
     "readError": "Could not read the chosen microphone.",
-    "loading": "Chosen microphone…"
+    "loading": "Chosen microphone…",
+    "test": "Test the microphone",
+    "testRecording": "Speak… ({seconds} s)",
+    "testPlaying": "Playing the recording back…",
+    "testLevel": "Level picked up: {percent}%",
+    "testQuiet": "Next to nothing was picked up: check that it is the right microphone and that it is not muted.",
+    "testSilent": "Complete silence: Windows passes nothing on. In Windows Settings › Privacy › Microphone, check that desktop apps may use the microphone, and that it is not muted.",
+    "testInUse": "The microphone is already in use by Nexus Chat in the other window.",
+    "testFailed": "The microphone could not open. Check that it is plugged in."
   }
 }

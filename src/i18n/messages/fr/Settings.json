@@ -37,6 +37,14 @@
     "listError": "Impossible de lister les micros.",
     "saveError": "Impossible d'enregistrer le micro choisi.",
     "readError": "Impossible de lire le micro choisi.",
-    "loading": "Micro choisi…"
+    "loading": "Micro choisi…",
+    "test": "Tester le micro",
+    "testRecording": "Parlez… ({seconds} s)",
+    "testPlaying": "Écoute de l'enregistrement…",
+    "testLevel": "Niveau capté : {percent} %",
+    "testQuiet": "Presque rien n'a été capté : vérifiez que c'est le bon micro et qu'il n'est pas coupé.",
+    "testSilent": "Silence complet : Windows ne transmet rien. Vérifiez dans Paramètres Windows › Confidentialité › Microphone que l'accès au micro est autorisé pour les applications de bureau, et que le micro n'est pas coupé.",
+    "testInUse": "Le micro est déjà utilisé par Nexus Chat dans l'autre fenêtre.",
+    "testFailed": "Le micro n'a pas pu s'ouvrir. Vérifiez qu'il est branché."
   }
 }

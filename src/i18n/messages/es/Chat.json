@@ -84,6 +84,7 @@
     "errors": {
       "mic_failed": "No se pudo abrir el micrófono. Comprueba que hay uno conectado y permitido en la configuración de Windows.",
       "mic_in_use": "El micrófono ya lo está usando la otra ventana de Nexus Chat.",
+      "mic_silent": "El micrófono no ha captado nada (silencio total). Comprueba el micrófono elegido en los ajustes de la app y, en Configuración de Windows › Privacidad › Micrófono, que las aplicaciones de escritorio pueden usarlo.",
       "nothing_heard": "No he oído nada. Inténtalo de nuevo un poco más alto.",
       "too_short": "Demasiado corto: mantén pulsada la tecla mientras hablas.",
       "too_long": "Demasiado largo: un minuto como máximo por pregunta.",
