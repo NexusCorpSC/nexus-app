@@ -8,6 +8,7 @@
     "plan": "Flight plan",
     "map": "Map",
     "nps": "NPS",
+    "chat": "Nexus Chat",
     "opacity": "Overlay opacity",
     "lock": "Overlay lock",
     "radial": "Quick radial menu"

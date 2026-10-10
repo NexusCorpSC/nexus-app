@@ -46,6 +46,8 @@ const MAP_WINDOW: &str = "map";
 /// The NPS — Nexus Positioning System: distance and heading to a place, from
 /// the game's `/showlocation` (`nps.rs`).
 const NPS_WINDOW: &str = "nps";
+/// Nexus Chat: the site's assistant, over the game.
+const CHAT_WINDOW: &str = "chat";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 /// The large, centred notifications: what is asked of the whole squad.
 pub(crate) const BANNERS_WINDOW: &str = "banners";
@@ -133,9 +135,16 @@ struct OverlayOpacity {
     /// Missing from what a frontend older than the NPS sends.
     #[serde(default = "default_nps_mode")]
     nps: OverlayMode,
+    /// Missing from what a frontend older than the chat sends.
+    #[serde(default = "default_chat_mode")]
+    chat: OverlayMode,
 }
 
 fn default_nps_mode() -> OverlayMode {
+    OverlayMode::Shaded
+}
+
+fn default_chat_mode() -> OverlayMode {
     OverlayMode::Shaded
 }
 
@@ -157,6 +166,8 @@ impl Default for OverlayOpacity {
             // A few lines of figures, read over the game: shaded keeps them
             // legible over a lit planet without hiding where one is going.
             nps: default_nps_mode(),
+            // Text read and written over the game: shaded, like the NPS.
+            chat: default_chat_mode(),
         }
     }
 }
@@ -170,6 +181,7 @@ impl OverlayOpacity {
             PLAN_WINDOW => Some(self.plan),
             MAP_WINDOW => Some(self.map),
             NPS_WINDOW => Some(self.nps),
+            CHAT_WINDOW => Some(self.chat),
             _ => None,
         }
     }
@@ -183,6 +195,7 @@ impl OverlayOpacity {
             PLAN_WINDOW => &mut self.plan,
             MAP_WINDOW => &mut self.map,
             NPS_WINDOW => &mut self.nps,
+            CHAT_WINDOW => &mut self.chat,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -193,7 +206,7 @@ impl OverlayOpacity {
     /// Whether any of them still draws something behind its text.
     fn any_drawn(&self) -> bool {
         [
-            self.notes, self.cargo, self.squad, self.plan, self.map, self.nps,
+            self.notes, self.cargo, self.squad, self.plan, self.map, self.nps, self.chat,
         ]
         .iter()
         .any(|mode| *mode != OverlayMode::Clear)
@@ -206,6 +219,7 @@ impl OverlayOpacity {
         self.plan = mode;
         self.map = mode;
         self.nps = mode;
+        self.chat = mode;
     }
 }
 
@@ -253,7 +267,13 @@ const LOCK_WATCH_IDLE: Duration = Duration::from_millis(250);
 fn is_overlay(label: &str) -> bool {
     matches!(
         label,
-        NOTES_WINDOW | CARGO_WINDOW | SQUAD_WINDOW | PLAN_WINDOW | MAP_WINDOW | NPS_WINDOW
+        NOTES_WINDOW
+            | CARGO_WINDOW
+            | SQUAD_WINDOW
+            | PLAN_WINDOW
+            | MAP_WINDOW
+            | NPS_WINDOW
+            | CHAT_WINDOW
     )
 }
 
@@ -273,6 +293,7 @@ pub(crate) enum Action {
     Plan,
     Map,
     Nps,
+    Chat,
     Opacity,
     Lock,
     /// Held rather than fired: see `radial.rs`.
@@ -292,6 +313,7 @@ impl Action {
             Action::Plan => "plan",
             Action::Map => "map",
             Action::Nps => "nps",
+            Action::Chat => "chat",
             Action::Opacity => "opacity",
             Action::Lock => "lock",
             Action::Radial => "radial",
@@ -337,6 +359,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Plan => toggle_plan(app),
         Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Nps => toggle_overlay(app, NPS_WINDOW),
+        Action::Chat => toggle_overlay(app, CHAT_WINDOW),
         Action::Opacity => flip_all_overlay_opacity(app),
         Action::Lock => flip_all_overlay_locks(app),
         // Never routed here by the shortcut paths, which open and close the
@@ -389,6 +412,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the NPS sends.
     #[serde(default = "default_nps_shortcut")]
     nps: String,
+    /// Missing from what a frontend older than the chat sends.
+    #[serde(default = "default_chat_shortcut")]
+    chat: String,
     opacity: String,
     /// Missing from what a frontend older than the shortcut sends.
     #[serde(default = "default_lock_shortcut")]
@@ -410,6 +436,10 @@ fn default_nps_shortcut() -> String {
     "Ctrl+Shift+KeyK".to_string()
 }
 
+fn default_chat_shortcut() -> String {
+    "Ctrl+Shift+KeyH".to_string()
+}
+
 impl Default for ShortcutSettings {
     fn default() -> Self {
         Self {
@@ -421,6 +451,7 @@ impl Default for ShortcutSettings {
             plan: "Ctrl+Shift+KeyP".to_string(),
             map: "Ctrl+Shift+KeyM".to_string(),
             nps: default_nps_shortcut(),
+            chat: default_chat_shortcut(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
             radial: default_radial_shortcut(),
@@ -466,6 +497,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Plan, &requested.plan),
         (Action::Map, &requested.map),
         (Action::Nps, &requested.nps),
+        (Action::Chat, &requested.chat),
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
         (Action::Radial, &requested.radial),
@@ -913,7 +945,7 @@ fn show_overlay(app: AppHandle, label: String) -> Result<(), String> {
             show_window(&app, PLAN_WINDOW)?;
             announce_plan_visibility(&app)
         }
-        OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW => {
+        OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW | CHAT_WINDOW => {
             show_window(&app, &label)
         }
         other => Err(format!("{other} is not an overlay")),
@@ -1022,6 +1054,11 @@ fn close_map_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_nps_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NPS_WINDOW)
+}
+
+#[tauri::command]
+fn close_chat_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, CHAT_WINDOW)
 }
 
 /// Brings the map overlay up — shown, never hidden.
@@ -1197,6 +1234,7 @@ fn flip_all_overlay_locks(app: &AppHandle) -> Result<(), String> {
         PLAN_WINDOW,
         MAP_WINDOW,
         NPS_WINDOW,
+        CHAT_WINDOW,
     ] {
         let visible = window(app, label)?
             .is_visible()
@@ -1344,6 +1382,7 @@ pub fn run() {
             close_map_overlay,
             open_map_overlay,
             close_nps_overlay,
+            close_chat_overlay,
             nps::nps_copy_command,
             toggle_overlay_opacity,
             set_overlay_opacity,

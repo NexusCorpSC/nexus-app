@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getVersion } from "@tauri-apps/api/app";
 import { useTranslations } from "use-intl";
 import {
+  Bot,
   Compass,
   Container,
   Map as MapIcon,
@@ -31,7 +32,15 @@ import type { Squad } from "@/types/nexus";
 /** The windows worth opening before the game, with the shortcut each has. */
 const LAUNCHERS: {
   label: OverlayLabel;
-  title: "search" | "squad" | "map" | "nps" | "plan" | "notes" | "cargo";
+  title:
+    | "search"
+    | "squad"
+    | "map"
+    | "nps"
+    | "plan"
+    | "notes"
+    | "cargo"
+    | "chat";
   icon: LucideIcon;
   shortcut: keyof Shortcuts;
 }[] = [
@@ -42,6 +51,7 @@ const LAUNCHERS: {
   { label: "plan", title: "plan", icon: RouteIcon, shortcut: "plan" },
   { label: "notes", title: "notes", icon: NotebookPen, shortcut: "notes" },
   { label: "cargo", title: "cargo", icon: Container, shortcut: "cargo" },
+  { label: "chat", title: "chat", icon: Bot, shortcut: "chat" },
 ];
 
 /** The sections of the database, by their key in `Home.database`. */

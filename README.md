@@ -36,7 +36,8 @@ src-tauri/            binaire Tauri, plugins et permissions
 ### Fonctionnalités
 
 La fenêtre s'ouvre sur l'**accueil** : les superpositions à lancer avant le jeu
-(recherche, escouade, carte, NPS, plan de vol, bloc-notes, cargo), chacune avec son
+(recherche, escouade, carte, NPS, plan de vol, bloc-notes, cargo, Nexus Chat),
+chacune avec son
 raccourci, l'état de l'escouade, le début du bloc-notes et l'accès à la base de
 données. Le menu range les écrans en deux groupes — *Base de données* et *Mon
 espace* — et garde en bas deux boutons qui affichent les superpositions
@@ -62,6 +63,7 @@ contrairement au raccourci qui bascule.
 | Feuille de cargo | `/api/cargo-ships` (une fois, mise en cache)               | non⁵            |
 | Bloc-notes    | `/api/notes`                                                 | non³            |
 | NPS           | `/api/lieux/nps`, `/api/lieux/:slug/position` (POST)          | pour enregistrer |
+| Nexus Chat    | `/api/chat` (POST, en flux), `/api/chat/status`, `/api/chat/access` (POST), `/api/chat/conversations`, `…/conversations/:id` (GET, PATCH, DELETE) | oui, et un accès ouvert |
 
 ¹ le filtre « possédés » n'apparaît qu'une fois connecté, il est résolu côté serveur.
 ² la liste publique est accessible sans session ; l'inventaire partagé non.
@@ -184,6 +186,27 @@ d'orientation : la commande `/showlocation`, tapée dans le chat, copie
 La fiche d'un lieu relevé propose **Y aller (NPS)**, qui en fait la
 destination et affiche la superposition.
 
+### Nexus Chat
+
+L'assistant du site (Claude), dans l'écran **Nexus Chat** et en superposition
+(`Ctrl+Maj+H`). Il cherche dans Nexus Tools et agit sur le compte du joueur
+avec les outils du serveur MCP du site ; toute écriture s'affiche d'abord en
+carte **Confirmer / Refuser**. Tout se passe côté site : l'accès (ouvert par un
+administrateur), le budget mensuel, le modèle et l'historique des
+conversations. L'application n'envoie que le nouveau message, ou la réponse à
+une confirmation, et lit la réponse en flux par le plugin HTTP
+(`chatFetch`, `src/lib/api/chat.ts`), avec la session persistée.
+
+- La superposition reprend la dernière conversation, d'ici, de la fenêtre
+  principale ou du site, chaque fois qu'elle s'affiche ; elle prend le focus,
+  le curseur dans la saisie, et **Échap** la range pour rendre le clavier au
+  jeu. Elle ne parle au site qu'affichée.
+- Une conversation continuée ailleurs est relue quand la fenêtre revient au
+  premier plan, jamais pendant une réponse en cours
+  (`src/hooks/use-active-chat.ts`).
+- Le bouton **Ouvrir dans la fenêtre principale** y ouvre la même
+  conversation (`/chat?c=`).
+
 ### Icône de notification
 
 Tant que l'application tourne, elle tient une icône dans la zone de
@@ -223,6 +246,7 @@ l'application est minimisée ou n'a pas le focus :
 | `Ctrl+Maj+N`         | affiche ou masque le bloc-notes en superposition            |
 | `Ctrl+Maj+G`         | affiche ou masque la feuille de cargo en superposition      |
 | `Ctrl+Maj+E`         | affiche ou masque l'escouade en superposition               |
+| `Ctrl+Maj+H`         | affiche ou masque Nexus Chat en superposition               |
 | `Ctrl+Maj+O`         | efface les trois superpositions, ou leur rend leur panneau  |
 | `Ctrl+Maj+L`         | verrouille les superpositions affichées, ou les déverrouille |
 | `Alt+V` (maintenu)   | affiche le menu radial rapide tant qu'il est maintenu       |

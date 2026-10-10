@@ -45,6 +45,7 @@ const WINDOW_ROWS: ShortcutAction[] = [
   "plan",
   "map",
   "nps",
+  "chat",
 ];
 
 /** The combinations used while playing, over the overlays already shown. */

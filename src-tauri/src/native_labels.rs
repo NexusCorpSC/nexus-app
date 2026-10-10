@@ -30,6 +30,9 @@ pub(crate) struct NativeLabels {
     /// Missing from what a frontend older than the NPS sends.
     #[serde(default = "default_nps_label")]
     pub nps: String,
+    /// Missing from what a frontend older than the chat sends.
+    #[serde(default = "default_chat_label")]
+    pub chat: String,
     pub quit: String,
     pub capture_failed: String,
     pub ocr_failed: String,
@@ -50,6 +53,7 @@ impl Default for NativeLabels {
             plan: "Plan de vol".into(),
             map: "Carte".into(),
             nps: default_nps_label(),
+            chat: default_chat_label(),
             quit: "Quitter Nexus App".into(),
             capture_failed: "Capture impossible".into(),
             ocr_failed: "Lecture du texte impossible".into(),
@@ -60,6 +64,10 @@ impl Default for NativeLabels {
 
 fn default_nps_label() -> String {
     "NPS".into()
+}
+
+fn default_chat_label() -> String {
+    "Nexus Chat".into()
 }
 
 #[derive(Default)]

@@ -23,7 +23,8 @@ export type OverlayLabel =
   | "squad"
   | "plan"
   | "map"
-  | "nps";
+  | "nps"
+  | "chat";
 
 /**
  * The three modes, in the order the button steps through them.
@@ -74,6 +75,8 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   // A few lines of figures read over the game: a tint keeps them legible over
   // a lit planet without hiding where one is going.
   nps: "shaded",
+  // Text read and written over the game: shaded, like the NPS.
+  chat: "shaded",
 };
 
 /** Steps one overlay to its next mode. Called by the button that overlay carries. */

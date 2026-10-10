@@ -5,6 +5,7 @@ import type Auth from "./messages/fr/Auth.json";
 import type Blueprints from "./messages/fr/Blueprints.json";
 import type Capture from "./messages/fr/Capture.json";
 import type Cargo from "./messages/fr/Cargo.json";
+import type Chat from "./messages/fr/Chat.json";
 import type Common from "./messages/fr/Common.json";
 import type Factions from "./messages/fr/Factions.json";
 import type Format from "./messages/fr/Format.json";
@@ -54,6 +55,7 @@ export type Messages = {
   Blueprints: typeof Blueprints;
   Capture: typeof Capture;
   Cargo: typeof Cargo;
+  Chat: typeof Chat;
   Common: typeof Common;
   Factions: typeof Factions;
   Format: typeof Format;

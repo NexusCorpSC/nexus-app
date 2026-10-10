@@ -18,6 +18,7 @@ import {
 } from "@/lib/overlay-opacity";
 import {
   Archive,
+  Bot,
   Container,
   Flag,
   Hammer,
@@ -63,6 +64,7 @@ type NavKey =
   | "reputations"
   | "friends"
   | "notes"
+  | "chat"
   | "cargo"
   | "orgs";
 
@@ -115,6 +117,7 @@ const NAV_GROUPS: NavGroup[] = [
       },
       { to: "/friends", label: "friends", icon: UserRound, requiresAuth: true },
       { to: "/notes", label: "notes", icon: NotebookPen },
+      { to: "/chat", label: "chat", icon: Bot, requiresAuth: true },
       { to: "/cargo", label: "cargo", icon: Container },
       { to: "/orgs", label: "orgs", icon: Users },
     ],
