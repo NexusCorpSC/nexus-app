@@ -259,7 +259,7 @@ fn on_input(lparam: LPARAM) {
             return;
         }
 
-        if up && releases_radial(keyboard.VKey) {
+        if up && releases(Action::Radial, keyboard.VKey) {
             let handle = app.clone();
             let _ = app.run_on_main_thread(move || radial::release(&handle));
             return;
@@ -379,18 +379,19 @@ fn register_mouse(window: HWND, on: bool) {
     }
 }
 
-/// Whether the radial menu's combination is still held — every key of it.
-pub fn radial_held() -> bool {
-    let Some((key, modifiers)) = radial_binding() else {
+/// Whether the combination bound to `action` is still held — every key of it.
+pub fn held(action: Action) -> bool {
+    let Some((key, modifiers)) = binding_of(action) else {
         return false;
     };
 
     is_down(key) && held_modifiers().contains(modifiers)
 }
 
-/// Whether a key going up is one of the radial menu's combination.
-fn releases_radial(key: u16) -> bool {
-    releases(Action::Radial, key)
+/// Whether the combination bound to `action` is known and no longer held.
+/// Unlike `!held(…)`, says nothing about a combination it does not know.
+pub fn let_go(action: Action) -> bool {
+    binding_of(action).is_some() && !held(action)
 }
 
 /// Whether a key going up is one of the combination bound to `action`.
@@ -413,10 +414,6 @@ fn releases(action: Action, key: u16) -> bool {
         || (modifiers.contains(Modifiers::SHIFT)
             && [VK_SHIFT, VK_LSHIFT, VK_RSHIFT].iter().any(|k| k.0 == key))
         || (modifiers.contains(Modifiers::SUPER) && [VK_LWIN, VK_RWIN].iter().any(|k| k.0 == key))
-}
-
-fn radial_binding() -> Option<(u16, Modifiers)> {
-    binding_of(Action::Radial)
 }
 
 fn binding_of(action: Action) -> Option<(u16, Modifiers)> {

@@ -1131,36 +1131,43 @@ fn voice_cancel(window: tauri::Window) {
 }
 
 /// Plays a chunk of an answer read aloud (a WAV, sent as raw bytes) and
-/// returns when it is over — or cut off by `voice_stop_playback`.
+/// returns when it is over — or cut off by `voice_stop_playback`. The page's
+/// reading comes in the `Speech-Generation` header.
 #[tauri::command]
 async fn voice_play(window: tauri::Window, request: tauri::ipc::Request<'_>) -> Result<(), String> {
     let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
         return Err("expected the audio as raw bytes".to_string());
     };
+    let generation = request
+        .headers()
+        .get("Speech-Generation")
+        .and_then(|value| value.to_str().ok())
+        .and_then(|value| value.parse::<u64>().ok())
+        .unwrap_or(0);
 
     #[cfg(windows)]
     {
         let bytes = bytes.clone();
         let owner = window.label().to_string();
-        tauri::async_runtime::spawn_blocking(move || voice::play(&owner, &bytes))
+        tauri::async_runtime::spawn_blocking(move || voice::play(&owner, generation, &bytes))
             .await
             .map_err(|e| e.to_string())?
     }
 
     #[cfg(not(windows))]
     {
-        let _ = (window, bytes);
+        let _ = (window, bytes, generation);
         Err("unsupported".to_string())
     }
 }
 
-/// Cuts off the answer the calling window is reading aloud.
+/// Cuts off the calling window's reading `generation` and any older one.
 #[tauri::command]
-fn voice_stop_playback(window: tauri::Window) {
+fn voice_stop_playback(window: tauri::Window, generation: u64) {
     #[cfg(windows)]
-    voice::stop_playback(window.label());
+    voice::stop_playback(window.label(), generation);
     #[cfg(not(windows))]
-    let _ = window;
+    let _ = (window, generation);
 }
 
 /// Brings the map overlay up — shown, never hidden.

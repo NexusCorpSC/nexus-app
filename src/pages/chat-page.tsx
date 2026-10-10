@@ -19,7 +19,7 @@ import {
   renameChatConversation,
 } from "@/lib/api/chat";
 import { showOverlay } from "@/lib/windows";
-import type { ChatStatus } from "@/types/chat";
+import { type ChatStatus, withRemaining } from "@/types/chat";
 
 /**
  * Nexus Chat in the main window: the conversations on the left, the open one
@@ -85,12 +85,7 @@ export default function ChatPage() {
 
   const voice = useChatVoice({
     conversationId: active?.id,
-    onRemaining: (remaining) =>
-      setStatus((current) => ({
-        ...current,
-        remainingMicros: remaining,
-        spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
-      })),
+    onRemaining: (remaining) => setStatus(withRemaining(remaining)),
   });
 
   const onSaved = useCallback(

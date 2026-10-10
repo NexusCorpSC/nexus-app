@@ -305,7 +305,7 @@ fn watch(app: AppHandle, generation: u64) {
         }
 
         #[cfg(windows)]
-        if !crate::hotkeys::radial_held() {
+        if !crate::hotkeys::held(crate::Action::Radial) {
             release(&app);
             return;
         }

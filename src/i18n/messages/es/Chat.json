@@ -83,6 +83,7 @@
     "readAloudOff": "Respuestas no leídas (haz clic para oírlas)",
     "errors": {
       "mic_failed": "No se pudo abrir el micrófono. Comprueba que hay uno conectado y permitido en la configuración de Windows.",
+      "mic_in_use": "El micrófono ya lo está usando la otra ventana de Nexus Chat.",
       "nothing_heard": "No he oído nada. Inténtalo de nuevo un poco más alto.",
       "too_short": "Demasiado corto: mantén pulsada la tecla mientras hablas.",
       "too_long": "Demasiado largo: un minuto como máximo por pregunta.",

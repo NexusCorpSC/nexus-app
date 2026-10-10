@@ -9,6 +9,8 @@
 //! recording the next tap finishes) and does the rest through the `voice_*`
 //! commands.
 
+#[cfg(windows)]
+use std::sync::atomic::AtomicU64;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use serde::Serialize;
@@ -23,6 +25,14 @@ pub const TALK_EVENT: &str = "chat-talk";
 /// Whether the combination is down. Both shortcut paths report it — the
 /// system's and raw input — so each edge is only acted on once.
 static HELD: AtomicBool = AtomicBool::new(false);
+
+/// Counts the presses, so the watcher of an earlier one stands down.
+#[cfg(windows)]
+static PRESSES: AtomicU64 = AtomicU64::new(0);
+
+/// How often the watcher asks the keyboard whether the keys are still down.
+#[cfg(windows)]
+const WATCH_TICK: std::time::Duration = std::time::Duration::from_millis(50);
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,31 +52,68 @@ pub fn press(app: &AppHandle) -> Result<(), String> {
     // Opening goes on in the background: a slow audio driver must not hold
     // up the main thread. Why it failed, if it does, comes back on `voice_stop`.
     #[cfg(windows)]
-    let error = crate::voice::start(CHAT_WINDOW).err();
+    let (opened, error) = match crate::voice::start(CHAT_WINDOW) {
+        Ok(opened) => (opened, None),
+        Err(error) => (false, Some(error)),
+    };
     #[cfg(not(windows))]
-    let error = Some("unsupported".to_string());
+    let (opened, error) = (false, Some("unsupported".to_string()));
 
     if let Some(error) = &error {
         log(format!("talk: microphone not opened ({error})"));
     }
 
-    if let Err(error) = show_without_focus(app) {
-        // Nobody would close a microphone the page never heard about.
+    let told = show_without_focus(app).and_then(|()| {
+        app.emit_to(
+            CHAT_WINDOW,
+            TALK_EVENT,
+            TalkEvent {
+                phase: "pressed",
+                error,
+            },
+        )
+        .map_err(|e| e.to_string())
+    });
+
+    if let Err(error) = told {
+        // Nobody would close a microphone the page never heard about — one
+        // this press opened; a recording the page started is still its own.
         #[cfg(windows)]
-        crate::voice::cancel(CHAT_WINDOW);
+        if opened {
+            crate::voice::cancel(CHAT_WINDOW);
+        }
+        let _ = opened;
         HELD.store(false, Ordering::SeqCst);
         return Err(error);
     }
 
-    app.emit_to(
-        CHAT_WINDOW,
-        TALK_EVENT,
-        TalkEvent {
-            phase: "pressed",
-            error,
-        },
-    )
-    .map_err(|e| e.to_string())
+    #[cfg(windows)]
+    watch(app.clone());
+
+    Ok(())
+}
+
+/// Lets go of the combination once its keys are no longer down. Raw input and
+/// the shortcut plugin both report the key going up, but one released while
+/// another application was being switched to can slip past both: the page
+/// would keep recording, and the shortcut would do nothing until then.
+#[cfg(windows)]
+fn watch(app: AppHandle) {
+    let generation = PRESSES.fetch_add(1, Ordering::SeqCst) + 1;
+
+    std::thread::spawn(move || loop {
+        std::thread::sleep(WATCH_TICK);
+
+        if !HELD.load(Ordering::SeqCst) || PRESSES.load(Ordering::SeqCst) != generation {
+            return;
+        }
+
+        if crate::hotkeys::let_go(crate::Action::Talk) {
+            let handle = app.clone();
+            let _ = app.run_on_main_thread(move || release(&handle));
+            return;
+        }
+    });
 }
 
 /// The combination, or one of its keys, went up.

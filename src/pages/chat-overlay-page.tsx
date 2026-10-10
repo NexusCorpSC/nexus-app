@@ -21,7 +21,7 @@ import { cancelRecording } from "@/lib/chat-voice";
 import { openMainRoute } from "@/lib/main-window";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { cn } from "@/lib/utils";
-import type { ChatStatus } from "@/types/chat";
+import { type ChatStatus, withRemaining } from "@/types/chat";
 
 /**
  * Nexus Chat over the game: the latest conversation, picked up where it was
@@ -103,12 +103,7 @@ export default function ChatOverlayPage() {
 
   const voice = useChatVoice({
     conversationId: active?.id,
-    onRemaining: (remaining) =>
-      setStatus((current) => ({
-        ...current,
-        remainingMicros: remaining,
-        spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
-      })),
+    onRemaining: (remaining) => setStatus(withRemaining(remaining)),
   });
 
   // The talk shortcut. Its window never gets the focus, so this does what
