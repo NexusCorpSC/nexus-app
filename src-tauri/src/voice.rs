@@ -6,7 +6,8 @@
 //! windows are doing.
 //!
 //! One recording at a time, on its own thread (a `cpal` stream is not `Send`):
-//! [`start`] opens the default microphone, [`stop`] closes it and hands back
+//! [`start`] opens the microphone chosen in Settings (or the system's default
+//! one, [`set_input_device`]), [`stop`] closes it and hands back
 //! what it heard as a WAV the site transcribes (`POST /api/chat/transcribe`),
 //! 16-bit mono at 16 kHz — plenty for a voice, and a minute stays under 2 MB.
 //!
@@ -24,6 +25,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample};
 
 use crate::diagnostics::log;
+use crate::InputDevice;
 
 /// What the site expects, and what it accepts at most.
 const OUTPUT_RATE: u32 = 16_000;
@@ -88,13 +90,6 @@ static RECORDING: Mutex<Option<Recording>> = Mutex::new(None);
 /// The microphone chosen in Settings, by its `cpal` id; `None` is the
 /// system's default one.
 static INPUT_DEVICE: Mutex<Option<String>> = Mutex::new(None);
-
-/// A microphone Settings can offer.
-pub struct InputDevice {
-    /// What to store and hand back to [`set_input_device`].
-    pub id: String,
-    pub name: String,
-}
 
 /// The microphones plugged in right now.
 pub fn input_devices() -> Result<Vec<InputDevice>, String> {
@@ -370,7 +365,8 @@ pub fn stop_playback(owner: &str, generation: u64) {
     }
 }
 
-/// Opens the default microphone in its own format, collecting mono samples.
+/// Opens the chosen microphone (or the default one, [`input_device`]) in its
+/// own format, collecting mono samples.
 fn open(samples: Arc<Mutex<Vec<f32>>>) -> Result<(cpal::Stream, u32), String> {
     let host = cpal::default_host();
     let device = input_device(&host).ok_or_else(|| "no_microphone".to_string())?;

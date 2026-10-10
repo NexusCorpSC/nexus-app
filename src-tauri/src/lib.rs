@@ -1170,16 +1170,23 @@ fn voice_stop_playback(window: tauri::Window, generation: u64) {
     let _ = (window, generation);
 }
 
-/// The microphones Settings can offer for talking to Nexus Chat.
+/// A microphone Settings can offer (`voice.rs`).
+#[derive(Serialize)]
+#[cfg_attr(not(windows), allow(dead_code))]
+pub(crate) struct InputDevice {
+    /// What to store and hand back to `voice_set_input_device`.
+    pub id: String,
+    pub name: String,
+}
+
+/// The microphones Settings can offer for talking to Nexus Chat. Listed off
+/// the main thread: a slow audio driver must not freeze the windows.
 #[tauri::command]
-fn voice_input_devices() -> Result<Vec<serde_json::Value>, String> {
+async fn voice_input_devices() -> Result<Vec<InputDevice>, String> {
     #[cfg(windows)]
-    return voice::input_devices().map(|devices| {
-        devices
-            .into_iter()
-            .map(|device| serde_json::json!({ "id": device.id, "name": device.name }))
-            .collect()
-    });
+    return tauri::async_runtime::spawn_blocking(voice::input_devices)
+        .await
+        .map_err(|e| e.to_string())?;
     #[cfg(not(windows))]
     Ok(Vec::new())
 }

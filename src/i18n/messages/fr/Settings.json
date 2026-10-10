@@ -35,6 +35,8 @@
     "hint": "Le micro écouté quand vous parlez à Nexus Chat (bouton micro ou raccourci « Parler à Nexus Chat »). Pris en compte dès le prochain enregistrement.",
     "missingHint": "Le micro choisi n'est pas branché : celui par défaut du système le remplace jusqu'à son retour.",
     "listError": "Impossible de lister les micros.",
-    "saveError": "Impossible d'enregistrer le micro choisi."
+    "saveError": "Impossible d'enregistrer le micro choisi.",
+    "readError": "Impossible de lire le micro choisi.",
+    "loading": "Micro choisi…"
   }
 }

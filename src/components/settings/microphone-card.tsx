@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "use-intl";
 import { Button, Card, Field, Select } from "@/components/ui";
 import {
@@ -23,31 +23,48 @@ const SYSTEM_DEFAULT = "";
 export function MicrophoneCard() {
   const t = useTranslations("Settings.microphone");
   const [chosen, setChosen] = useState<string>(SYSTEM_DEFAULT);
-  const [microphones, setMicrophones] = useState<Microphone[]>([]);
+  /** `null` until listed: no microphone is called unplugged before that. */
+  const [microphones, setMicrophones] = useState<Microphone[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     void listMicrophones()
-      .then(setMicrophones)
+      .then((listed) => {
+        setMicrophones(listed);
+        setError(null);
+      })
       .catch((cause) => {
         console.error("[settings] cannot list the microphones", cause);
         setError(t("listError"));
       });
   }, [t]);
 
+  // A choice made before the stored one is read wins over it.
+  const touched = useRef(false);
+
   useEffect(() => {
-    void getMicrophone().then((id) => setChosen(id ?? SYSTEM_DEFAULT));
+    void getMicrophone()
+      .then((id) => {
+        if (!touched.current) setChosen(id ?? SYSTEM_DEFAULT);
+      })
+      .catch((cause) => {
+        console.error("[settings] cannot read the microphone", cause);
+        setError(t("readError"));
+      });
     refresh();
-  }, [refresh]);
+  }, [refresh, t]);
 
   async function handleChange(next: string) {
+    touched.current = true;
     const previous = chosen;
     setChosen(next);
     setError(null);
     const id = next === SYSTEM_DEFAULT ? null : next;
     try {
-      await setMicrophone(id);
+      // Applied before it is stored: a choice Rust refuses must not come
+      // back at the next start.
       await applyMicrophone(id);
+      await setMicrophone(id);
     } catch (cause) {
       setChosen(previous);
       setError(cause instanceof Error ? cause.message : t("saveError"));
@@ -56,7 +73,11 @@ export function MicrophoneCard() {
 
   const missing =
     chosen !== SYSTEM_DEFAULT &&
+    microphones !== null &&
     !microphones.some((microphone) => microphone.id === chosen);
+  // Before the list is in, the chosen one is still offered, under its id's
+  // stand-in label rather than as unplugged.
+  const pending = chosen !== SYSTEM_DEFAULT && microphones === null;
 
   return (
     <Card>
@@ -69,12 +90,13 @@ export function MicrophoneCard() {
               onChange={(event) => void handleChange(event.target.value)}
             >
               <option value={SYSTEM_DEFAULT}>{t("systemDefault")}</option>
-              {microphones.map((microphone) => (
+              {(microphones ?? []).map((microphone) => (
                 <option key={microphone.id} value={microphone.id}>
                   {microphone.name}
                 </option>
               ))}
               {missing ? <option value={chosen}>{t("missing")}</option> : null}
+              {pending ? <option value={chosen}>{t("loading")}</option> : null}
             </Select>
           </Field>
           <Button type="button" size="sm" variant="outline" onClick={refresh}>

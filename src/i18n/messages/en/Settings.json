@@ -35,6 +35,8 @@
     "hint": "The microphone listened to when you talk to Nexus Chat (mic button or the \"Talk to Nexus Chat\" shortcut). Used from the next recording on.",
     "missingHint": "The chosen microphone is not plugged in: the system default stands in for it until it is back.",
     "listError": "Could not list the microphones.",
-    "saveError": "Could not save the chosen microphone."
+    "saveError": "Could not save the chosen microphone.",
+    "readError": "Could not read the chosen microphone.",
+    "loading": "Chosen microphone…"
   }
 }
