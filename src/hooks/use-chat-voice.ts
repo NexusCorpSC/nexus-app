@@ -54,13 +54,10 @@ export function useChatVoice({
   const [speaking, setSpeaking] = useState(false);
   const [error, setError] = useState<VoiceError | null>(null);
   const [readAloud, setReadAloudState] = useState(readAloudStored);
-  /** The last thing said, for the conversation to send; `key` tells repeats apart. */
-  const [transcript, setTranscript] = useState<{
-    text: string;
-    key: number;
-  } | null>(null);
+  /** The last thing said, for the conversation to send. */
+  const [transcript, setTranscript] = useState<string | null>(null);
   /** `transcript`, readable as soon as it is set (`takeTranscript`). */
-  const transcriptRef = useRef<{ text: string; key: number } | null>(null);
+  const transcriptRef = useRef<string | null>(null);
   const stateRef = useRef<VoiceState>("idle");
   const pressedAt = useRef(0);
   const starting = useRef<Promise<void> | null>(null);
@@ -96,7 +93,9 @@ export function useChatVoice({
       const stopped = stopRecording();
       stopping.current = stopped.catch(() => {});
       const wav = await stopped;
-      if (wavSeconds(wav) < MIN_SECONDS) {
+      const seconds = wavSeconds(wav);
+      logVoice(`recorded ${seconds.toFixed(1)} s`);
+      if (seconds < MIN_SECONDS) {
         setError("too_short");
         return;
       }
@@ -111,9 +110,8 @@ export function useChatVoice({
       else {
         // Kept in the ref at once: the conversation takes it from its own
         // effect, which runs before any effect of this hook's page.
-        const next = { text, key: (transcriptRef.current?.key ?? 0) + 1 };
-        transcriptRef.current = next;
-        setTranscript(next);
+        transcriptRef.current = text;
+        setTranscript(text);
       }
     } catch (cause) {
       if (!(cause instanceof VoiceFailure))
@@ -211,7 +209,7 @@ export function useChatVoice({
 
   /** What was said, for the conversation to send — once. */
   const takeTranscript = useCallback(() => {
-    const text = transcriptRef.current?.text ?? null;
+    const text = transcriptRef.current;
     transcriptRef.current = null;
     setTranscript(null);
     return text;

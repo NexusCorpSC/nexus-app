@@ -20,6 +20,7 @@ export async function startRecording(): Promise<void> {
   try {
     await invoke("voice_start");
   } catch (cause) {
+    logVoice(`start failed: ${String(cause)}`);
     throw new VoiceFailure(
       String(cause) === "busy" ? "mic_in_use" : "mic_failed",
     );
@@ -35,6 +36,7 @@ export async function stopRecording(): Promise<ArrayBuffer> {
     return await invoke<ArrayBuffer>("voice_stop");
   } catch (cause) {
     const reason = String(cause);
+    logVoice(`stop failed: ${reason}`);
     throw new VoiceFailure(
       reason === "microphone_silent"
         ? "mic_silent"
@@ -159,7 +161,7 @@ async function failure(
   );
 }
 
-/** A call to the site that did not get through (network, timeout). */
+/** A call to the site that did not get through, or came back unreadable. */
 function unreachable(what: string, cause: unknown): VoiceFailure {
   logVoice(`${what} failed: ${String(cause)}`);
   return new VoiceFailure("generic");
@@ -185,13 +187,11 @@ export async function transcribe(
   }
   if (!response.ok) throw await failure(response, "transcription");
   const body = (await response.json().catch((cause: unknown) => {
-    throw unreachable("transcription", cause);
-  })) as { text?: string; remainingMicros?: number };
-  const text = body.text?.trim() ?? "";
-  logVoice(
-    `transcription: ${wavSeconds(wav).toFixed(1)} s heard, ${text.length} characters`,
-  );
-  return { text, remainingMicros: body.remainingMicros };
+    throw unreachable("transcription answer", cause);
+  })) as { text?: string; remainingMicros?: number } | null;
+  const text = body?.text?.trim() ?? "";
+  logVoice(`transcription: ${text.length} characters`);
+  return { text, remainingMicros: body?.remainingMicros };
 }
 
 /** One chunk of an answer, read aloud by the site. */
@@ -200,19 +200,30 @@ export async function speech(
   conversationId: string,
   signal: AbortSignal,
 ): Promise<{ audio: Blob; remainingMicros?: number }> {
-  const response = await chatFetch(
-    `/api/chat/speech?id=${encodeURIComponent(conversationId)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
-      signal,
-    },
-  );
+  // Cut off by a new reading or a stop: nothing went wrong.
+  const unread = (cause: unknown) =>
+    signal.aborted ? cause : unreachable("speech", cause);
+  let response: Response;
+  try {
+    response = await chatFetch(
+      `/api/chat/speech?id=${encodeURIComponent(conversationId)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+        signal,
+      },
+    );
+  } catch (cause) {
+    throw unread(cause);
+  }
   if (!response.ok) throw await failure(response, "speech");
   const remaining = Number(response.headers.get("X-Chat-Remaining-Micros"));
+  const audio = await response.blob().catch((cause: unknown) => {
+    throw unread(cause);
+  });
   return {
-    audio: await response.blob(),
+    audio,
     remainingMicros: response.headers.has("X-Chat-Remaining-Micros")
       ? remaining
       : undefined,

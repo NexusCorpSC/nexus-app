@@ -1123,12 +1123,12 @@ async fn voice_stop(window: tauri::Window) -> Result<tauri::ipc::Response, Strin
 
 /// Notes in the log file how a voice exchange with the site went: the
 /// transcription and reading aloud happen in the page, out of Rust's sight.
+/// Async, so the file is written off the main thread; control characters
+/// are escaped, so a line from the page stays one line.
 #[tauri::command]
-fn voice_log(message: String) {
-    log(format_args!(
-        "voice: {}",
-        message.chars().take(300).collect::<String>()
-    ));
+async fn voice_log(message: String) {
+    let line: String = message.chars().take(300).collect();
+    log(format_args!("voice: {}", line.escape_debug()));
 }
 
 /// Closes the calling window's microphone, keeping nothing.

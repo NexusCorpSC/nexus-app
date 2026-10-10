@@ -175,11 +175,17 @@ export function ChatView({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
 
-  // An error shows under the last message: brought into view too.
-  const voiceError = voice?.error;
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages, chatStatus, voiceError, errorCode]);
+  }, [messages, chatStatus]);
+
+  // An error shows under the last message: brought into view as it comes.
+  const voiceError = voice?.error;
+  useEffect(() => {
+    if (voiceError || errorCode) {
+      endRef.current?.scrollIntoView({ block: "end" });
+    }
+  }, [voiceError, errorCode]);
 
   useEffect(() => {
     inputRef.current?.focus();
