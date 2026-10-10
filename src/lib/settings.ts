@@ -48,6 +48,7 @@ const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_PINNED_MAP = "pinnedMap";
 const KEY_NPS_DESTINATION = "npsDestination";
 const KEY_NPS_SYSTEM = "npsSystem";
+const KEY_NPS_SCREEN = "npsScreen";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
@@ -525,6 +526,40 @@ export async function getNpsSystem(): Promise<string | null> {
 export async function setNpsSystem(slug: string): Promise<void> {
   const store = await getStore();
   await store.set(KEY_NPS_SYSTEM, slug);
+}
+
+/**
+ * Where the game's debug lines (`r_displayInfo 1`) are on screen, as drawn
+ * in the calibration: a box on one monitor, in fractions of it.
+ */
+export type NpsScreenRegion = {
+  monitorX: number;
+  monitorY: number;
+  selection: { x: number; y: number; width: number; height: number };
+};
+
+/** The NPS following the player from those lines (`src-tauri/src/nps_screen.rs`). */
+export type NpsScreenSettings = {
+  enabled: boolean;
+  intervalMs: number;
+  region: NpsScreenRegion | null;
+};
+
+export const DEFAULT_NPS_SCREEN: NpsScreenSettings = {
+  enabled: false,
+  intervalMs: 1000,
+  region: null,
+};
+
+export async function getNpsScreen(): Promise<NpsScreenSettings> {
+  const store = await getStore();
+  const stored = await store.get<Partial<NpsScreenSettings>>(KEY_NPS_SCREEN);
+  return { ...DEFAULT_NPS_SCREEN, ...stored };
+}
+
+export async function setNpsScreen(settings: NpsScreenSettings): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_NPS_SCREEN, settings);
 }
 
 /**

@@ -20,13 +20,17 @@ import type { NpsBody, NpsPlace, PlacePosition } from "@/types/nexus";
  * Coordinates are metres throughout; angles are degrees at the edges.
  */
 
-/** One reading of `/showlocation`, stamped with when it was seen. */
+/**
+ * One reading of the player's position, stamped with when it was seen: from
+ * `/showlocation`, or read off the screen from the game's debug lines.
+ */
 export type Fix = {
   x: number;
   y: number;
   z: number;
   /** Milliseconds since the Unix epoch. */
   at: number;
+  source?: "clipboard" | "screen";
 };
 
 type Vector = { x: number; y: number; z: number };
@@ -41,6 +45,12 @@ export const MAX_TRAVEL_AGE_MS = 10 * 60 * 1000;
 
 /** Under this, in metres a second, one is neither closing in nor moving away. */
 export const MIN_CLOSING_SPEED = 0.5;
+
+/**
+ * Under this, two readings are too close in time to give a direction: read
+ * off the screen every second, the noise of a step would swing it about.
+ */
+export const MIN_TRAVEL_GAP_MS = 2000;
 
 const DEG = Math.PI / 180;
 
@@ -308,4 +318,33 @@ export type CompassPoint = (typeof COMPASS_POINTS)[number];
 
 export function compassPoint(heading: number): CompassPoint {
   return COMPASS_POINTS[Math.round(normalize360(heading) / 45) % 8];
+}
+
+/**
+ * The reading to measure the way one is going from, among the earlier ones
+ * (oldest first, `current` last or not in it): the latest one far enough
+ * behind, in space and in time. Read off the screen every second, the one
+ * just before is a step away and says nothing; with readings by hand, it is
+ * simply the one before. Falls back on the one before when none is far
+ * enough: the overlay then says to move on.
+ */
+export function previousFor(
+  current: Fix,
+  history: Fix[],
+  bodies: NpsBody[],
+): Fix | null {
+  const earlier = history.filter(
+    (one) => one.at < current.at && current.at - one.at <= MAX_TRAVEL_AGE_MS,
+  );
+  if (earlier.length === 0) return null;
+
+  const body = bodyAt(current, bodies);
+  const here = body ? toBodyFrame(current, body) : current;
+  for (let index = earlier.length - 1; index >= 0; index -= 1) {
+    const one = earlier[index];
+    if (current.at - one.at < MIN_TRAVEL_GAP_MS) continue;
+    const there = body ? toBodyFrame(one, body) : one;
+    if (length(sub(here, there)) >= MIN_TRAVEL_M) return one;
+  }
+  return earlier[earlier.length - 1];
 }

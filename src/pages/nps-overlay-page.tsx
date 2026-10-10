@@ -10,7 +10,9 @@ import {
   Crosshair,
   MapPinPlus,
   Navigation,
+  Radar,
   Search,
+  ScanText,
   X,
 } from "lucide-react";
 import { useFormatter, useTranslations } from "use-intl";
@@ -35,7 +37,9 @@ import {
   inSystem,
   MIN_CLOSING_SPEED,
   nearestPlaces,
+  MAX_TRAVEL_AGE_MS,
   positionOf,
+  previousFor,
   toBodyFrame,
   type Fix,
 } from "@/lib/nps";
@@ -45,12 +49,41 @@ import {
   setDestination,
 } from "@/lib/nps-destination";
 import { overlaySkin } from "@/lib/overlay-opacity";
-import { getNpsSystem, setNpsSystem } from "@/lib/settings";
+import {
+  DEFAULT_NPS_SCREEN,
+  getNpsScreen,
+  getNpsSystem,
+  setNpsScreen,
+  setNpsSystem,
+  type NpsScreenRegion,
+  type NpsScreenSettings,
+} from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import type { NpsPlace } from "@/types/nexus";
 
-/** Carries a reading of `/showlocation`, from `src-tauri/src/nps.rs`. */
+/**
+ * Carries a reading of `/showlocation`, from `src-tauri/src/nps.rs`, or one
+ * read off the screen, from `src-tauri/src/nps_screen.rs`.
+ */
 const POSITION_EVENT = "nps://position";
+
+/** How the reading off the screen goes, each time it changes. */
+const SCREEN_STATUS_EVENT = "nps://screen-status";
+
+/** The box drawn around the game's debug lines, and whether it read. */
+const CALIBRATED_EVENT = "nps://calibrated";
+
+/** Read off the screen every second, ten minutes of readings at most. */
+const MAX_HISTORY = 600;
+
+/** The intervals offered for reading the screen, in milliseconds. */
+const SCREEN_INTERVALS = [500, 1000, 2000, 5000];
+
+type ScreenStatus =
+  | { state: "idle" }
+  | { state: "reading" }
+  | { state: "unreadable" }
+  | { state: "failed"; message: string };
 
 /** Under this, the destination is straight ahead. */
 const AHEAD_DEGREES = 10;
@@ -82,12 +115,17 @@ export default function NpsOverlayPage() {
   const mode = useOverlayMode("nps");
   const locked = useOverlayLocked("nps");
 
-  // The latest reading and the one before: two are what give a direction.
-  const [readings, setReadings] = useState<{
-    current: Fix | null;
-    previous: Fix | null;
-  }>({ current: null, previous: null });
-  const { current: fix, previous } = readings;
+  // The readings of the last minutes, oldest first: the latest says where one
+  // is, an earlier one far enough behind which way one is going.
+  const [history, setHistory] = useState<Fix[]>([]);
+  const fix = history.length > 0 ? history[history.length - 1] : null;
+  const [screen, setScreen] = useState<NpsScreenSettings>(DEFAULT_NPS_SCREEN);
+  const [screenLoaded, setScreenLoaded] = useState(false);
+  const [screenStatus, setScreenStatus] = useState<ScreenStatus>({
+    state: "idle",
+  });
+  // Set once a box has been drawn: whether a position was read in it.
+  const [calibration, setCalibration] = useState<boolean | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -107,16 +145,62 @@ export default function NpsOverlayPage() {
 
   useEffect(() => {
     const pending = listen<Fix>(POSITION_EVENT, (event) => {
-      setReadings((last) => ({
-        current: event.payload,
-        previous: last.current,
-      }));
-      setWaiting(false);
+      const reading = event.payload;
+      setHistory((last) =>
+        [...last, reading]
+          .filter((one) => reading.at - one.at <= MAX_TRAVEL_AGE_MS)
+          .slice(-MAX_HISTORY),
+      );
+      if (reading.source !== "screen") setWaiting(false);
     });
     return () => {
       void pending.then((stop) => stop()).catch(() => {});
     };
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    void getNpsScreen()
+      .then((stored) => {
+        if (!alive) return;
+        setScreen(stored);
+        setScreenLoaded(true);
+      })
+      .catch((error) => console.error("cannot read the NPS tracking", error));
+    const status = listen<ScreenStatus>(SCREEN_STATUS_EVENT, (event) =>
+      setScreenStatus(event.payload),
+    );
+    const calibrated = listen<{ region: NpsScreenRegion; found: boolean }>(
+      CALIBRATED_EVENT,
+      (event) => {
+        const { region, found } = event.payload;
+        setCalibration(found);
+        // A box that reads turns the tracking on: that is what it was drawn
+        // for.
+        setScreen((last) => ({
+          ...last,
+          region,
+          enabled: last.enabled || found,
+        }));
+      },
+    );
+    return () => {
+      alive = false;
+      void status.then((stop) => stop()).catch(() => {});
+      void calibrated.then((stop) => stop()).catch(() => {});
+    };
+  }, []);
+
+  // Rust reads the screen; the settings live here, in the store.
+  useEffect(() => {
+    if (!screenLoaded) return;
+    void invoke("nps_screen_configure", { settings: screen }).catch((error) =>
+      console.error("cannot apply the NPS tracking", error),
+    );
+    void setNpsScreen(screen).catch((error) =>
+      console.error("cannot save the NPS tracking", error),
+    );
+  }, [screen, screenLoaded]);
 
   // The destination lives in the store: the main window can set it from a
   // place's page, and this window outlives any hide and show.
@@ -169,10 +253,15 @@ export default function NpsOverlayPage() {
   )?.systemName;
   const geo = fix && body ? geoOf(toBodyFrame(fix, body), body) : null;
   const elsewhere = destination ? !inSystem(destination, system) : false;
+  const previous = useMemo(
+    () => (fix ? previousFor(fix, history, bodies) : null),
+    [fix, history, bodies],
+  );
   const guidance =
     fix && destination && !elsewhere
       ? guide(fix, previous, destination.position, bodies)
       : null;
+  const live = screen.enabled && screen.region !== null;
   const nearest = fix
     ? nearestPlaces(fix, places, bodies, system, 1)[0]
     : undefined;
@@ -195,6 +284,13 @@ export default function NpsOverlayPage() {
       console.error("cannot copy /showlocation", error);
       setCopyError(true);
     }
+  }
+
+  function calibrate() {
+    setCalibration(null);
+    void invoke("nps_calibrate").catch((error) =>
+      console.error("cannot start the NPS calibration", error),
+    );
   }
 
   function close() {
@@ -268,11 +364,19 @@ export default function NpsOverlayPage() {
               <Crosshair className="size-4" />
               {t("refresh")}
             </button>
+            <ScreenTracking
+              settings={screen}
+              status={screenStatus}
+              calibration={calibration}
+              locked={locked}
+              onChange={setScreen}
+              onCalibrate={calibrate}
+            />
             {copyError ? (
               <p className="text-[11px] text-red-300">{t("copyFailed")}</p>
             ) : waiting ? (
               <p className="text-[11px] text-sky-200">{t("waiting")}</p>
-            ) : !fix ? (
+            ) : !fix && !live ? (
               <p className="text-[11px] text-slate-400">{t("hint")}</p>
             ) : null}
           </section>
@@ -372,6 +476,7 @@ export default function NpsOverlayPage() {
                   <Guidance
                     guidance={guidance}
                     hasPrevious={Boolean(previous)}
+                    live={fix.source === "screen"}
                   />
                 )}
               </>
@@ -443,9 +548,12 @@ function formatDuration(
 function Guidance({
   guidance,
   hasPrevious,
+  live,
 }: {
   guidance: NonNullable<ReturnType<typeof guide>>;
   hasPrevious: boolean;
+  /** Followed off the screen: no need to refresh by hand. */
+  live: boolean;
 }) {
   const t = useTranslations("NpsOverlay");
   const format = useFormatter();
@@ -496,7 +604,11 @@ function Guidance({
         </p>
       ) : (
         <p className="text-[11px] text-slate-400">
-          {hasPrevious ? t("moveMore") : t("moveThenRefresh")}
+          {live
+            ? t("moveLive")
+            : hasPrevious
+              ? t("moveMore")
+              : t("moveThenRefresh")}
         </p>
       )}
 
@@ -513,6 +625,105 @@ function Guidance({
               ? t("receding")
               : t("steady")}
         </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * Following the player off the screen: the game's debug lines, read every
+ * second or so in the box the player drew around them.
+ */
+function ScreenTracking({
+  settings,
+  status,
+  calibration,
+  locked,
+  onChange,
+  onCalibrate,
+}: {
+  settings: NpsScreenSettings;
+  status: ScreenStatus;
+  calibration: boolean | null;
+  locked: boolean;
+  onChange: (settings: NpsScreenSettings) => void;
+  onCalibrate: () => void;
+}) {
+  const t = useTranslations("NpsOverlay");
+  const format = useFormatter();
+  const calibrated = settings.region !== null;
+
+  const message = !calibrated
+    ? { tone: "text-slate-400", text: t("screen.setup") }
+    : calibration === false
+      ? { tone: "text-amber-200", text: t("screen.calibrationEmpty") }
+      : !settings.enabled
+        ? null
+        : status.state === "unreadable"
+          ? { tone: "text-amber-200", text: t("screen.unreadable") }
+          : status.state === "failed"
+            ? {
+                tone: "text-red-300",
+                text: t("screen.failed", { message: status.message }),
+              }
+            : status.state === "reading"
+              ? { tone: "text-sky-200", text: t("screen.reading") }
+              : null;
+
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          disabled={locked || !calibrated}
+          onClick={() => onChange({ ...settings, enabled: !settings.enabled })}
+          aria-pressed={settings.enabled}
+          title={settings.enabled ? t("screen.stop") : t("screen.start")}
+          className={cn(
+            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] transition disabled:opacity-40",
+            settings.enabled && calibrated
+              ? "border-sky-300/40 bg-sky-300/10 text-sky-100 hover:bg-sky-300/20"
+              : "border-white/15 bg-white/5 hover:bg-white/10",
+          )}
+        >
+          <Radar className="size-3.5 shrink-0" />
+          <span className="truncate">
+            {settings.enabled && calibrated ? t("screen.on") : t("screen.off")}
+          </span>
+        </button>
+        <button
+          type="button"
+          disabled={locked}
+          onClick={onCalibrate}
+          title={t("screen.calibrateHint")}
+          className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+        >
+          <ScanText className="size-3.5" />
+          {calibrated ? t("screen.recalibrate") : t("screen.calibrate")}
+        </button>
+        <select
+          value={settings.intervalMs}
+          disabled={locked}
+          onChange={(event) =>
+            onChange({ ...settings, intervalMs: Number(event.target.value) })
+          }
+          title={t("screen.interval")}
+          aria-label={t("screen.interval")}
+          className="shrink-0 rounded-lg border border-white/15 bg-black/40 px-1 py-1 text-[12px] text-slate-200 focus:outline-none disabled:opacity-40"
+        >
+          {SCREEN_INTERVALS.map((ms) => (
+            <option key={ms} value={ms}>
+              {t("screen.every", {
+                seconds: format.number(ms / 1000, {
+                  maximumFractionDigits: 1,
+                }),
+              })}
+            </option>
+          ))}
+        </select>
+      </div>
+      {message ? (
+        <p className={cn("text-[11px]", message.tone)}>{message.text}</p>
       ) : null}
     </div>
   );

@@ -3,5 +3,6 @@
   "reading": "Reading the text…",
   "encodeFailed": "The image could not be encoded.",
   "unreadable": "This image cannot be read.",
-  "tooLarge": "The image is still too large, even scaled down."
+  "tooLarge": "The image is still too large, even scaled down.",
+  "npsHint": "Draw a box around the “Zone: … Pos:” lines shown by r_displayInfo 1 · Esc to cancel"
 }

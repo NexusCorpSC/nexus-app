@@ -4,7 +4,7 @@
 //! pixels and `Windows.Media.Ocr` — the engine shipped with the OS — recognises
 //! the text, so there is no Tesseract binary or training data to bundle.
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 /// Smallest selection worth running OCR on, in pixels. Below this a drag is
 /// almost certainly a stray click.
@@ -48,7 +48,7 @@ const UNSUPPORTED: &str = "Screen capture is only available on Windows.";
 /// The fields are only read by the Windows capture path, but the type stays
 /// cross-platform because it is the Tauri command's argument.
 #[cfg_attr(not(windows), allow(dead_code))]
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Selection {
     pub x: f64,
     pub y: f64,
@@ -145,6 +145,14 @@ fn winerr(context: &'static str) -> impl Fn(windows::core::Error) -> String {
 
 #[cfg(windows)]
 impl Capture {
+    /// Crops the selection out of the snapshot, unread: the NPS reads it its
+    /// own way (`nps_screen.rs`).
+    pub fn crop(&self, selection: Selection) -> Result<xcap::image::RgbaImage, String> {
+        let (left, top, width, height) =
+            selection.to_pixels(self.image.width(), self.image.height())?;
+        Ok(xcap::image::imageops::crop_imm(&self.image, left, top, width, height).to_image())
+    }
+
     /// Crops the selection out of the snapshot and returns the text found in it.
     ///
     /// Async because `windows-future` 0.3 dropped the blocking `get()` on
@@ -155,36 +163,7 @@ impl Capture {
 
         let region =
             xcap::image::imageops::crop_imm(&self.image, left, top, width, height).to_image();
-
-        // The engine is trained on document-sized text and reads a game HUD
-        // poorly at native resolution: letters come back as their look-alikes
-        // and short words are dropped outright. Enlarging the crop first costs
-        // a few milliseconds on a region this small and buys back most of it.
-        let (region, width, height) = match upscale(width, height) {
-            Some(factor) => {
-                let (scaled_width, scaled_height) = (width * factor, height * factor);
-                (
-                    xcap::image::imageops::resize(
-                        &region,
-                        scaled_width,
-                        scaled_height,
-                        xcap::image::imageops::FilterType::Lanczos3,
-                    ),
-                    scaled_width,
-                    scaled_height,
-                )
-            }
-            None => (region, width, height),
-        };
-
-        // Windows OCR expects BGRA8 while xcap hands back RGBA8. Alpha is
-        // forced opaque: a screenshot carries none, and a zero would blank the
-        // bitmap the engine sees.
-        let mut pixels = region.into_raw();
-        for pixel in pixels.as_chunks_mut::<4>().0 {
-            pixel.swap(0, 2);
-            pixel[3] = 0xFF;
-        }
+        let (mut pixels, width, height) = prepare(region);
 
         let text = read_text(&pixels, width, height).await?;
         if !is_work_order(&text) {
@@ -196,14 +175,7 @@ impl Capture {
         // and inverted into dark text on white, as Nexus Tools prepares the
         // same panel for Tesseract, it keeps them. Only the work order is read
         // again: the mission log is read well enough as it is.
-        for pixel in pixels.as_chunks_mut::<4>().0 {
-            let [b, g, r, _] = *pixel;
-            let grey = (299 * u32::from(r) + 587 * u32::from(g) + 114 * u32::from(b)) / 1000;
-            let inverted = 255 - grey.min(255) as u8;
-            pixel[0] = inverted;
-            pixel[1] = inverted;
-            pixel[2] = inverted;
-        }
+        invert(&mut pixels);
 
         let inverted = read_text(&pixels, width, height).await?;
         Ok(if is_work_order(&inverted) {
@@ -212,6 +184,91 @@ impl Capture {
             text
         })
     }
+}
+
+/// Enlarges a crop and turns it into the BGRA8 pixels the engine reads.
+///
+/// The engine is trained on document-sized text and reads a game HUD poorly
+/// at native resolution: letters come back as their look-alikes and short
+/// words are dropped outright. Enlarging the crop first costs a few
+/// milliseconds on a region this small and buys back most of it.
+#[cfg(windows)]
+fn prepare(region: xcap::image::RgbaImage) -> (Vec<u8>, u32, u32) {
+    let (width, height) = region.dimensions();
+    let (region, width, height) = match upscale(width, height) {
+        Some(factor) => {
+            let (scaled_width, scaled_height) = (width * factor, height * factor);
+            (
+                xcap::image::imageops::resize(
+                    &region,
+                    scaled_width,
+                    scaled_height,
+                    xcap::image::imageops::FilterType::Lanczos3,
+                ),
+                scaled_width,
+                scaled_height,
+            )
+        }
+        None => (region, width, height),
+    };
+
+    // Windows OCR expects BGRA8 while xcap hands back RGBA8. Alpha is forced
+    // opaque: a screenshot carries none, and a zero would blank the bitmap the
+    // engine sees.
+    let mut pixels = region.into_raw();
+    for pixel in pixels.as_chunks_mut::<4>().0 {
+        pixel.swap(0, 2);
+        pixel[3] = 0xFF;
+    }
+
+    (pixels, width, height)
+}
+
+/// Greys BGRA8 pixels and inverts them: light text on a dark game scene
+/// becomes dark text on white, the engine's home ground.
+#[cfg(windows)]
+fn invert(pixels: &mut [u8]) {
+    for pixel in pixels.as_chunks_mut::<4>().0 {
+        let [b, g, r, _] = *pixel;
+        let grey = (299 * u32::from(r) + 587 * u32::from(g) + 114 * u32::from(b)) / 1000;
+        let inverted = 255 - grey.min(255) as u8;
+        pixel[0] = inverted;
+        pixel[1] = inverted;
+        pixel[2] = inverted;
+    }
+}
+
+/// Grabs one region of a monitor as it is now, without freezing anything:
+/// what the NPS reads every second or so (`nps_screen.rs`). `origin` is the
+/// monitor's top-left corner on the virtual desktop. Blocking.
+#[cfg(windows)]
+pub fn grab_region(
+    origin: (i32, i32),
+    selection: Selection,
+) -> Result<xcap::image::RgbaImage, String> {
+    let monitor = xcap::Monitor::from_point(origin.0, origin.1)
+        .map_err(|e| format!("no monitor found at ({}, {}): {e}", origin.0, origin.1))?;
+    let width = monitor
+        .width()
+        .map_err(|e| format!("cannot read monitor width: {e}"))?;
+    let height = monitor
+        .height()
+        .map_err(|e| format!("cannot read monitor height: {e}"))?;
+    let (left, top, width, height) = selection.to_pixels(width, height)?;
+
+    monitor
+        .capture_region(left, top, width, height)
+        .map_err(|e| format!("screen capture failed: {e}"))
+}
+
+/// Reads a region grabbed by [`grab_region`], as it is or `inverted`.
+#[cfg(windows)]
+pub async fn read_region(region: xcap::image::RgbaImage, inverted: bool) -> Result<String, String> {
+    let (mut pixels, width, height) = prepare(region);
+    if inverted {
+        invert(&mut pixels);
+    }
+    read_text(&pixels, width, height).await
 }
 
 /// Whether text read looks like a completed refinery work order: its column

@@ -27,7 +27,7 @@ use crate::clipboard;
 use crate::diagnostics::log;
 
 /// Carries a [`Fix`] to every window.
-const POSITION_EVENT: &str = "nps://position";
+pub(crate) const POSITION_EVENT: &str = "nps://position";
 
 /// The window whose being on screen turns the watch on.
 const NPS_WINDOW: &str = "nps";
@@ -48,6 +48,9 @@ pub struct Fix {
     pub z: f64,
     /// When it was seen, in milliseconds since the Unix epoch.
     pub at: u64,
+    /// Where it was read: `clipboard` for `/showlocation`, `screen` for
+    /// `r_displayInfo` (`nps_screen.rs`).
+    pub source: &'static str,
 }
 
 fn coordinates_pattern() -> &'static Regex {
@@ -70,14 +73,14 @@ pub fn parse(text: &str) -> Option<(f64, f64, f64)> {
     [x, y, z].iter().all(|v| v.is_finite()).then_some((x, y, z))
 }
 
-fn now_ms() -> u64 {
+pub(crate) fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|elapsed| elapsed.as_millis() as u64)
         .unwrap_or(0)
 }
 
-fn watched(app: &AppHandle) -> bool {
+pub(crate) fn watched(app: &AppHandle) -> bool {
     app.get_webview_window(NPS_WINDOW)
         .and_then(|window| window.is_visible().ok())
         .unwrap_or(false)
@@ -112,7 +115,16 @@ pub(crate) fn install(app: &AppHandle) {
             };
 
             log(format!("nps: position read ({x:.0}, {y:.0}, {z:.0})"));
-            if let Err(error) = app.emit(POSITION_EVENT, Fix { x, y, z, at }) {
+            if let Err(error) = app.emit(
+                POSITION_EVENT,
+                Fix {
+                    x,
+                    y,
+                    z,
+                    at,
+                    source: "clipboard",
+                },
+            ) {
                 log(format!("nps: cannot send the position: {error}"));
             }
         }
