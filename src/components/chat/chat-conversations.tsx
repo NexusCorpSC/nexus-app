@@ -103,7 +103,7 @@ function ConversationRow({
     <li
       className={cn(
         "group flex items-center gap-1 rounded-lg",
-        current ? "bg-nexus-accent/13" : "hover:bg-nexus-accent/8",
+        current ? "bg-[#1e6aa8]/35" : "hover:bg-[#1e6aa8]/15",
       )}
     >
       <button

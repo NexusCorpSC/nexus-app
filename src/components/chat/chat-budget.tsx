@@ -23,13 +23,17 @@ export function resetDate(status: ChatStatus, locale: string): string {
   });
 }
 
-/** What the player has used of this month's budget, and when it starts again. */
+/**
+ * What the player has used of this month's budget, on one line with a thin
+ * bar; when it starts again is only in plain sight where asked for.
+ */
 export function ChatBudget({
   status,
-  compact = false,
+  showReset = false,
 }: {
   status: ChatStatus;
-  compact?: boolean;
+  /** When the budget starts again, in plain sight (the chat tab's sidebar). */
+  showReset?: boolean;
 }) {
   const t = useTranslations("Chat.budget");
   const locale = useLocale();
@@ -40,10 +44,10 @@ export function ChatBudget({
   const resets = t("resets", { date: resetDate(status, locale) });
 
   return (
-    <div className="space-y-1.5" title={resets}>
-      <div className="flex items-baseline justify-between gap-2 text-xs text-nexus-muted">
-        {!compact && <span>{t("label")}</span>}
-        <span className="font-mono whitespace-nowrap">
+    <div className="space-y-1.5">
+      <div className="flex items-baseline justify-between gap-2 text-xs text-[#8fb1d6]">
+        <span>{t("label")}</span>
+        <span className="font-mono whitespace-nowrap text-[#cfe2f7]">
           {t("spent", {
             spent: formatUsd(status.spentMicros, locale),
             budget: formatUsd(status.monthlyBudgetMicros, locale),
@@ -51,7 +55,7 @@ export function ChatBudget({
         </span>
       </div>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-nexus-accent/12"
+        className="h-0.5 overflow-hidden rounded-full bg-[#8fd0ff]/12"
         role="progressbar"
         aria-label={t("label")}
         aria-valuemin={0}
@@ -61,12 +65,14 @@ export function ChatBudget({
         <div
           className={cn(
             "h-full rounded-full",
-            ratio >= 0.9 ? "bg-amber-300" : "bg-nexus-accent/70",
+            ratio >= 0.9 ? "bg-amber-300" : "bg-[#8fd0ff]",
           )}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
-      {!compact && <p className="text-[11px] text-nexus-dim">{resets}</p>}
+      <p className={showReset ? "text-[11px] text-[#8fb1d6]" : "sr-only"}>
+        {resets}
+      </p>
     </div>
   );
 }
