@@ -352,5 +352,7 @@ label {
     #2386c8 60%,
     #0d3a66
   );
-  box-shadow: 0 0 24px rgb(58 160 220 / 0.45);
+  /* The glow as a `filter`: a `ring-*` or `shadow-*` on the same element
+     (the microphone while recording) does not wipe it out. */
+  filter: drop-shadow(0 0 12px rgb(58 160 220 / 0.55));
 }

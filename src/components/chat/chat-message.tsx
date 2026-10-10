@@ -214,7 +214,9 @@ function ToolChips({ parts }: { parts: DynamicToolUIPart[] }) {
             )}
           >
             {chip.icon}
-            <span className="truncate">{chip.label}</span>
+            <span className="truncate" title={chip.label}>
+              {chip.label}
+            </span>
           </li>
         ))}
       </ul>

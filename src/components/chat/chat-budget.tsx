@@ -25,9 +25,16 @@ export function resetDate(status: ChatStatus, locale: string): string {
 
 /**
  * What the player has used of this month's budget, on one line with a thin
- * bar; when it starts again is in the tooltip.
+ * bar; when it starts again is only in plain sight where asked for.
  */
-export function ChatBudget({ status }: { status: ChatStatus }) {
+export function ChatBudget({
+  status,
+  showReset = false,
+}: {
+  status: ChatStatus;
+  /** When the budget starts again, in plain sight (the chat tab's sidebar). */
+  showReset?: boolean;
+}) {
   const t = useTranslations("Chat.budget");
   const locale = useLocale();
   const ratio =
@@ -37,7 +44,7 @@ export function ChatBudget({ status }: { status: ChatStatus }) {
   const resets = t("resets", { date: resetDate(status, locale) });
 
   return (
-    <div className="space-y-1.5" title={resets}>
+    <div className="space-y-1.5">
       <div className="flex items-baseline justify-between gap-2 text-xs text-[#8fb1d6]">
         <span>{t("label")}</span>
         <span className="font-mono whitespace-nowrap text-[#cfe2f7]">
@@ -63,7 +70,9 @@ export function ChatBudget({ status }: { status: ChatStatus }) {
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
-      <p className="sr-only">{resets}</p>
+      <p className={showReset ? "text-[11px] text-[#8fb1d6]" : "sr-only"}>
+        {resets}
+      </p>
     </div>
   );
 }

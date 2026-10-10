@@ -394,7 +394,7 @@ export function ChatView({
                   pendingApproval ? t("placeholderApproval") : t("placeholder")
                 }
                 aria-label={t("placeholder")}
-                className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-2xl border border-[#8fd0ff]/35 bg-transparent px-3.5 py-2 text-[13.5px] text-nexus-white placeholder:text-[#5f84ad] focus:border-[#8fd0ff]/70 focus:outline-none"
+                className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-2xl border border-[#8fd0ff]/35 bg-transparent px-3.5 py-2 text-[13.5px] text-nexus-white placeholder:text-[#6e93bc] focus:border-[#8fd0ff]/70 focus:outline-none"
               />
               {voiceOpen &&
                 voice &&

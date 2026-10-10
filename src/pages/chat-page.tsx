@@ -171,7 +171,7 @@ export default function ChatPage() {
               />
             </nav>
             <div className="border-t border-[#8cbeff]/18 p-3">
-              <ChatBudget status={status} />
+              <ChatBudget status={status} showReset />
             </div>
           </aside>
           <section className="flex min-w-0 flex-1 flex-col">
