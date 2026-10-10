@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 import { AppWindow, Bot, MessageSquarePlus, X } from "lucide-react";
@@ -11,10 +12,12 @@ import { ChatView } from "@/components/chat/chat-view";
 import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { useActiveChat } from "@/hooks/use-active-chat";
+import { useChatVoice } from "@/hooks/use-chat-voice";
 import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
 import { CHAT_STATUS_KEY, getChatStatus } from "@/lib/api/chat";
+import { cancelRecording } from "@/lib/chat-voice";
 import { openMainRoute } from "@/lib/main-window";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { cn } from "@/lib/utils";
@@ -26,7 +29,20 @@ import type { ChatStatus } from "@/types/chat";
  * cursor in the input, and Escape puts it away, handing the keyboard back to
  * the game. It only talks to the site while it is on screen: when it is shown
  * (its window gains focus) and when the player sends something.
+ *
+ * The talk shortcut (held) brings it up without the focus, the game keeping
+ * the keyboard: the microphone is already open (`src-tauri/src/talk.rs`), and
+ * what the player says goes to the latest conversation, the answer read
+ * aloud.
  */
+
+/** The talk shortcut's two edges, from `talk.rs`. */
+const TALK_EVENT = "chat-talk";
+
+interface TalkEvent {
+  phase: "pressed" | "released";
+  error?: string | null;
+}
 export default function ChatOverlayPage() {
   const t = useTranslations("Chat");
   const { user, loading } = useAuth();
@@ -85,22 +101,84 @@ export default function ChatOverlayPage() {
     [queryClient],
   );
 
+  const voice = useChatVoice({
+    conversationId: active?.id,
+    onRemaining: (remaining) =>
+      setStatus((current) => ({
+        ...current,
+        remainingMicros: remaining,
+        spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
+      })),
+  });
+
+  // The talk shortcut. Its window never gets the focus, so this does what
+  // the focus would have: the status, and the latest conversation.
+  const { press, release } = voice;
+  const talkState = useRef({
+    signedIn,
+    status,
+    resume,
+    refetch: statusQuery.refetch,
+  });
+  useEffect(() => {
+    talkState.current = {
+      signedIn,
+      status,
+      resume,
+      refetch: statusQuery.refetch,
+    };
+  });
+  useEffect(() => {
+    const pending = listen<TalkEvent>(TALK_EVENT, ({ payload }) => {
+      if (payload.phase === "released") {
+        release();
+        return;
+      }
+      const {
+        signedIn: online,
+        status: known,
+        resume: pickUp,
+        refetch,
+      } = talkState.current;
+      const closed =
+        !online ||
+        (known &&
+          (!known.enabled ||
+            known.status !== "granted" ||
+            !known.voice ||
+            known.remainingMicros <= 0));
+      if (closed) {
+        void cancelRecording();
+        return;
+      }
+      void refetch();
+      void pickUp();
+      void press({ error: payload.error });
+    });
+    return () => {
+      void pending.then((unlisten) => unlisten());
+    };
+  }, [press, release]);
+
   function close() {
     void invoke("close_chat_overlay");
   }
 
   // Escape puts the window away wherever the focus is — on the page itself
   // once a confirmation button it was on has gone.
+  // A recording under way is dropped first.
+  const { cancel: cancelTalk } = voice;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !event.defaultPrevented) {
         event.preventDefault();
+        if (cancelTalk()) return;
         void invoke("close_chat_overlay");
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [cancelTalk]);
 
   function openInMain() {
     const route = active?.updatedAt
@@ -202,6 +280,7 @@ export default function ChatOverlayPage() {
             onSaved={(id, savedAt) => void markSaved(id, savedAt)}
             onBusyChange={setBusy}
             focusSignal={focusSignal}
+            voice={voice}
             compact
           />
         ) : (

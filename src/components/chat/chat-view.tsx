@@ -6,11 +6,21 @@ import {
   lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import { useLocale, useTranslations } from "use-intl";
-import { ArrowUp, Loader2, RotateCcw, Square } from "lucide-react";
+import {
+  ArrowUp,
+  Loader2,
+  Mic,
+  RotateCcw,
+  Square,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import { Button } from "@/components/ui";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { resetDate } from "@/components/chat/chat-budget";
+import type { ChatVoice } from "@/hooks/use-chat-voice";
 import { chatErrorCode, chatFetch, requestChatStop } from "@/lib/api/chat";
+import { speechText, textPartCount } from "@/lib/chat-voice";
 import { cn } from "@/lib/utils";
 import {
   CHAT_MESSAGE_MAX_LENGTH,
@@ -29,10 +39,19 @@ function hasConfirmedWrite(message: ChatUIMessage): boolean {
 }
 
 /**
+ * The conversations whose current turn started by voice: the answer is made
+ * for speaking and read aloud (confirmations included).
+ */
+const voiceTurns = new Set<string>();
+
+/**
  * One Nexus Chat conversation: the messages, the input, the confirmations.
  * The site keeps the history: each request sends only the last message (the
  * player's new one, or their answers to the confirmations). The same as the
  * site's `components/chat/chat-view.tsx`, through the HTTP plugin.
+ *
+ * With `voice` (and voice open on the site), the player can also talk: what
+ * they said is sent as their message, and the answer is read aloud.
  */
 export function ChatView({
   id,
@@ -43,6 +62,7 @@ export function ChatView({
   compact = false,
   focusSignal = 0,
   onBusyChange,
+  voice,
 }: {
   id: string;
   initialMessages: ChatUIMessage[];
@@ -55,12 +75,22 @@ export function ChatView({
   focusSignal?: number;
   /** Whether an answer is on its way, for a caller that must not swap it out. */
   onBusyChange?: (busy: boolean) => void;
+  /** Talking to the chat, owned by the page (`useChatVoice`). */
+  voice?: ChatVoice;
 }) {
   const t = useTranslations("Chat");
   const locale = useLocale();
   const [input, setInput] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  // The text parts already read, by message: after a confirmation the rest of
+  // the answer is read without going over the start again.
+  const spoken = useRef(new Map<string, number>());
+  const voiceRef = useRef(voice);
+
+  useEffect(() => {
+    voiceRef.current = voice;
+  });
 
   const transport = useMemo(
     () =>
@@ -68,7 +98,11 @@ export function ChatView({
         api: "/api/chat",
         fetch: chatFetch,
         prepareSendMessagesRequest: ({ id: chatId, messages }) => ({
-          body: { id: chatId, message: messages[messages.length - 1] },
+          body: {
+            id: chatId,
+            message: messages[messages.length - 1],
+            ...(voiceTurns.has(chatId) && { voice: true }),
+          },
         }),
       }),
     [],
@@ -89,6 +123,12 @@ export function ChatView({
     transport,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     onFinish: ({ message, isError }) => {
+      const reader = voiceRef.current;
+      if (!isError && voiceTurns.has(id) && reader?.readAloud) {
+        const from = spoken.current.get(message.id) ?? 0;
+        spoken.current.set(message.id, textPartCount(message));
+        reader.speak(speechText(message, from));
+      }
       const remaining = message.metadata?.remainingMicros;
       if (remaining !== undefined) {
         onStatus((current) => ({
@@ -117,6 +157,8 @@ export function ChatView({
 
   const busy = chatStatus === "submitted" || chatStatus === "streaming";
   const exhausted = status.remainingMicros <= 0;
+  const voiceOpen = Boolean(voice && status.voice);
+  const canTalk = voiceOpen && !exhausted && !busy;
   const errorCode = error ? chatErrorCode(error) : null;
   const last = messages[messages.length - 1];
   // Retrying replays the turn: not once it made a confirmed write (an order
@@ -142,11 +184,41 @@ export function ChatView({
     inputRef.current?.focus();
   }, [id, focusSignal]);
 
+  useEffect(
+    () => () => {
+      voiceTurns.delete(id);
+    },
+    [id],
+  );
+
+  // What the player said goes out as their message, once the answer before
+  // it is over.
+  const takeTranscript = voice?.takeTranscript;
+  const hasTranscript = Boolean(voice?.transcript);
+  useEffect(() => {
+    if (!hasTranscript || !takeTranscript || busy || exhausted) return;
+    const text = takeTranscript();
+    if (!text) return;
+    clearError();
+    voiceTurns.add(id);
+    void sendMessage({ text });
+  }, [
+    busy,
+    clearError,
+    exhausted,
+    hasTranscript,
+    id,
+    sendMessage,
+    takeTranscript,
+  ]);
+
   function submit(event?: React.FormEvent) {
     event?.preventDefault();
     const text = input.trim();
     if (!text || busy || exhausted) return;
     clearError();
+    voiceTurns.delete(id);
+    voice?.stopSpeaking();
     void sendMessage({ text });
     setInput("");
   }
@@ -185,6 +257,11 @@ export function ChatView({
         {last?.metadata?.budgetExhausted && (
           <p className="text-xs text-amber-200">{t("stoppedBudget")}</p>
         )}
+        {voice?.error && (
+          <p className="text-xs text-amber-200" role="status">
+            {t(`voice.errors.${voice.error}`)}
+          </p>
+        )}
         {errorCode && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-[13px] text-red-200">
             <span>{t(`errors.${errorCode}`)}</span>
@@ -218,54 +295,141 @@ export function ChatView({
             {t("budget.exhausted", { date: resetDate(status, locale) })}
           </p>
         ) : (
-          <div className="flex items-end gap-2">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (
-                  event.key === "Enter" &&
-                  !event.shiftKey &&
-                  !event.nativeEvent.isComposing
-                ) {
-                  event.preventDefault();
-                  submit();
-                }
-              }}
-              rows={1}
-              maxLength={CHAT_MESSAGE_MAX_LENGTH}
-              placeholder={
-                pendingApproval ? t("placeholderApproval") : t("placeholder")
-              }
-              aria-label={t("placeholder")}
-              className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
-            />
-            {busy ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-9.5 px-0"
-                onClick={() => {
-                  void stop();
-                  void requestChatStop().catch(() => {});
-                }}
-                aria-label={t("stop")}
-                title={t("stop")}
+          <div className="space-y-2">
+            {voiceOpen && voice && voice.state !== "idle" && (
+              <p
+                className="flex items-center gap-2 px-1 text-xs text-nexus-accent"
+                role="status"
               >
-                <Square className="size-4" aria-hidden />
-              </Button>
-            ) : (
-              <Button
-                type="submit"
-                className="w-9.5 px-0"
-                disabled={!input.trim()}
-                aria-label={t("send")}
-                title={t("send")}
-              >
-                <ArrowUp className="size-4" aria-hidden />
-              </Button>
+                {voice.state === "recording" ? (
+                  <span className="size-2 animate-pulse rounded-full bg-red-400" />
+                ) : (
+                  <Loader2 className="size-3.5 animate-spin" aria-hidden />
+                )}
+                {t(`voice.${voice.state}`)}
+              </p>
             )}
+            <div className="flex items-end gap-2">
+              {voiceOpen && voice && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-9.5 px-0"
+                  onClick={() => voice.setReadAloud(!voice.readAloud)}
+                  aria-pressed={voice.readAloud}
+                  aria-label={t(
+                    voice.readAloud
+                      ? "voice.readAloudOn"
+                      : "voice.readAloudOff",
+                  )}
+                  title={t(
+                    voice.readAloud
+                      ? "voice.readAloudOn"
+                      : "voice.readAloudOff",
+                  )}
+                >
+                  {voice.readAloud ? (
+                    <Volume2 className="size-4" aria-hidden />
+                  ) : (
+                    <VolumeX className="size-4" aria-hidden />
+                  )}
+                </Button>
+              )}
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !event.nativeEvent.isComposing
+                  ) {
+                    event.preventDefault();
+                    submit();
+                  }
+                }}
+                rows={1}
+                maxLength={CHAT_MESSAGE_MAX_LENGTH}
+                placeholder={
+                  pendingApproval ? t("placeholderApproval") : t("placeholder")
+                }
+                aria-label={t("placeholder")}
+                className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+              />
+              {voiceOpen &&
+                voice &&
+                (voice.speaking ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-9.5 px-0"
+                    onClick={voice.stopSpeaking}
+                    aria-label={t("voice.stopSpeaking")}
+                    title={t("voice.stopSpeaking")}
+                  >
+                    <VolumeX className="size-4" aria-hidden />
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant={voice.state === "recording" ? "danger" : "outline"}
+                    className="w-9.5 px-0"
+                    disabled={!canTalk || voice.state === "transcribing"}
+                    onPointerDown={(event) => {
+                      if (event.button !== 0) return;
+                      event.currentTarget.setPointerCapture(event.pointerId);
+                      void voice.press();
+                    }}
+                    onPointerUp={() => voice.release()}
+                    onPointerCancel={() => voice.release()}
+                    onKeyDown={(event) => {
+                      if (
+                        (event.key === " " || event.key === "Enter") &&
+                        !event.repeat
+                      ) {
+                        event.preventDefault();
+                        void voice.press();
+                      }
+                    }}
+                    onKeyUp={(event) => {
+                      if (event.key === " " || event.key === "Enter") {
+                        voice.release();
+                      }
+                    }}
+                    aria-pressed={voice.state === "recording"}
+                    aria-label={t("voice.talk")}
+                    title={t("voice.talkHint")}
+                  >
+                    <Mic className="size-4" aria-hidden />
+                  </Button>
+                ))}
+              {busy ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-9.5 px-0"
+                  onClick={() => {
+                    void stop();
+                    void requestChatStop().catch(() => {});
+                  }}
+                  aria-label={t("stop")}
+                  title={t("stop")}
+                >
+                  <Square className="size-4" aria-hidden />
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-9.5 px-0"
+                  disabled={!input.trim()}
+                  aria-label={t("send")}
+                  title={t("send")}
+                >
+                  <ArrowUp className="size-4" aria-hidden />
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </form>

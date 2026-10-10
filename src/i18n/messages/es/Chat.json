@@ -72,5 +72,30 @@
     "busy": "Otra respuesta sigue en curso (en el sitio, la app o la superposición). Inténtalo de nuevo en un momento.",
     "unavailable": "Las herramientas de Nexus Tools no responden. Inténtalo de nuevo en un momento.",
     "generic": "La respuesta se interrumpió. Inténtalo de nuevo."
+  },
+  "voice": {
+    "talk": "Hablar",
+    "talkHint": "Habla con Nexus Chat: mantén pulsado y suelta para enviar, o pulsa una vez para empezar y otra para terminar. En el juego, mantén el atajo «Hablar con Nexus Chat».",
+    "recording": "Escuchando… Suelta para enviar.",
+    "transcribing": "Transcribiendo…",
+    "stopSpeaking": "Detener la lectura",
+    "readAloudOn": "Respuestas leídas en voz alta (haz clic para silenciar)",
+    "readAloudOff": "Respuestas no leídas (haz clic para oírlas)",
+    "errors": {
+      "mic_failed": "No se pudo abrir el micrófono. Comprueba que hay uno conectado y permitido en la configuración de Windows.",
+      "nothing_heard": "No he oído nada. Inténtalo de nuevo un poco más alto.",
+      "too_short": "Demasiado corto: mantén pulsada la tecla mientras hablas.",
+      "too_long": "Demasiado largo: un minuto como máximo por pregunta.",
+      "voice_disabled": "La voz no está disponible por ahora.",
+      "unauthorized": "Tu sesión ha caducado. Vuelve a iniciar sesión.",
+      "disabled": "Nexus Chat está cerrado por ahora.",
+      "no_access": "Tu acceso a Nexus Chat no está abierto.",
+      "budget_exhausted": "Tu presupuesto del mes se ha agotado.",
+      "invalid_request": "No se pudo leer la grabación.",
+      "not_found": "No se encuentra esta conversación.",
+      "busy": "Otra respuesta sigue en curso. Inténtalo de nuevo en un momento.",
+      "unavailable": "La voz no responde. Inténtalo de nuevo en un momento.",
+      "generic": "La voz se interrumpió. Inténtalo de nuevo."
+    }
   }
 }

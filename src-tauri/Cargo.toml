@@ -1,6 +1,6 @@
 [package]
 name = "nexus-app"
-version = "0.37.0"
+version = "0.38.0"
 description = "Desktop client for Nexus Tools"
 authors = ["Nexus Corp"]
 edition = "2021"
@@ -50,10 +50,15 @@ regex = "1"
 # engine shipped with the OS — no Tesseract binary or training data to bundle.
 [target."cfg(windows)".dependencies]
 xcap = "0.9.7"
+# The microphone, for talking to Nexus Chat (`src/voice.rs`): WASAPI, read
+# from Rust so a hidden overlay or the game holding the focus cannot stop it.
+cpal = "0.18.2"
 windows = { version = "0.62.2", features = [
     "Foundation",
     "Globalization",
     "Graphics_Imaging",
+    # Answers read aloud by Nexus Chat (`src/voice.rs`).
+    "Win32_Media_Audio",
     "Media_Ocr",
     "Storage_Streams",
     # Raw input, so the shortcuts are seen while a game holds the keyboard.

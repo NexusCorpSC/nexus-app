@@ -41,7 +41,7 @@ use windows::Win32::UI::WindowsAndMessaging::{
 };
 
 use crate::diagnostics::log;
-use crate::{radial, trigger, Action};
+use crate::{radial, talk, trigger, Action};
 
 /// Keyboard, as the HID usage tables spell it.
 const HID_USAGE_PAGE_GENERIC: u16 = 0x01;
@@ -266,6 +266,13 @@ fn on_input(lparam: LPARAM) {
         }
     }
 
+    // Letting go of any key of the talk combination ends the recording.
+    if up && talk::is_held() && releases(Action::Talk, keyboard.VKey) {
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || talk::release(&handle));
+        return;
+    }
+
     if up {
         return;
     }
@@ -273,6 +280,18 @@ fn on_input(lparam: LPARAM) {
     let Some(action) = matching_action(keyboard.VKey) else {
         return;
     };
+
+    // Held as well: the microphone stays open until the keys are let go.
+    // Pressing while held does nothing, which covers auto-repeat.
+    if action == Action::Talk {
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if let Err(error) = talk::press(&handle) {
+                log(format!("talk failed: {error}"));
+            }
+        });
+        return;
+    }
 
     // Held, not fired: the menu stays up until the keys are let go, so the
     // debounce of `trigger` — meant for a press that fires once — is no place
@@ -371,7 +390,12 @@ pub fn radial_held() -> bool {
 
 /// Whether a key going up is one of the radial menu's combination.
 fn releases_radial(key: u16) -> bool {
-    let Some((bound, modifiers)) = radial_binding() else {
+    releases(Action::Radial, key)
+}
+
+/// Whether a key going up is one of the combination bound to `action`.
+fn releases(action: Action, key: u16) -> bool {
+    let Some((bound, modifiers)) = binding_of(action) else {
         return false;
     };
 
@@ -392,11 +416,15 @@ fn releases_radial(key: u16) -> bool {
 }
 
 fn radial_binding() -> Option<(u16, Modifiers)> {
+    binding_of(Action::Radial)
+}
+
+fn binding_of(action: Action) -> Option<(u16, Modifiers)> {
     let bindings = BINDINGS.lock().ok()?;
 
     bindings
         .iter()
-        .find(|binding| binding.action == Action::Radial)
+        .find(|binding| binding.action == action)
         .map(|binding| (binding.key, binding.modifiers))
 }
 

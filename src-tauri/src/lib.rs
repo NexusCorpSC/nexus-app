@@ -11,7 +11,10 @@ mod notifications;
 mod nps;
 mod radial;
 mod screenshots;
+mod talk;
 mod tray;
+#[cfg(windows)]
+mod voice;
 
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -47,7 +50,7 @@ const MAP_WINDOW: &str = "map";
 /// the game's `/showlocation` (`nps.rs`).
 const NPS_WINDOW: &str = "nps";
 /// Nexus Chat: the site's assistant, over the game.
-const CHAT_WINDOW: &str = "chat";
+pub(crate) const CHAT_WINDOW: &str = "chat";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 /// The large, centred notifications: what is asked of the whole squad.
 pub(crate) const BANNERS_WINDOW: &str = "banners";
@@ -294,6 +297,8 @@ pub(crate) enum Action {
     Map,
     Nps,
     Chat,
+    /// Held rather than fired: see `talk.rs`.
+    Talk,
     Opacity,
     Lock,
     /// Held rather than fired: see `radial.rs`.
@@ -314,6 +319,7 @@ impl Action {
             Action::Map => "map",
             Action::Nps => "nps",
             Action::Chat => "chat",
+            Action::Talk => "talk",
             Action::Opacity => "opacity",
             Action::Lock => "lock",
             Action::Radial => "radial",
@@ -360,6 +366,8 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Nps => toggle_overlay(app, NPS_WINDOW),
         Action::Chat => toggle_overlay(app, CHAT_WINDOW),
+        // Never routed here either: both shortcut paths handle its two edges.
+        Action::Talk => talk::press(app),
         Action::Opacity => flip_all_overlay_opacity(app),
         Action::Lock => flip_all_overlay_locks(app),
         // Never routed here by the shortcut paths, which open and close the
@@ -415,6 +423,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the chat sends.
     #[serde(default = "default_chat_shortcut")]
     chat: String,
+    /// Missing from what a frontend older than the voice sends.
+    #[serde(default = "default_talk_shortcut")]
+    talk: String,
     opacity: String,
     /// Missing from what a frontend older than the shortcut sends.
     #[serde(default = "default_lock_shortcut")]
@@ -440,6 +451,10 @@ fn default_chat_shortcut() -> String {
     "Ctrl+Shift+KeyH".to_string()
 }
 
+fn default_talk_shortcut() -> String {
+    "Ctrl+Shift+KeyJ".to_string()
+}
+
 impl Default for ShortcutSettings {
     fn default() -> Self {
         Self {
@@ -452,6 +467,7 @@ impl Default for ShortcutSettings {
             map: "Ctrl+Shift+KeyM".to_string(),
             nps: default_nps_shortcut(),
             chat: default_chat_shortcut(),
+            talk: default_talk_shortcut(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
             radial: default_radial_shortcut(),
@@ -498,6 +514,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Map, &requested.map),
         (Action::Nps, &requested.nps),
         (Action::Chat, &requested.chat),
+        (Action::Talk, &requested.talk),
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
         (Action::Radial, &requested.radial),
@@ -1061,6 +1078,63 @@ fn close_chat_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, CHAT_WINDOW)
 }
 
+/// Opens the microphone for Nexus Chat (see `voice.rs`). Does nothing when it
+/// is already open — the talk shortcut opens it before the page asks.
+#[tauri::command]
+fn voice_start() -> Result<(), String> {
+    #[cfg(windows)]
+    return voice::start();
+    #[cfg(not(windows))]
+    Err("unsupported".to_string())
+}
+
+/// Closes the microphone and hands back what it heard: a 16-bit mono WAV at
+/// 16 kHz, as raw bytes rather than a JSON array of numbers.
+#[tauri::command]
+fn voice_stop() -> Result<tauri::ipc::Response, String> {
+    #[cfg(windows)]
+    return voice::stop().map(tauri::ipc::Response::new);
+    #[cfg(not(windows))]
+    Err("unsupported".to_string())
+}
+
+/// Closes the microphone, keeping nothing.
+#[tauri::command]
+fn voice_cancel() {
+    #[cfg(windows)]
+    voice::cancel();
+}
+
+/// Plays a chunk of an answer read aloud (a WAV, sent as raw bytes) and
+/// returns when it is over — or cut off by `voice_stop_playback`.
+#[tauri::command]
+async fn voice_play(request: tauri::ipc::Request<'_>) -> Result<(), String> {
+    let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
+        return Err("expected the audio as raw bytes".to_string());
+    };
+
+    #[cfg(windows)]
+    {
+        let bytes = bytes.clone();
+        tauri::async_runtime::spawn_blocking(move || voice::play(&bytes))
+            .await
+            .map_err(|e| e.to_string())?
+    }
+
+    #[cfg(not(windows))]
+    {
+        let _ = bytes;
+        Err("unsupported".to_string())
+    }
+}
+
+/// Cuts off the answer being read aloud.
+#[tauri::command]
+fn voice_stop_playback() {
+    #[cfg(windows)]
+    voice::stop_playback();
+}
+
 /// Brings the map overlay up — shown, never hidden.
 ///
 /// Called by the pin button on a place's page, which promises to show the map:
@@ -1383,6 +1457,11 @@ pub fn run() {
             open_map_overlay,
             close_nps_overlay,
             close_chat_overlay,
+            voice_start,
+            voice_stop,
+            voice_cancel,
+            voice_play,
+            voice_stop_playback,
             nps::nps_copy_command,
             toggle_overlay_opacity,
             set_overlay_opacity,
@@ -1493,6 +1572,20 @@ pub fn run() {
                                 }
                             }
                             ShortcutState::Released => radial::release(app),
+                        }
+                        return;
+                    }
+
+                    // Talking to the chat is held too: the microphone is open
+                    // while the keys are down.
+                    if action == Some(Action::Talk) {
+                        match event.state {
+                            ShortcutState::Pressed => {
+                                if let Err(error) = talk::press(app) {
+                                    log(format!("talk failed: {error}"));
+                                }
+                            }
+                            ShortcutState::Released => talk::release(app),
                         }
                         return;
                     }

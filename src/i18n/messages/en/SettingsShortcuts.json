@@ -52,6 +52,11 @@
       "hint": "Hold, aim at an action with the mouse, release. Esc cancels.",
       "detail": "Hold the combination to show the menu in the middle of the screen, flick the mouse toward an action, then release to run it. Releasing without moving, or Esc, cancels. READY and Down/Up only appear in a squad; lock and screen capture, always."
     },
+    "talk": {
+      "label": "Hold to talk to Nexus Chat",
+      "hint": "Speak while holding, release to send. The answer is read aloud.",
+      "detail": "Hold the combination and speak: the microphone opens, the chat overlay comes up without taking the game's focus, and your question is sent when you let go. A short tap starts recording, a second one sends it. The answer is read aloud (you can mute it in the overlay) and counts toward your monthly budget."
+    },
     "lock": {
       "label": "Lock",
       "hint": "Clicks go through to the game; the radial menu stays usable.",

@@ -72,5 +72,30 @@
     "busy": "Another answer is still in progress (on the site, the app or the overlay). Try again in a moment.",
     "unavailable": "The Nexus Tools tools are not responding. Try again in a moment.",
     "generic": "The answer was interrupted. Try again."
+  },
+  "voice": {
+    "talk": "Talk",
+    "talkHint": "Talk to Nexus Chat: hold and release to send, or press once to start and once to finish. In game, hold the \"Talk to Nexus Chat\" shortcut.",
+    "recording": "Listening… Release to send.",
+    "transcribing": "Transcribing…",
+    "stopSpeaking": "Stop reading",
+    "readAloudOn": "Answers read aloud (click to mute)",
+    "readAloudOff": "Answers not read aloud (click to hear them)",
+    "errors": {
+      "mic_failed": "The microphone could not open. Check that one is plugged in and allowed in Windows settings.",
+      "nothing_heard": "I didn't hear anything. Try again a little louder.",
+      "too_short": "Too short: hold the key while you speak.",
+      "too_long": "Too long: one minute at most per question.",
+      "voice_disabled": "Voice is not available right now.",
+      "unauthorized": "Your session has expired. Sign in again.",
+      "disabled": "Nexus Chat is closed for now.",
+      "no_access": "Your access to Nexus Chat is not open.",
+      "budget_exhausted": "Your budget for this month is used up.",
+      "invalid_request": "The recording could not be read.",
+      "not_found": "This conversation cannot be found.",
+      "busy": "Another answer is still in progress. Try again in a moment.",
+      "unavailable": "Voice is not responding. Try again in a moment.",
+      "generic": "Voice was interrupted. Try again."
+    }
   }
 }

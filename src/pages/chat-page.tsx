@@ -9,6 +9,7 @@ import { ChatBudget } from "@/components/chat/chat-budget";
 import { ChatConversations } from "@/components/chat/chat-conversations";
 import { ChatView } from "@/components/chat/chat-view";
 import { useActiveChat } from "@/hooks/use-active-chat";
+import { useChatVoice } from "@/hooks/use-chat-voice";
 import {
   CHAT_CONVERSATIONS_KEY,
   CHAT_STATUS_KEY,
@@ -81,6 +82,16 @@ export default function ChatPage() {
     },
     [queryClient],
   );
+
+  const voice = useChatVoice({
+    conversationId: active?.id,
+    onRemaining: (remaining) =>
+      setStatus((current) => ({
+        ...current,
+        remainingMicros: remaining,
+        spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
+      })),
+  });
 
   const onSaved = useCallback(
     (id: string, savedAt?: string) => {
@@ -182,6 +193,7 @@ export default function ChatPage() {
                 onStatus={setStatus}
                 onSaved={onSaved}
                 onBusyChange={setBusy}
+                voice={voice}
               />
             ) : (
               <LoadingState />

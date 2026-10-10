@@ -9,6 +9,7 @@
     "map": "Map",
     "nps": "NPS",
     "chat": "Nexus Chat",
+    "talk": "Talk to Nexus Chat",
     "opacity": "Overlay opacity",
     "lock": "Overlay lock",
     "radial": "Quick radial menu"

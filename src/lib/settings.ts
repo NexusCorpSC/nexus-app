@@ -38,6 +38,7 @@ const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_NPS = "shortcutNps";
 const KEY_SHORTCUT_CHAT = "shortcutChat";
+const KEY_SHORTCUT_TALK = "shortcutTalk";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
 const KEY_SHORTCUT_RADIAL = "shortcutRadial";
@@ -135,6 +136,8 @@ export const DEFAULT_SHORTCUTS = {
   map: "Ctrl+Shift+KeyM",
   nps: "Ctrl+Shift+KeyK",
   chat: "Ctrl+Shift+KeyH",
+  // Held, not pressed: the microphone is open while it is down.
+  talk: "Ctrl+Shift+KeyJ",
   opacity: "Ctrl+Shift+KeyO",
   lock: "Ctrl+Shift+KeyL",
   // Held, not pressed: the radial menu stays up while it is down.
@@ -167,6 +170,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
     nps: (await store.get<string>(KEY_SHORTCUT_NPS)) ?? DEFAULT_SHORTCUTS.nps,
     chat:
       (await store.get<string>(KEY_SHORTCUT_CHAT)) ?? DEFAULT_SHORTCUTS.chat,
+    talk:
+      (await store.get<string>(KEY_SHORTCUT_TALK)) ?? DEFAULT_SHORTCUTS.talk,
     opacity:
       (await store.get<string>(KEY_SHORTCUT_OPACITY)) ??
       DEFAULT_SHORTCUTS.opacity,
@@ -189,6 +194,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
   await store.set(KEY_SHORTCUT_NPS, shortcuts.nps);
   await store.set(KEY_SHORTCUT_CHAT, shortcuts.chat);
+  await store.set(KEY_SHORTCUT_TALK, shortcuts.talk);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
   await store.set(KEY_SHORTCUT_RADIAL, shortcuts.radial);
