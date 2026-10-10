@@ -39,6 +39,18 @@ const NPS_WINDOW: &str = "nps";
 const MIN_INTERVAL_MS: u64 = 250;
 const MAX_INTERVAL_MS: u64 = 10_000;
 
+/// Two readings of the same line agree when no axis differs by more than this,
+/// in metres: the game writes tenths of a metre.
+const AGREE_M: f64 = 1.0;
+
+/// Faster than this, in metres a second, a move is taken for a misread digit
+/// until the next reading confirms it: no ship goes that fast out of quantum
+/// travel, and a wrong digit in the kilometres jumps further.
+const MAX_SPEED: f64 = 5_000.0;
+
+/// Allowance on top of [`MAX_SPEED`], in metres, for readings close in time.
+const JUMP_MARGIN_M: f64 = 50.0;
+
 /// How long to wait, with the tracking off, before looking at the settings
 /// again.
 const IDLE_INTERVAL: Duration = Duration::from_millis(500);
@@ -175,14 +187,20 @@ fn coordinates(text: &str) -> Option<(f64, f64, f64)> {
     Some((x, y, z))
 }
 
-/// The player's position in the frame of the star system, in metres, from
-/// the text read in the box, or `None` when it is not there.
-///
-/// The `SolarSystem` line is the one: it is in the frame `/showlocation`
-/// uses. The `Root` line, the same numbers in Stanton, stands in for it when
-/// it could not be read.
-pub fn parse(text: &str) -> Option<(f64, f64, f64)> {
-    let mut root = None;
+type Position = (f64, f64, f64);
+
+/// The two lines that carry the position, as read in the box.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Lines {
+    /// `Zone: SolarSystem_… Pos:`, in the frame `/showlocation` uses.
+    pub solar: Option<Position>,
+    /// `Zone: Root Pos:`: the same numbers in Stanton, not in Pyro.
+    pub root: Option<Position>,
+}
+
+/// The position lines found in the text read in the box, in metres.
+pub fn lines(text: &str) -> Lines {
+    let mut found = Lines::default();
     for line in text.lines() {
         let Some(captures) = pos_pattern().captures(line) else {
             continue;
@@ -191,29 +209,89 @@ pub fn parse(text: &str) -> Option<(f64, f64, f64)> {
         let Some(position) = coordinates(&captures[2]) else {
             continue;
         };
-        if zone.contains("solarsystem") {
-            return Some(position);
-        }
-        if zone.contains("root") && root.is_none() {
-            root = Some(position);
+        if zone.contains("solarsystem") && found.solar.is_none() {
+            found.solar = Some(position);
+        } else if zone.contains("root") && found.root.is_none() {
+            found.root = Some(position);
         }
     }
-    root
+    found
 }
 
-#[cfg(windows)]
-async fn read_coordinates(
-    image: xcap::image::RgbaImage,
-) -> Result<Option<(f64, f64, f64)>, String> {
-    // Light text over the game: read as it is first, then greyed and
-    // inverted, which is what the engine reads best when the scene behind is
-    // bright.
-    let text = crate::capture::read_region(image.clone(), false).await?;
-    if let Some(position) = parse(&text) {
-        return Ok(Some(position));
+fn same(a: Position, b: Position) -> bool {
+    (a.0 - b.0).abs() <= AGREE_M && (a.1 - b.1).abs() <= AGREE_M && (a.2 - b.2).abs() <= AGREE_M
+}
+
+/// The position two independent readings agree on, or `None`.
+///
+/// The OCR mistakes a digit for another now and then — a 2 read as a 9 — and
+/// one reading alone cannot tell. So the box is read twice, as it is and
+/// inverted, and a position counts once two readings give it: the
+/// `SolarSystem` line of both, or that line and the `Root` line, which carry
+/// the same numbers in Stanton. The same mistake twice, on two different
+/// images or on two different lines, is rare enough.
+pub fn agreed(plain: Lines, inverted: Lines) -> Option<Position> {
+    let solars = [plain.solar, inverted.solar];
+    let roots = [plain.root, inverted.root];
+    for (index, solar) in solars.iter().enumerate() {
+        let Some(solar) = *solar else { continue };
+        let other = solars[1 - index];
+        let witnesses = std::iter::once(other).chain(roots).flatten();
+        if witnesses.into_iter().any(|witness| same(solar, witness)) {
+            return Some(solar);
+        }
     }
-    let text = crate::capture::read_region(image, true).await?;
-    Ok(parse(&text))
+    // No `SolarSystem` line confirmed: both `Root` lines, then.
+    match roots {
+        [Some(a), Some(b)] if solars == [None, None] && same(a, b) => Some(a),
+        _ => None,
+    }
+}
+
+/// Keeps the readings that agree with the way the player moves: a jump no
+/// ship can make is held back until the next reading lands next to it — the
+/// end of a quantum travel, a respawn — and dropped otherwise, as the
+/// misread it most likely was.
+#[derive(Default)]
+pub struct Motion {
+    last: Option<(Position, u64)>,
+    pending: Option<(Position, u64)>,
+}
+
+fn reachable(from: (Position, u64), to: (Position, u64)) -> bool {
+    let ((a, from_at), (b, to_at)) = (from, to);
+    let seconds = to_at.saturating_sub(from_at) as f64 / 1_000.0;
+    let distance = ((b.0 - a.0).powi(2) + (b.1 - a.1).powi(2) + (b.2 - a.2).powi(2)).sqrt();
+    distance <= MAX_SPEED * seconds + JUMP_MARGIN_M
+}
+
+impl Motion {
+    /// Whether the reading is to be passed on.
+    pub fn accept(&mut self, position: Position, at: u64) -> bool {
+        let reading = (position, at);
+        let accepted = match (self.last, self.pending) {
+            (None, _) => true,
+            (Some(last), _) if reachable(last, reading) => true,
+            (_, Some(pending)) => reachable(pending, reading),
+            _ => false,
+        };
+        if accepted {
+            self.last = Some(reading);
+            self.pending = None;
+        } else {
+            self.pending = Some(reading);
+        }
+        accepted
+    }
+}
+
+/// Reads the box twice, as it is and inverted: light text over the game
+/// reads best one way or the other depending on the scene behind.
+#[cfg(windows)]
+async fn read_both(image: xcap::image::RgbaImage) -> Result<(Lines, Lines), String> {
+    let plain = crate::capture::read_region(image.clone(), false).await?;
+    let inverted = crate::capture::read_region(image, true).await?;
+    Ok((lines(&plain), lines(&inverted)))
 }
 
 /// Records the box just drawn in the capture window, tries it on the frozen
@@ -230,8 +308,8 @@ pub(crate) async fn calibrate(
     };
 
     #[cfg(windows)]
-    let found = match read_coordinates(frame.crop(selection)?).await {
-        Ok(found) => found.is_some(),
+    let found = match read_both(frame.crop(selection)?).await {
+        Ok((plain, inverted)) => agreed(plain, inverted).is_some(),
         Err(error) => {
             log(format!("nps: cannot read the calibrated box: {error}"));
             false
@@ -263,6 +341,8 @@ pub(crate) fn install(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
         let mut last = Status::Idle;
+        #[cfg(windows)]
+        let mut motion = Motion::default();
         loop {
             let settings = app.state::<Tracking>().get();
             #[cfg(windows)]
@@ -285,8 +365,10 @@ pub(crate) fn install(app: &AppHandle) {
             {
                 let status = match read_once(region).await {
                     Ok(Some(fix)) => {
-                        if let Err(error) = app.emit(POSITION_EVENT, fix) {
-                            log(format!("nps: cannot send the position: {error}"));
+                        if motion.accept((fix.x, fix.y, fix.z), fix.at) {
+                            if let Err(error) = app.emit(POSITION_EVENT, fix) {
+                                log(format!("nps: cannot send the position: {error}"));
+                            }
                         }
                         Status::Reading
                     }
@@ -315,7 +397,8 @@ async fn read_once(region: Region) -> Result<Option<Fix>, String> {
     .await
     .map_err(|e| e.to_string())??;
 
-    Ok(read_coordinates(image).await?.map(|(x, y, z)| Fix {
+    let (plain, inverted) = read_both(image).await?;
+    Ok(agreed(plain, inverted).map(|(x, y, z)| Fix {
         x,
         y,
         z,
@@ -327,6 +410,12 @@ async fn read_once(region: Region) -> Result<Option<Fix>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// What one reading gives: the `SolarSystem` line, or the `Root` line.
+    fn parse(text: &str) -> Option<Position> {
+        let found = lines(text);
+        found.solar.or(found.root)
+    }
 
     const DISPLAY_INFO: &str = "\
 Zone: Hangar_MediumFront_RestStop_868650250231 Pos: 3.05m -126.68m 7.96m
@@ -382,6 +471,50 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
         );
         assert_eq!(parse("FPS 60.0 - 16.7ms [8.9ms]"), None);
         assert_eq!(parse(""), None);
+    }
+
+    #[test]
+    fn a_misread_digit_is_not_confirmed() {
+        let right = lines(DISPLAY_INFO);
+        // A 2 read as a 9 on the `SolarSystem` line, and the `Root` line lost.
+        let wrong =
+            lines("Zone: SolarSystem_8629 Pos: 16729220.4026km -19942047.4831km 9239.7445km");
+        assert_eq!(agreed(wrong, Lines::default()), None);
+        assert!(agreed(wrong, Lines::default()).is_none());
+        // The other reading of the same image confirms the right line.
+        assert_eq!(agreed(wrong, right), right.solar);
+    }
+
+    #[test]
+    fn the_root_line_confirms_the_solar_system_line() {
+        let both = lines(DISPLAY_INFO);
+        assert_eq!(agreed(both, Lines::default()), both.solar);
+        let solar_only = Lines { root: None, ..both };
+        assert_eq!(agreed(solar_only, Lines::default()), None);
+        assert_eq!(agreed(solar_only, solar_only), both.solar);
+    }
+
+    #[test]
+    fn roots_alone_need_each_other() {
+        let root = Some((1.0, 2.0, 3.0));
+        let only = Lines { solar: None, root };
+        assert_eq!(agreed(only, Lines::default()), None);
+        assert_eq!(agreed(only, only), root);
+    }
+
+    #[test]
+    fn a_jump_waits_for_the_next_reading() {
+        let mut motion = Motion::default();
+        assert!(motion.accept((0.0, 0.0, 0.0), 0));
+        assert!(motion.accept((200.0, 0.0, 0.0), 1_000));
+        // Seven kilometres in a second: a misread, dropped…
+        assert!(!motion.accept((7_200.0, 0.0, 0.0), 2_000));
+        // …since the next reading carries on from before it.
+        assert!(motion.accept((400.0, 0.0, 0.0), 3_000));
+        // A quantum jump: held back, then confirmed by the reading after.
+        assert!(!motion.accept((9.0e9, 0.0, 0.0), 4_000));
+        assert!(motion.accept((9.0e9 + 100.0, 0.0, 0.0), 5_000));
+        assert!(motion.accept((9.0e9 + 300.0, 0.0, 0.0), 6_000));
     }
 
     #[test]
