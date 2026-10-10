@@ -39,6 +39,10 @@ const START_TIMEOUT: Duration = Duration::from_secs(5);
 /// open for good, nor hand its old audio to the next press.
 const ABANDON_AFTER: Duration = Duration::from_secs(MAX_SECONDS as u64 + 10);
 
+/// Below this peak, a recording is digital silence rather than a quiet room:
+/// a live microphone always picks up some noise.
+const SILENCE: f32 = 1e-5;
+
 /// Tells recordings apart, so a stale one's thread cannot drop a newer one.
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -259,6 +263,19 @@ pub fn stop(owner: &str) -> Result<Vec<u8>, String> {
         .lock()
         .map_err(|_| "voice samples are poisoned".to_string())?;
 
+    let peak = peak(&samples);
+    log(format!(
+        "recording: {:.1} s at {rate} Hz, peak {peak:.4}",
+        samples.len() as f64 / f64::from(rate.max(1)),
+    ));
+
+    // Nothing at all, not even the hiss of a live microphone: Windows hands
+    // out silence when desktop apps may not use the microphone, or the device
+    // is muted. Sending it would only come back as "nothing heard".
+    if samples.is_empty() || peak < SILENCE {
+        return Err("microphone_silent".to_string());
+    }
+
     Ok(wav(&resample(&samples, rate)))
 }
 
@@ -392,6 +409,15 @@ fn open(samples: Arc<Mutex<Vec<f32>>>) -> Result<(cpal::Stream, u32), String> {
         .play()
         .map_err(|error| format!("microphone_failed: {error}"))?;
 
+    let name = device
+        .description()
+        .map(|description| description.name().to_string())
+        .unwrap_or_else(|_| "?".to_string());
+    log(format!(
+        "microphone opened: {name} ({rate} Hz, {channels} ch, {:?})",
+        supported.sample_format()
+    ));
+
     Ok((stream, rate))
 }
 
@@ -425,6 +451,13 @@ where
             None,
         )
         .map_err(|error| format!("microphone_failed: {error}"))
+}
+
+/// The loudest sample, as a fraction of full scale.
+fn peak(samples: &[f32]) -> f32 {
+    samples
+        .iter()
+        .fold(0.0, |peak, sample| peak.max(sample.abs()))
 }
 
 /// Down to `OUTPUT_RATE`, averaging each window: enough of a low-pass for a
@@ -487,6 +520,12 @@ mod tests {
         let out = resample(&samples, 48_000);
         assert_eq!(out.len(), 16_000);
         assert!(out.iter().all(|sample| (sample - 0.5).abs() < f32::EPSILON));
+    }
+
+    #[test]
+    fn finds_the_peak() {
+        assert_eq!(peak(&[0.1, -0.5, 0.25]), 0.5);
+        assert_eq!(peak(&[]), 0.0);
     }
 
     #[test]

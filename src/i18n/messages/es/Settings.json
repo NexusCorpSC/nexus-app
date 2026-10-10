@@ -37,6 +37,14 @@
     "listError": "No se pudieron listar los micrófonos.",
     "saveError": "No se pudo guardar el micrófono elegido.",
     "readError": "No se pudo leer el micrófono elegido.",
-    "loading": "Micrófono elegido…"
+    "loading": "Micrófono elegido…",
+    "test": "Probar el micrófono",
+    "testRecording": "Habla… ({seconds} s)",
+    "testPlaying": "Reproduciendo la grabación…",
+    "testLevel": "Nivel captado: {percent} %",
+    "testQuiet": "Casi no se ha captado nada: comprueba que es el micrófono correcto y que no está silenciado.",
+    "testSilent": "Silencio total: Windows no transmite nada. En Configuración de Windows › Privacidad › Micrófono, comprueba que las aplicaciones de escritorio pueden usar el micrófono y que no está silenciado.",
+    "testInUse": "El micrófono ya lo está usando Nexus Chat en la otra ventana.",
+    "testFailed": "No se pudo abrir el micrófono. Comprueba que está conectado."
   }
 }

@@ -8,12 +8,30 @@ import {
 import {
   applyMicrophone,
   listMicrophones,
+  playWav,
+  startRecording,
+  stopRecording,
+  VoiceFailure,
+  wavPeak,
   type Microphone,
 } from "@/lib/chat-voice";
 import { getMicrophone, setMicrophone } from "@/lib/settings";
 
 /** The option standing for the system's default microphone. */
 const SYSTEM_DEFAULT = "";
+
+/** How long the test records. */
+const TEST_SECONDS = 3;
+
+/** Below this peak, the test says next to nothing was picked up. */
+const QUIET_PEAK = 0.02;
+
+type TestState = "idle" | "recording" | "playing";
+
+/** What the test heard, or why it heard nothing. */
+type TestResult =
+  | { kind: "level"; percent: number; quiet: boolean }
+  | { kind: "error"; key: "testSilent" | "testInUse" | "testFailed" };
 
 /**
  * The microphone Nexus Chat listens to. A chosen one that is unplugged stays
@@ -71,6 +89,45 @@ export function MicrophoneCard() {
     }
   }
 
+  const [testState, setTestState] = useState<TestState>("idle");
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+
+  /**
+   * Records a few seconds with the chosen microphone, says how loud it was,
+   * and plays it back: the quickest way to tell a muted or wrong microphone
+   * from a transcription problem.
+   */
+  async function handleTest() {
+    setTestResult(null);
+    setTestState("recording");
+    try {
+      await startRecording();
+      await new Promise((resolve) => setTimeout(resolve, TEST_SECONDS * 1000));
+      const wav = await stopRecording();
+      const peak = wavPeak(wav);
+      setTestResult({
+        kind: "level",
+        percent: Math.round(peak * 100),
+        quiet: peak < QUIET_PEAK,
+      });
+      setTestState("playing");
+      await playWav(wav).catch(() => {});
+    } catch (cause) {
+      const code = cause instanceof VoiceFailure ? cause.code : "generic";
+      setTestResult({
+        kind: "error",
+        key:
+          code === "mic_silent"
+            ? "testSilent"
+            : code === "mic_in_use"
+              ? "testInUse"
+              : "testFailed",
+      });
+    } finally {
+      setTestState("idle");
+    }
+  }
+
   const missing =
     chosen !== SYSTEM_DEFAULT &&
     microphones !== null &&
@@ -106,6 +163,32 @@ export function MicrophoneCard() {
         <p className="text-[11.5px] text-nexus-dim">
           {missing ? t("missingHint") : t("hint")}
         </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={testState !== "idle"}
+            onClick={() => void handleTest()}
+          >
+            {t("test")}
+          </Button>
+          <span className="text-[12px] text-nexus-muted" aria-live="polite">
+            {testState === "recording"
+              ? t("testRecording", { seconds: TEST_SECONDS })
+              : testState === "playing"
+                ? t("testPlaying")
+                : testResult?.kind === "level"
+                  ? t("testLevel", { percent: testResult.percent })
+                  : null}
+          </span>
+        </div>
+        {testResult?.kind === "level" && testResult.quiet ? (
+          <SettingsError>{t("testQuiet")}</SettingsError>
+        ) : null}
+        {testResult?.kind === "error" ? (
+          <SettingsError>{t(testResult.key)}</SettingsError>
+        ) : null}
         {error ? <SettingsError>{error}</SettingsError> : null}
       </div>
     </Card>
