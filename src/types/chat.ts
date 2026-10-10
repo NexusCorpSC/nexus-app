@@ -34,6 +34,8 @@ export interface ChatMessageMetadata {
   costMicros?: number;
   remainingMicros?: number;
   budgetExhausted?: boolean;
+  /** When the site saved the conversation with this answer (its `updatedAt`). */
+  savedAt?: string;
 }
 
 export type ChatUIMessage = UIMessage<ChatMessageMetadata>;
@@ -51,6 +53,7 @@ export type ChatErrorCode =
   | "budget_exhausted"
   | "invalid_request"
   | "not_found"
+  | "busy"
   | "unavailable";
 
 export const CHAT_MESSAGE_MAX_LENGTH = 8000;

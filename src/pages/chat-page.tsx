@@ -83,11 +83,11 @@ export default function ChatPage() {
   );
 
   const onSaved = useCallback(
-    (id: string) => {
+    (id: string, savedAt?: string) => {
       if (searchParams.get("c") !== id) {
         setSearchParams({ c: id }, { replace: true });
       }
-      void markSaved(id);
+      void markSaved(id, savedAt);
       void queryClient.invalidateQueries({ queryKey: CHAT_CONVERSATIONS_KEY });
     },
     [markSaved, queryClient, searchParams, setSearchParams],

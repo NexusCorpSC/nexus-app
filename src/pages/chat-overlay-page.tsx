@@ -199,7 +199,7 @@ export default function ChatOverlayPage() {
             initialMessages={active.messages}
             status={status}
             onStatus={setStatus}
-            onSaved={(id) => void markSaved(id)}
+            onSaved={(id, savedAt) => void markSaved(id, savedAt)}
             onBusyChange={setBusy}
             focusSignal={focusSignal}
             compact

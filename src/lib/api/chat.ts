@@ -44,6 +44,14 @@ export function deleteChatConversation(id: string) {
 }
 
 /**
+ * "Stop": the site stops the answer on its way after its current step. Cutting
+ * the stream here is not enough, the site carries the answer through.
+ */
+export function requestChatStop() {
+  return apiRequest<void>("/api/chat/stop", { method: "POST" });
+}
+
+/**
  * The `fetch` the chat transport streams its answers through: the HTTP plugin,
  * on the site the settings point at, with the persisted session — as every
  * other request of the app (`api-client.ts`), but handing back the `Response`
@@ -78,6 +86,7 @@ const KNOWN_ERRORS: ChatErrorCode[] = [
   "budget_exhausted",
   "invalid_request",
   "not_found",
+  "busy",
   "unavailable",
 ];
 

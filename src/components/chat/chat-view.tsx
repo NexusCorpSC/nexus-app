@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
+  isToolUIPart,
   lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import { useLocale, useTranslations } from "use-intl";
@@ -9,13 +10,23 @@ import { ArrowUp, Loader2, RotateCcw, Square } from "lucide-react";
 import { Button } from "@/components/ui";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { resetDate } from "@/components/chat/chat-budget";
-import { chatErrorCode, chatFetch } from "@/lib/api/chat";
+import { chatErrorCode, chatFetch, requestChatStop } from "@/lib/api/chat";
 import { cn } from "@/lib/utils";
 import {
   CHAT_MESSAGE_MAX_LENGTH,
   type ChatStatus,
   type ChatUIMessage,
 } from "@/types/chat";
+
+/** Whether the message holds a write the player confirmed: it was made. */
+function hasConfirmedWrite(message: ChatUIMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      isToolUIPart(part) &&
+      "approval" in part &&
+      part.approval?.approved === true,
+  );
+}
 
 /**
  * One Nexus Chat conversation: the messages, the input, the confirmations.
@@ -38,7 +49,7 @@ export function ChatView({
   status: ChatStatus;
   onStatus: (update: (status: ChatStatus) => ChatStatus) => void;
   /** An answer is over (and saved): the list can be read again. */
-  onSaved?: (id: string) => void;
+  onSaved?: (id: string, savedAt?: string) => void;
   compact?: boolean;
   /** Bumped to put the cursor back in the input (the overlay coming up). */
   focusSignal?: number;
@@ -86,7 +97,7 @@ export function ChatView({
           spentMicros: Math.max(0, current.monthlyBudgetMicros - remaining),
         }));
       }
-      if (!isError) onSaved?.(id);
+      if (!isError) onSaved?.(id, message.metadata?.savedAt);
     },
     onError: (cause) => {
       const code = chatErrorCode(cause);
@@ -108,6 +119,13 @@ export function ChatView({
   const exhausted = status.remainingMicros <= 0;
   const errorCode = error ? chatErrorCode(error) : null;
   const last = messages[messages.length - 1];
+  // Retrying replays the turn: not once it made a confirmed write (an order
+  // twice).
+  const canRetry =
+    (errorCode === "generic" ||
+      errorCode === "unavailable" ||
+      errorCode === "busy") &&
+    !(last?.role === "assistant" && hasConfirmedWrite(last));
   const pendingApproval = last?.parts.some(
     (part) => "state" in part && part.state === "approval-requested",
   );
@@ -170,7 +188,7 @@ export function ChatView({
         {errorCode && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-[13px] text-red-200">
             <span>{t(`errors.${errorCode}`)}</span>
-            {(errorCode === "generic" || errorCode === "unavailable") && (
+            {canRetry && (
               <Button
                 size="sm"
                 variant="outline"
@@ -228,7 +246,10 @@ export function ChatView({
                 type="button"
                 variant="outline"
                 className="w-9.5 px-0"
-                onClick={() => void stop()}
+                onClick={() => {
+                  void stop();
+                  void requestChatStop().catch(() => {});
+                }}
                 aria-label={t("stop")}
                 title={t("stop")}
               >

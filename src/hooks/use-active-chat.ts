@@ -7,8 +7,12 @@ export type ActiveChat = {
   messages: ChatUIMessage[];
   /** When the site last saved it, as it said; `null` until its first answer. */
   updatedAt: string | null;
-  /** When it was opened here: a newer conversation elsewhere takes over. */
-  since: string;
+  /**
+   * The site's date of the latest conversation when this one was opened: a
+   * conversation saved after it, elsewhere, takes over. Always the site's
+   * clock, never this computer's, which can be off. `null` while unknown.
+   */
+  since: string | null;
   /** Bumped when the messages are replaced, to start the view over. */
   version: number;
 };
@@ -30,13 +34,26 @@ export function useActiveChat() {
   }, []);
 
   const startNew = useCallback(() => {
+    const id = newChatId();
     setActive((current) => ({
-      id: newChatId(),
+      id,
       messages: [],
       updatedAt: null,
-      since: new Date().toISOString(),
+      since: latestOf(current?.updatedAt, current?.since),
       version: (current?.version ?? 0) + 1,
     }));
+    // What the site holds as its latest conversation now: only one saved
+    // after it replaces this new one.
+    void getChatConversation("latest")
+      .then((latest) => {
+        if (!latest) return;
+        setActive((current) =>
+          current?.id === id
+            ? { ...current, since: latestOf(current.since, latest.updatedAt) }
+            : current,
+        );
+      })
+      .catch(() => {});
   }, []);
 
   /**
@@ -56,8 +73,9 @@ export function useActiveChat() {
       if (busy.current && !options.opened) return true;
       setActive((current) => {
         if (current && options.onlyIfNewer) {
-          const shownAt = current.updatedAt ?? current.since;
-          if (conversation.updatedAt <= shownAt) return current;
+          const shownAt = latestOf(current.updatedAt, current.since);
+          // Not knowing what is on screen yet: keep it.
+          if (!shownAt || conversation.updatedAt <= shownAt) return current;
         }
         if (
           current?.id === conversation.id &&
@@ -69,7 +87,7 @@ export function useActiveChat() {
           id: conversation.id,
           messages: conversation.messages,
           updatedAt: conversation.updatedAt,
-          since: new Date().toISOString(),
+          since: conversation.updatedAt,
           version: (current?.version ?? 0) + 1,
         };
       });
@@ -79,20 +97,31 @@ export function useActiveChat() {
   );
 
   /**
-   * An answer was saved here: notes the site's date for it, without starting
-   * the view over, so the next focus does not take our own answer for news.
+   * An answer was saved here: notes the site's date for it (`savedAt`, sent
+   * with the answer), without starting the view over, so the next focus does
+   * not take our own answer for news.
    */
-  const markSaved = useCallback(async (id: string) => {
-    // The site saves as the stream ends; give it a moment to land.
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    const conversation = await getChatConversation(id).catch(() => null);
-    if (!conversation) return;
+  const markSaved = useCallback(async (id: string, savedAt?: string) => {
+    // An older site does not send it: ask.
+    const updatedAt =
+      savedAt ??
+      (await getChatConversation(id).catch(() => null))?.updatedAt ??
+      null;
+    if (!updatedAt) return;
     setActive((current) =>
-      current?.id === id
-        ? { ...current, updatedAt: conversation.updatedAt }
-        : current,
+      current?.id === id ? { ...current, updatedAt } : current,
     );
   }, []);
 
   return { active, startNew, load, markSaved, setBusy };
+}
+
+/** The later of two ISO dates of the site. */
+function latestOf(
+  a: string | null | undefined,
+  b: string | null | undefined,
+): string | null {
+  if (!a) return b ?? null;
+  if (!b) return a;
+  return a > b ? a : b;
 }
