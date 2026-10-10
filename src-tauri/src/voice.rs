@@ -15,7 +15,7 @@
 //! a page make a sound.
 
 use std::sync::mpsc::{self, Sender};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread::JoinHandle;
 use std::time::Duration;
 
@@ -31,41 +31,87 @@ const MAX_SECONDS: u32 = 60;
 /// How long the microphone gets to open before the attempt is given up.
 const START_TIMEOUT: Duration = Duration::from_secs(5);
 
+/// One recording, owned by the window that started it: the main window and
+/// the chat overlay each have their own conversation, and neither may take
+/// or drop what the other is recording.
 struct Recording {
+    owner: String,
     stop: Sender<()>,
     thread: JoinHandle<()>,
     samples: Arc<Mutex<Vec<f32>>>,
-    rate: u32,
+    opened: Arc<Opened>,
+}
+
+/// What opening the microphone came to: the rate it records at, or why it
+/// did not open. Set by the voice thread, waited for by whoever needs it.
+#[derive(Default)]
+struct Opened {
+    result: Mutex<Option<Result<u32, String>>>,
+    done: Condvar,
+}
+
+impl Opened {
+    fn set(&self, result: Result<u32, String>) {
+        if let Ok(mut slot) = self.result.lock() {
+            *slot = Some(result);
+        }
+        self.done.notify_all();
+    }
+
+    fn wait(&self, timeout: Duration) -> Result<u32, String> {
+        let slot = self
+            .result
+            .lock()
+            .map_err(|_| "voice state is poisoned".to_string())?;
+        let (slot, _) = self
+            .done
+            .wait_timeout_while(slot, timeout, |result| result.is_none())
+            .map_err(|_| "voice state is poisoned".to_string())?;
+
+        slot.clone()
+            .unwrap_or_else(|| Err("microphone_failed: did not open in time".to_string()))
+    }
 }
 
 static RECORDING: Mutex<Option<Recording>> = Mutex::new(None);
 
-/// Opens the microphone and starts listening. Starting while already
-/// listening does nothing: the shortcut and the button may both ask.
-pub fn start() -> Result<(), String> {
+/// The window whose answer [`play`] is reading, if any.
+static PLAYING: Mutex<Option<String>> = Mutex::new(None);
+
+/// Starts opening the microphone for `owner` and returns at once: called on
+/// the main thread by the talk shortcut, which must not wait on a slow audio
+/// driver. Starting again for the same window does nothing; for another
+/// window, it is `busy`.
+pub fn start(owner: &str) -> Result<(), String> {
     let mut slot = RECORDING
         .lock()
         .map_err(|_| "voice state is poisoned".to_string())?;
 
-    if slot.is_some() {
-        return Ok(());
+    if let Some(recording) = slot.as_ref() {
+        return if recording.owner == owner {
+            Ok(())
+        } else {
+            Err("busy".to_string())
+        };
     }
 
     let samples = Arc::new(Mutex::new(Vec::new()));
+    let opened = Arc::new(Opened::default());
     let (stop, stopped) = mpsc::channel::<()>();
-    let (ready, opened) = mpsc::channel::<Result<u32, String>>();
     let collected = Arc::clone(&samples);
+    let reported = Arc::clone(&opened);
 
     let thread = std::thread::Builder::new()
         .name("nexus-voice".into())
         .spawn(move || {
             let stream = match open(collected) {
                 Ok((stream, rate)) => {
-                    let _ = ready.send(Ok(rate));
+                    reported.set(Ok(rate));
                     stream
                 }
                 Err(error) => {
-                    let _ = ready.send(Err(error));
+                    log(format!("microphone could not open: {error}"));
+                    reported.set(Err(error));
                     return;
                 }
             };
@@ -76,34 +122,44 @@ pub fn start() -> Result<(), String> {
         })
         .map_err(|error| format!("could not start the voice thread: {error}"))?;
 
-    let rate = match opened.recv_timeout(START_TIMEOUT) {
-        Ok(Ok(rate)) => rate,
-        Ok(Err(error)) => {
-            let _ = thread.join();
-            log(format!("microphone could not open: {error}"));
-            return Err(error);
-        }
-        Err(_) => {
-            let _ = stop.send(());
-            log("microphone did not open in time".to_string());
-            return Err("microphone_failed".to_string());
-        }
-    };
-
     *slot = Some(Recording {
+        owner: owner.to_string(),
         stop,
         thread,
         samples,
-        rate,
+        opened,
     });
 
     Ok(())
 }
 
-/// Closes the microphone and returns what it heard, as a WAV.
-pub fn stop() -> Result<Vec<u8>, String> {
-    let recording = take()?.ok_or_else(|| "not_recording".to_string())?;
+/// Waits for the microphone [`start`] is opening for `owner`, and drops the
+/// recording when it does not open. Blocks: called from a worker thread.
+pub fn wait_open(owner: &str) -> Result<(), String> {
+    let opened = {
+        let slot = RECORDING
+            .lock()
+            .map_err(|_| "voice state is poisoned".to_string())?;
+        match slot.as_ref() {
+            Some(recording) if recording.owner == owner => Arc::clone(&recording.opened),
+            _ => return Err("not_recording".to_string()),
+        }
+    };
+
+    opened
+        .wait(START_TIMEOUT)
+        .map(|_| ())
+        .inspect_err(|_| cancel(owner))
+}
+
+/// Closes `owner`'s microphone and returns what it heard, as a WAV. Blocks:
+/// called from a worker thread.
+pub fn stop(owner: &str) -> Result<Vec<u8>, String> {
+    let recording = take(owner)?.ok_or_else(|| "not_recording".to_string())?;
     let _ = recording.stop.send(());
+
+    // A microphone that never opened leaves its thread to finish on its own.
+    let rate = recording.opened.wait(START_TIMEOUT)?;
     let _ = recording.thread.join();
 
     let samples = recording
@@ -111,32 +167,44 @@ pub fn stop() -> Result<Vec<u8>, String> {
         .lock()
         .map_err(|_| "voice samples are poisoned".to_string())?;
 
-    Ok(wav(&resample(&samples, recording.rate)))
+    Ok(wav(&resample(&samples, rate)))
 }
 
-/// Closes the microphone and forgets what it heard.
-pub fn cancel() {
-    if let Ok(Some(recording)) = take() {
+/// Closes `owner`'s microphone and forgets what it heard. Does not wait for
+/// the voice thread, which ends on its own.
+pub fn cancel(owner: &str) {
+    if let Ok(Some(recording)) = take(owner) {
         let _ = recording.stop.send(());
-        let _ = recording.thread.join();
     }
 }
 
-fn take() -> Result<Option<Recording>, String> {
-    Ok(RECORDING
+fn take(owner: &str) -> Result<Option<Recording>, String> {
+    let mut slot = RECORDING
         .lock()
-        .map_err(|_| "voice state is poisoned".to_string())?
-        .take())
+        .map_err(|_| "voice state is poisoned".to_string())?;
+
+    if slot
+        .as_ref()
+        .is_some_and(|recording| recording.owner == owner)
+    {
+        Ok(slot.take())
+    } else {
+        Ok(None)
+    }
 }
 
-/// Plays a WAV to the end, or until [`stop_playback`]. Blocks: called from a
-/// worker thread.
-pub fn play(wav: &[u8]) -> Result<(), String> {
+/// Plays a WAV for `owner` to the end, or until [`stop_playback`]. Blocks:
+/// called from a worker thread.
+pub fn play(owner: &str, wav: &[u8]) -> Result<(), String> {
     use windows::core::PCWSTR;
     use windows::Win32::Media::Audio::{PlaySoundW, SND_MEMORY, SND_NODEFAULT, SND_SYNC};
 
     if wav.len() < 44 || &wav[0..4] != b"RIFF" {
         return Err("not a WAV".to_string());
+    }
+
+    if let Ok(mut playing) = PLAYING.lock() {
+        *playing = Some(owner.to_string());
     }
 
     // `SND_MEMORY` reads the sound from the pointer instead of a file name.
@@ -148,6 +216,12 @@ pub fn play(wav: &[u8]) -> Result<(), String> {
         )
     };
 
+    if let Ok(mut playing) = PLAYING.lock() {
+        if playing.as_deref() == Some(owner) {
+            *playing = None;
+        }
+    }
+
     if played.as_bool() {
         Ok(())
     } else {
@@ -155,13 +229,21 @@ pub fn play(wav: &[u8]) -> Result<(), String> {
     }
 }
 
-/// Cuts off what [`play`] is playing.
-pub fn stop_playback() {
+/// Cuts off what [`play`] is playing — only when it is `owner`'s answer:
+/// the other window's goes on.
+pub fn stop_playback(owner: &str) {
     use windows::core::PCWSTR;
     use windows::Win32::Media::Audio::{PlaySoundW, SND_FLAGS};
 
-    unsafe {
-        let _ = PlaySoundW(PCWSTR::null(), None, SND_FLAGS(0));
+    let mine = PLAYING
+        .lock()
+        .map(|playing| playing.as_deref() == Some(owner))
+        .unwrap_or(false);
+
+    if mine {
+        unsafe {
+            let _ = PlaySoundW(PCWSTR::null(), None, SND_FLAGS(0));
+        }
     }
 }
 

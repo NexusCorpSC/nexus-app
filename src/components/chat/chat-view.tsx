@@ -122,9 +122,11 @@ export function ChatView({
     messages: initialMessages,
     transport,
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
-    onFinish: ({ message, isError }) => {
+    onFinish: ({ message, isError, isAbort, isDisconnect }) => {
       const reader = voiceRef.current;
-      if (!isError && voiceTurns.has(id) && reader?.readAloud) {
+      // An answer the player stopped, or that was cut off, is not read.
+      const complete = !isError && !isAbort && !isDisconnect;
+      if (complete && voiceTurns.has(id) && reader?.readAloud) {
         const from = spoken.current.get(message.id) ?? 0;
         spoken.current.set(message.id, textPartCount(message));
         reader.speak(speechText(message, from));

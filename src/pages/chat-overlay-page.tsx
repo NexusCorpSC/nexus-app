@@ -149,6 +149,9 @@ export default function ChatOverlayPage() {
             known.remainingMicros <= 0));
       if (closed) {
         void cancelRecording();
+        // The status may be stale (voice just opened, a new month's budget):
+        // the next press goes by a fresh one.
+        if (online) void refetch();
         return;
       }
       void refetch();

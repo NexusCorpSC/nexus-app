@@ -17,9 +17,21 @@ export function startRecording(): Promise<void> {
   return invoke("voice_start");
 }
 
-/** Closes the microphone and returns what it heard: a 16 kHz mono WAV. */
+/**
+ * Closes the microphone and returns what it heard: a 16 kHz mono WAV. The
+ * talk shortcut opens it without waiting: that it did not open comes out here.
+ */
 export async function stopRecording(): Promise<ArrayBuffer> {
-  return invoke<ArrayBuffer>("voice_stop");
+  try {
+    return await invoke<ArrayBuffer>("voice_stop");
+  } catch (cause) {
+    const reason = String(cause);
+    throw new VoiceFailure(
+      reason.startsWith("microphone") || reason.startsWith("no_microphone")
+        ? "mic_failed"
+        : "generic",
+    );
+  }
 }
 
 /** Closes the microphone, keeping nothing. */

@@ -39,8 +39,10 @@ pub fn press(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
+    // Opening goes on in the background: a slow audio driver must not hold
+    // up the main thread. Why it failed, if it does, comes back on `voice_stop`.
     #[cfg(windows)]
-    let error = crate::voice::start().err();
+    let error = crate::voice::start(CHAT_WINDOW).err();
     #[cfg(not(windows))]
     let error = Some("unsupported".to_string());
 
@@ -48,7 +50,13 @@ pub fn press(app: &AppHandle) -> Result<(), String> {
         log(format!("talk: microphone not opened ({error})"));
     }
 
-    show_without_focus(app)?;
+    if let Err(error) = show_without_focus(app) {
+        // Nobody would close a microphone the page never heard about.
+        #[cfg(windows)]
+        crate::voice::cancel(CHAT_WINDOW);
+        HELD.store(false, Ordering::SeqCst);
+        return Err(error);
+    }
 
     app.emit_to(
         CHAT_WINDOW,

@@ -1078,37 +1078,62 @@ fn close_chat_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, CHAT_WINDOW)
 }
 
-/// Opens the microphone for Nexus Chat (see `voice.rs`). Does nothing when it
-/// is already open — the talk shortcut opens it before the page asks.
+/// Opens the microphone for Nexus Chat (see `voice.rs`), for the calling
+/// window, and returns once it is open. Does nothing when that window already
+/// has it open — the talk shortcut opens it before the page asks.
 #[tauri::command]
-fn voice_start() -> Result<(), String> {
+async fn voice_start(window: tauri::Window) -> Result<(), String> {
     #[cfg(windows)]
-    return voice::start();
+    {
+        let owner = window.label().to_string();
+        tauri::async_runtime::spawn_blocking(move || {
+            voice::start(&owner)?;
+            voice::wait_open(&owner)
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    }
+
     #[cfg(not(windows))]
-    Err("unsupported".to_string())
+    {
+        let _ = window;
+        Err("unsupported".to_string())
+    }
 }
 
-/// Closes the microphone and hands back what it heard: a 16-bit mono WAV at
-/// 16 kHz, as raw bytes rather than a JSON array of numbers.
+/// Closes the calling window's microphone and hands back what it heard: a
+/// 16-bit mono WAV at 16 kHz, as raw bytes rather than a JSON array of numbers.
 #[tauri::command]
-fn voice_stop() -> Result<tauri::ipc::Response, String> {
+async fn voice_stop(window: tauri::Window) -> Result<tauri::ipc::Response, String> {
     #[cfg(windows)]
-    return voice::stop().map(tauri::ipc::Response::new);
+    {
+        let owner = window.label().to_string();
+        tauri::async_runtime::spawn_blocking(move || voice::stop(&owner))
+            .await
+            .map_err(|e| e.to_string())?
+            .map(tauri::ipc::Response::new)
+    }
+
     #[cfg(not(windows))]
-    Err("unsupported".to_string())
+    {
+        let _ = window;
+        Err("unsupported".to_string())
+    }
 }
 
-/// Closes the microphone, keeping nothing.
+/// Closes the calling window's microphone, keeping nothing.
 #[tauri::command]
-fn voice_cancel() {
+fn voice_cancel(window: tauri::Window) {
     #[cfg(windows)]
-    voice::cancel();
+    voice::cancel(window.label());
+    #[cfg(not(windows))]
+    let _ = window;
 }
 
 /// Plays a chunk of an answer read aloud (a WAV, sent as raw bytes) and
 /// returns when it is over — or cut off by `voice_stop_playback`.
 #[tauri::command]
-async fn voice_play(request: tauri::ipc::Request<'_>) -> Result<(), String> {
+async fn voice_play(window: tauri::Window, request: tauri::ipc::Request<'_>) -> Result<(), String> {
     let tauri::ipc::InvokeBody::Raw(bytes) = request.body() else {
         return Err("expected the audio as raw bytes".to_string());
     };
@@ -1116,23 +1141,26 @@ async fn voice_play(request: tauri::ipc::Request<'_>) -> Result<(), String> {
     #[cfg(windows)]
     {
         let bytes = bytes.clone();
-        tauri::async_runtime::spawn_blocking(move || voice::play(&bytes))
+        let owner = window.label().to_string();
+        tauri::async_runtime::spawn_blocking(move || voice::play(&owner, &bytes))
             .await
             .map_err(|e| e.to_string())?
     }
 
     #[cfg(not(windows))]
     {
-        let _ = bytes;
+        let _ = (window, bytes);
         Err("unsupported".to_string())
     }
 }
 
-/// Cuts off the answer being read aloud.
+/// Cuts off the answer the calling window is reading aloud.
 #[tauri::command]
-fn voice_stop_playback() {
+fn voice_stop_playback(window: tauri::Window) {
     #[cfg(windows)]
-    voice::stop_playback();
+    voice::stop_playback(window.label());
+    #[cfg(not(windows))]
+    let _ = window;
 }
 
 /// Brings the map overlay up — shown, never hidden.
