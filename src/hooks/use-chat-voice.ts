@@ -59,6 +59,8 @@ export function useChatVoice({
     text: string;
     key: number;
   } | null>(null);
+  /** `transcript`, readable as soon as it is set (`takeTranscript`). */
+  const transcriptRef = useRef<{ text: string; key: number } | null>(null);
   const stateRef = useRef<VoiceState>("idle");
   const pressedAt = useRef(0);
   const starting = useRef<Promise<void> | null>(null);
@@ -106,7 +108,13 @@ export function useChatVoice({
         latest.current.onRemaining(remainingMicros);
       }
       if (!text) setError("nothing_heard");
-      else setTranscript((current) => ({ text, key: (current?.key ?? 0) + 1 }));
+      else {
+        // Kept in the ref at once: the conversation takes it from its own
+        // effect, which runs before any effect of this hook's page.
+        const next = { text, key: (transcriptRef.current?.key ?? 0) + 1 };
+        transcriptRef.current = next;
+        setTranscript(next);
+      }
     } catch (cause) {
       if (!(cause instanceof VoiceFailure))
         logVoice(`failed: ${String(cause)}`);
@@ -202,10 +210,6 @@ export function useChatVoice({
   const stopSpeaking = useCallback(() => player.current?.stop(), []);
 
   /** What was said, for the conversation to send — once. */
-  const transcriptRef = useRef(transcript);
-  useEffect(() => {
-    transcriptRef.current = transcript;
-  });
   const takeTranscript = useCallback(() => {
     const text = transcriptRef.current?.text ?? null;
     transcriptRef.current = null;
