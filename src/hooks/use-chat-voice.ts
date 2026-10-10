@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   cancelRecording,
+  logVoice,
   SpeechPlayer,
   speech,
   splitForSpeech,
@@ -107,6 +108,8 @@ export function useChatVoice({
       if (!text) setError("nothing_heard");
       else setTranscript((current) => ({ text, key: (current?.key ?? 0) + 1 }));
     } catch (cause) {
+      if (!(cause instanceof VoiceFailure))
+        logVoice(`failed: ${String(cause)}`);
       setError(cause instanceof VoiceFailure ? cause.code : "generic");
     } finally {
       update("idle");

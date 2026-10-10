@@ -140,14 +140,29 @@ export class VoiceFailure extends Error {
   }
 }
 
-async function failure(response: Response): Promise<VoiceFailure> {
+/** A line in the app's log file, for when the voice goes wrong at a player's. */
+export function logVoice(message: string): void {
+  void invoke("voice_log", { message }).catch(() => {});
+}
+
+async function failure(
+  response: Response,
+  what: string,
+): Promise<VoiceFailure> {
   const body = (await response.json().catch(() => null)) as {
     error?: unknown;
   } | null;
   const code = body?.error;
+  logVoice(`${what} failed: HTTP ${response.status} ${String(code ?? "")}`);
   return new VoiceFailure(
     KNOWN.includes(code as VoiceError) ? (code as VoiceError) : "generic",
   );
+}
+
+/** A call to the site that did not get through (network, timeout). */
+function unreachable(what: string, cause: unknown): VoiceFailure {
+  logVoice(`${what} failed: ${String(cause)}`);
+  return new VoiceFailure("generic");
 }
 
 /** What the player said, and what is left of this month's budget. */
@@ -155,23 +170,28 @@ export async function transcribe(
   wav: ArrayBuffer,
   conversationId: string,
 ): Promise<{ text: string; remainingMicros?: number }> {
-  const response = await chatFetch(
-    `/api/chat/transcribe?id=${encodeURIComponent(conversationId)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "audio/wav" },
-      body: new Uint8Array(wav),
-    },
+  let response: Response;
+  try {
+    response = await chatFetch(
+      `/api/chat/transcribe?id=${encodeURIComponent(conversationId)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "audio/wav" },
+        body: new Uint8Array(wav),
+      },
+    );
+  } catch (cause) {
+    throw unreachable("transcription", cause);
+  }
+  if (!response.ok) throw await failure(response, "transcription");
+  const body = (await response.json().catch((cause: unknown) => {
+    throw unreachable("transcription", cause);
+  })) as { text?: string; remainingMicros?: number };
+  const text = body.text?.trim() ?? "";
+  logVoice(
+    `transcription: ${wavSeconds(wav).toFixed(1)} s heard, ${text.length} characters`,
   );
-  if (!response.ok) throw await failure(response);
-  const body = (await response.json()) as {
-    text?: string;
-    remainingMicros?: number;
-  };
-  return {
-    text: body.text?.trim() ?? "",
-    remainingMicros: body.remainingMicros,
-  };
+  return { text, remainingMicros: body.remainingMicros };
 }
 
 /** One chunk of an answer, read aloud by the site. */
@@ -189,7 +209,7 @@ export async function speech(
       signal,
     },
   );
-  if (!response.ok) throw await failure(response);
+  if (!response.ok) throw await failure(response, "speech");
   const remaining = Number(response.headers.get("X-Chat-Remaining-Micros"));
   return {
     audio: await response.blob(),

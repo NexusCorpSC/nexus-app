@@ -20,7 +20,7 @@ import { ChatMessage } from "@/components/chat/chat-message";
 import { resetDate } from "@/components/chat/chat-budget";
 import type { ChatVoice } from "@/hooks/use-chat-voice";
 import { chatErrorCode, chatFetch, requestChatStop } from "@/lib/api/chat";
-import { speechText, textPartCount } from "@/lib/chat-voice";
+import { logVoice, speechText, textPartCount } from "@/lib/chat-voice";
 import { cn } from "@/lib/utils";
 import {
   CHAT_MESSAGE_MAX_LENGTH,
@@ -175,9 +175,11 @@ export function ChatView({
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
 
+  // An error shows under the last message: brought into view too.
+  const voiceError = voice?.error;
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
-  }, [messages, chatStatus]);
+  }, [messages, chatStatus, voiceError, errorCode]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -200,6 +202,7 @@ export function ChatView({
     if (!text) return;
     clearError();
     voiceTurns.add(id);
+    logVoice("transcript sent to the conversation");
     void sendMessage({ text });
   }, [
     busy,
