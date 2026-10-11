@@ -31,8 +31,8 @@
   "choose": "Choisir",
   "loadFailed": "Les lieux n'ont pas pu être chargés.",
   "retry": "Réessayer",
-  "noPlaces": "Aucun lieu n'a encore de coordonnées. Sur place, enregistrez votre position pour le lieu : les autres joueurs pourront s'y rendre.",
-  "noDestination": "Choisissez un lieu relevé vers lequel vous guider.",
+  "noPlaces": "Aucun lieu n'a encore de coordonnées : saisissez-en à la main, ou enregistrez votre position sur place pour qu'un lieu en ait.",
+  "noDestination": "Choisissez un lieu relevé, ou saisissez des coordonnées.",
   "needFix": "Actualisez votre position pour savoir où il se trouve.",
   "unknownBody": "Ce lieu est rangé sur un corps céleste que le NPS ne connaît pas.",
   "otherSystem": "Ce lieu est dans le système {system} : rejoignez-le d'abord, le NPS ne guide qu'à l'intérieur d'un système.",
@@ -83,5 +83,34 @@
     "tooManyPending": "Vous avez déjà 5 contributions en attente de relecture.",
     "noChange": "Ce lieu a déjà exactement cette position.",
     "invalidInput": "Cette position n'a pas pu être enregistrée : le corps céleste n'est peut-être plus connu."
+  },
+  "coordinates": "Coordonnées",
+  "coordinatesHint": "Saisir des coordonnées comme destination",
+  "clearDestination": "Retirer la destination",
+  "manualName": "Coordonnées saisies",
+  "manualWhere": "Coordonnées saisies · {where}",
+  "coordinatesTitle": "Aller à des coordonnées",
+  "dial": {
+    "travelUp": "Haut : votre direction",
+    "northUp": "Haut : le nord",
+    "space": "Haut : votre trajectoire",
+    "travelUpLabel": "Compas : la flèche montre la destination par rapport à votre direction",
+    "northUpLabel": "Compas : la flèche montre le cap vers la destination, le nord en haut",
+    "spaceLabel": "Écart entre votre trajectoire et la destination"
+  },
+  "manual": {
+    "onBody": "Sur une planète",
+    "inSpace": "Dans l'espace",
+    "body": "Planète ou lune",
+    "latitude": "Latitude (°)",
+    "longitude": "Longitude (°)",
+    "altitude": "Altitude (m)",
+    "bodyHint": "Les mêmes valeurs que sous « Ma position » quand on se trouve sur place. Altitude au-dessus du sol, 0 si vide.",
+    "unit": "Unité",
+    "spaceHint": "Coordonnées du système, comme celles de /showlocation : collez la ligne copiée par le jeu dans un champ pour tout remplir. Près d'une planète, elles ne valent qu'au moment du relevé, car la planète tourne.",
+    "name": "Nom (facultatif)",
+    "invalidGeo": "Vérifiez les valeurs : latitude entre -90 et 90, longitude entre -180 et 180.",
+    "invalidXyz": "Saisissez les trois coordonnées X, Y et Z.",
+    "go": "Me guider"
   }
 }

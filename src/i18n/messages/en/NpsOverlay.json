@@ -31,8 +31,8 @@
   "choose": "Choose",
   "loadFailed": "Places could not be loaded.",
   "retry": "Retry",
-  "noPlaces": "No place has coordinates yet. On site, record your position for the place: other players will be able to get there.",
-  "noDestination": "Choose a recorded place to be guided to.",
+  "noPlaces": "No place has coordinates yet: type some in, or record your position on the spot so a place has one.",
+  "noDestination": "Pick a recorded place, or type in coordinates.",
   "needFix": "Update your position to know where it is.",
   "unknownBody": "This place sits on a celestial body the NPS does not know.",
   "otherSystem": "This place is in the {system} system: get there first, the NPS only guides within a system.",
@@ -83,5 +83,34 @@
     "tooManyPending": "You already have 5 contributions waiting for review.",
     "noChange": "This place already has exactly this position.",
     "invalidInput": "This position could not be recorded: the celestial body may no longer be known."
+  },
+  "coordinates": "Coordinates",
+  "coordinatesHint": "Type in coordinates as the destination",
+  "clearDestination": "Remove the destination",
+  "manualName": "Typed coordinates",
+  "manualWhere": "Typed coordinates · {where}",
+  "coordinatesTitle": "Go to coordinates",
+  "dial": {
+    "travelUp": "Up: your direction",
+    "northUp": "Up: north",
+    "space": "Up: your trajectory",
+    "travelUpLabel": "Compass: the arrow shows the destination relative to your direction",
+    "northUpLabel": "Compass: the arrow shows the heading to the destination, north up",
+    "spaceLabel": "Gap between your trajectory and the destination"
+  },
+  "manual": {
+    "onBody": "On a planet",
+    "inSpace": "In space",
+    "body": "Planet or moon",
+    "latitude": "Latitude (°)",
+    "longitude": "Longitude (°)",
+    "altitude": "Altitude (m)",
+    "bodyHint": "The same values as under “My position” when standing there. Altitude above the ground, 0 if empty.",
+    "unit": "Unit",
+    "spaceHint": "System coordinates, like those of /showlocation: paste the line the game copied into a field to fill them all. Near a planet they only hold at the time of the reading, since the planet turns.",
+    "name": "Name (optional)",
+    "invalidGeo": "Check the values: latitude between -90 and 90, longitude between -180 and 180.",
+    "invalidXyz": "Type in all three coordinates X, Y and Z.",
+    "go": "Guide me"
   }
 }

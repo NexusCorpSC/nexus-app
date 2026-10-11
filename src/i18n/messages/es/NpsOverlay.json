@@ -31,8 +31,8 @@
   "choose": "Elegir",
   "loadFailed": "No se pudieron cargar los lugares.",
   "retry": "Reintentar",
-  "noPlaces": "Ningún lugar tiene coordenadas todavía. Allí mismo, registra tu posición para el lugar: los demás jugadores podrán llegar.",
-  "noDestination": "Elige un lugar registrado hacia el que guiarte.",
+  "noPlaces": "Ningún lugar tiene coordenadas todavía: introdúcelas a mano, o registra tu posición en el sitio para que un lugar la tenga.",
+  "noDestination": "Elige un lugar registrado, o introduce coordenadas.",
   "needFix": "Actualiza tu posición para saber dónde está.",
   "unknownBody": "Este lugar está en un cuerpo celeste que el NPS no conoce.",
   "otherSystem": "Este lugar está en el sistema {system}: llega primero allí, el NPS solo guía dentro de un sistema.",
@@ -83,5 +83,34 @@
     "tooManyPending": "Ya tienes 5 contribuciones pendientes de revisión.",
     "noChange": "Este lugar ya tiene exactamente esta posición.",
     "invalidInput": "No se pudo registrar esta posición: puede que el cuerpo celeste ya no se conozca."
+  },
+  "coordinates": "Coordenadas",
+  "coordinatesHint": "Introducir coordenadas como destino",
+  "clearDestination": "Quitar el destino",
+  "manualName": "Coordenadas introducidas",
+  "manualWhere": "Coordenadas introducidas · {where}",
+  "coordinatesTitle": "Ir a unas coordenadas",
+  "dial": {
+    "travelUp": "Arriba: tu dirección",
+    "northUp": "Arriba: el norte",
+    "space": "Arriba: tu trayectoria",
+    "travelUpLabel": "Brújula: la flecha muestra el destino respecto a tu dirección",
+    "northUpLabel": "Brújula: la flecha muestra el rumbo hacia el destino, con el norte arriba",
+    "spaceLabel": "Desvío entre tu trayectoria y el destino"
+  },
+  "manual": {
+    "onBody": "En un planeta",
+    "inSpace": "En el espacio",
+    "body": "Planeta o luna",
+    "latitude": "Latitud (°)",
+    "longitude": "Longitud (°)",
+    "altitude": "Altitud (m)",
+    "bodyHint": "Los mismos valores que en «Mi posición» estando allí. Altitud sobre el suelo, 0 si está vacío.",
+    "unit": "Unidad",
+    "spaceHint": "Coordenadas del sistema, como las de /showlocation: pega en un campo la línea que copió el juego para rellenarlas todas. Cerca de un planeta solo valen en el momento de la lectura, porque el planeta gira.",
+    "name": "Nombre (opcional)",
+    "invalidGeo": "Revisa los valores: latitud entre -90 y 90, longitud entre -180 y 180.",
+    "invalidXyz": "Introduce las tres coordenadas X, Y y Z.",
+    "go": "Guíame"
   }
 }
