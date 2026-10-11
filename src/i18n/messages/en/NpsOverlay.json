@@ -111,6 +111,7 @@
     "name": "Name (optional)",
     "invalidGeo": "Check the values: latitude between -90 and 90, longitude between -180 and 180.",
     "invalidXyz": "Type in all three coordinates X, Y and Z.",
-    "go": "Guide me"
+    "go": "Guide me",
+    "noBodies": "Planets and moons are not loaded from the site yet: only system coordinates can be typed in."
   }
 }

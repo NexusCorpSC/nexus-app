@@ -484,7 +484,7 @@ export default function NpsOverlayPage() {
               <button
                 type="button"
                 onClick={() => setPanel("coordinates")}
-                disabled={locked || bodies.length === 0}
+                disabled={locked}
                 title={t("coordinatesHint")}
                 className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
               >
@@ -1229,12 +1229,15 @@ function CoordinatesPanel({
             key={one}
             type="button"
             aria-pressed={mode === one}
+            // Without the planets and moons from the site, only system
+            // coordinates can be placed.
+            disabled={one === "body" && bodies.length === 0}
             onClick={() => {
               setMode(one);
               setInvalid(false);
             }}
             className={cn(
-              "flex-1 rounded-md px-2 py-1 transition",
+              "flex-1 rounded-md px-2 py-1 transition disabled:opacity-40",
               mode === one
                 ? "bg-white/15 text-slate-100"
                 : "text-slate-400 hover:bg-white/10",
@@ -1244,6 +1247,10 @@ function CoordinatesPanel({
           </button>
         ))}
       </div>
+
+      {bodies.length === 0 ? (
+        <p className="text-[11px] text-amber-200">{t("manual.noBodies")}</p>
+      ) : null}
 
       {mode === "body" ? (
         <>

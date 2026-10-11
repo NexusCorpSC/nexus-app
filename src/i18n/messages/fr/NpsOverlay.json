@@ -111,6 +111,7 @@
     "name": "Nom (facultatif)",
     "invalidGeo": "Vérifiez les valeurs : latitude entre -90 et 90, longitude entre -180 et 180.",
     "invalidXyz": "Saisissez les trois coordonnées X, Y et Z.",
-    "go": "Me guider"
+    "go": "Me guider",
+    "noBodies": "Les planètes et les lunes ne sont pas encore chargées depuis le site : seules des coordonnées du système peuvent être saisies."
   }
 }

@@ -111,6 +111,7 @@
     "name": "Nombre (opcional)",
     "invalidGeo": "Revisa los valores: latitud entre -90 y 90, longitud entre -180 y 180.",
     "invalidXyz": "Introduce las tres coordenadas X, Y y Z.",
-    "go": "Guíame"
+    "go": "Guíame",
+    "noBodies": "Los planetas y las lunas aún no se han cargado desde el sitio: solo se pueden introducir coordenadas del sistema."
   }
 }
