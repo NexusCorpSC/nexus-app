@@ -218,8 +218,6 @@ export function CollectModal({
                 { value: "cSCU", label: "cSCU" },
                 { value: "SCU", label: "SCU" },
               ]}
-              aria-label={t("collectLocation")}
-              className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </div>
         </div>
