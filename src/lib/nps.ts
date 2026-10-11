@@ -199,39 +199,104 @@ const SHOWLOCATION = new RegExp(
   "im",
 );
 
-/**
- * The `SolarSystem` line of `r_displayInfo`, each value with its unit. The
- * `Root` and `CamPos` lines are left out, as in `src-tauri/src/nps_screen.rs`:
- * in Pyro, `Root` is in another frame.
- */
-const DISPLAY_INFO = new RegExp(
-  String.raw`zone:\s*solarsystem\S*\s+pos:\s*` +
+/** The `Zone: … Pos:` lines of `r_displayInfo`, each value with its unit. */
+const ZONE_LINE = new RegExp(
+  String.raw`zone:\s*(\S+)\s+pos:\s*` +
     [1, 2, 3]
       .map(() => String.raw`(${NUMBER})\s*(k?m)\b`)
       .join(String.raw`\s+`),
-  "i",
+  "gi",
 );
+
+/** The zone of a `ZONE_LINE` match, and its position in metres. */
+function zoneLines(text: string): { zone: string; point: Vector }[] {
+  return [...text.matchAll(ZONE_LINE)].flatMap((line) => {
+    const [x, y, z] = [0, 1, 2].map(
+      (index) =>
+        Number(line[2 + index * 2]) *
+        (line[3 + index * 2].toLowerCase() === "km" ? 1000 : 1),
+    );
+    return [x, y, z].every(Number.isFinite)
+      ? [{ zone: squash(line[1]), point: { x, y, z } }]
+      : [];
+  });
+}
+
+function squash(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
 
 /**
  * Coordinates pasted from the game, in metres: the line `/showlocation`
- * copies or the `Zone: SolarSystem_… Pos:` line `r_displayInfo` shows.
+ * copies or the `Zone: SolarSystem_… Pos:` line `r_displayInfo` shows. The
+ * `Root` and `CamPos` lines are left out, as in `src-tauri/src/nps_screen.rs`:
+ * in Pyro, `Root` is in another frame.
  */
 export function parseGameCoordinates(text: string): Vector | null {
   const showlocation = SHOWLOCATION.exec(text);
-  const values = showlocation
-    ? showlocation.slice(1, 4).map(Number)
-    : (() => {
-        const line = DISPLAY_INFO.exec(text);
-        if (!line) return null;
-        return [0, 1, 2].map(
-          (index) =>
-            Number(line[1 + index * 2]) *
-            (line[2 + index * 2].toLowerCase() === "km" ? 1000 : 1),
-        );
-      })();
-  if (!values || !values.every(Number.isFinite)) return null;
-  const [x, y, z] = values;
-  return { x, y, z };
+  if (showlocation) {
+    const [x, y, z] = showlocation.slice(1, 4).map(Number);
+    return [x, y, z].every(Number.isFinite) ? { x, y, z } : null;
+  }
+  return (
+    zoneLines(text).find((line) => line.zone.startsWith("solarsystem"))
+      ?.point ?? null
+  );
+}
+
+const ROMAN: Record<string, number> = {
+  i: 1,
+  ii: 2,
+  iii: 3,
+  iv: 4,
+  v: 5,
+  vi: 6,
+  vii: 7,
+  viii: 8,
+  ix: 9,
+  x: 10,
+};
+
+/** How a body's zone ends: `Daymar` → `daymar`, `Pyro IV` → `pyro4`. */
+function zoneSuffix(name: string): string {
+  return squash(
+    name.replace(/\b([ivx]+)\b/gi, (roman) =>
+      String(ROMAN[roman.toLowerCase()] ?? roman),
+    ),
+  );
+}
+
+/** Whether pasted text looks like coordinates from the game at all. */
+export function looksLikeGameCoordinates(text: string): boolean {
+  return /\b(zone|coordinates)\s*:/i.test(text);
+}
+
+/**
+ * The position in a planet's or a moon's own frame, from the line
+ * `r_displayInfo` shows for it (`Zone: OOC_Stanton_2b_Daymar Pos: … km …`),
+ * in metres, with the body the zone ends with. Lines of other zones (the
+ * system, a hangar, a Lagrange point…) are not in a body's frame: left out.
+ * Bodies of `system` are tried first, then the longest names.
+ */
+export function parseBodyCoordinates(
+  text: string,
+  bodies: NpsBody[],
+  system: string | null,
+): { point: Vector; body: NpsBody } | null {
+  const ranked = [...bodies].sort(
+    (a, b) =>
+      Number(b.systemSlug === system) - Number(a.systemSlug === system) ||
+      b.name.length - a.name.length,
+  );
+  for (const { zone, point } of zoneLines(text)) {
+    if (!zone.startsWith("ooc")) continue;
+    const body = ranked.find((one) => {
+      const suffix = zoneSuffix(one.name);
+      return suffix && zone.endsWith(suffix);
+    });
+    if (body) return { point, body };
+  }
+  return null;
 }
 
 function normalize360(degrees: number): number {

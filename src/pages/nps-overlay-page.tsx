@@ -47,6 +47,8 @@ import {
   MIN_CLOSING_SPEED,
   nearestPlaces,
   MAX_TRAVEL_AGE_MS,
+  looksLikeGameCoordinates,
+  parseBodyCoordinates,
   parseGameCoordinates,
   parseNumber,
   positionOf,
@@ -285,7 +287,8 @@ export default function NpsOverlayPage() {
   const systemName = bodies.find(
     (one) => one.systemSlug === system,
   )?.systemName;
-  const geo = fix && body ? geoOf(toBodyFrame(fix, body), body) : null;
+  const bodyFrame = fix && body ? toBodyFrame(fix, body) : null;
+  const geo = bodyFrame && body ? geoOf(bodyFrame, body) : null;
   const elsewhere = target ? !inSystem(target, system) : false;
   const previous = useMemo(
     () => (fix ? previousFor(fix, history, bodies) : null),
@@ -385,6 +388,9 @@ export default function NpsOverlayPage() {
           bodies={bodies}
           system={system}
           currentBody={body}
+          loadFailed={data.isError}
+          retrying={data.isFetching}
+          onRetry={() => void data.refetch()}
           onPick={(point) => {
             setPanel("guide");
             void setDestination({ point });
@@ -456,6 +462,17 @@ export default function NpsOverlayPage() {
                   })}
                 </p>
               ) : null}
+              {bodyFrame ? (
+                // As r_displayInfo writes them on the body's line: to check
+                // against the game, and to share.
+                <p className="text-slate-400 tabular-nums">
+                  {t("local", {
+                    x: kilometres(bodyFrame.x, format),
+                    y: kilometres(bodyFrame.y, format),
+                    z: kilometres(bodyFrame.z, format),
+                  })}
+                </p>
+              ) : null}
               {nearest ? (
                 <p className="text-slate-400">
                   {t("nearest", {
@@ -484,7 +501,7 @@ export default function NpsOverlayPage() {
               <button
                 type="button"
                 onClick={() => setPanel("coordinates")}
-                disabled={locked || bodies.length === 0}
+                disabled={locked}
                 title={t("coordinatesHint")}
                 className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
               >
@@ -607,6 +624,11 @@ function targetOf(
 }
 
 type Formatter = ReturnType<typeof useFormatter>;
+
+/** As `r_displayInfo` writes a coordinate, in km to the metre. */
+function kilometres(meters: number, format: Formatter): string {
+  return format.number(meters / 1000, { maximumFractionDigits: 3 });
+}
 
 /** As the game writes distances: metres, kilometres, then Mm and Gm. */
 function formatDistance(meters: number, format: Formatter): string {
@@ -1094,17 +1116,35 @@ function PickerHeader({
 
 type ManualPoint = Extract<NpsDestination, { point: unknown }>["point"];
 
+type Xyz = { x: string; y: string; z: string };
+type Unit = "m" | "km";
+
+const EMPTY_XYZ: Xyz = { x: "", y: "", z: "" };
+
 /**
- * A destination typed in by hand. On a planet or a moon, by latitude,
- * longitude and altitude, as the NPS shows them under « Ma position »: the
+ * Within this many radii of a body's centre, typed X, Y, Z are plausible;
+ * past it, they were most likely typed in metres with the unit left on km.
+ */
+const MAX_BODY_RADII = 3;
+
+/**
+ * A destination typed in by hand. On a planet or a moon, in its own frame:
+ * the X, Y, Z `r_displayInfo` shows on the line of its zone, or latitude,
+ * longitude and altitude as the NPS shows them under « Ma position ». The
  * ground turns, so a position in the system frame would be wrong a minute
  * later. In space, by the system coordinates `/showlocation` gives, which
  * can be pasted whole.
+ *
+ * The planets and moons may arrive after it opens: what it picks by default
+ * is worked out from them on each render, so nothing typed is lost.
  */
 function CoordinatesPanel({
   bodies,
   system,
   currentBody,
+  loadFailed,
+  retrying,
+  onRetry,
   onPick,
   onCancel,
 }: {
@@ -1112,28 +1152,42 @@ function CoordinatesPanel({
   /** The system the player is in, if known: its bodies come first. */
   system: string | null;
   currentBody: NpsBody | null;
+  /** The planets and moons could not be loaded from the site. */
+  loadFailed: boolean;
+  /** They are being asked for again. */
+  retrying: boolean;
+  onRetry: () => void;
   onPick: (point: ManualPoint) => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("NpsOverlay");
-  const [mode, setMode] = useState<"body" | "space">(
-    currentBody ? "body" : "space",
-  );
+  const format = useFormatter();
+  const noBodies = bodies.length === 0;
+  // Unset until the player picks: then the default follows the bodies.
+  const [pickedMode, setMode] = useState<"body" | "space" | null>(null);
+  const mode = noBodies
+    ? "space"
+    : (pickedMode ?? (currentBody ? "body" : "space"));
   const [name, setName] = useState("");
-  const [bodySlug, setBodySlug] = useState(
-    () =>
-      currentBody?.slug ??
-      bodies.find((one) => inSystem(one, system))?.slug ??
-      bodies[0]?.slug ??
-      "",
-  );
+  const [pickedSlug, setBodySlug] = useState("");
+  const bodySlug =
+    pickedSlug ||
+    currentBody?.slug ||
+    bodies.find((one) => inSystem(one, system))?.slug ||
+    bodies[0]?.slug ||
+    "";
+  // In-game, a body's frame is what one sees: r_displayInfo gives X, Y, Z.
+  const [bodyInput, setBodyInput] = useState<"local" | "geo">("local");
+  const [local, setLocal] = useState<Xyz>(EMPTY_XYZ);
+  // r_displayInfo writes kilometres, /showlocation metres.
+  const [localUnit, setLocalUnit] = useState<Unit>("km");
   const [geo, setGeo] = useState({ latitude: "", longitude: "", altitude: "" });
-  const [xyz, setXyz] = useState({ x: "", y: "", z: "" });
-  const [unit, setUnit] = useState<"m" | "km">("m");
+  const [xyz, setXyz] = useState<Xyz>(EMPTY_XYZ);
+  const [unit, setUnit] = useState<Unit>("m");
   // When the pasted coordinates were read: close to a body, they place the
   // point as the body stood then. Typed by hand, they are taken as of now.
   const [pastedAt, setPastedAt] = useState<number | null>(null);
-  const [invalid, setInvalid] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // By system, the player's own first, then by name.
   const groups = useMemo(() => {
@@ -1154,22 +1208,90 @@ function CoordinatesPanel({
       );
   }, [bodies, system]);
 
+  /**
+   * Fills the fields from a line of the game, if `read` makes one out; a
+   * line from the game it cannot place is not pasted raw into a field.
+   */
+  function pasting(
+    event: ClipboardEvent,
+    read: (text: string) => boolean,
+    unknown: string,
+  ) {
+    const text = event.clipboardData.getData("text");
+    if (read(text)) {
+      event.preventDefault();
+      setError(null);
+    } else if (looksLikeGameCoordinates(text)) {
+      event.preventDefault();
+      setError(unknown);
+    }
+  }
+
   function pasted(event: ClipboardEvent) {
-    const point = parseGameCoordinates(event.clipboardData.getData("text"));
-    if (!point) return;
-    event.preventDefault();
-    setUnit("m");
-    setXyz({ x: String(point.x), y: String(point.y), z: String(point.z) });
-    setPastedAt(Date.now());
-    setInvalid(false);
+    pasting(
+      event,
+      (text) => {
+        const point = parseGameCoordinates(text);
+        if (!point) return false;
+        setUnit("m");
+        setXyz(asFields(point));
+        setPastedAt(Date.now());
+        return true;
+      },
+      t("manual.pasteSpaceUnknown"),
+    );
+  }
+
+  function pastedLocal(event: ClipboardEvent) {
+    pasting(
+      event,
+      (text) => {
+        const found = parseBodyCoordinates(text, bodies, system);
+        if (!found) return false;
+        setBodySlug(found.body.slug);
+        setLocalUnit("m");
+        setLocal(asFields(found.point));
+        return true;
+      },
+      t("manual.pasteBodyUnknown"),
+    );
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
     const label = name.trim() || undefined;
+    const body = bodies.find((one) => one.slug === bodySlug);
+
+    if (mode === "body" && bodyInput === "local") {
+      const point = parseXyz(local, localUnit);
+      if (!body || !point) {
+        setError(t("manual.invalidXyz"));
+        return;
+      }
+      const distance = Math.hypot(point.x, point.y, point.z);
+      if (
+        distance < body.radius / 2 ||
+        distance > body.radius * MAX_BODY_RADII
+      ) {
+        setError(
+          t("manual.implausibleXyz", {
+            distance: formatDistance(distance, format),
+            body: body.name,
+            radius: formatDistance(body.radius, format),
+          }),
+        );
+        return;
+      }
+      // The body's frame turns with it, as the one places are stored in.
+      onPick({
+        name: label,
+        systemSlug: body.systemSlug,
+        position: { body: body.slug, ...point },
+      });
+      return;
+    }
 
     if (mode === "body") {
-      const body = bodies.find((one) => one.slug === bodySlug);
       const latitude = parseNumber(geo.latitude);
       const longitude = parseNumber(geo.longitude);
       const altitude = geo.altitude.trim() ? parseNumber(geo.altitude) : 0;
@@ -1180,27 +1302,25 @@ function CoordinatesPanel({
         altitude === null ||
         body.radius + altitude <= 0 ||
         Math.abs(latitude) > 90 ||
-        Math.abs(longitude) > 360
+        Math.abs(longitude) > 180
       ) {
-        setInvalid(true);
+        setError(t("manual.invalidGeo"));
         return;
       }
-      const local = fromGeo({ latitude, longitude, altitude }, body);
+      const position = fromGeo({ latitude, longitude, altitude }, body);
       onPick({
         name: label,
         systemSlug: body.systemSlug,
-        position: { body: body.slug, ...local },
+        position: { body: body.slug, ...position },
       });
       return;
     }
 
-    const factor = unit === "km" ? 1000 : 1;
-    const [x, y, z] = [xyz.x, xyz.y, xyz.z].map(parseNumber);
-    if (x === null || y === null || z === null) {
-      setInvalid(true);
+    const point = parseXyz(xyz, unit);
+    if (!point) {
+      setError(t("manual.invalidXyz"));
       return;
     }
-    const point = { x: x * factor, y: y * factor, z: z * factor };
     // Close to a body, the point turns with it from now on.
     const position = positionOf(
       { ...point, at: pastedAt ?? Date.now() },
@@ -1212,9 +1332,6 @@ function CoordinatesPanel({
       position,
     });
   }
-
-  const field =
-    "min-w-0 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none";
 
   return (
     <form
@@ -1229,12 +1346,15 @@ function CoordinatesPanel({
             key={one}
             type="button"
             aria-pressed={mode === one}
+            // Without the planets and moons from the site, only system
+            // coordinates can be placed.
+            disabled={one === "body" && noBodies}
             onClick={() => {
               setMode(one);
-              setInvalid(false);
+              setError(null);
             }}
             className={cn(
-              "flex-1 rounded-md px-2 py-1 transition",
+              "flex-1 rounded-md px-2 py-1 transition disabled:opacity-40",
               mode === one
                 ? "bg-white/15 text-slate-100"
                 : "text-slate-400 hover:bg-white/10",
@@ -1245,6 +1365,22 @@ function CoordinatesPanel({
         ))}
       </div>
 
+      {noBodies ? (
+        <p className="text-[11px] text-amber-200">
+          {loadFailed ? t("manual.bodiesFailed") : t("manual.noBodies")}
+          {loadFailed ? (
+            <button
+              type="button"
+              onClick={onRetry}
+              disabled={retrying}
+              className="ml-1 underline underline-offset-2 hover:text-amber-100 disabled:no-underline disabled:opacity-60"
+            >
+              {retrying ? "…" : t("retry")}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+
       {mode === "body" ? (
         <>
           <label className="space-y-0.5 text-[11px] text-slate-400">
@@ -1253,9 +1389,9 @@ function CoordinatesPanel({
               value={bodySlug}
               onChange={(event) => {
                 setBodySlug(event.target.value);
-                setInvalid(false);
+                setError(null);
               }}
-              className={cn(field, "block w-full")}
+              className={cn(FIELD, "block w-full")}
             >
               {groups.map((group) => (
                 <optgroup key={group.label} label={group.label}>
@@ -1268,65 +1404,83 @@ function CoordinatesPanel({
               ))}
             </select>
           </label>
-          <div className="grid grid-cols-3 gap-1.5">
-            {(["latitude", "longitude", "altitude"] as const).map((key) => (
-              <label
-                key={key}
-                className="space-y-0.5 text-[11px] text-slate-400"
-              >
-                <span>{t(`manual.${key}`)}</span>
+          <div className="flex shrink-0 gap-3 text-[11px] text-slate-400">
+            {(["local", "geo"] as const).map((one) => (
+              <label key={one} className="flex items-center gap-1">
                 <input
-                  value={geo[key]}
-                  inputMode="decimal"
-                  autoFocus={key === "latitude"}
-                  placeholder={key === "altitude" ? "0" : undefined}
-                  onChange={(event) => {
-                    setGeo({ ...geo, [key]: event.target.value });
-                    setInvalid(false);
+                  type="radio"
+                  name="bodyInput"
+                  checked={bodyInput === one}
+                  onChange={() => {
+                    setBodyInput(one);
+                    setError(null);
                   }}
-                  className={cn(field, "block w-full")}
                 />
+                {one === "local" ? t("manual.localXyz") : t("manual.latLong")}
               </label>
             ))}
           </div>
-          <p className="text-[11px] text-slate-500">{t("manual.bodyHint")}</p>
+          {bodyInput === "local" ? (
+            <>
+              <XyzFields
+                value={local}
+                unit={localUnit}
+                onChange={(value) => {
+                  setLocal(value);
+                  setError(null);
+                }}
+                onUnit={setLocalUnit}
+                onPaste={pastedLocal}
+              />
+              <p className="text-[11px] text-slate-500">
+                {t("manual.localHint")}
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(["latitude", "longitude", "altitude"] as const).map((key) => (
+                  <label
+                    key={key}
+                    className="space-y-0.5 text-[11px] text-slate-400"
+                  >
+                    <span>{t(`manual.${key}`)}</span>
+                    <input
+                      value={geo[key]}
+                      inputMode="decimal"
+                      autoFocus={key === "latitude"}
+                      placeholder={key === "altitude" ? "0" : undefined}
+                      onChange={(event) => {
+                        setGeo({ ...geo, [key]: event.target.value });
+                        setError(null);
+                      }}
+                      className={cn(FIELD, "block w-full")}
+                    />
+                  </label>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-500">
+                {t("manual.bodyHint")}
+              </p>
+            </>
+          )}
         </>
       ) : (
         <>
-          <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-1.5">
-            {(["x", "y", "z"] as const).map((key) => (
-              <label
-                key={key}
-                className="space-y-0.5 text-[11px] text-slate-400"
-              >
-                <span>{key.toUpperCase()}</span>
-                <input
-                  value={xyz[key]}
-                  inputMode="decimal"
-                  autoFocus={key === "x"}
-                  onPaste={pasted}
-                  onChange={(event) => {
-                    setXyz({ ...xyz, [key]: event.target.value });
-                    setPastedAt(null);
-                    setInvalid(false);
-                  }}
-                  className={cn(field, "block w-full")}
-                />
-              </label>
-            ))}
-            <select
-              value={unit}
-              onChange={(event) => {
-                setUnit(event.target.value as "m" | "km");
-                setPastedAt(null);
-              }}
-              aria-label={t("manual.unit")}
-              className={cn(field, "px-1")}
-            >
-              <option value="m">m</option>
-              <option value="km">km</option>
-            </select>
-          </div>
+          <XyzFields
+            value={xyz}
+            unit={unit}
+            onChange={(value) => {
+              setXyz(value);
+              setPastedAt(null);
+              setError(null);
+            }}
+            onUnit={(value) => {
+              setUnit(value);
+              setPastedAt(null);
+            }}
+            onPaste={pasted}
+          />
           <p className="text-[11px] text-slate-500">{t("manual.spaceHint")}</p>
         </>
       )}
@@ -1338,15 +1492,11 @@ function CoordinatesPanel({
           maxLength={60}
           placeholder={t("manualName")}
           onChange={(event) => setName(event.target.value)}
-          className={cn(field, "block w-full")}
+          className={cn(FIELD, "block w-full")}
         />
       </label>
 
-      {invalid ? (
-        <p className="text-[12px] text-red-300">
-          {mode === "body" ? t("manual.invalidGeo") : t("manual.invalidXyz")}
-        </p>
-      ) : null}
+      {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
 
       <button
         type="submit"
@@ -1356,5 +1506,68 @@ function CoordinatesPanel({
         {t("manual.go")}
       </button>
     </form>
+  );
+}
+
+const FIELD =
+  "min-w-0 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none";
+
+function asFields(point: { x: number; y: number; z: number }): Xyz {
+  return { x: String(point.x), y: String(point.y), z: String(point.z) };
+}
+
+/** The three fields in metres, or `null` if one is not a number. */
+function parseXyz(
+  value: Xyz,
+  unit: Unit,
+): { x: number; y: number; z: number } | null {
+  const factor = unit === "km" ? 1000 : 1;
+  const [x, y, z] = [value.x, value.y, value.z].map(parseNumber);
+  if (x === null || y === null || z === null) return null;
+  return { x: x * factor, y: y * factor, z: z * factor };
+}
+
+/** X, Y, Z and their unit; a pasted line of the game can fill all three. */
+function XyzFields({
+  value,
+  unit,
+  onChange,
+  onUnit,
+  onPaste,
+}: {
+  value: Xyz;
+  unit: Unit;
+  onChange: (value: Xyz) => void;
+  onUnit: (unit: Unit) => void;
+  onPaste: (event: ClipboardEvent) => void;
+}) {
+  const t = useTranslations("NpsOverlay");
+  return (
+    <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-1.5">
+      {(["x", "y", "z"] as const).map((key) => (
+        <label key={key} className="space-y-0.5 text-[11px] text-slate-400">
+          <span>{key.toUpperCase()}</span>
+          <input
+            value={value[key]}
+            inputMode="decimal"
+            autoFocus={key === "x"}
+            onPaste={onPaste}
+            onChange={(event) =>
+              onChange({ ...value, [key]: event.target.value })
+            }
+            className={cn(FIELD, "block w-full")}
+          />
+        </label>
+      ))}
+      <select
+        value={unit}
+        onChange={(event) => onUnit(event.target.value as Unit)}
+        aria-label={t("manual.unit")}
+        className={cn(FIELD, "px-1")}
+      >
+        <option value="m">m</option>
+        <option value="km">km</option>
+      </select>
+    </div>
   );
 }

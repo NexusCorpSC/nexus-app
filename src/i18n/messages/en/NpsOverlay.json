@@ -111,6 +111,15 @@
     "name": "Name (optional)",
     "invalidGeo": "Check the values: latitude between -90 and 90, longitude between -180 and 180.",
     "invalidXyz": "Type in all three coordinates X, Y and Z.",
-    "go": "Guide me"
-  }
+    "go": "Guide me",
+    "noBodies": "Planets and moons are not loaded from the site yet: only system coordinates can be typed in, and a point near a planet will not follow its rotation.",
+    "localXyz": "Body X, Y, Z",
+    "latLong": "Latitude, longitude",
+    "localHint": "The values r_displayInfo shows on the planet's or moon's “Zone: OOC_… Pos:” line (a frame that turns with it). Paste the line into a field to fill them all and pick the body.",
+    "bodiesFailed": "Planets and moons could not be loaded: only system coordinates can be typed in.",
+    "implausibleXyz": "This point is {distance} from the centre of {body}, whose radius is {radius}: check the unit (km or m).",
+    "pasteBodyUnknown": "Line not recognised: paste the “Zone: OOC_… Pos:” line of a planet or moon known to the site (not the system, a hangar or a Lagrange point).",
+    "pasteSpaceUnknown": "Line not recognised: paste the /showlocation line or r_displayInfo's “Zone: SolarSystem… Pos:” line."
+  },
+  "local": "Body X, Y, Z: {x} km {y} km {z} km"
 }
