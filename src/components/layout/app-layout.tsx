@@ -22,6 +22,7 @@ import {
   Archive,
   Bot,
   Container,
+  FlaskConical,
   Flag,
   Hammer,
   House,
@@ -43,6 +44,10 @@ import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useContribWatcher } from "@/hooks/use-contrib-watcher";
 import { useOrdersWatcher } from "@/hooks/use-orders-watcher";
+import {
+  useReadyRefiningCount,
+  useRefiningWatcher,
+} from "@/hooks/use-refining-watcher";
 import { usePresenceRenewal } from "@/hooks/use-presence";
 import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
@@ -63,6 +68,7 @@ type NavKey =
   | "factions"
   | "inventory"
   | "orders"
+  | "refining"
   | "reputations"
   | "friends"
   | "notes"
@@ -103,6 +109,12 @@ const NAV_GROUPS: NavGroup[] = [
         to: "/inventory",
         label: "inventory",
         icon: Archive,
+        requiresAuth: true,
+      },
+      {
+        to: "/refining",
+        label: "refining",
+        icon: FlaskConical,
         requiresAuth: true,
       },
       {
@@ -186,6 +198,8 @@ export default function AppLayout() {
   // back, an achievement, a level. Read from here, the window with the session.
   useContribWatcher(user?.id ?? null);
   useOrdersWatcher(user?.id ?? null);
+  // Refining orders reaching their end, told from here as well.
+  useRefiningWatcher(user?.id ?? null);
 
   useEffect(() => {
     const pending = listen<string>(NAVIGATE_EVENT, (event) => {
@@ -334,6 +348,9 @@ export default function AppLayout() {
                         {friendsPlaying}
                       </span>
                     ) : null}
+                    {to === "/refining" ? (
+                      <RefiningReadyBadge userId={user?.id} />
+                    ) : null}
                   </NavLink>
                 ))}
               </div>
@@ -407,5 +424,23 @@ export default function AppLayout() {
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * How many refining orders are ready to collect, beside «Raffinage». Its own
+ * component: the clock it reads would otherwise redraw the whole layout.
+ */
+function RefiningReadyBadge({ userId }: { userId?: string }) {
+  const t = useTranslations("Layout");
+  const ready = useReadyRefiningCount(userId);
+  if (ready === 0) return null;
+  return (
+    <span
+      title={t("refiningReady", { count: ready })}
+      className="rounded-full bg-emerald-300 px-1.5 font-mono text-[10.5px] font-semibold text-[#053527]"
+    >
+      {ready}
+    </span>
   );
 }

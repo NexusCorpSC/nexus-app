@@ -22,6 +22,7 @@ import OrgDetailPage from "@/pages/org-detail-page";
 import OrgEventPage from "@/pages/org-event-page";
 import FriendsPage from "@/pages/friends-page";
 import OrdersPage from "@/pages/orders-page";
+import RefiningPage from "@/pages/refining-page";
 import SettingsPage from "@/pages/settings-page";
 import HomePage from "@/pages/home-page";
 import LoginPage from "@/pages/login-page";
@@ -123,6 +124,7 @@ export default function App() {
           />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="refining" element={<RefiningPage />} />
           <Route
             path="chat"
             element={

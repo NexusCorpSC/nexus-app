@@ -34,6 +34,7 @@ import type Price from "./messages/fr/Price.json";
 import type QuickAdd from "./messages/fr/QuickAdd.json";
 import type Radial from "./messages/fr/Radial.json";
 import type Raid from "./messages/fr/Raid.json";
+import type Refining from "./messages/fr/Refining.json";
 import type Report from "./messages/fr/Report.json";
 import type Reputations from "./messages/fr/Reputations.json";
 import type Search from "./messages/fr/Search.json";
@@ -84,6 +85,7 @@ export type Messages = {
   QuickAdd: typeof QuickAdd;
   Radial: typeof Radial;
   Raid: typeof Raid;
+  Refining: typeof Refining;
   Report: typeof Report;
   Reputations: typeof Reputations;
   Search: typeof Search;

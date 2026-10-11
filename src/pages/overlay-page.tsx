@@ -27,6 +27,8 @@ import {
   parseWorkOrderText,
   workOrderImportRoute,
 } from "@/lib/refinery-work-order";
+import { listRefiningJobs } from "@/lib/api/refining";
+import { isFinished } from "@/lib/refining";
 import { openMainRoute } from "@/lib/main-window";
 import { CargoCaptureImport } from "@/components/cargo/capture-import";
 import { BlueprintQuickAdd } from "@/components/blueprint-ownership-buttons";
@@ -57,6 +59,25 @@ function asQuery(text: string): string {
  * the user's own inventory when signed in — and hands each result to whichever of the two
  * clients has a screen for it (see `src/lib/search.ts`).
  */
+/**
+ * Where a captured work order goes: the Refining page when an order of the
+ * reader's is ready to collect, the bulk add otherwise — or when the orders
+ * cannot be read.
+ */
+async function workOrderRoute(
+  workOrder: Parameters<typeof workOrderImportRoute>[0],
+): Promise<string> {
+  try {
+    const jobs = await listRefiningJobs();
+    if (jobs.some((job) => isFinished(job, Date.now()))) {
+      return workOrderImportRoute(workOrder, "/refining");
+    }
+  } catch (error) {
+    console.error("cannot read refining orders", error);
+  }
+  return workOrderImportRoute(workOrder);
+}
+
 export default function OverlayPage() {
   const t = useTranslations("Search");
   const { user } = useAuth();
@@ -130,9 +151,12 @@ export default function OverlayPage() {
         // table's work, not the palette's, so the main window takes over.
         // The palette is put away first, so the main window comes up in
         // front rather than under it.
+        // When a refining order is ready, the capture is its yield: the
+        // Refining page collects that order with the lines read.
         setCargo(null);
         void invoke("close_search_overlay")
-          .then(() => openMainRoute(workOrderImportRoute(workOrder)))
+          .then(() => workOrderRoute(workOrder))
+          .then(openMainRoute)
           .catch((cause) => {
             console.error("cannot open the bulk add", cause);
           });

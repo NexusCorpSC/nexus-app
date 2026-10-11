@@ -409,11 +409,16 @@ export interface WorkOrderImport {
 }
 
 /**
- * The route that opens the bulk add with a captured work order in it. The
- * capture is read in the search palette, a window of its own, and the main
- * window only takes a route (see `openMainRoute`), so the lots travel in it.
+ * The route that opens the bulk add with a captured work order in it — or,
+ * given `/refining`, the Refining page, which collects a finished order with
+ * it. The capture is read in the search palette, a window of its own, and the
+ * main window only takes a route (see `openMainRoute`), so the lots travel in
+ * it.
  */
-export function workOrderImportRoute(result: WorkOrderParseResult): string {
+export function workOrderImportRoute(
+  result: WorkOrderParseResult,
+  page: "/inventory/quick-add" | "/refining" = "/inventory/quick-add",
+): string {
   const payload: WorkOrderImport = {
     lines: result.lines.map(({ name, quality, quantity }) => ({
       name,
@@ -425,7 +430,7 @@ export function workOrderImportRoute(result: WorkOrderParseResult): string {
   const params = new URLSearchParams({
     [WORK_ORDER_PARAM]: JSON.stringify(payload),
   });
-  return `/inventory/quick-add?${params}`;
+  return `${page}?${params}`;
 }
 
 /** The work order a bulk-add route carries, or `null` when it holds none. */

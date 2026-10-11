@@ -58,6 +58,8 @@ const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
 const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
 const KEY_ORDERS_SINCE = "ordersSince";
+const KEY_REFINING_NOTIFICATIONS = "refiningNotifications";
+const KEY_REFINING_NOTIFIED = "refiningNotified";
 const KEY_LOCALE = "locale";
 const KEY_MICROPHONE = "microphone";
 
@@ -435,6 +437,51 @@ export async function getOrderNotifications(): Promise<boolean> {
 export async function setOrderNotifications(enabled: boolean): Promise<void> {
   const store = await getStore();
   await store.set(KEY_ORDER_NOTIFICATIONS, enabled);
+}
+
+/**
+ * Whether a refining order reaching its end raises a notification. On unless
+ * turned off.
+ */
+export async function getRefiningNotifications(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_REFINING_NOTIFICATIONS);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setRefiningNotifications(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_REFINING_NOTIFICATIONS, enabled);
+}
+
+/**
+ * The refining orders whose end was already told, one list per account and
+ * per instance; null before the first read, which only sets it.
+ */
+export async function getRefiningNotified(
+  userId: string,
+): Promise<string[] | null> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_REFINING_NOTIFIED);
+  if (!marks || typeof marks !== "object") return null;
+  const value = (marks as Record<string, unknown>)[
+    await accountInstanceKey(userId)
+  ];
+  return Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string")
+    : null;
+}
+
+export async function setRefiningNotified(
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_REFINING_NOTIFIED);
+  await store.set(KEY_REFINING_NOTIFIED, {
+    ...(marks && typeof marks === "object" ? marks : {}),
+    [await accountInstanceKey(userId)]: ids,
+  });
 }
 
 /**

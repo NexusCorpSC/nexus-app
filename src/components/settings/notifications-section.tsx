@@ -4,9 +4,11 @@ import {
   getContribNotifications,
   getNotificationCorner,
   getOrderNotifications,
+  getRefiningNotifications,
   setContribNotifications,
   setNotificationCorner,
   setOrderNotifications,
+  setRefiningNotifications,
 } from "@/lib/settings";
 import {
   applyNotificationCorner,
@@ -41,11 +43,13 @@ export function NotificationsSection() {
 
   const [contrib, setContrib] = useState(true);
   const [orders, setOrders] = useState(true);
+  const [refining, setRefining] = useState(true);
 
   useEffect(() => {
     void getNotificationCorner().then(setCorner);
     void getContribNotifications().then(setContrib);
     void getOrderNotifications().then(setOrders);
+    void getRefiningNotifications().then(setRefining);
   }, []);
 
   function handleContribChange(next: boolean) {
@@ -62,6 +66,16 @@ export function NotificationsSection() {
     setOrders(next);
     void setOrderNotifications(next).catch((cause) => {
       setOrders(!next);
+      setNotificationError(
+        cause instanceof Error ? cause.message : t("contribError"),
+      );
+    });
+  }
+
+  function handleRefiningChange(next: boolean) {
+    setRefining(next);
+    void setRefiningNotifications(next).catch((cause) => {
+      setRefining(!next);
       setNotificationError(
         cause instanceof Error ? cause.message : t("contribError"),
       );
@@ -162,6 +176,21 @@ export function NotificationsSection() {
               {t("orders")}
               <small className="mt-0.5 block text-xs text-nexus-dim">
                 {t("ordersHint")}
+              </small>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={refining}
+              onChange={(event) => handleRefiningChange(event.target.checked)}
+              className="mt-0.5 accent-nexus-accent"
+            />
+            <span>
+              {t("refining")}
+              <small className="mt-0.5 block text-xs text-nexus-dim">
+                {t("refiningHint")}
               </small>
             </span>
           </label>

@@ -22,5 +22,7 @@
   "contribHint": "Publicada, por corregir, logro desbloqueado o nuevo nivel.",
   "contribError": "No se pudo guardar el ajuste.",
   "orders": "Mis pedidos",
-  "ordersHint": "Un pedido recibido por una de mis tiendas, o un paso dado en un pedido."
+  "ordersHint": "Un pedido recibido por una de mis tiendas, o un paso dado en un pedido.",
+  "refining": "Órdenes de refinado terminadas",
+  "refiningHint": "Cuando una orden de refinado llega a su fin, para ir a recogerla."
 }
