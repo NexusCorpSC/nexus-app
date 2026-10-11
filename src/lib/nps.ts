@@ -171,43 +171,67 @@ export function fromGeo(geo: Geo, body: NpsBody): Vector {
 }
 
 /**
- * A number as a player types it: `12 850,5` or `12850.5`. A comma is a
- * decimal point, unless there is a point too: then it groups thousands.
+ * A number as a player types it: `12 850,5`, `12850.5`, `12,850.5` or
+ * `12.850,5`. With both a comma and a point, the last one is the decimal
+ * separator and the other groups thousands; with a comma alone, it is the
+ * decimal separator.
  */
 export function parseNumber(text: string): number | null {
   let cleaned = text.trim().replace(/[\s\u00a0\u202f']/g, "");
   if (!cleaned) return null;
-  cleaned = cleaned.includes(".")
-    ? cleaned.replace(/,/g, "")
-    : cleaned.replace(",", ".");
+  const comma = cleaned.lastIndexOf(",");
+  const point = cleaned.lastIndexOf(".");
+  cleaned =
+    comma > point
+      ? cleaned.replace(/\./g, "").replace(/,/g, ".")
+      : cleaned.replace(/,/g, "");
+  if (!/^[-+]?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?$/i.test(cleaned)) return null;
   const value = Number(cleaned);
   return Number.isFinite(value) ? value : null;
 }
 
-const NUMBER = String.raw`[-+]?\d+(?:\.\d+)?`;
+/** As `src-tauri/src/nps.rs` reads them, exponent included. */
+const NUMBER = String.raw`-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?`;
+
+/** The line `/showlocation` copies, in metres. */
+const SHOWLOCATION = new RegExp(
+  String.raw`^\s*coordinates:\s*x:\s*(${NUMBER})\s+y:\s*(${NUMBER})\s+z:\s*(${NUMBER})`,
+  "im",
+);
+
+/**
+ * The `SolarSystem` line of `r_displayInfo`, each value with its unit. The
+ * `Root` and `CamPos` lines are left out, as in `src-tauri/src/nps_screen.rs`:
+ * in Pyro, `Root` is in another frame.
+ */
+const DISPLAY_INFO = new RegExp(
+  String.raw`zone:\s*solarsystem\S*\s+pos:\s*` +
+    [1, 2, 3]
+      .map(() => String.raw`(${NUMBER})\s*(k?m)\b`)
+      .join(String.raw`\s+`),
+  "i",
+);
 
 /**
  * Coordinates pasted from the game, in metres: the line `/showlocation`
- * copies (`Coordinates: x:… y:… z:…`, in metres) or the one `r_displayInfo`
- * shows (`Pos: … km … km … km`).
+ * copies or the `Zone: SolarSystem_… Pos:` line `r_displayInfo` shows.
  */
 export function parseGameCoordinates(text: string): Vector | null {
-  const showlocation = new RegExp(
-    `x:\\s*(${NUMBER})\\s+y:\\s*(${NUMBER})\\s+z:\\s*(${NUMBER})`,
-    "i",
-  ).exec(text);
-  const displayInfo = new RegExp(
-    `Pos:\\s*(${NUMBER})\\s*km\\s+(${NUMBER})\\s*km\\s+(${NUMBER})\\s*km`,
-    "i",
-  ).exec(text);
-  const [match, factor] = showlocation
-    ? [showlocation, 1]
-    : displayInfo
-      ? [displayInfo, 1000]
-      : [null, 0];
-  if (!match) return null;
-  const [x, y, z] = match.slice(1, 4).map((one) => Number(one) * factor);
-  return [x, y, z].every(Number.isFinite) ? { x, y, z } : null;
+  const showlocation = SHOWLOCATION.exec(text);
+  const values = showlocation
+    ? showlocation.slice(1, 4).map(Number)
+    : (() => {
+        const line = DISPLAY_INFO.exec(text);
+        if (!line) return null;
+        return [0, 1, 2].map(
+          (index) =>
+            Number(line[1 + index * 2]) *
+            (line[2 + index * 2].toLowerCase() === "km" ? 1000 : 1),
+        );
+      })();
+  if (!values || !values.every(Number.isFinite)) return null;
+  const [x, y, z] = values;
+  return { x, y, z };
 }
 
 function normalize360(degrees: number): number {

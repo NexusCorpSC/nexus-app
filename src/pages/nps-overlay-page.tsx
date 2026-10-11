@@ -1130,6 +1130,9 @@ function CoordinatesPanel({
   const [geo, setGeo] = useState({ latitude: "", longitude: "", altitude: "" });
   const [xyz, setXyz] = useState({ x: "", y: "", z: "" });
   const [unit, setUnit] = useState<"m" | "km">("m");
+  // When the pasted coordinates were read: close to a body, they place the
+  // point as the body stood then. Typed by hand, they are taken as of now.
+  const [pastedAt, setPastedAt] = useState<number | null>(null);
   const [invalid, setInvalid] = useState(false);
 
   // By system, the player's own first, then by name.
@@ -1157,6 +1160,7 @@ function CoordinatesPanel({
     event.preventDefault();
     setUnit("m");
     setXyz({ x: String(point.x), y: String(point.y), z: String(point.z) });
+    setPastedAt(Date.now());
     setInvalid(false);
   }
 
@@ -1174,6 +1178,7 @@ function CoordinatesPanel({
         latitude === null ||
         longitude === null ||
         altitude === null ||
+        body.radius + altitude <= 0 ||
         Math.abs(latitude) > 90 ||
         Math.abs(longitude) > 360
       ) {
@@ -1197,7 +1202,10 @@ function CoordinatesPanel({
     }
     const point = { x: x * factor, y: y * factor, z: z * factor };
     // Close to a body, the point turns with it from now on.
-    const position = positionOf({ ...point, at: Date.now() }, bodies);
+    const position = positionOf(
+      { ...point, at: pastedAt ?? Date.now() },
+      bodies,
+    );
     onPick({
       name: label,
       systemSlug: bodyAt(point, bodies)?.systemSlug ?? system ?? undefined,
@@ -1299,6 +1307,7 @@ function CoordinatesPanel({
                   onPaste={pasted}
                   onChange={(event) => {
                     setXyz({ ...xyz, [key]: event.target.value });
+                    setPastedAt(null);
                     setInvalid(false);
                   }}
                   className={cn(field, "block w-full")}
@@ -1307,7 +1316,10 @@ function CoordinatesPanel({
             ))}
             <select
               value={unit}
-              onChange={(event) => setUnit(event.target.value as "m" | "km")}
+              onChange={(event) => {
+                setUnit(event.target.value as "m" | "km");
+                setPastedAt(null);
+              }}
               aria-label={t("manual.unit")}
               className={cn(field, "px-1")}
             >

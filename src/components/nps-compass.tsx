@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { useTranslations } from "use-intl";
 
 import type { Guidance } from "@/lib/nps";
@@ -22,10 +22,14 @@ const TICKS = Array.from({ length: 24 }, (_, index) => index * 15);
  * back through 180°, so the needle does not spin when it eases to its place.
  */
 function useContinuousAngle(angle: number): number {
-  const last = useRef(angle);
-  const delta = ((((angle - last.current) % 360) + 540) % 360) - 180;
-  last.current += delta;
-  return last.current;
+  // Adjusted while rendering, the way React allows: a render it throws away
+  // leaves no trace, unlike a ref written to.
+  const [state, setState] = useState({ angle, unwrapped: angle });
+  if (state.angle === angle) return state.unwrapped;
+  const delta = ((((angle - state.unwrapped) % 360) + 540) % 360) - 180;
+  const next = { angle, unwrapped: state.unwrapped + delta };
+  setState(next);
+  return next.unwrapped;
 }
 
 /**

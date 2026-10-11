@@ -521,9 +521,18 @@ function isNpsDestination(value: unknown): value is NpsDestination {
   if (!("point" in value) || !value.point || typeof value.point !== "object") {
     return false;
   }
-  const { position } = value.point as { position?: Partial<PlacePosition> };
+  const { name, systemSlug, position } = value.point as {
+    name?: unknown;
+    systemSlug?: unknown;
+    position?: Partial<Record<keyof PlacePosition, unknown>>;
+  };
+  const optionalString = (one: unknown) =>
+    one === undefined || typeof one === "string";
   return (
+    optionalString(name) &&
+    optionalString(systemSlug) &&
     !!position &&
+    optionalString(position.body) &&
     [position.x, position.y, position.z].every(
       (one) => typeof one === "number" && Number.isFinite(one),
     )
