@@ -98,5 +98,10 @@
     "credit": "Crédit (facultatif)",
     "creditPlaceholder": "Votre pseudo, ou l'auteur de l'image",
     "help": "+{points} points par image publiée, +{bonus} si c'est la première du lieu. L'image est réduite à 2560 pixels avant l'envoi ; évitez l'interface personnelle (pseudo, messages) dans le cadre."
+  },
+  "propose": {
+    "button": "Proposer un lieu",
+    "here": "Il manque un lieu ici ?",
+    "hint": "S'ouvre sur le site Nexus Tools. +3 points une fois la proposition approuvée."
   }
 }
