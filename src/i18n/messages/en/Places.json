@@ -102,6 +102,7 @@
   "propose": {
     "button": "Suggest a location",
     "here": "A location is missing here?",
-    "hint": "Opens on the Nexus Tools website. +{points} points once the suggestion is approved."
+    "hint": "Opens on the Nexus Tools website. +{points} points once the suggestion is approved.",
+    "openFailed": "Couldn't open the Nexus Tools website."
   }
 }

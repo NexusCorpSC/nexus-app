@@ -83,7 +83,10 @@ export default function PlaceDetailPage() {
         actions={
           <>
             {user ? <AddMediaButton place={place} /> : null}
-            <ProposePlaceButton parentSlug={place.slug} />
+            {/* Un magasin ne contient pas d'autre lieu. */}
+            {user && place.type !== "shop" ? (
+              <ProposePlaceButton parentSlug={place.slug} />
+            ) : null}
             {place.position ? (
               <Button
                 variant="outline"

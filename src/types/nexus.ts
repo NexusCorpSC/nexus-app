@@ -1753,6 +1753,8 @@ export type PlaceMediaUploadResult = {
 /** An image of a place: 2 points, 3 more for the place's first one. */
 export const PLACE_MEDIA_POINTS = 2;
 export const PLACE_FIRST_MEDIA_BONUS = 3;
+/** A place suggested by a player, once published (`POINTS.placeCreate`). */
+export const PLACE_CREATE_POINTS = 3;
 export const MAX_MEDIA_CAPTION_LENGTH = 140;
 export const MAX_MEDIA_CREDIT_LENGTH = 60;
 

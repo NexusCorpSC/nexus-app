@@ -8,6 +8,7 @@ import {
   useInitialParams,
   useUrlFilters,
 } from "@/hooks/use-url-filters";
+import { useAuth } from "@/auth/auth-context";
 import { PlaceCard } from "@/components/place-card";
 import { ProposePlaceButton } from "@/components/place/propose-place-button";
 import {
@@ -50,6 +51,7 @@ function isPlaceType(value: string): value is PlaceType {
  */
 export default function PlacesPage() {
   const t = useTranslations("Places");
+  const { user } = useAuth();
   const params = useInitialParams();
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [type, setType] = useState<PlaceType | "">(
@@ -103,7 +105,7 @@ export default function PlacesPage() {
       <PageHeader
         title={t("list.title")}
         description={t("list.description")}
-        actions={<ProposePlaceButton />}
+        actions={user ? <ProposePlaceButton /> : null}
       />
 
       <Toolbar className="mb-3">
