@@ -32,7 +32,7 @@ export function ProposePlaceButton({ parentSlug }: { parentSlug?: string }) {
       variant="outline"
       size="sm"
       onClick={() => void open()}
-      title={t("hint")}
+      title={t("hint", { points: PLACE_CREATE_POINTS })}
     >
       <MapPinPlus className="h-3.5 w-3.5" />
       {parentSlug ? t("here") : t("button")}

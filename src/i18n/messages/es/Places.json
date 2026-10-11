@@ -102,6 +102,6 @@
   "propose": {
     "button": "Proponer un lugar",
     "here": "¿Falta un lugar aquí?",
-    "hint": "Se abre en el sitio de Nexus Tools. +3 puntos cuando se apruebe la propuesta."
+    "hint": "Se abre en el sitio de Nexus Tools. +{points} puntos cuando se apruebe la propuesta."
   }
 }
