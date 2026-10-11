@@ -91,7 +91,7 @@ export default function PlaceDetailPage() {
                 onClick={() => {
                   // Comme épingler une carte : choisir la destination affiche
                   // la fenêtre qui y guide.
-                  void setDestination(place.slug).then(() =>
+                  void setDestination({ slug: place.slug }).then(() =>
                     showOverlay("nps"),
                   );
                 }}

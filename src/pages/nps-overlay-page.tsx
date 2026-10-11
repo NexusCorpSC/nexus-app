@@ -1,4 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ClipboardEvent,
+  type FormEvent,
+} from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -8,6 +14,7 @@ import {
   ArrowUp,
   Compass,
   Crosshair,
+  Keyboard,
   MapPinPlus,
   Navigation,
   Radar,
@@ -17,6 +24,7 @@ import {
 } from "lucide-react";
 import { useFormatter, useTranslations } from "use-intl";
 
+import { AHEAD_DEGREES, NpsCompass } from "@/components/nps-compass";
 import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -32,12 +40,15 @@ import { listPlaces } from "@/lib/api/places";
 import {
   bodyAt,
   compassPoint,
+  fromGeo,
   geoOf,
   guide,
   inSystem,
   MIN_CLOSING_SPEED,
   nearestPlaces,
   MAX_TRAVEL_AGE_MS,
+  parseGameCoordinates,
+  parseNumber,
   positionOf,
   previousFor,
   toBodyFrame,
@@ -47,6 +58,7 @@ import {
   onDestinationChange,
   readNpsDestination,
   setDestination,
+  type NpsDestination,
 } from "@/lib/nps-destination";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import {
@@ -59,7 +71,7 @@ import {
   type NpsScreenSettings,
 } from "@/lib/settings";
 import { cn } from "@/lib/utils";
-import type { NpsPlace } from "@/types/nexus";
+import type { NpsBody, NpsPlace, PlacePosition } from "@/types/nexus";
 
 /**
  * Carries a reading of `/showlocation`, from `src-tauri/src/nps.rs`, or one
@@ -85,13 +97,21 @@ type ScreenStatus =
   | { state: "unreadable" }
   | { state: "failed"; message: string };
 
-/** Under this, the destination is straight ahead. */
-const AHEAD_DEGREES = 10;
-
 /** How often the age of the reading is redrawn. */
 const TICK_MS = 1000;
 
-type Panel = "guide" | "destination" | "record";
+type Panel = "guide" | "destination" | "coordinates" | "record";
+
+/** What the overlay guides to: a recorded place, or a point typed in. */
+type Target = {
+  name: string;
+  /** Typed in by hand, not a place of the catalogue. */
+  manual: boolean;
+  systemSlug?: string;
+  systemName?: string;
+  bodyName?: string;
+  position: PlacePosition;
+};
 
 /**
  * The NPS — Nexus Positioning System — over the game.
@@ -133,7 +153,9 @@ export default function NpsOverlayPage() {
   const [copyError, setCopyError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const [panel, setPanel] = useState<Panel>("guide");
-  const [destinationSlug, setDestinationSlug] = useState<string | null>(null);
+  const [destination, setDestinationState] = useState<NpsDestination | null>(
+    null,
+  );
   // Where the player was last seen near a body: in open space, a reading does
   // not tell Stanton from Pyro, each centred on its own star.
   const [lastSystem, setLastSystem] = useState<string | null>(null);
@@ -217,8 +239,8 @@ export default function NpsOverlayPage() {
     let alive = true;
     function refresh() {
       void readNpsDestination()
-        .then((slug) => {
-          if (alive) setDestinationSlug(slug);
+        .then((stored) => {
+          if (alive) setDestinationState(stored);
         })
         .catch((error) =>
           console.error("cannot read the NPS destination", error),
@@ -254,21 +276,24 @@ export default function NpsOverlayPage() {
     if (locked) setPanel("guide");
   }, [locked]);
 
-  const destination = places.find((place) => place.slug === destinationSlug);
+  const target = useMemo(
+    () => targetOf(destination, places, bodies, t("manualName")),
+    [destination, places, bodies, t],
+  );
   const body = fix ? bodyAt(fix, bodies) : null;
   const system = body?.systemSlug ?? lastSystem;
   const systemName = bodies.find(
     (one) => one.systemSlug === system,
   )?.systemName;
   const geo = fix && body ? geoOf(toBodyFrame(fix, body), body) : null;
-  const elsewhere = destination ? !inSystem(destination, system) : false;
+  const elsewhere = target ? !inSystem(target, system) : false;
   const previous = useMemo(
     () => (fix ? previousFor(fix, history, bodies) : null),
     [fix, history, bodies],
   );
   const guidance =
-    fix && destination && !elsewhere
-      ? guide(fix, previous, destination.position, bodies)
+    fix && target && !elsewhere
+      ? guide(fix, previous, target.position, bodies)
       : null;
   const live = screen.enabled && screen.region !== null;
   const nearest = fix
@@ -351,7 +376,18 @@ export default function NpsOverlayPage() {
           places={places}
           onPick={(slug) => {
             setPanel("guide");
-            void setDestination(slug);
+            void setDestination({ slug });
+          }}
+          onCancel={() => setPanel("guide")}
+        />
+      ) : open && panel === "coordinates" ? (
+        <CoordinatesPanel
+          bodies={bodies}
+          system={system}
+          currentBody={body}
+          onPick={(point) => {
+            setPanel("guide");
+            void setDestination({ point });
           }}
           onCancel={() => setPanel("guide")}
         />
@@ -445,6 +481,28 @@ export default function NpsOverlayPage() {
                 <Search className="size-3" />
                 {t("choose")}
               </button>
+              <button
+                type="button"
+                onClick={() => setPanel("coordinates")}
+                disabled={locked || bodies.length === 0}
+                title={t("coordinatesHint")}
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+              >
+                <Keyboard className="size-3" />
+                {t("coordinates")}
+              </button>
+              {destination ? (
+                <button
+                  type="button"
+                  onClick={() => void setDestination(null)}
+                  disabled={locked}
+                  title={t("clearDestination")}
+                  className="rounded p-0.5 text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+                >
+                  <span className="sr-only">{t("clearDestination")}</span>
+                  <X className="size-3" />
+                </button>
+              ) : null}
             </div>
 
             {data.isPending ? (
@@ -460,19 +518,26 @@ export default function NpsOverlayPage() {
                   {t("retry")}
                 </button>
               </p>
-            ) : !destination ? (
+            ) : !target ? (
               <p className="text-[12px] text-slate-400">
                 {places.length === 0 ? t("noPlaces") : t("noDestination")}
               </p>
             ) : (
               <>
                 <p className="truncate text-[13px] font-medium">
-                  {destination.name}
+                  {target.name}
                 </p>
+                {target.manual ? (
+                  <p className="truncate text-[11px] text-slate-500">
+                    {t("manualWhere", {
+                      where: target.bodyName ?? target.systemName ?? t("space"),
+                    })}
+                  </p>
+                ) : null}
                 {elsewhere ? (
                   <p className="text-[12px] text-slate-400">
                     {t("otherSystem", {
-                      system: destination.systemName ?? "?",
+                      system: target.systemName ?? "?",
                     })}
                   </p>
                 ) : !fix ? (
@@ -507,6 +572,38 @@ export default function NpsOverlayPage() {
       )}
     </div>
   );
+}
+
+/** The destination as stored, with what the overlay shows of it. */
+function targetOf(
+  destination: NpsDestination | null,
+  places: NpsPlace[],
+  bodies: NpsBody[],
+  manualName: string,
+): Target | null {
+  if (!destination) return null;
+  if ("slug" in destination) {
+    const place = places.find((one) => one.slug === destination.slug);
+    return place
+      ? {
+          name: place.name,
+          manual: false,
+          systemSlug: place.systemSlug,
+          systemName: place.systemName,
+          bodyName: place.bodyName,
+          position: place.position,
+        }
+      : null;
+  }
+  const { name, systemSlug, position } = destination.point;
+  return {
+    name: name || manualName,
+    manual: true,
+    systemSlug,
+    systemName: bodies.find((one) => one.systemSlug === systemSlug)?.systemName,
+    bodyName: bodies.find((one) => one.slug === position.body)?.name,
+    position,
+  };
 }
 
 type Formatter = ReturnType<typeof useFormatter>;
@@ -578,6 +675,7 @@ function Guidance({
 
   return (
     <div className="space-y-1.5">
+      <NpsCompass guidance={guidance} />
       <p className="text-2xl font-semibold tabular-nums">
         {formatDistance(surface?.distance ?? guidance.distance, format)}
       </p>
@@ -991,5 +1089,260 @@ function PickerHeader({
       </button>
       <p className="text-[13px] font-medium">{title}</p>
     </div>
+  );
+}
+
+type ManualPoint = Extract<NpsDestination, { point: unknown }>["point"];
+
+/**
+ * A destination typed in by hand. On a planet or a moon, by latitude,
+ * longitude and altitude, as the NPS shows them under « Ma position »: the
+ * ground turns, so a position in the system frame would be wrong a minute
+ * later. In space, by the system coordinates `/showlocation` gives, which
+ * can be pasted whole.
+ */
+function CoordinatesPanel({
+  bodies,
+  system,
+  currentBody,
+  onPick,
+  onCancel,
+}: {
+  bodies: NpsBody[];
+  /** The system the player is in, if known: its bodies come first. */
+  system: string | null;
+  currentBody: NpsBody | null;
+  onPick: (point: ManualPoint) => void;
+  onCancel: () => void;
+}) {
+  const t = useTranslations("NpsOverlay");
+  const [mode, setMode] = useState<"body" | "space">(
+    currentBody ? "body" : "space",
+  );
+  const [name, setName] = useState("");
+  const [bodySlug, setBodySlug] = useState(
+    () =>
+      currentBody?.slug ??
+      bodies.find((one) => inSystem(one, system))?.slug ??
+      bodies[0]?.slug ??
+      "",
+  );
+  const [geo, setGeo] = useState({ latitude: "", longitude: "", altitude: "" });
+  const [xyz, setXyz] = useState({ x: "", y: "", z: "" });
+  const [unit, setUnit] = useState<"m" | "km">("m");
+  const [invalid, setInvalid] = useState(false);
+
+  // By system, the player's own first, then by name.
+  const groups = useMemo(() => {
+    const bySystem = new Map<string, NpsBody[]>();
+    for (const one of bodies) {
+      const key = one.systemName ?? one.systemSlug ?? "";
+      bySystem.set(key, [...(bySystem.get(key) ?? []), one]);
+    }
+    return [...bySystem.entries()]
+      .map(([label, list]) => ({
+        label,
+        mine: list.some((one) => one.systemSlug === system),
+        list: [...list].sort((a, b) => a.name.localeCompare(b.name)),
+      }))
+      .sort(
+        (a, b) =>
+          Number(b.mine) - Number(a.mine) || a.label.localeCompare(b.label),
+      );
+  }, [bodies, system]);
+
+  function pasted(event: ClipboardEvent) {
+    const point = parseGameCoordinates(event.clipboardData.getData("text"));
+    if (!point) return;
+    event.preventDefault();
+    setUnit("m");
+    setXyz({ x: String(point.x), y: String(point.y), z: String(point.z) });
+    setInvalid(false);
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    const label = name.trim() || undefined;
+
+    if (mode === "body") {
+      const body = bodies.find((one) => one.slug === bodySlug);
+      const latitude = parseNumber(geo.latitude);
+      const longitude = parseNumber(geo.longitude);
+      const altitude = geo.altitude.trim() ? parseNumber(geo.altitude) : 0;
+      if (
+        !body ||
+        latitude === null ||
+        longitude === null ||
+        altitude === null ||
+        Math.abs(latitude) > 90 ||
+        Math.abs(longitude) > 360
+      ) {
+        setInvalid(true);
+        return;
+      }
+      const local = fromGeo({ latitude, longitude, altitude }, body);
+      onPick({
+        name: label,
+        systemSlug: body.systemSlug,
+        position: { body: body.slug, ...local },
+      });
+      return;
+    }
+
+    const factor = unit === "km" ? 1000 : 1;
+    const [x, y, z] = [xyz.x, xyz.y, xyz.z].map(parseNumber);
+    if (x === null || y === null || z === null) {
+      setInvalid(true);
+      return;
+    }
+    const point = { x: x * factor, y: y * factor, z: z * factor };
+    // Close to a body, the point turns with it from now on.
+    const position = positionOf({ ...point, at: Date.now() }, bodies);
+    onPick({
+      name: label,
+      systemSlug: bodyAt(point, bodies)?.systemSlug ?? system ?? undefined,
+      position,
+    });
+  }
+
+  const field =
+    "min-w-0 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none";
+
+  return (
+    <form
+      onSubmit={submit}
+      className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3"
+    >
+      <PickerHeader title={t("coordinatesTitle")} onCancel={onCancel} />
+
+      <div className="flex shrink-0 gap-1 rounded-lg border border-white/10 p-0.5 text-[12px]">
+        {(["body", "space"] as const).map((one) => (
+          <button
+            key={one}
+            type="button"
+            aria-pressed={mode === one}
+            onClick={() => {
+              setMode(one);
+              setInvalid(false);
+            }}
+            className={cn(
+              "flex-1 rounded-md px-2 py-1 transition",
+              mode === one
+                ? "bg-white/15 text-slate-100"
+                : "text-slate-400 hover:bg-white/10",
+            )}
+          >
+            {one === "body" ? t("manual.onBody") : t("manual.inSpace")}
+          </button>
+        ))}
+      </div>
+
+      {mode === "body" ? (
+        <>
+          <label className="space-y-0.5 text-[11px] text-slate-400">
+            <span>{t("manual.body")}</span>
+            <select
+              value={bodySlug}
+              onChange={(event) => {
+                setBodySlug(event.target.value);
+                setInvalid(false);
+              }}
+              className={cn(field, "block w-full")}
+            >
+              {groups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.list.map((one) => (
+                    <option key={one.slug} value={one.slug}>
+                      {one.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {(["latitude", "longitude", "altitude"] as const).map((key) => (
+              <label
+                key={key}
+                className="space-y-0.5 text-[11px] text-slate-400"
+              >
+                <span>{t(`manual.${key}`)}</span>
+                <input
+                  value={geo[key]}
+                  inputMode="decimal"
+                  autoFocus={key === "latitude"}
+                  placeholder={key === "altitude" ? "0" : undefined}
+                  onChange={(event) => {
+                    setGeo({ ...geo, [key]: event.target.value });
+                    setInvalid(false);
+                  }}
+                  className={cn(field, "block w-full")}
+                />
+              </label>
+            ))}
+          </div>
+          <p className="text-[11px] text-slate-500">{t("manual.bodyHint")}</p>
+        </>
+      ) : (
+        <>
+          <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-1.5">
+            {(["x", "y", "z"] as const).map((key) => (
+              <label
+                key={key}
+                className="space-y-0.5 text-[11px] text-slate-400"
+              >
+                <span>{key.toUpperCase()}</span>
+                <input
+                  value={xyz[key]}
+                  inputMode="decimal"
+                  autoFocus={key === "x"}
+                  onPaste={pasted}
+                  onChange={(event) => {
+                    setXyz({ ...xyz, [key]: event.target.value });
+                    setInvalid(false);
+                  }}
+                  className={cn(field, "block w-full")}
+                />
+              </label>
+            ))}
+            <select
+              value={unit}
+              onChange={(event) => setUnit(event.target.value as "m" | "km")}
+              aria-label={t("manual.unit")}
+              className={cn(field, "px-1")}
+            >
+              <option value="m">m</option>
+              <option value="km">km</option>
+            </select>
+          </div>
+          <p className="text-[11px] text-slate-500">{t("manual.spaceHint")}</p>
+        </>
+      )}
+
+      <label className="space-y-0.5 text-[11px] text-slate-400">
+        <span>{t("manual.name")}</span>
+        <input
+          value={name}
+          maxLength={60}
+          placeholder={t("manualName")}
+          onChange={(event) => setName(event.target.value)}
+          className={cn(field, "block w-full")}
+        />
+      </label>
+
+      {invalid ? (
+        <p className="text-[12px] text-red-300">
+          {mode === "body" ? t("manual.invalidGeo") : t("manual.invalidXyz")}
+        </p>
+      ) : null}
+
+      <button
+        type="submit"
+        className="flex shrink-0 items-center justify-center gap-2 rounded-lg border border-sky-300/40 bg-sky-300/10 px-3 py-1.5 text-[12px] font-medium transition hover:bg-sky-300/20"
+      >
+        <Navigation className="size-3.5" />
+        {t("manual.go")}
+      </button>
+    </form>
   );
 }

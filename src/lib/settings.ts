@@ -18,7 +18,7 @@ import {
 } from "@/lib/raid-layout";
 import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
 import { translator } from "@/i18n/translate";
-import { EMPTY_NOTE, type Note } from "@/types/nexus";
+import { EMPTY_NOTE, type Note, type PlacePosition } from "@/types/nexus";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -499,19 +499,52 @@ export async function setPinnedMap(slug: string | null): Promise<void> {
 }
 
 /**
- * The place the NPS overlay guides to, kept as a slug — for the same reason
- * as the pinned map: the overlay outlives a hide and a show.
+ * Where the NPS overlay guides to: a recorded place, by its slug, or a point
+ * typed in by hand. Kept for the same reason as the pinned map: the overlay
+ * outlives a hide and a show.
  */
-export async function getNpsDestination(): Promise<string | null> {
-  const store = await getStore();
-  return (await store.get<string>(KEY_NPS_DESTINATION)) ?? null;
+export type NpsDestination =
+  | { slug: string }
+  | {
+      point: {
+        /** What the player called it, if anything. */
+        name?: string;
+        /** The star system whose frame the position is in, if known. */
+        systemSlug?: string;
+        position: PlacePosition;
+      };
+    };
+
+function isNpsDestination(value: unknown): value is NpsDestination {
+  if (!value || typeof value !== "object") return false;
+  if ("slug" in value) return typeof value.slug === "string";
+  if (!("point" in value) || !value.point || typeof value.point !== "object") {
+    return false;
+  }
+  const { position } = value.point as { position?: Partial<PlacePosition> };
+  return (
+    !!position &&
+    [position.x, position.y, position.z].every(
+      (one) => typeof one === "number" && Number.isFinite(one),
+    )
+  );
 }
 
-export async function setNpsDestination(slug: string | null): Promise<void> {
+export async function getNpsDestination(): Promise<NpsDestination | null> {
+  const store = await getStore();
+  const stored = await store.get<unknown>(KEY_NPS_DESTINATION);
+  // Before points could be typed in, only a slug was kept.
+  if (typeof stored === "string") return { slug: stored };
+  return isNpsDestination(stored) ? stored : null;
+}
+
+export async function setNpsDestination(
+  destination: NpsDestination | null,
+): Promise<void> {
   const store = await getStore();
 
-  if (slug === null) await store.delete(KEY_NPS_DESTINATION);
-  else await store.set(KEY_NPS_DESTINATION, slug);
+  if (destination === null) await store.delete(KEY_NPS_DESTINATION);
+  else await store.set(KEY_NPS_DESTINATION, destination);
 }
 
 /**
