@@ -677,7 +677,32 @@ fn show_window(app: &AppHandle, label: &str) -> Result<(), String> {
 }
 
 fn hide_window(app: &AppHandle, label: &str) -> Result<(), String> {
-    window(app, label)?.hide().map_err(|e| e.to_string())
+    hide(&window(app, label)?)
+}
+
+/// Puts a window away, even one brought up behind Tauri's back.
+///
+/// `hide()` only calls `ShowWindow` when the state Tauri keeps of the window
+/// changes. The talk shortcut shows the chat overlay without the focus,
+/// straight through `ShowWindow` (`talk.rs`), which Tauri never hears about:
+/// it still holds the window for hidden, so its `hide()` did nothing and the
+/// overlay stayed on screen — its close button, Escape and its shortcut all
+/// went through here. Hiding it natively as well gets it off in every case.
+fn hide(window: &WebviewWindow) -> Result<(), String> {
+    window.hide().map_err(|e| e.to_string())?;
+
+    #[cfg(windows)]
+    {
+        use windows::Win32::Foundation::HWND;
+        use windows::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE};
+
+        let handle = window.hwnd().map_err(|e| e.to_string())?;
+        unsafe {
+            let _ = ShowWindow(HWND(handle.0), SW_HIDE);
+        }
+    }
+
+    Ok(())
 }
 
 /// Brings the main window back from wherever it was left: hidden by its close
@@ -707,7 +732,7 @@ fn toggle_overlay(app: &AppHandle, label: &str) -> Result<(), String> {
     let overlay = window(app, label)?;
 
     if overlay.is_visible().map_err(|e| e.to_string())? {
-        return overlay.hide().map_err(|e| e.to_string());
+        return hide(&overlay);
     }
 
     show_window(app, label)
