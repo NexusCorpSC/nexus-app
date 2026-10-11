@@ -1,30 +1,36 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { MapPinPlus } from "lucide-react";
 import { useTranslations } from "use-intl";
-import { useAuth } from "@/auth/auth-context";
+import { translator } from "@/i18n/translate";
+import { notify } from "@/lib/notifications";
 import { getApiBaseUrl } from "@/lib/settings";
 import { Button } from "@/components/ui";
-
-/** Ce que rapporte un lieu proposé, une fois publié (`POINTS.placeCreate` côté site). */
-const PLACE_CREATE_POINTS = 3;
+import { PLACE_CREATE_POINTS } from "@/types/nexus";
 
 /**
  * Proposer un lieu qui manque, sur le site : la liste laisse choisir le lieu
  * parent, une fiche l'impose (« Il manque un lieu ici ? »). Réservé aux
- * joueurs connectés, comme les autres contributions.
+ * joueurs connectés : c'est à l'appelant de ne l'afficher qu'à eux, comme
+ * l'ajout d'image.
  */
 export function ProposePlaceButton({ parentSlug }: { parentSlug?: string }) {
   const t = useTranslations("Places.propose");
-  const { user } = useAuth();
-  if (!user) return null;
 
   async function open() {
-    const baseUrl = await getApiBaseUrl();
-    await openUrl(
-      parentSlug
-        ? `${baseUrl}/lieux/${encodeURIComponent(parentSlug)}/contribuer/lieu`
-        : `${baseUrl}/lieux/proposer`,
-    );
+    try {
+      const baseUrl = await getApiBaseUrl();
+      await openUrl(
+        parentSlug
+          ? `${baseUrl}/lieux/${encodeURIComponent(parentSlug)}/contribuer/lieu`
+          : `${baseUrl}/lieux/proposer`,
+      );
+    } catch (error) {
+      console.error("Ouverture du formulaire de lieu impossible", error);
+      await notify({
+        kind: "error",
+        title: translator("Places.propose")("openFailed"),
+      });
+    }
   }
 
   return (
