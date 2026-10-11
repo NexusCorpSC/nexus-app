@@ -112,6 +112,11 @@
     "invalidGeo": "Revisa los valores: latitud entre -90 y 90, longitud entre -180 y 180.",
     "invalidXyz": "Introduce las tres coordenadas X, Y y Z.",
     "go": "Guíame",
-    "noBodies": "Los planetas y las lunas aún no se han cargado desde el sitio: solo se pueden introducir coordenadas del sistema."
-  }
+    "noBodies": "Los planetas y las lunas aún no se han cargado desde el sitio: solo se pueden introducir coordenadas del sistema, y un punto cerca de un planeta no seguirá su rotación.",
+    "localXyz": "X, Y, Z del cuerpo",
+    "latLong": "Latitud, longitud",
+    "localHint": "Los valores que muestra r_displayInfo en la línea «Zone: OOC_… Pos:» del planeta o la luna (un marco que gira con él). Pega la línea en un campo para rellenarlo todo y elegir el cuerpo.",
+    "bodiesFailed": "No se han podido cargar los planetas y las lunas: solo se pueden introducir coordenadas del sistema."
+  },
+  "local": "X, Y, Z del cuerpo: {x} km {y} km {z} km"
 }

@@ -234,6 +234,49 @@ export function parseGameCoordinates(text: string): Vector | null {
   return { x, y, z };
 }
 
+/** A `Zone: … Pos:` line of `r_displayInfo`, each value with its unit. */
+const ZONE_LINE = new RegExp(
+  String.raw`zone:\s*(\S+)\s+pos:\s*` +
+    [1, 2, 3]
+      .map(() => String.raw`(${NUMBER})\s*(k?m)\b`)
+      .join(String.raw`\s+`),
+  "gi",
+);
+
+function squash(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+/**
+ * The position in a planet's or a moon's own frame, from the line
+ * `r_displayInfo` shows for it (`Zone: OOC_Stanton_2b_Daymar Pos: … km …`),
+ * in metres, with the body whose name the zone carries. Lines of other
+ * zones (the system, a hangar, a Lagrange point…) are not in a body's frame:
+ * left out.
+ */
+export function parseBodyCoordinates(
+  text: string,
+  bodies: NpsBody[],
+): { point: Vector; body: NpsBody } | null {
+  // The longest name first: a zone naming a moon must not match a shorter
+  // name it happens to contain.
+  const named = [...bodies].sort((a, b) => b.name.length - a.name.length);
+  for (const line of text.matchAll(ZONE_LINE)) {
+    const zone = squash(line[1]);
+    const [x, y, z] = [0, 1, 2].map(
+      (index) =>
+        Number(line[2 + index * 2]) *
+        (line[3 + index * 2].toLowerCase() === "km" ? 1000 : 1),
+    );
+    if (![x, y, z].every(Number.isFinite)) continue;
+    const body = named.find(
+      (one) => squash(one.name) && zone.includes(squash(one.name)),
+    );
+    if (body) return { point: { x, y, z }, body };
+  }
+  return null;
+}
+
 function normalize360(degrees: number): number {
   return ((degrees % 360) + 360) % 360;
 }
