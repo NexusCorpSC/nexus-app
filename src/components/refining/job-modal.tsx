@@ -8,9 +8,12 @@ import { createRefiningJob, updateRefiningJob } from "@/lib/api/refining";
 import {
   formatDurationInput,
   formatMinutes,
+  MAX_REFINING_DURATION,
+  MAX_REFINING_LINES,
   parseDuration,
   REFINING_KEY,
   REFINING_METHODS,
+  refiningErrorMessage,
 } from "@/lib/refining";
 import { getLocale } from "@/i18n/locale";
 import { cn, formatNumber } from "@/lib/utils";
@@ -62,7 +65,10 @@ export function JobModal({
       : [toDraft({})],
   );
 
-  const minutes = parseDuration(duration);
+  const parsed = parseDuration(duration);
+  // Beyond what the site accepts: told here rather than on the way back.
+  const tooLong = parsed !== null && parsed > MAX_REFINING_DURATION;
+  const minutes = tooLong ? null : parsed;
   const checked = rows.filter((row) => !isBlank(row)).map(checkDraft);
   const lines = checked.flatMap((result) => (result.ok ? [result.line] : []));
   const invalid = checked.length - lines.length;
@@ -104,6 +110,7 @@ export function JobModal({
     !!location &&
     minutes !== null &&
     lines.length > 0 &&
+    lines.length <= MAX_REFINING_LINES &&
     invalid === 0 &&
     !costInvalid &&
     !save.isPending;
@@ -121,10 +128,12 @@ export function JobModal({
           <p className="mr-auto text-xs text-nexus-muted">
             {invalid > 0
               ? t("linesInvalid", { count: invalid })
-              : t("linesSum", {
-                  count: lines.length,
-                  total: formatNumber(total),
-                })}
+              : lines.length > MAX_REFINING_LINES
+                ? t("linesTooMany", { max: MAX_REFINING_LINES })
+                : t("linesSum", {
+                    count: lines.length,
+                    total: formatNumber(total),
+                  })}
           </p>
           <Button type="button" variant="outline" onClick={onClose}>
             {t("cancel")}
@@ -186,7 +195,7 @@ export function JobModal({
             {duration !== "" ? (
               minutes === null ? (
                 <span className="block text-xs text-red-300">
-                  {t("durationInvalid")}
+                  {tooLong ? t("durationTooLong") : t("durationInvalid")}
                 </span>
               ) : (
                 <span className="block text-xs text-emerald-300">
@@ -238,7 +247,7 @@ export function JobModal({
 
         {save.error ? (
           <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
-            {save.error instanceof Error ? save.error.message : t("errorSave")}
+            {refiningErrorMessage(save.error, "errorSave")}
           </p>
         ) : null}
       </div>

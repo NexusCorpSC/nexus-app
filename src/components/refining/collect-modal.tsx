@@ -7,7 +7,13 @@ import { LocationCombobox } from "@/components/inventory/location-combobox";
 import { listInventoryItems } from "@/lib/api/inventory";
 import { collectRefiningJob } from "@/lib/api/refining";
 import { notify } from "@/lib/notifications";
-import { isInert, REFINING_KEY } from "@/lib/refining";
+import {
+  isInert,
+  MAX_REFINING_LINES,
+  REFINING_KEY,
+  refiningErrorMessage,
+} from "@/lib/refining";
+import { roundQty } from "@/lib/units";
 import { formatNumber } from "@/lib/utils";
 import type { Location, RefiningJob, RefiningLine } from "@/types/nexus";
 import {
@@ -22,11 +28,6 @@ type Unit = "cSCU" | "SCU";
 
 function same(a: string | undefined, b: string | undefined) {
   return (a ?? "").trim().toLowerCase() === (b ?? "").trim().toLowerCase();
-}
-
-/** As the site rounds a quantity: no float noise in a lot. */
-function roundQty(value: number) {
-  return Math.round(value * 1e10) / 1e10;
 }
 
 /**
@@ -62,6 +63,8 @@ export function CollectModal({
   );
   const [unit, setUnit] = useState<Unit>("cSCU");
   const [orgVisible, setOrgVisible] = useState(false);
+  // "Remove without adding" deletes the order for good: a second click confirms.
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
 
   // The lots already at the place picked, to tell those that will be topped up.
   const held = useQuery({
@@ -122,8 +125,13 @@ export function CollectModal({
     },
   });
 
+  const tooMany = lines.length > MAX_REFINING_LINES;
   const canCollect =
-    !!location && lines.length > 0 && invalid === 0 && !collect.isPending;
+    !!location &&
+    lines.length > 0 &&
+    !tooMany &&
+    invalid === 0 &&
+    !collect.isPending;
 
   return (
     <Modal
@@ -140,24 +148,29 @@ export function CollectModal({
               ? t("collectPickLocation")
               : invalid > 0
                 ? t("linesInvalid", { count: invalid })
-                : t("collectSum", {
-                    count: lines.length,
-                    total: formatNumber(
-                      unit === "SCU" ? roundQty(total / 100) : total,
-                    ),
-                    unit,
-                  })}
+                : tooMany
+                  ? t("linesTooMany", { max: MAX_REFINING_LINES })
+                  : t("collectSum", {
+                      count: lines.length,
+                      total: formatNumber(
+                        unit === "SCU" ? roundQty(total / 100) : total,
+                      ),
+                      unit,
+                    })}
           </p>
           <Button type="button" variant="outline" onClick={onClose}>
             {t("cancel")}
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant={confirmDiscard ? "danger" : "ghost"}
             disabled={collect.isPending}
-            onClick={() => collect.mutate(false)}
+            onClick={() =>
+              confirmDiscard ? collect.mutate(false) : setConfirmDiscard(true)
+            }
+            onBlur={() => setConfirmDiscard(false)}
           >
-            {t("collectDiscard")}
+            {confirmDiscard ? t("collectDiscardConfirm") : t("collectDiscard")}
           </Button>
           <Button
             type="button"
@@ -234,9 +247,7 @@ export function CollectModal({
 
         {collect.error ? (
           <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
-            {collect.error instanceof Error
-              ? collect.error.message
-              : t("errorCollect")}
+            {refiningErrorMessage(collect.error, "errorCollect")}
           </p>
         ) : null}
       </div>

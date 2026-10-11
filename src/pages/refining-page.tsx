@@ -26,8 +26,10 @@ import {
   isFinished,
   minutesLeft,
   REFINING_KEY,
+  refiningErrorMessage,
   totalQuantity,
 } from "@/lib/refining";
+import { notify } from "@/lib/notifications";
 import { cn, formatNumber, formatUEC } from "@/lib/utils";
 import type { RefiningJob } from "@/types/nexus";
 
@@ -103,6 +105,11 @@ export default function RefiningPage() {
 
   const remove = useMutation({
     mutationFn: (jobId: string) => deleteRefiningJob(jobId),
+    onError: (error) =>
+      notify({
+        kind: "error",
+        title: refiningErrorMessage(error, "errorDelete"),
+      }).catch((cause) => console.error("cannot notify", cause)),
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: REFINING_KEY }),
   });

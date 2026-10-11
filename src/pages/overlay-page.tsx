@@ -49,6 +49,38 @@ function asQuery(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+/** How long the main window waits on the orders before it opens anyway. */
+const ORDERS_WAIT_MS = 1500;
+
+/**
+ * Where a captured work order goes: the Refining page when an order of the
+ * reader's is ready to collect, the bulk add otherwise — or when the reader is
+ * signed out, or the orders cannot be read in time.
+ */
+async function workOrderRoute(
+  workOrder: Parameters<typeof workOrderImportRoute>[0],
+  signedIn: boolean,
+): Promise<string> {
+  if (!signedIn) return workOrderImportRoute(workOrder);
+  try {
+    const jobs = await Promise.race([
+      listRefiningJobs(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("refining orders took too long")),
+          ORDERS_WAIT_MS,
+        ),
+      ),
+    ]);
+    if (jobs.some((job) => isFinished(job, Date.now()))) {
+      return workOrderImportRoute(workOrder, "/refining");
+    }
+  } catch (error) {
+    console.error("cannot read refining orders", error);
+  }
+  return workOrderImportRoute(workOrder);
+}
+
 /**
  * Quick-search palette shown over whatever the user is doing, opened by a
  * global shortcut. Its window is transparent and frameless, so this component
@@ -59,25 +91,6 @@ function asQuery(text: string): string {
  * the user's own inventory when signed in — and hands each result to whichever of the two
  * clients has a screen for it (see `src/lib/search.ts`).
  */
-/**
- * Where a captured work order goes: the Refining page when an order of the
- * reader's is ready to collect, the bulk add otherwise — or when the orders
- * cannot be read.
- */
-async function workOrderRoute(
-  workOrder: Parameters<typeof workOrderImportRoute>[0],
-): Promise<string> {
-  try {
-    const jobs = await listRefiningJobs();
-    if (jobs.some((job) => isFinished(job, Date.now()))) {
-      return workOrderImportRoute(workOrder, "/refining");
-    }
-  } catch (error) {
-    console.error("cannot read refining orders", error);
-  }
-  return workOrderImportRoute(workOrder);
-}
-
 export default function OverlayPage() {
   const t = useTranslations("Search");
   const { user } = useAuth();
@@ -97,6 +110,12 @@ export default function OverlayPage() {
     ignored: number;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Read by the capture listener, set up once: a work order is only checked
+  // against the reader's refining orders when there is a reader.
+  const signedIn = useRef(false);
+  useEffect(() => {
+    signedIn.current = Boolean(user);
+  }, [user]);
 
   const debouncedQuery = useDebounced(query, 200);
 
@@ -155,7 +174,7 @@ export default function OverlayPage() {
         // Refining page collects that order with the lines read.
         setCargo(null);
         void invoke("close_search_overlay")
-          .then(() => workOrderRoute(workOrder))
+          .then(() => workOrderRoute(workOrder, signedIn.current))
           .then(openMainRoute)
           .catch((cause) => {
             console.error("cannot open the bulk add", cause);

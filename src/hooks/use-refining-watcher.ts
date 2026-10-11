@@ -92,34 +92,46 @@ export function useRefiningWatcher(userId: string | null) {
       try {
         const told = await getRefiningNotified(userId);
         const ids = done.map((job) => job.id);
-        // Only orders still there are kept: collected ones are gone for good.
-        await setRefiningNotified(userId, ids);
-        if (told === null || !(await getRefiningNotifications())) return;
+        if (told === null || !(await getRefiningNotifications())) {
+          // Nothing to tell: the orders finished now count as told.
+          await setRefiningNotified(userId, ids);
+          return;
+        }
 
+        // Only orders still there are kept, collected ones are gone for good;
+        // a fresh one counts as told once its notification is out, so one
+        // that fails is told again at the next look.
+        const kept = ids.filter((id) => told.includes(id));
         const fresh = done.filter((job) => !told.includes(job.id));
         const t = translator("Refining.notify");
         const shown = fresh.slice(0, MAX_TOASTS);
-        for (const job of shown) {
-          await notify({
-            kind: "success",
-            title: t("title"),
-            body:
-              job.lines.length > 0
-                ? t("body", {
-                    location: job.location,
-                    total: formatNumber(totalQuantity(job.lines)),
-                  })
-                : t("bodyNoLines", { location: job.location }),
-            route: "/refining",
-          });
-        }
-        if (fresh.length > shown.length) {
-          await notify({
-            kind: "success",
-            title: t("title"),
-            body: t("backlog", { count: fresh.length - shown.length }),
-            route: "/refining",
-          });
+        try {
+          for (const job of shown) {
+            await notify({
+              kind: "success",
+              title: t("title"),
+              body:
+                job.lines.length > 0
+                  ? t("body", {
+                      location: job.location,
+                      total: formatNumber(totalQuantity(job.lines)),
+                    })
+                  : t("bodyNoLines", { location: job.location }),
+              route: "/refining",
+            });
+            kept.push(job.id);
+          }
+          if (fresh.length > shown.length) {
+            await notify({
+              kind: "success",
+              title: t("title"),
+              body: t("backlog", { count: fresh.length - shown.length }),
+              route: "/refining",
+            });
+            kept.push(...fresh.slice(shown.length).map((job) => job.id));
+          }
+        } finally {
+          await setRefiningNotified(userId, kept);
         }
       } catch (error) {
         console.error("cannot tell of finished refining orders", error);

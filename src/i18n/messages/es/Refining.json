@@ -79,5 +79,11 @@
     "body": "{location} · {total} cSCU por recoger",
     "bodyNoLines": "{location} · por recoger",
     "backlog": "{count, plural, one {# orden más terminada} other {# órdenes más terminadas}}"
-  }
+  },
+  "durationTooLong": "Treinta días como máximo: ninguna orden dura más.",
+  "linesTooMany": "Como máximo {max} líneas por orden.",
+  "collectDiscardConfirm": "Confirmar: retirar sin añadir",
+  "errorGone": "Esta orden ya no existe: ya se recogió o se eliminó.",
+  "errorLocation": "No se encuentra este lugar. Elige uno de la lista.",
+  "errorDelete": "No se pudo eliminar la orden."
 }

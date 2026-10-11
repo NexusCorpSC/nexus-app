@@ -1,4 +1,5 @@
 import { translator } from "@/i18n/translate";
+import { ApiError } from "@/lib/api-client";
 import type { RefiningJob, RefiningLine } from "@/types/nexus";
 
 /**
@@ -8,6 +9,32 @@ import type { RefiningJob, RefiningLine } from "@/types/nexus";
 
 /** The query the page and the watcher read, refreshed every minute. */
 export const REFINING_KEY = ["refining-jobs"] as const;
+
+/** Beyond this, an entry is more surely a mistake than an order. */
+export const MAX_REFINING_LINES = 40;
+/** Thirty days: no order in the game runs longer. */
+export const MAX_REFINING_DURATION = 30 * 24 * 60;
+
+/**
+ * What to tell of a refused save or collection: the site's codes, translated,
+ * and `fallback` for the rest — never the server's raw text.
+ */
+export function refiningErrorMessage(
+  error: unknown,
+  fallback: "errorSave" | "errorCollect" | "errorDelete",
+): string {
+  const t = translator("Refining");
+  const code =
+    error instanceof ApiError &&
+    typeof error.body === "object" &&
+    error.body !== null &&
+    "code" in error.body
+      ? (error.body as { code?: unknown }).code
+      : undefined;
+  if (code === "not_found") return t("errorGone");
+  if (code === "invalid_location") return t("errorLocation");
+  return t(fallback);
+}
 
 /** The methods a refinery terminal offers. */
 export const REFINING_METHODS = [

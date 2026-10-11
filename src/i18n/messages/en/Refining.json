@@ -79,5 +79,11 @@
     "body": "{location} · {total} cSCU to collect",
     "bodyNoLines": "{location} · to collect",
     "backlog": "{count, plural, one {# more order done} other {# more orders done}}"
-  }
+  },
+  "durationTooLong": "Thirty days at most: no order runs longer.",
+  "linesTooMany": "At most {max} lines per order.",
+  "collectDiscardConfirm": "Confirm: remove without adding",
+  "errorGone": "This order no longer exists: it was already collected or deleted.",
+  "errorLocation": "This place cannot be found. Pick one from the list.",
+  "errorDelete": "The order could not be deleted."
 }

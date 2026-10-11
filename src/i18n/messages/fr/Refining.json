@@ -79,5 +79,11 @@
     "body": "{location} · {total} cSCU à collecter",
     "bodyNoLines": "{location} · à collecter",
     "backlog": "{count, plural, one {# autre ordre terminé} other {# autres ordres terminés}}"
-  }
+  },
+  "durationTooLong": "Trente jours au plus : aucun ordre ne dure davantage.",
+  "linesTooMany": "{max} lignes au plus par ordre.",
+  "collectDiscardConfirm": "Confirmer : retirer sans ajouter",
+  "errorGone": "Cet ordre n'existe plus : il a déjà été collecté ou supprimé.",
+  "errorLocation": "Ce lieu est introuvable. Choisissez-en un dans la liste.",
+  "errorDelete": "L'ordre n'a pas pu être supprimé."
 }
