@@ -116,7 +116,10 @@
     "localXyz": "X, Y, Z del cuerpo",
     "latLong": "Latitud, longitud",
     "localHint": "Los valores que muestra r_displayInfo en la línea «Zone: OOC_… Pos:» del planeta o la luna (un marco que gira con él). Pega la línea en un campo para rellenarlo todo y elegir el cuerpo.",
-    "bodiesFailed": "No se han podido cargar los planetas y las lunas: solo se pueden introducir coordenadas del sistema."
+    "bodiesFailed": "No se han podido cargar los planetas y las lunas: solo se pueden introducir coordenadas del sistema.",
+    "implausibleXyz": "Este punto está a {distance} del centro de {body}, cuyo radio es {radius}: revisa la unidad (km o m).",
+    "pasteBodyUnknown": "Línea no reconocida: pega la línea «Zone: OOC_… Pos:» de un planeta o una luna conocidos por el sitio (no la del sistema, un hangar o un punto de Lagrange).",
+    "pasteSpaceUnknown": "Línea no reconocida: pega la línea de /showlocation o la línea «Zone: SolarSystem… Pos:» de r_displayInfo."
   },
   "local": "X, Y, Z del cuerpo: {x} km {y} km {z} km"
 }
