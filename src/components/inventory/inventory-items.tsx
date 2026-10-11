@@ -174,7 +174,7 @@ function qualityTier(quality: number) {
   return { pill: "bg-nexus-muted/15 text-[#A9BFD0]", bar: "bg-[#A9BFD0]" };
 }
 
-function QualityBadge({ quality }: { quality: number }) {
+export function QualityBadge({ quality }: { quality: number }) {
   const t = useTranslations("Inventory");
   const tier = qualityTier(quality);
   return (

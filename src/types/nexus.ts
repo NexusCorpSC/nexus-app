@@ -1898,3 +1898,50 @@ export type AppOrdersSummary = {
   events: AppOrderEvent[];
   now: string;
 };
+
+/** A material a refining order gives back: one line of the terminal. */
+export type RefiningLine = {
+  name: string;
+  /** Out of 1000; absent when the terminal gives none (inert materials). */
+  quality?: number;
+  /** In cSCU, as the terminal counts. */
+  quantity: number;
+};
+
+/** A refining order, as `GET /api/refining/jobs` gives it. */
+export type RefiningJob = {
+  id: string;
+  /** The refinery's name: the place picked, or the text of an older order. */
+  location: string;
+  /** The inventory place; absent from an order typed before places. */
+  locationId?: string;
+  method?: string;
+  /** Empty for an older order, which only had `content`. */
+  lines: RefiningLine[];
+  /** The free text of an older order. */
+  content?: string;
+  /** In aUEC. */
+  cost?: number;
+  note?: string;
+  /** In minutes. */
+  duration: number;
+  startTime: string;
+  endTime: string;
+};
+
+export type RefiningJobInput = {
+  locationId: string;
+  method?: string;
+  lines: RefiningLine[];
+  cost?: number;
+  note?: string;
+  duration: number;
+};
+
+export type RefiningCollectInput = {
+  /** In cSCU; none to remove the order without adding anything. */
+  lines: RefiningLine[];
+  locationId: string;
+  unit: "cSCU" | "SCU";
+  orgVisible: boolean;
+};

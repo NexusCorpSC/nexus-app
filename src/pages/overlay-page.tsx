@@ -27,6 +27,8 @@ import {
   parseWorkOrderText,
   workOrderImportRoute,
 } from "@/lib/refinery-work-order";
+import { listRefiningJobs } from "@/lib/api/refining";
+import { isFinished } from "@/lib/refining";
 import { openMainRoute } from "@/lib/main-window";
 import { CargoCaptureImport } from "@/components/cargo/capture-import";
 import { BlueprintQuickAdd } from "@/components/blueprint-ownership-buttons";
@@ -45,6 +47,38 @@ const SEARCH_EVENT = "overlay://search";
  */
 function asQuery(text: string): string {
   return text.replace(/\s+/g, " ").trim();
+}
+
+/** How long the main window waits on the orders before it opens anyway. */
+const ORDERS_WAIT_MS = 1500;
+
+/**
+ * Where a captured work order goes: the Refining page when an order of the
+ * reader's is ready to collect, the bulk add otherwise — or when the reader is
+ * signed out, or the orders cannot be read in time.
+ */
+async function workOrderRoute(
+  workOrder: Parameters<typeof workOrderImportRoute>[0],
+  signedIn: boolean,
+): Promise<string> {
+  if (!signedIn) return workOrderImportRoute(workOrder);
+  try {
+    const jobs = await Promise.race([
+      listRefiningJobs(),
+      new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error("refining orders took too long")),
+          ORDERS_WAIT_MS,
+        ),
+      ),
+    ]);
+    if (jobs.some((job) => isFinished(job, Date.now()))) {
+      return workOrderImportRoute(workOrder, "/refining");
+    }
+  } catch (error) {
+    console.error("cannot read refining orders", error);
+  }
+  return workOrderImportRoute(workOrder);
 }
 
 /**
@@ -76,6 +110,12 @@ export default function OverlayPage() {
     ignored: number;
   } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Read by the capture listener, set up once: a work order is only checked
+  // against the reader's refining orders when there is a reader.
+  const signedIn = useRef(false);
+  useEffect(() => {
+    signedIn.current = Boolean(user);
+  }, [user]);
 
   const debouncedQuery = useDebounced(query, 200);
 
@@ -130,9 +170,12 @@ export default function OverlayPage() {
         // table's work, not the palette's, so the main window takes over.
         // The palette is put away first, so the main window comes up in
         // front rather than under it.
+        // When a refining order is ready, the capture is its yield: the
+        // Refining page collects that order with the lines read.
         setCargo(null);
         void invoke("close_search_overlay")
-          .then(() => openMainRoute(workOrderImportRoute(workOrder)))
+          .then(() => workOrderRoute(workOrder, signedIn.current))
+          .then(openMainRoute)
           .catch((cause) => {
             console.error("cannot open the bulk add", cause);
           });

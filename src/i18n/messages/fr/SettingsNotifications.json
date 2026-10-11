@@ -22,5 +22,7 @@
   "contribHint": "Publiée, à corriger, succès débloqué ou nouveau niveau.",
   "contribError": "Le réglage n'a pas pu être enregistré.",
   "orders": "Mes commandes",
-  "ordersHint": "Commande reçue par un de mes magasins, ou étape franchie sur une commande."
+  "ordersHint": "Commande reçue par un de mes magasins, ou étape franchie sur une commande.",
+  "refining": "Ordres de raffinage terminés",
+  "refiningHint": "Quand un ordre de raffinage arrive à son terme, pour aller le collecter."
 }

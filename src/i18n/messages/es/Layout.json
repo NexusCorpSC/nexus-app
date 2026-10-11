@@ -14,6 +14,7 @@
     "missions": "Misiones",
     "factions": "Facciones",
     "inventory": "Inventario",
+    "refining": "Refinado",
     "orders": "Pedidos",
     "reputations": "Reputaciones",
     "friends": "Amigos",
@@ -40,5 +41,6 @@
     "title": "Mi sesión de juego",
     "hint": "Tus amigos y tus organizaciones ven que estás jugando, o cuándo piensas jugar, y a qué.",
     "signOut": "Cerrar sesión"
-  }
+  },
+  "refiningReady": "{count, plural, one {# orden lista para recoger} other {# órdenes listas para recoger}}"
 }

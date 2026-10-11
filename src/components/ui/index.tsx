@@ -141,6 +141,7 @@ export function Modal({
   onClose,
   children,
   footer,
+  wide = false,
 }: {
   open: boolean;
   title: string;
@@ -149,6 +150,8 @@ export function Modal({
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  /** For a table that needs the room: a wider dialog. */
+  wide?: boolean;
 }) {
   const t = useTranslations("Common");
   const titleId = useId();
@@ -177,7 +180,10 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
-        className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50"
+        className={cn(
+          "flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50",
+          wide ? "max-w-3xl" : "max-w-xl",
+        )}
       >
         <header className="flex items-start gap-3 px-5 pt-5">
           {icon ? (

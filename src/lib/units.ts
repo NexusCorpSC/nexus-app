@@ -17,7 +17,7 @@ export type DisplayUnit = {
 };
 
 /** Clears float noise: 7.000000000000001 is 7. */
-function roundQty(value: number) {
+export function roundQty(value: number) {
   return Math.round(value * 1e10) / 1e10;
 }
 
