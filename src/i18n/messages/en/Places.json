@@ -98,5 +98,10 @@
     "credit": "Credit (optional)",
     "creditPlaceholder": "Your handle, or the image's author",
     "help": "+{points} points per published image, +{bonus} if it is the location's first. The image is scaled down to 2560 pixels before sending; keep personal UI (handle, messages) out of the frame."
+  },
+  "propose": {
+    "button": "Suggest a location",
+    "here": "A location is missing here?",
+    "hint": "Opens on the Nexus Tools website. +{points} points once the suggestion is approved."
   }
 }

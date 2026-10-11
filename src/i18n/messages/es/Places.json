@@ -98,5 +98,10 @@
     "credit": "Crédito (opcional)",
     "creditPlaceholder": "Tu apodo, o el autor de la imagen",
     "help": "+{points} puntos por imagen publicada, +{bonus} si es la primera del lugar. La imagen se reduce a 2560 píxeles antes de enviarla; evita que se vea tu interfaz personal (apodo, mensajes) en el encuadre."
+  },
+  "propose": {
+    "button": "Proponer un lugar",
+    "here": "¿Falta un lugar aquí?",
+    "hint": "Se abre en el sitio de Nexus Tools. +{points} puntos cuando se apruebe la propuesta."
   }
 }

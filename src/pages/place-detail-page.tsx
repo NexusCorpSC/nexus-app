@@ -20,6 +20,7 @@ import { PlaceCard, PlaceTypeBadge } from "@/components/place-card";
 import { type PlaceDetails, type PlacePlan } from "@/types/nexus";
 import { ReportButton } from "@/components/report-button";
 import { AddMediaButton } from "@/components/place/add-media-button";
+import { ProposePlaceButton } from "@/components/place/propose-place-button";
 import { useAuth } from "@/auth/auth-context";
 import {
   Button,
@@ -82,6 +83,7 @@ export default function PlaceDetailPage() {
         actions={
           <>
             {user ? <AddMediaButton place={place} /> : null}
+            <ProposePlaceButton parentSlug={place.slug} />
             {place.position ? (
               <Button
                 variant="outline"

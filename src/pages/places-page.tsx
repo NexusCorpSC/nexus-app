@@ -9,6 +9,7 @@ import {
   useUrlFilters,
 } from "@/hooks/use-url-filters";
 import { PlaceCard } from "@/components/place-card";
+import { ProposePlaceButton } from "@/components/place/propose-place-button";
 import {
   PLACE_TYPES,
   isPlaceService,
@@ -102,6 +103,7 @@ export default function PlacesPage() {
       <PageHeader
         title={t("list.title")}
         description={t("list.description")}
+        actions={<ProposePlaceButton />}
       />
 
       <Toolbar className="mb-3">
