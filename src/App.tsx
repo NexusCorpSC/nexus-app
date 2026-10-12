@@ -10,6 +10,9 @@ import ItemDetailPage from "@/pages/item-detail-page";
 import PlacesPage from "@/pages/places-page";
 import PlaceDetailPage from "@/pages/place-detail-page";
 import FactionsPage from "@/pages/factions-page";
+import LorePage from "@/pages/lore-page";
+import LoreArticlePage from "@/pages/lore-article-page";
+import LoreSystemPage from "@/pages/lore-system-page";
 import MissionsPage from "@/pages/missions-page";
 import MissionDetailPage from "@/pages/mission-detail-page";
 import ReputationsPage from "@/pages/reputations-page";
@@ -96,6 +99,10 @@ export default function App() {
         {/* With an id when the search palette points at one faction. */}
         <Route path="factions" element={<FactionsPage />} />
         <Route path="factions/:factionId" element={<FactionsPage />} />
+
+        <Route path="lore" element={<LorePage />} />
+        <Route path="lore/systems/:code" element={<LoreSystemPage />} />
+        <Route path="lore/:id" element={<LoreArticlePage />} />
 
         <Route path="cargo" element={<CargoPage />} />
         <Route path="orgs" element={<OrgsPage />} />
