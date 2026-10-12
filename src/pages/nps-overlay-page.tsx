@@ -15,6 +15,7 @@ import {
   Compass,
   Crosshair,
   Keyboard,
+  Lock,
   MapPinPlus,
   Navigation,
   Radar,
@@ -911,8 +912,19 @@ function DestinationPicker({
               onClick={() => onPick(place.slug)}
               className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
             >
-              <span className="block truncate text-[13px] text-slate-100">
-                {place.name}
+              <span className="flex items-center gap-1.5 truncate text-[13px] text-slate-100">
+                {/* Un lieu privé, à soi ou à son organisation. */}
+                {place.private ? (
+                  <Lock
+                    className="size-3 shrink-0 text-[#c4b2ff]"
+                    aria-label={
+                      place.private.org
+                        ? t("privateShared", { org: place.private.org })
+                        : t("privateOwn")
+                    }
+                  />
+                ) : null}
+                <span className="truncate">{place.name}</span>
               </span>
               <span className="block truncate text-[11px] text-slate-400">
                 {[place.systemName, place.bodyName, place.parentName]

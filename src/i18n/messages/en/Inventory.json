@@ -51,7 +51,8 @@
     "create": "Create “{name}”",
     "searching": "Searching…",
     "none": "No location",
-    "createFailed": "Could not create it."
+    "createFailed": "Could not create it.",
+    "private": "Private place"
   },
   "form": {
     "title": "New resource",

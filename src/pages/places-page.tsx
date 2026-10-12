@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 import { listPlaceFacets, listPlaces } from "@/lib/api/places";
+import { listPrivatePlaces } from "@/lib/api/private-places";
+import { PrivatePlacesSection } from "@/components/place/private-places";
 import { useDebounced } from "@/hooks/use-debounced";
 import {
   pageFrom,
@@ -93,6 +95,23 @@ export default function PlacesPage() {
       }),
     placeholderData: keepPreviousData,
   });
+
+  // Ses lieux privés, filtrés comme le catalogue. Ils n'ont pas de services :
+  // ce filtre les écarte.
+  const privateQuery = useQuery({
+    queryKey: ["private-places", query, type, system, body],
+    queryFn: () =>
+      listPrivatePlaces({
+        query: query || undefined,
+        type: type || undefined,
+        system: system || undefined,
+        body: body || undefined,
+      }),
+    enabled: Boolean(user) && !service,
+    placeholderData: keepPreviousData,
+  });
+  const privatePlaces =
+    user && !service && page === 1 ? (privateQuery.data?.places ?? []) : [];
 
   /** Tout changement de filtre ramène à la première page. */
   function updateFilter(apply: () => void) {
@@ -193,6 +212,14 @@ export default function PlacesPage() {
           ) : null;
         })}
       </div>
+
+      <PrivatePlacesSection places={privatePlaces} />
+
+      {privatePlaces.length > 0 ? (
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-nexus-dim">
+          {t("private.catalogue")}
+        </p>
+      ) : null}
 
       {placesQuery.isPending ? (
         <LoadingState />

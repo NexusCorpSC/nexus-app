@@ -449,6 +449,10 @@ export type Location = {
   slug?: string;
   system?: string;
   userId?: string;
+  /** The catalogue place this row stands for. */
+  placeSlug?: string;
+  /** The private place this row stands for, shared with its organization. */
+  privatePlaceSlug?: string;
 };
 
 export type InventoryItem = {
@@ -1832,6 +1836,11 @@ export type NpsPlace = {
   bodyName?: string;
   parentName?: string;
   position: PlacePosition;
+  /**
+   * One of the player's private places, or one of their organization's
+   * (`org`): the site only sends them to the players who see them.
+   */
+  private?: { org?: string };
 };
 
 /** `GET /api/lieux/nps`. */
@@ -1948,4 +1957,47 @@ export type RefiningCollectInput = {
   locationId: string;
   unit: "cSCU" | "SCU";
   orgVisible: boolean;
+};
+
+/**
+ * A private place (`/api/lieux/prives`): visible to its creator only, or to
+ * the members of one of their organizations. Not a contribution; its creator
+ * can propose it to the public catalogue, which then replaces it.
+ */
+export type PrivatePlaceSummary = {
+  slug: string;
+  name: string;
+  type: PlaceType;
+  imageUrl?: string;
+  parentSlug: string;
+  parentName?: string;
+  systemSlug?: string;
+  systemName?: string;
+  bodySlug?: string;
+  bodyName?: string;
+  position?: PlacePosition;
+  /** The organization that sees it; absent when only its creator does. */
+  org?: { id: string; name: string; tag?: string; memberCount: number };
+  isOwner: boolean;
+  ownerName?: string;
+  /** Its row in the inventory, where lots are stored. */
+  locationId: string;
+  /** The proposal to the public catalogue, if any. */
+  proposal?: { contributionId: string; status: string };
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** `GET /api/lieux/prives/{slug}`. */
+export type PrivatePlace = PrivatePlaceSummary & {
+  description?: string;
+  image?: { url: string; width: number; height: number };
+  ancestors: PlaceAncestor[];
+};
+
+/** `GET /api/lieux/prives`. */
+export type PrivatePlaceListResponse = {
+  places: PrivatePlaceSummary[];
+  orgs: { id: string; name: string; tag?: string }[];
+  owned: number;
 };

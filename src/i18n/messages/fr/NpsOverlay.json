@@ -121,5 +121,7 @@
     "pasteBodyUnknown": "Ligne non reconnue : collez la ligne « Zone: OOC_… Pos: » d'une planète ou d'une lune du site (pas celle du système, d'un hangar ou d'un point de Lagrange).",
     "pasteSpaceUnknown": "Ligne non reconnue : collez la ligne de /showlocation ou la ligne « Zone: SolarSystem… Pos: » de r_displayInfo."
   },
-  "local": "X, Y, Z du corps : {x} km {y} km {z} km"
+  "local": "X, Y, Z du corps : {x} km {y} km {z} km",
+  "privateShared": "Lieu privé de {org}",
+  "privateOwn": "Votre lieu privé"
 }

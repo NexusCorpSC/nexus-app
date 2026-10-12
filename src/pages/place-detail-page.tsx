@@ -6,6 +6,9 @@ import { useTranslations } from "use-intl";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Compass, ExternalLink, Map as MapIcon, Pin } from "lucide-react";
 import { getPlace } from "@/lib/api/places";
+import { getPrivatePlace } from "@/lib/api/private-places";
+import { ApiError } from "@/lib/api-client";
+import { PrivatePlaceDetail } from "@/components/place/private-place-detail";
 import {
   onPinnedMapChange,
   pinMap,
@@ -49,6 +52,19 @@ export default function PlaceDetailPage() {
     queryKey: ["place", slug],
     queryFn: () => getPlace(slug),
     enabled: Boolean(slug),
+    // Absent du catalogue, c'est peut-être un lieu privé : inutile d'insister.
+    retry: (count, error) =>
+      !(error instanceof ApiError && error.status === 404) && count < 3,
+  });
+
+  // Les lieux privés ne sont pas au catalogue public : leur fiche vient d'ailleurs.
+  const notInCatalogue =
+    placeQuery.error instanceof ApiError && placeQuery.error.status === 404;
+  const privateQuery = useQuery({
+    queryKey: ["private-place", slug],
+    queryFn: () => getPrivatePlace(slug),
+    enabled: Boolean(slug && user && notInCatalogue),
+    retry: false,
   });
 
   async function openOnWeb() {
@@ -57,6 +73,12 @@ export default function PlaceDetailPage() {
   }
 
   if (placeQuery.isPending) return <LoadingState />;
+
+  if (notInCatalogue && user) {
+    if (privateQuery.isPending) return <LoadingState />;
+    if (privateQuery.data)
+      return <PrivatePlaceDetail place={privateQuery.data} />;
+  }
 
   if (placeQuery.isError) {
     return (

@@ -51,7 +51,8 @@
     "create": "Créer « {name} »",
     "searching": "Recherche…",
     "none": "Aucun lieu",
-    "createFailed": "Création impossible."
+    "createFailed": "Création impossible.",
+    "private": "Lieu privé"
   },
   "form": {
     "title": "Nouvelle ressource",
