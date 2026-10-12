@@ -15,6 +15,7 @@ import type Home from "./messages/fr/Home.json";
 import type Inventory from "./messages/fr/Inventory.json";
 import type Items from "./messages/fr/Items.json";
 import type Layout from "./messages/fr/Layout.json";
+import type Lore from "./messages/fr/Lore.json";
 import type MapOverlay from "./messages/fr/MapOverlay.json";
 import type Missions from "./messages/fr/Missions.json";
 import type Native from "./messages/fr/Native.json";
@@ -66,6 +67,7 @@ export type Messages = {
   Inventory: typeof Inventory;
   Items: typeof Items;
   Layout: typeof Layout;
+  Lore: typeof Lore;
   MapOverlay: typeof MapOverlay;
   Missions: typeof Missions;
   Native: typeof Native;

@@ -38,6 +38,7 @@ import {
   Star,
   UserRound,
   Users,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
@@ -66,6 +67,7 @@ type NavKey =
   | "places"
   | "missions"
   | "factions"
+  | "lore"
   | "inventory"
   | "orders"
   | "refining"
@@ -100,6 +102,7 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/places", label: "places", icon: MapPin },
       { to: "/missions", label: "missions", icon: Rocket },
       { to: "/factions", label: "factions", icon: Flag },
+      { to: "/lore", label: "lore", icon: BookOpen },
     ],
   },
   {

@@ -3,6 +3,8 @@
  * Kept in sync by hand with `nexus-tools/types/*` and the `app/api` routes.
  */
 
+import type { PlaceLore } from "@/types/lore";
+
 /* ------------------------------------------------------------------ */
 /* Crafting / blueprints                                               */
 /* ------------------------------------------------------------------ */
@@ -1328,6 +1330,8 @@ export type PlaceDetails = PlaceSummary & {
   planTargets: PlaceSummary[];
   /** Où le lieu se trouve en jeu, quand un joueur l'a relevé (NPS). */
   position?: PlacePosition;
+  /** Sa fiche de la starmap et son article de la Galactapedia, en anglais. */
+  lore?: PlaceLore;
 };
 
 export type PlaceListResponse = {

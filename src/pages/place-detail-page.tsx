@@ -18,6 +18,7 @@ import { showOverlay } from "@/lib/windows";
 import { MapLegend, MapView } from "@/components/place/map-view";
 import { PlaceCard, PlaceTypeBadge } from "@/components/place-card";
 import { type PlaceDetails, type PlacePlan } from "@/types/nexus";
+import { PlaceLoreSection } from "@/components/lore/place-lore-section";
 import { ReportButton } from "@/components/report-button";
 import { AddMediaButton } from "@/components/place/add-media-button";
 import { ProposePlaceButton } from "@/components/place/propose-place-button";
@@ -130,6 +131,8 @@ export default function PlaceDetailPage() {
             </Section>
           ) : null}
 
+          {place.lore ? <PlaceLoreSection lore={place.lore} /> : null}
+
           <MapsSection place={place} plans={plans} />
 
           {place.children.length > 0 ? (
@@ -176,11 +179,12 @@ export default function PlaceDetailPage() {
             </dl>
           </Section>
 
-          <Section title={t("detail.services")} aside={services.length ? undefined : "—"}>
+          <Section
+            title={t("detail.services")}
+            aside={services.length ? undefined : "—"}
+          >
             {services.length === 0 ? (
-              <p className="text-xs text-nexus-dim">
-                {t("detail.noServices")}
-              </p>
+              <p className="text-xs text-nexus-dim">{t("detail.noServices")}</p>
             ) : (
               <ul className="flex flex-wrap gap-1.5">
                 {services.map((service) => (
