@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Plus } from "lucide-react";
+import { Lock, MapPin, Plus } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { createLocation, listLocations } from "@/lib/api/inventory";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -279,7 +279,14 @@ export function LocationCombobox({
                 >
                   {option.kind === "location" ? (
                     <>
-                      <MapPin className="size-3.5 shrink-0 text-nexus-muted" />
+                      {option.location.privatePlaceSlug ? (
+                        <Lock
+                          className="size-3.5 shrink-0 text-[#c4b2ff]"
+                          aria-label={t("location.private")}
+                        />
+                      ) : (
+                        <MapPin className="size-3.5 shrink-0 text-nexus-muted" />
+                      )}
                       <span className="truncate">{option.location.name}</span>
                       {option.location.system ? (
                         <span className="ml-auto shrink-0 pl-2 text-xs text-nexus-dim">

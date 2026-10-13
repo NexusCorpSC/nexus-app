@@ -100,9 +100,27 @@
     "help": "+{points} puntos por imagen publicada, +{bonus} si es la primera del lugar. La imagen se reduce a 2560 píxeles antes de enviarla; evita que se vea tu interfaz personal (apodo, mensajes) en el encuadre."
   },
   "propose": {
-    "button": "Proponer un lugar",
+    "button": "Añadir un lugar",
     "here": "¿Falta un lugar aquí?",
     "hint": "Se abre en el sitio de Nexus Tools. +{points} puntos cuando se apruebe la propuesta.",
-    "openFailed": "No se pudo abrir el sitio de Nexus Tools."
+    "openFailed": "No se pudo abrir el sitio de Nexus Tools.",
+    "addHint": "Se abre en el sitio de Nexus Tools: un lugar público (+{points} puntos una vez aprobado) o un lugar privado, para ti o tu organización."
+  },
+  "private": {
+    "section": "Mis lugares privados · {count}",
+    "catalogue": "Catálogo",
+    "onlyMe": "Solo yo",
+    "sharedWith": "Compartido con {org}",
+    "guide": "Guiar",
+    "visibleWithOrg": "Lugar privado, visible para ti y los miembros de {org}",
+    "visibleOwn": "Lugar privado, visible solo para ti",
+    "edit": "Editar en el sitio",
+    "inReview": "Propuesto al catálogo público: en revisión.",
+    "notes": "Notas",
+    "noNotes": "Sin notas.",
+    "visibility": "Visible para",
+    "createdBy": "Creado por",
+    "position": "Posición",
+    "positionKnown": "Registrada"
   }
 }

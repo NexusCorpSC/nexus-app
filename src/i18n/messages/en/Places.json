@@ -100,9 +100,27 @@
     "help": "+{points} points per published image, +{bonus} if it is the location's first. The image is scaled down to 2560 pixels before sending; keep personal UI (handle, messages) out of the frame."
   },
   "propose": {
-    "button": "Suggest a location",
+    "button": "Add a place",
     "here": "A location is missing here?",
     "hint": "Opens on the Nexus Tools website. +{points} points once the suggestion is approved.",
-    "openFailed": "Couldn't open the Nexus Tools website."
+    "openFailed": "Couldn't open the Nexus Tools website.",
+    "addHint": "Opens on the Nexus Tools website: a public place (+{points} points once approved) or a private place, for you or your organization."
+  },
+  "private": {
+    "section": "My private places · {count}",
+    "catalogue": "Catalogue",
+    "onlyMe": "Only me",
+    "sharedWith": "Shared with {org}",
+    "guide": "Guide",
+    "visibleWithOrg": "Private place, visible to you and the members of {org}",
+    "visibleOwn": "Private place, visible to you only",
+    "edit": "Edit on the website",
+    "inReview": "Proposed to the public catalogue: in review.",
+    "notes": "Notes",
+    "noNotes": "No notes.",
+    "visibility": "Visible to",
+    "createdBy": "Created by",
+    "position": "Position",
+    "positionKnown": "Recorded"
   }
 }
