@@ -32,7 +32,7 @@
     "unknown": "Se produjo un error. Inténtalo de nuevo.",
     "self": "Ya tienes acceso.",
     "userNotFound": "Este jugador no existe.",
-    "tooManyShares": "No más de 100 jugadores por compartición.",
+    "tooManyShares": "No más de 100 invitados por compartición.",
     "tooManyInvites": "Has enviado 50 invitaciones hoy. Inténtalo mañana.",
     "forbidden": "Solo quienes lo gestionan pueden compartirlo."
   }
