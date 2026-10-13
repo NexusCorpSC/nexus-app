@@ -1,0 +1,8 @@
+{
+  "notify": {
+    "eventTitle": "{name} te invita a un evento",
+    "placeTitle": "{name} comparte un lugar contigo",
+    "backlogTitle": "Más invitaciones",
+    "backlog": "{count, plural, one {# invitación más te espera} other {# invitaciones más te esperan}} en el sitio."
+  }
+}

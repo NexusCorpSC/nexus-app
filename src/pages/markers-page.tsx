@@ -395,7 +395,7 @@ function MarkerRow({
             .join(" · ")}
         </span>
       </span>
-      {marker.org ? <PrivatePlaceBadge org={marker.org} /> : null}
+      {marker.org ? <PrivatePlaceBadge place={{ org: marker.org }} /> : null}
       <span className="flex shrink-0 flex-col items-end text-xs">
         {distance ? (
           <span className="font-mono text-nexus-bright">{distance}</span>

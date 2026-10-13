@@ -2,7 +2,9 @@ import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useTranslations } from "use-intl";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Compass, ExternalLink, Lock, Pencil } from "lucide-react";
+import { Compass, ExternalLink, Lock, Pencil, Share2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { ShareModal } from "@/components/share-modal";
 import { getApiBaseUrl } from "@/lib/settings";
 import { BackLink } from "@/components/layout/back-link";
 import { PlaceTypeBadge } from "@/components/place-card";
@@ -20,6 +22,8 @@ import type { PrivatePlace } from "@/types/nexus";
  */
 export function PrivatePlaceDetail({ place }: { place: PrivatePlace }) {
   const t = useTranslations("Places");
+  const queryClient = useQueryClient();
+  const [sharing, setSharing] = useState(false);
 
   async function openOnWeb(path = "") {
     const baseUrl = await getApiBaseUrl();
@@ -30,12 +34,30 @@ export function PrivatePlaceDetail({ place }: { place: PrivatePlace }) {
     <>
       <BackLink to="/places">{t("detail.back")}</BackLink>
 
+      {place.isOwner ? (
+        <ShareModal
+          kind="place"
+          id={place.slug}
+          open={sharing}
+          onClose={() => {
+            setSharing(false);
+            // Le nombre d'invités de l'en-tête suit.
+            void queryClient.invalidateQueries({ queryKey: ["private-places"] });
+            void queryClient.invalidateQueries({ queryKey: ["private-place"] });
+          }}
+        />
+      ) : null}
+
       <PageHeader
         title={place.name}
         description={
-          place.org
-            ? t("private.visibleWithOrg", { org: place.org.name })
-            : t("private.visibleOwn")
+          place.sharedWithMe && !place.org
+            ? t("private.sharedWithYou", { name: place.ownerName ?? "?" })
+            : place.org
+              ? t("private.visibleWithOrg", { org: place.org.name })
+              : place.guestCount
+                ? t("private.visibleOwnGuests", { count: place.guestCount })
+                : t("private.visibleOwn")
         }
         actions={
           <>
@@ -47,6 +69,16 @@ export function PrivatePlaceDetail({ place }: { place: PrivatePlace }) {
               >
                 <Compass className="h-3.5 w-3.5" />
                 {t("detail.guide")}
+              </Button>
+            ) : null}
+            {place.isOwner ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSharing(true)}
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                {t("private.share")}
               </Button>
             ) : null}
             {place.isOwner ? (
@@ -127,7 +159,7 @@ export function PrivatePlaceDetail({ place }: { place: PrivatePlace }) {
               <PlaceTypeBadge type={place.type} />
             </Row>
             <Row label={t("private.visibility")}>
-              <PrivatePlaceBadge org={place.org} />
+              <PrivatePlaceBadge place={place} />
             </Row>
             {place.systemName ? (
               <Row label={t("detail.system")}>{place.systemName}</Row>

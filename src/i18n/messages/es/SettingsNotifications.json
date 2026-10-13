@@ -24,5 +24,7 @@
   "orders": "Mis pedidos",
   "ordersHint": "Un pedido recibido por una de mis tiendas, o un paso dado en un pedido.",
   "refining": "Órdenes de refinado terminadas",
-  "refiningHint": "Cuando una orden de refinado llega a su fin, para ir a recogerla."
+  "refiningHint": "Cuando una orden de refinado llega a su fin, para ir a recogerla.",
+  "invites": "Invitaciones",
+  "invitesHint": "Cuando un jugador te invita a un evento o comparte un lugar privado contigo."
 }

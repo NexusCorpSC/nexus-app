@@ -1544,7 +1544,12 @@ export type OrgEventView = {
   participants: OrgEventParticipant[];
   /** The reader's registration, withdrawn included; `null` without one. */
   myRegistration: OrgEventRegistration | null;
-  /** A member of the organization: may register. */
+  /**
+   * Outside the organization, the reader sees the event through sharing:
+   * invited by a player, or come through the share link. `null` otherwise.
+   */
+  guest: "invite" | "link" | null;
+  /** A member of the organization, or a signed-in guest: may register. */
   canRegister: boolean;
   /** Its creator or an editor of the organization. */
   canManage: boolean;
@@ -1986,6 +1991,10 @@ export type PrivatePlaceSummary = {
   org?: { id: string; name: string; tag?: string; memberCount: number };
   isOwner: boolean;
   ownerName?: string;
+  /** Its creator invited the reader: «shared by {ownerName}». */
+  sharedWithMe?: true;
+  /** For its creator: how many players they invited. */
+  guestCount?: number;
   /** Its row in the inventory, where lots are stored. */
   locationId: string;
   /** The proposal to the public catalogue, if any. */
@@ -2006,4 +2015,67 @@ export type PrivatePlaceListResponse = {
   places: PrivatePlaceSummary[];
   orgs: { id: string; name: string; tag?: string }[];
   owned: number;
+};
+
+/* ------------------------------------------------------------------ */
+/* Sharing with players (see `lib/shares.ts` in Nexus Tools)            */
+/* ------------------------------------------------------------------ */
+
+/** What can be shared with a given player: an event, a private place. */
+export type ShareKind = "event" | "place";
+
+/** Invited by someone, or come through the share link while signed in. */
+export type ShareVia = "invite" | "link";
+
+/** A player who has the object through sharing. */
+export type ShareEntry = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  via: ShareVia;
+  invitedByName: string | null;
+  createdAt: string;
+  seen: boolean;
+};
+
+/** `GET /api/shares/{kind}/{id}`: the share panel. */
+export type SharePanelData = {
+  title: string;
+  shares: ShareEntry[];
+  /** Events have a share link; `null` while none is active. */
+  link: { url: string; createdAt: string } | null;
+  allowLink: boolean;
+  org: { name: string; memberCount: number } | null;
+};
+
+/** A player to invite: friends first. */
+export type ShareCandidate = {
+  userId: string;
+  name: string;
+  avatar: string | null;
+  isFriend: boolean;
+  hasAccess: boolean;
+};
+
+/** An invitation the reader received. */
+export type Invitation = {
+  id: string;
+  kind: ShareKind;
+  targetId: string;
+  title: string;
+  startsAt?: string;
+  orgName?: string;
+  placeType?: string;
+  parentName?: string;
+  /** The page on the site, `/orgs/…/events/…` or `/lieux/…`. */
+  href: string;
+  invitedByName: string;
+  createdAt: string;
+  seen: boolean;
+};
+
+/** `GET /api/me/invitations`. */
+export type InvitationsResponse = {
+  invitations: Invitation[];
+  unseen: number;
 };

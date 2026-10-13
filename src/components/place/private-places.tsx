@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslations } from "use-intl";
-import { Compass, Lock, Users } from "lucide-react";
+import { Compass, Lock, UserPlus, Users } from "lucide-react";
 import { setDestination } from "@/lib/nps-destination";
 import { showOverlay } from "@/lib/windows";
 import { PlaceThumbnail } from "@/components/place-card";
@@ -11,16 +11,26 @@ import type { PrivatePlaceSummary } from "@/types/nexus";
 export const PRIVATE_ACCENT = "#c4b2ff";
 
 /**
- * « NXS » quand l'organisation le voit, « Moi seul » sinon. Sert aussi aux
- * marqueurs d'une collection partagée.
+ * « NXS » quand l'organisation le voit, « Partagé » quand son créateur a
+ * invité le lecteur, « 2 invités » pour le créateur qui a invité des joueurs,
+ * « Moi seul » sinon.
  */
 export function PrivatePlaceBadge({
-  org,
+  place,
 }: {
-  org?: Pick<NonNullable<PrivatePlaceSummary["org"]>, "name" | "tag">;
+  // Sert aussi aux marqueurs d'une collection partagée, qui n'ont que l'org.
+  place: Pick<
+    PrivatePlaceSummary,
+    "sharedWithMe" | "guestCount" | "ownerName"
+  > & {
+    org?: Pick<NonNullable<PrivatePlaceSummary["org"]>, "name" | "tag">;
+  };
 }) {
   const t = useTranslations("Places.private");
-  const Icon = org ? Users : Lock;
+  const { org } = place;
+  const shared = place.sharedWithMe && !org;
+  const guests = !org && !shared ? (place.guestCount ?? 0) : 0;
+  const Icon = org ? Users : shared || guests > 0 ? UserPlus : Lock;
   return (
     <span
       className="inline-flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold"
@@ -29,10 +39,24 @@ export function PrivatePlaceBadge({
         borderColor: `${PRIVATE_ACCENT}55`,
         backgroundColor: `${PRIVATE_ACCENT}14`,
       }}
-      title={org ? t("sharedWith", { org: org.name }) : t("onlyMe")}
+      title={
+        org
+          ? t("sharedWith", { org: org.name })
+          : shared
+            ? t("sharedBy", { name: place.ownerName ?? "?" })
+            : guests > 0
+              ? t("guests", { count: guests })
+              : t("onlyMe")
+      }
     >
       <Icon className="size-3" />
-      {org ? (org.tag ?? org.name) : t("onlyMe")}
+      {org
+        ? (org.tag ?? org.name)
+        : shared
+          ? t("sharedBadge")
+          : guests > 0
+            ? t("guests", { count: guests })
+            : t("onlyMe")}
     </span>
   );
 }
@@ -92,7 +116,7 @@ export function PrivatePlacesSection({
                 </span>
               </span>
             </Link>
-            <PrivatePlaceBadge org={place.org} />
+            <PrivatePlaceBadge place={place} />
             {place.position ? (
               <Button
                 variant="outline"
