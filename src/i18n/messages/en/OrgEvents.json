@@ -29,7 +29,8 @@
     "summary": "Summary",
     "summaryTitle": "Opens the organizer summary in the browser",
     "edit": "Edit",
-    "editTitle": "Opens the form in the browser"
+    "editTitle": "Opens the form in the browser",
+    "share": "Share"
   },
   "thePlan": "The plan",
   "facts": {
@@ -90,5 +91,11 @@
     "alreadyDrawn": "A squad was already made from this event. If it was disbanded, you can create a new one.",
     "hint": "{count, plural, one {A squad of # participant} other {A squad of # participants}} led by you{hasRoles, select, yes {, with the roles {roles}} other {}}. Everyone keeps the role they picked on registration and finds it in their squad list, without leaving their own. Past 20, several squads grouped in a raid.",
     "create": "Create the squad"
+  },
+  "guest": {
+    "linkTitle": "You see this event through a share link",
+    "inviteTitle": "You are invited to this event",
+    "link": "You are not a member of the organization: you can sign up, but access ends if the link is disabled before you do.",
+    "invite": "You are not a member of the organization, but you can see the plan and sign up."
   }
 }

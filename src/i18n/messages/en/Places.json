@@ -121,6 +121,12 @@
     "visibility": "Visible to",
     "createdBy": "Created by",
     "position": "Position",
-    "positionKnown": "Recorded"
+    "positionKnown": "Recorded",
+    "sharedBy": "Shared by {name}",
+    "sharedBadge": "Shared with me",
+    "guests": "{count, plural, one {# guest} other {# guests}}",
+    "share": "Share",
+    "sharedWithYou": "{name}'s private place, shared with you",
+    "visibleOwnGuests": "Private place, visible to you and {count, plural, one {# guest} other {# guests}}"
   }
 }

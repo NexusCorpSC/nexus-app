@@ -121,6 +121,12 @@
     "visibility": "Visible para",
     "createdBy": "Creado por",
     "position": "Posición",
-    "positionKnown": "Registrada"
+    "positionKnown": "Registrada",
+    "sharedBy": "Compartido por {name}",
+    "sharedBadge": "Compartido conmigo",
+    "guests": "{count, plural, one {# invitado} other {# invitados}}",
+    "share": "Compartir",
+    "sharedWithYou": "Lugar privado de {name}, compartido contigo",
+    "visibleOwnGuests": "Lugar privado, visible para ti y {count, plural, one {# invitado} other {# invitados}}"
   }
 }

@@ -24,5 +24,7 @@
   "orders": "Mes commandes",
   "ordersHint": "Commande reçue par un de mes magasins, ou étape franchie sur une commande.",
   "refining": "Ordres de raffinage terminés",
-  "refiningHint": "Quand un ordre de raffinage arrive à son terme, pour aller le collecter."
+  "refiningHint": "Quand un ordre de raffinage arrive à son terme, pour aller le collecter.",
+  "invites": "Invitations",
+  "invitesHint": "Quand un joueur vous invite à un évènement ou partage un lieu privé avec vous."
 }
