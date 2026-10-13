@@ -37,7 +37,7 @@ function errorMessage(
 }
 
 /**
- * Sharing an event or a private place: invite a player (friends first), see
+ * Sharing an event, a private place or a marker collection: invite a player (friends first), see
  * who has access and take it back, and for an event its share link. The same
  * as the site's «Partager» panel.
  */
@@ -111,7 +111,13 @@ export function ShareModal({
       onClose={onClose}
       icon={<Share2 className="size-5" />}
       title={data ? t("title", { name: data.title }) : t("loading")}
-      description={kind === "event" ? t("introEvent") : t("introPlace")}
+      description={
+        kind === "event"
+          ? t("introEvent")
+          : kind === "markerCollection"
+            ? t("introMarkerCollection")
+            : t("introPlace")
+      }
     >
       {panel.isPending ? (
         <Spinner />

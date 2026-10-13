@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useSearchParams } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -7,8 +8,12 @@ import {
   ExternalLink,
   MapPinned,
   Pencil,
+  Share2,
   Trash2,
+  X,
 } from "lucide-react";
+import { ShareModal } from "@/components/share-modal";
+import { leaveShare } from "@/lib/api/shares";
 import { useFormatter, useTranslations } from "use-intl";
 import { markersChanged, useMarkersSync } from "@/hooks/use-markers-sync";
 import { translator } from "@/i18n/translate";
@@ -76,7 +81,12 @@ export default function MarkersPage() {
   const t = useTranslations("Markers");
   const format = useFormatter();
   const queryClient = useQueryClient();
-  const [collection, setCollection] = useState<CollectionFilter>("all");
+  // Ouverte depuis une invitation : `?collection=<id>`.
+  const [searchParams] = useSearchParams();
+  const [collection, setCollection] = useState<CollectionFilter>(
+    () => searchParams.get("collection") ?? "all",
+  );
+  const [sharing, setSharing] = useState(false);
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<Marker | null>(null);
   const [deleting, setDeleting] = useState<Marker | null>(null);
@@ -177,6 +187,19 @@ export default function MarkersPage() {
     markersChanged(queryClient);
   }
 
+  const current = collections.find((one) => one.id === collection);
+
+  async function leave(id: string) {
+    try {
+      await leaveShare("markerCollection", id);
+      setCollection("all");
+      refresh();
+    } catch (error) {
+      console.error("cannot leave the marker collection", error);
+      await notify({ kind: "error", title: t("leaveFailed") });
+    }
+  }
+
   return (
     <>
       <PageHeader
@@ -241,7 +264,40 @@ export default function MarkersPage() {
               <Dot color={DEFAULT_MARKER_COLOR} />
               {t("noCollection")} <Count value={loose} />
             </Chip>
+            {current?.isOwner && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSharing(true)}
+              >
+                <Share2 className="h-3.5 w-3.5" />
+                {current.guestCount
+                  ? `${t("share")} · ${t("guests", { count: current.guestCount })}`
+                  : t("share")}
+              </Button>
+            )}
+            {current?.sharedWithMe && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void leave(current.id)}
+              >
+                <X className="h-3.5 w-3.5" />
+                {t("leave")}
+              </Button>
+            )}
           </div>
+          {current?.isOwner && (
+            <ShareModal
+              kind="markerCollection"
+              id={current.id}
+              open={sharing}
+              onClose={() => {
+                setSharing(false);
+                refresh();
+              }}
+            />
+          )}
 
           <Toolbar>
             <SearchField
@@ -339,7 +395,11 @@ function CollectionChip({
       title={
         collection.org
           ? t("sharedWith", { org: collection.org.name })
-          : undefined
+          : collection.sharedWithMe
+            ? t("sharedByPlayer", { owner: collection.ownerName ?? "?" })
+            : collection.guestCount
+              ? t("guests", { count: collection.guestCount })
+              : undefined
       }
     >
       <Dot color={collection.color} />

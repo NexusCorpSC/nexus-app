@@ -2022,7 +2022,7 @@ export type PrivatePlaceListResponse = {
 /* ------------------------------------------------------------------ */
 
 /** What can be shared with a given player: an event, a private place. */
-export type ShareKind = "event" | "place";
+export type ShareKind = "event" | "place" | "markerCollection";
 
 /** Invited by someone, or come through the share link while signed in. */
 export type ShareVia = "invite" | "link";
@@ -2067,6 +2067,8 @@ export type Invitation = {
   orgName?: string;
   placeType?: string;
   parentName?: string;
+  /** A marker collection: how many markers it holds. */
+  markerCount?: number;
   /** The page on the site, `/orgs/…/events/…` or `/lieux/…`. */
   href: string;
   invitedByName: string;

@@ -48,5 +48,10 @@
     "notFound": "Este marcador o esta colección ya no existe.",
     "forbidden": "Solo su creador puede modificar este marcador.",
     "tooMany": "Has llegado a 1000 marcadores. Elimina algunos antes de crear más."
-  }
+  },
+  "sharedByPlayer": "Compartida por {owner}",
+  "guests": "{count, plural, one {# invitado} other {# invitados}}",
+  "share": "Compartir",
+  "leave": "Dejar de ver",
+  "leaveFailed": "No se pudo quitar la colección."
 }

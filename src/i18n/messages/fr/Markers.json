@@ -48,5 +48,10 @@
     "notFound": "Ce marqueur ou cette collection n'existe plus.",
     "forbidden": "Seul son créateur peut modifier ce marqueur.",
     "tooMany": "Vous avez atteint 1 000 marqueurs. Supprimez-en avant d'en créer d'autres."
-  }
+  },
+  "sharedByPlayer": "Partagée par {owner}",
+  "guests": "{count, plural, one {# invité} other {# invités}}",
+  "share": "Partager",
+  "leave": "Ne plus voir",
+  "leaveFailed": "La collection n'a pas pu être retirée."
 }

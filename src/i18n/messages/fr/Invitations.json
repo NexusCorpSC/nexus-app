@@ -3,6 +3,7 @@
     "eventTitle": "{name} vous invite à un évènement",
     "placeTitle": "{name} partage un lieu avec vous",
     "backlogTitle": "D'autres invitations",
-    "backlog": "{count, plural, one {# autre invitation vous attend} other {# autres invitations vous attendent}} sur le site."
+    "backlog": "{count, plural, one {# autre invitation vous attend} other {# autres invitations vous attendent}} sur le site.",
+    "markerCollectionTitle": "{name} partage des marqueurs avec vous"
   }
 }
