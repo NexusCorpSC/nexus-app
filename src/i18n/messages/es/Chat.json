@@ -117,6 +117,7 @@
       "add_marker": "Creación del marcador",
       "update_marker": "Modificación del marcador",
       "delete_marker": "Eliminación del marcador",
+      "list_players_in_game": "Búsqueda de tus amigos en juego",
       "sell_lot": "Puesta en venta del lote",
       "contribute_item_edit": "Propuesta de corrección de objeto",
       "contribute_place_create": "Propuesta de lugar",

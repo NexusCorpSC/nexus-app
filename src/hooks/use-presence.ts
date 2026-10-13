@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { emit, listen } from "@tauri-apps/api/event";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   cancelPlannedSession,
@@ -11,6 +12,34 @@ import {
 import type { MyPresence } from "@/types/nexus";
 
 const MY_PRESENCE_KEY = ["presence", "me"] as const;
+
+/**
+ * La présence a changé dans une autre fenêtre : le NPS qui déclare en jeu en
+ * partageant la position, ou la fenêtre principale qui arrête la session, ce
+ * que le NPS doit savoir pour cesser d'envoyer ses relevés.
+ */
+const PRESENCE_CHANGED_EVENT = "presence://changed";
+
+/** À appeler après chaque changement : les autres fenêtres relisent. */
+export function presenceChanged(): void {
+  void emit(PRESENCE_CHANGED_EVENT).catch((error) =>
+    console.error("cannot announce the presence change", error),
+  );
+}
+
+/** Relit `queryKey` quand une autre fenêtre a changé la présence. */
+export function usePresenceSync(queryKey: readonly unknown[]): void {
+  const queryClient = useQueryClient();
+  const key = JSON.stringify(queryKey);
+  useEffect(() => {
+    const pending = listen(PRESENCE_CHANGED_EVENT, () =>
+      void queryClient.invalidateQueries({ queryKey: JSON.parse(key) }),
+    );
+    return () => {
+      void pending.then((stop) => stop()).catch(() => {});
+    };
+  }, [queryClient, key]);
+}
 
 /** The events the reader registered to; dropped by every registration. */
 export const MY_EVENTS_KEY = ["events", "me"] as const;
@@ -39,10 +68,13 @@ export function useMyPresence(enabled: boolean) {
     refetchInterval: 5 * 60_000,
   });
 
+  usePresenceSync(MY_PRESENCE_KEY);
+
   const settle = (presence: MyPresence) => {
     queryClient.setQueryData(MY_PRESENCE_KEY, presence);
     // Whoever looks at an organization should see the change at once.
     void queryClient.invalidateQueries({ queryKey: ["presence", "org"] });
+    presenceChanged();
   };
 
   // `undefined` starts a session on the planned activity: see `declarePlaying`.

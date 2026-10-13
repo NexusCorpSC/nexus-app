@@ -160,5 +160,44 @@
     "undo": "Deshacer",
     "undone": "Marcador «{name}» eliminado",
     "undoFailed": "No se pudo eliminar el marcador"
+  },
+  "share": {
+    "title": "Compartir mi posición",
+    "start": "Compartir mi posición",
+    "stop": "Dejar de compartir",
+    "off": "Tus amigos y tus organizaciones no ven dónde estás.",
+    "audience": "Visible para {who} en el Star Map.",
+    "friends": "tus amigos",
+    "nobody": "Nadie te ve: elige quién puede ver tu posición.",
+    "sent": "Enviada hace {age}",
+    "waitingFix": "Esperando una lectura para enviar.",
+    "playingSince": "en juego",
+    "notPlaying": "Ya no estás en juego: no se envía nada.",
+    "resume": "Reanudar la sesión",
+    "choose": "Elegir quién me ve",
+    "signIn": "Inicia sesión en la app para compartir tu posición.",
+    "loadFailed": "No se pudo leer tu ajuste de compartición.",
+    "panelTitle": "Quién ve mi posición",
+    "myFriends": "Mis amigos",
+    "myOrgs": "Mis organizaciones",
+    "members": "{count, plural, one {# miembro} other {# miembros}}",
+    "explain": "Solo los jugadores conectados ven tu posición, y solo mientras estás en juego. Se borra al terminar la sesión.",
+    "declares": "Si no estás «En juego», compartir te declara en juego hasta que pares.",
+    "cancel": "Cancelar",
+    "confirm": "Compartir",
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "errors": {
+      "unauthorized": "Inicia sesión en la app para compartir tu posición.",
+      "notSharing": "Se desactivó la compartición desde el sitio."
+    }
+  },
+  "players": {
+    "section": "Jugadores en juego",
+    "searchPlaceholder": "Lugar, marcador o jugador…",
+    "label": "Jugador",
+    "reading": "lectura de hace {age}",
+    "stale": "Su última lectura tiene {age}: puede haberse movido desde entonces.",
+    "gone": "Dejó de compartir su posición: el NPS guía a la última conocida."
   }
 }

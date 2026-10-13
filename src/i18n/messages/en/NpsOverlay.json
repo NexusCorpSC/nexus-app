@@ -160,5 +160,44 @@
     "undo": "Undo",
     "undone": "Marker “{name}” deleted",
     "undoFailed": "The marker could not be deleted"
+  },
+  "share": {
+    "title": "Share my position",
+    "start": "Share my position",
+    "stop": "Stop sharing",
+    "off": "Your friends and organizations don't see where you are.",
+    "audience": "Visible to {who} on the Star Map.",
+    "friends": "your friends",
+    "nobody": "Nobody sees you: choose who can see your position.",
+    "sent": "Sent {age} ago",
+    "waitingFix": "Waiting for a reading to send.",
+    "playingSince": "in game",
+    "notPlaying": "You're no longer in game: nothing is sent.",
+    "resume": "Resume the session",
+    "choose": "Choose who sees me",
+    "signIn": "Sign in to the app to share your position.",
+    "loadFailed": "Your sharing setting couldn't be read.",
+    "panelTitle": "Who sees my position",
+    "myFriends": "My friends",
+    "myOrgs": "My organizations",
+    "members": "{count, plural, one {# member} other {# members}}",
+    "explain": "Only signed-in players see your position, and only while you're in game. It's erased when the session ends.",
+    "declares": "If you're not “In game”, sharing declares you in game until you stop.",
+    "cancel": "Cancel",
+    "confirm": "Share",
+    "save": "Save",
+    "saving": "Saving…",
+    "errors": {
+      "unauthorized": "Sign in to the app to share your position.",
+      "notSharing": "Sharing was turned off from the website."
+    }
+  },
+  "players": {
+    "section": "Players in game",
+    "searchPlaceholder": "Place, marker or player…",
+    "label": "Player",
+    "reading": "read {age} ago",
+    "stale": "Their last reading is {age} old: they may have moved since.",
+    "gone": "They stopped sharing their position: the NPS guides to the last known one."
   }
 }

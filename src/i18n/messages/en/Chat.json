@@ -117,6 +117,7 @@
       "add_marker": "Creating the marker",
       "update_marker": "Editing the marker",
       "delete_marker": "Deleting the marker",
+      "list_players_in_game": "Looking for your friends in game",
       "sell_lot": "Listing the lot for sale",
       "contribute_item_edit": "Suggesting an item fix",
       "contribute_place_create": "Suggesting a place",
