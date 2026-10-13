@@ -44,6 +44,7 @@ import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useContribWatcher } from "@/hooks/use-contrib-watcher";
+import { useInvitationsWatcher } from "@/hooks/use-invitations-watcher";
 import { useOrdersWatcher } from "@/hooks/use-orders-watcher";
 import {
   useReadyRefiningCount,
@@ -200,6 +201,7 @@ export default function AppLayout() {
   // What became of the player's contributions on the site: published, sent
   // back, an achievement, a level. Read from here, the window with the session.
   useContribWatcher(user?.id ?? null);
+  useInvitationsWatcher(user?.id ?? null);
   useOrdersWatcher(user?.id ?? null);
   // Refining orders reaching their end, told from here as well.
   useRefiningWatcher(user?.id ?? null);

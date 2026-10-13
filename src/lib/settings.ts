@@ -60,6 +60,8 @@ const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
 const KEY_ORDERS_SINCE = "ordersSince";
 const KEY_REFINING_NOTIFICATIONS = "refiningNotifications";
 const KEY_REFINING_NOTIFIED = "refiningNotified";
+const KEY_INVITE_NOTIFICATIONS = "inviteNotifications";
+const KEY_INVITES_NOTIFIED = "invitesNotified";
 const KEY_LOCALE = "locale";
 const KEY_MICROPHONE = "microphone";
 
@@ -722,4 +724,49 @@ export async function getLocaleSetting(): Promise<Locale> {
 export async function setLocaleSetting(locale: Locale): Promise<void> {
   const store = await getStore();
   await store.set(KEY_LOCALE, locale);
+}
+
+/**
+ * Whether an invitation — an event or a private place a player shared with
+ * the reader — raises a notification. On unless turned off.
+ */
+export async function getInviteNotifications(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_INVITE_NOTIFICATIONS);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setInviteNotifications(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_INVITE_NOTIFICATIONS, enabled);
+}
+
+/**
+ * The invitations already notified, by id: one list per account and per
+ * instance, like the refining orders'. `null` before the first read.
+ */
+export async function getInvitesNotified(
+  userId: string,
+): Promise<string[] | null> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_INVITES_NOTIFIED);
+  if (!marks || typeof marks !== "object") return null;
+  const value = (marks as Record<string, unknown>)[
+    await accountInstanceKey(userId)
+  ];
+  return Array.isArray(value)
+    ? value.filter((id): id is string => typeof id === "string")
+    : null;
+}
+
+export async function setInvitesNotified(
+  userId: string,
+  ids: string[],
+): Promise<void> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_INVITES_NOTIFIED);
+  await store.set(KEY_INVITES_NOTIFIED, {
+    ...(marks && typeof marks === "object" ? marks : {}),
+    [await accountInstanceKey(userId)]: ids,
+  });
 }

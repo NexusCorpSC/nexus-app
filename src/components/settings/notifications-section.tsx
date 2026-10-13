@@ -3,10 +3,12 @@ import { useTranslations } from "use-intl";
 import {
   getContribNotifications,
   getNotificationCorner,
+  getInviteNotifications,
   getOrderNotifications,
   getRefiningNotifications,
   setContribNotifications,
   setNotificationCorner,
+  setInviteNotifications,
   setOrderNotifications,
   setRefiningNotifications,
 } from "@/lib/settings";
@@ -43,12 +45,14 @@ export function NotificationsSection() {
 
   const [contrib, setContrib] = useState(true);
   const [orders, setOrders] = useState(true);
+  const [invites, setInvites] = useState(true);
   const [refining, setRefining] = useState(true);
 
   useEffect(() => {
     void getNotificationCorner().then(setCorner);
     void getContribNotifications().then(setContrib);
     void getOrderNotifications().then(setOrders);
+    void getInviteNotifications().then(setInvites);
     void getRefiningNotifications().then(setRefining);
   }, []);
 
@@ -56,6 +60,16 @@ export function NotificationsSection() {
     setContrib(next);
     void setContribNotifications(next).catch((cause) => {
       setContrib(!next);
+      setNotificationError(
+        cause instanceof Error ? cause.message : t("contribError"),
+      );
+    });
+  }
+
+  function handleInvitesChange(next: boolean) {
+    setInvites(next);
+    void setInviteNotifications(next).catch((cause) => {
+      setInvites(!next);
       setNotificationError(
         cause instanceof Error ? cause.message : t("contribError"),
       );
@@ -161,6 +175,21 @@ export function NotificationsSection() {
               {t("contrib")}
               <small className="mt-0.5 block text-xs text-nexus-dim">
                 {t("contribHint")}
+              </small>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={invites}
+              onChange={(event) => handleInvitesChange(event.target.checked)}
+              className="mt-0.5 accent-nexus-accent"
+            />
+            <span>
+              {t("invites")}
+              <small className="mt-0.5 block text-xs text-nexus-dim">
+                {t("invitesHint")}
               </small>
             </span>
           </label>

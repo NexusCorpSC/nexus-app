@@ -24,5 +24,7 @@
   "orders": "My orders",
   "ordersHint": "An order received by one of my shops, or a step taken on an order.",
   "refining": "Finished refining orders",
-  "refiningHint": "When a refining order reaches its end, so you can go and collect it."
+  "refiningHint": "When a refining order reaches its end, so you can go and collect it.",
+  "invites": "Invitations",
+  "invitesHint": "When a player invites you to an event or shares a private place with you."
 }

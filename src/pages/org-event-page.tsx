@@ -7,14 +7,17 @@ import {
   Check,
   ClipboardList,
   Globe,
+  Link2,
   Lock,
   MapPin,
   Pencil,
+  Share2,
   User,
   Users,
 } from "lucide-react";
 import { useTranslations } from "use-intl";
 import { EventPill } from "@/components/org-event-pill";
+import { ShareModal } from "@/components/share-modal";
 import { RoleIcon } from "@/components/squad/role-icon";
 import {
   Button,
@@ -106,6 +109,7 @@ export default function OrgEventPage() {
     queryFn: () => listOrganizations({ page: 1 }),
   });
   const org = orgs.data?.userOrganizations.find((one) => one.id === orgId);
+  const [sharing, setSharing] = useState(false);
 
   const event = useQuery({
     queryKey: ["events", "detail", orgId, eventId],
@@ -186,7 +190,15 @@ export default function OrgEventPage() {
           </h1>
         </div>
         {view.canManage ? (
-          <div className="flex shrink-0 gap-2">
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              className="border-cyan-300/40 bg-cyan-300/10 text-cyan-200 hover:bg-cyan-300/20"
+              onClick={() => setSharing(true)}
+            >
+              <Share2 className="size-4" />
+              {t("header.share")}
+            </Button>
             <Button
               variant="outline"
               onClick={() => void openOnSite(`${sitePath}/summary`)}
@@ -206,6 +218,32 @@ export default function OrgEventPage() {
           </div>
         ) : null}
       </header>
+
+      {view.guest ? (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-[13px]">
+          {view.guest === "link" ? (
+            <Link2 className="size-4.5 shrink-0 text-cyan-200" />
+          ) : (
+            <Users className="size-4.5 shrink-0 text-cyan-200" />
+          )}
+          <p className="min-w-0 text-nexus-soft">
+            <b className="text-cyan-200">
+              {view.guest === "link" ? t("guest.linkTitle") : t("guest.inviteTitle")}
+            </b>
+            {" · "}
+            {view.guest === "link" ? t("guest.link") : t("guest.invite")}
+          </p>
+        </div>
+      ) : null}
+
+      {view.canManage ? (
+        <ShareModal
+          kind="event"
+          id={view.id}
+          open={sharing}
+          onClose={() => setSharing(false)}
+        />
+      ) : null}
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col gap-7">

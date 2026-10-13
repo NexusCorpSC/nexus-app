@@ -29,7 +29,8 @@
     "summary": "Resumen",
     "summaryTitle": "Abre el resumen del organizador en el navegador",
     "edit": "Editar",
-    "editTitle": "Abre el formulario en el navegador"
+    "editTitle": "Abre el formulario en el navegador",
+    "share": "Compartir"
   },
   "thePlan": "El plan",
   "facts": {
@@ -90,5 +91,11 @@
     "alreadyDrawn": "Ya se ha creado una escuadra a partir de este evento. Si se ha disuelto, puedes crear una nueva.",
     "hint": "{count, plural, one {Una escuadra de # inscrito} other {Una escuadra de # inscritos}} liderada por ti{hasRoles, select, yes {, con los roles {roles}} other {}}. Cada uno conserva el rol elegido en la inscripción y la encuentra en su lista de escuadras, sin abandonar la suya. Por encima de 20, varias escuadras reunidas en un raid.",
     "create": "Crear la escuadra"
+  },
+  "guest": {
+    "linkTitle": "Ves este evento por un enlace para compartir",
+    "inviteTitle": "Estás invitado a este evento",
+    "link": "No eres miembro de la organización: puedes inscribirte, pero el acceso termina si el enlace se desactiva antes de tu inscripción.",
+    "invite": "No eres miembro de la organización, pero puedes ver el programa e inscribirte."
   }
 }

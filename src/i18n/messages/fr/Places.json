@@ -121,6 +121,12 @@
     "visibility": "Visible de",
     "createdBy": "Créé par",
     "position": "Position",
-    "positionKnown": "Relevée"
+    "positionKnown": "Relevée",
+    "sharedBy": "Partagé par {name}",
+    "sharedBadge": "Partagé avec moi",
+    "guests": "{count, plural, one {# invité} other {# invités}}",
+    "share": "Partager",
+    "sharedWithYou": "Lieu privé de {name}, partagé avec vous",
+    "visibleOwnGuests": "Lieu privé, visible de vous et de {count, plural, one {# invité} other {# invités}}"
   }
 }

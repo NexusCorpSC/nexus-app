@@ -29,7 +29,8 @@
     "summary": "Résumé",
     "summaryTitle": "Ouvre le résumé de l'organisateur dans le navigateur",
     "edit": "Modifier",
-    "editTitle": "Ouvre le formulaire dans le navigateur"
+    "editTitle": "Ouvre le formulaire dans le navigateur",
+    "share": "Partager"
   },
   "thePlan": "Le plan",
   "facts": {
@@ -90,5 +91,11 @@
     "alreadyDrawn": "Une escouade a déjà été tirée de cet évènement. Si elle a été dissoute, vous pouvez en créer une nouvelle.",
     "hint": "{count, plural, one {Une escouade de # inscrit} other {Une escouade de # inscrits}} menée par vous{hasRoles, select, yes {, avec les rôles {roles}} other {}}. Chacun garde le rôle choisi à l'inscription et la retrouve dans sa liste d'escouades, sans quitter la sienne. Au-delà de 20, plusieurs escouades réunies en raid.",
     "create": "Créer l'escouade"
+  },
+  "guest": {
+    "linkTitle": "Vous voyez cet évènement par un lien de partage",
+    "inviteTitle": "Vous êtes invité à cet évènement",
+    "link": "Vous n'êtes pas membre de l'organisation : vous pouvez vous inscrire, mais l'accès cesse si le lien est désactivé avant votre inscription.",
+    "invite": "Vous n'êtes pas membre de l'organisation, mais vous pouvez voir le programme et vous inscrire."
   }
 }
