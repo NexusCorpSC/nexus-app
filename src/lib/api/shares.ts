@@ -71,6 +71,14 @@ export function markInvitationsSeen() {
   return apiRequest<void>("/api/me/invitations", { method: "POST" });
 }
 
+/** The reader gives up something shared with them: they no longer see it. */
+export function leaveShare(kind: ShareKind, id: string) {
+  return apiRequest<void>(
+    `/api/me/shares/${kind}/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+  );
+}
+
 /** Declines an invitation: the event or place is no longer shown. */
 export function declineInvitation(id: string) {
   return apiRequest<void>(`/api/me/invitations/${encodeURIComponent(id)}`, {

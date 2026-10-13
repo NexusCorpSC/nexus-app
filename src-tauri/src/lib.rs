@@ -315,6 +315,8 @@ pub(crate) enum Action {
     Lock,
     /// Held rather than fired: see `radial.rs`.
     Radial,
+    /// Marks the player's position, from the NPS window (`nps.rs`).
+    Mark,
 }
 
 impl Action {
@@ -335,6 +337,7 @@ impl Action {
             Action::Opacity => "opacity",
             Action::Lock => "lock",
             Action::Radial => "radial",
+            Action::Mark => "mark",
         }
     }
 }
@@ -385,6 +388,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         // Never routed here by the shortcut paths, which open and close the
         // menu themselves; opening it is the least surprising answer anyway.
         Action::Radial => radial::press(app),
+        Action::Mark => nps::mark(app),
     };
 
     if let Err(error) = outcome {
@@ -445,6 +449,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the menu sends.
     #[serde(default = "default_radial_shortcut")]
     radial: String,
+    /// Missing from what a frontend older than the markers sends.
+    #[serde(default = "default_mark_shortcut")]
+    mark: String,
 }
 
 fn default_lock_shortcut() -> String {
@@ -467,6 +474,11 @@ fn default_talk_shortcut() -> String {
     "Ctrl+Shift+KeyJ".to_string()
 }
 
+/// Not M, which the map already holds.
+fn default_mark_shortcut() -> String {
+    "Ctrl+Shift+KeyX".to_string()
+}
+
 impl Default for ShortcutSettings {
     fn default() -> Self {
         Self {
@@ -483,6 +495,7 @@ impl Default for ShortcutSettings {
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
             radial: default_radial_shortcut(),
+            mark: default_mark_shortcut(),
         }
     }
 }
@@ -530,6 +543,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
         (Action::Radial, &requested.radial),
+        (Action::Mark, &requested.mark),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -674,6 +688,32 @@ fn show_window(app: &AppHandle, label: &str) -> Result<(), String> {
     window.show().map_err(|e| e.to_string())?;
     window.set_focus().map_err(|e| e.to_string())?;
     Ok(())
+}
+
+/// Brings an overlay up without activating it: the game keeps the keyboard
+/// and the mouse. Left as it is when already on screen.
+pub(crate) fn show_without_focus(app: &AppHandle, label: &str) -> Result<(), String> {
+    let overlay = window(app, label)?;
+
+    if overlay.is_visible().map_err(|e| e.to_string())? {
+        return Ok(());
+    }
+
+    #[cfg(windows)]
+    {
+        use windows::Win32::Foundation::HWND;
+        use windows::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_SHOWNOACTIVATE};
+
+        let handle = overlay.hwnd().map_err(|e| e.to_string())?;
+        // `show()` activates the window, which would take the game's focus.
+        unsafe {
+            let _ = ShowWindow(HWND(handle.0), SW_SHOWNOACTIVATE);
+        }
+        Ok(())
+    }
+
+    #[cfg(not(windows))]
+    overlay.show().map_err(|e| e.to_string())
 }
 
 fn hide_window(app: &AppHandle, label: &str) -> Result<(), String> {

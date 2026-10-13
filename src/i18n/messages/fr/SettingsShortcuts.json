@@ -66,6 +66,11 @@
       "label": "Opacité",
       "hint": "Efface les superpositions, le jeu vu au travers, ou les rend.",
       "detail": "Efface toutes les superpositions d'un coup — le jeu vu au travers — ou leur rend leur panneau. Chacune porte aussi le bouton, qui passe par le fond ombré entre les deux."
+    },
+    "mark": {
+      "label": "Marquer ma position",
+      "hint": "Crée un marqueur au dernier relevé du NPS, sans formulaire.",
+      "detail": "Crée tout de suite un marqueur à votre position, dans la dernière collection utilisée, nommé d'après le corps et l'heure. Le relevé doit dater de moins de 30 s : sinon le NPS en demande un nouveau (suivi à l'écran, ou /showlocation à coller dans le chat du jeu). Une notification confirme."
     }
   }
 }

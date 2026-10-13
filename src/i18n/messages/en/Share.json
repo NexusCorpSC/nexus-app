@@ -35,5 +35,6 @@
     "tooManyShares": "No more than 100 guests per share.",
     "tooManyInvites": "You sent 50 invitations today. Try again tomorrow.",
     "forbidden": "Only those who manage this can share it."
-  }
+  },
+  "introMarkerCollection": "Invited players see the markers in this collection, on the Star Map and in the NPS, and can navigate to them. Only you can edit them."
 }

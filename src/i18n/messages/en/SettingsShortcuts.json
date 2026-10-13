@@ -66,6 +66,11 @@
       "label": "Opacity",
       "hint": "Clears the overlays, the game seen through, or brings them back.",
       "detail": "Clears every overlay at once — the game seen through — or gives them back their panel. Each one also has the button, which goes through the shaded background in between."
+    },
+    "mark": {
+      "label": "Mark my position",
+      "hint": "Creates a marker at the NPS's latest reading, no form.",
+      "detail": "Creates a marker at your position right away, in the last collection used, named after the body and the time. The reading must be less than 30 s old: otherwise the NPS asks for a new one (screen tracking, or /showlocation to paste in the game chat). A notification confirms it."
     }
   }
 }

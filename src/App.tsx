@@ -9,6 +9,7 @@ import ItemsPage from "@/pages/items-page";
 import ItemDetailPage from "@/pages/item-detail-page";
 import PlacesPage from "@/pages/places-page";
 import PlaceDetailPage from "@/pages/place-detail-page";
+import MarkersPage from "@/pages/markers-page";
 import FactionsPage from "@/pages/factions-page";
 import LorePage from "@/pages/lore-page";
 import LoreArticlePage from "@/pages/lore-article-page";
@@ -132,6 +133,7 @@ export default function App() {
           <Route path="friends" element={<FriendsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="refining" element={<RefiningPage />} />
+          <Route path="markers" element={<MarkersPage />} />
           <Route
             path="chat"
             element={

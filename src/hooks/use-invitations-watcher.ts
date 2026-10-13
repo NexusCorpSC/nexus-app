@@ -17,9 +17,13 @@ const MAX_TOASTS = 3;
 
 /** The page of the app for what was shared: the event, or the place. */
 export function invitationRoute(invitation: Invitation): string {
-  return invitation.kind === "place"
-    ? `/places/${encodeURIComponent(invitation.targetId)}`
-    : invitation.href;
+  if (invitation.kind === "place") {
+    return `/places/${encodeURIComponent(invitation.targetId)}`;
+  }
+  if (invitation.kind === "markerCollection") {
+    return `/markers?collection=${encodeURIComponent(invitation.targetId)}`;
+  }
+  return invitation.href;
 }
 
 /**
@@ -64,7 +68,11 @@ export function useInvitationsWatcher(userId: string | null) {
               title:
                 invitation.kind === "event"
                   ? t("eventTitle", { name: invitation.invitedByName })
-                  : t("placeTitle", { name: invitation.invitedByName }),
+                  : invitation.kind === "markerCollection"
+                    ? t("markerCollectionTitle", {
+                        name: invitation.invitedByName,
+                      })
+                    : t("placeTitle", { name: invitation.invitedByName }),
               body: invitation.title,
               route: invitationRoute(invitation),
             });

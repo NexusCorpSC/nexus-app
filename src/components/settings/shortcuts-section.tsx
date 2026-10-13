@@ -27,7 +27,14 @@ import {
  * messages); the ones with more to it also carry `detail`, the full
  * explanation the page used to show, kept as the hint's tooltip.
  */
-const DETAILED = ["map", "radial", "talk", "lock", "opacity"] as const;
+const DETAILED = [
+  "map",
+  "radial",
+  "talk",
+  "mark",
+  "lock",
+  "opacity",
+] as const;
 
 type DetailedAction = (typeof DETAILED)[number];
 
@@ -49,7 +56,13 @@ const WINDOW_ROWS: ShortcutAction[] = [
 ];
 
 /** The combinations used while playing, over the overlays already shown. */
-const IN_GAME_ROWS: ShortcutAction[] = ["radial", "talk", "lock", "opacity"];
+const IN_GAME_ROWS: ShortcutAction[] = [
+  "radial",
+  "talk",
+  "mark",
+  "lock",
+  "opacity",
+];
 
 export function ShortcutsSection() {
   const t = useTranslations("SettingsShortcuts");

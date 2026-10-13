@@ -35,5 +35,6 @@
     "tooManyShares": "No más de 100 invitados por compartición.",
     "tooManyInvites": "Has enviado 50 invitaciones hoy. Inténtalo mañana.",
     "forbidden": "Solo quienes lo gestionan pueden compartirlo."
-  }
+  },
+  "introMarkerCollection": "Los jugadores invitados ven los marcadores de esta colección, en el Star Map y en el NPS, y se guían hasta ellos. Solo tú los modificas."
 }

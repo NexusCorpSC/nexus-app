@@ -29,6 +29,7 @@ import {
   LogIn,
   Map as MapIcon,
   MapPin,
+  MapPinned,
   NotebookPen,
   Package,
   Rocket,
@@ -66,6 +67,7 @@ type NavKey =
   | "blueprints"
   | "items"
   | "places"
+  | "markers"
   | "missions"
   | "factions"
   | "lore"
@@ -101,6 +103,13 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/blueprints", label: "blueprints", icon: Hammer },
       { to: "/items", label: "items", icon: Package },
       { to: "/places", label: "places", icon: MapPin },
+      // Les points relevés par le joueur, à côté des lieux où le NPS guide.
+      {
+        to: "/markers",
+        label: "markers",
+        icon: MapPinned,
+        requiresAuth: true,
+      },
       { to: "/missions", label: "missions", icon: Rocket },
       { to: "/factions", label: "factions", icon: Flag },
       { to: "/lore", label: "lore", icon: BookOpen },

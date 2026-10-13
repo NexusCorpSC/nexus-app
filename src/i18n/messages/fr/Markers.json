@@ -1,0 +1,57 @@
+{
+  "title": "Marqueurs",
+  "description": "Les points relevés en jeu pour y revenir : les vôtres, et ceux des collections partagées avec vos organisations.",
+  "manage": "Gérer sur le site",
+  "mark": "Marquer ma position",
+  "all": "Tous",
+  "noCollection": "Sans collection",
+  "empty": {
+    "title": "Aucun marqueur pour l'instant",
+    "description": "Dans la superposition du NPS, « Marquer ma position » garde l'endroit où vous êtes, pour y revenir plus tard."
+  },
+  "searchLabel": "Rechercher un marqueur",
+  "searchPlaceholder": "Rechercher un marqueur, une note",
+  "sortedByDistance": "Triés par distance · vous êtes sur {where}",
+  "sortedByDate": "Du plus récent au plus ancien · affichez le NPS pour les trier par distance",
+  "space": "l'espace",
+  "noResults": "Aucun marqueur ne correspond.",
+  "sharedWith": "Partagée avec {org}",
+  "inSpace": "{system}, espace",
+  "kinds": {
+    "ore": "Minerai",
+    "wreck": "Épave",
+    "cave": "Grotte",
+    "poi": "Point d'intérêt",
+    "danger": "Danger",
+    "other": "Autre"
+  },
+  "otherSystem": "Dans un autre système ({system}) : le NPS ne peut pas y guider d'ici.",
+  "guide": "Guider",
+  "edit": "Modifier",
+  "delete": "Supprimer",
+  "form": {
+    "title": "Modifier le marqueur",
+    "name": "Nom",
+    "kind": "Catégorie",
+    "collection": "Collection",
+    "note": "Note",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "nameMissing": "Donnez un nom au marqueur."
+  },
+  "deleteTitle": "Supprimer « {name} » ?",
+  "deleteDescription": "Le marqueur disparaît pour vous et pour ceux qui voient sa collection.",
+  "openFailed": "Impossible d'ouvrir le site.",
+  "errors": {
+    "unauthorized": "Votre session a expiré. Reconnectez-vous.",
+    "invalidInput": "Le site a refusé ce marqueur : un champ n'est pas valide.",
+    "notFound": "Ce marqueur ou cette collection n'existe plus.",
+    "forbidden": "Seul son créateur peut modifier ce marqueur.",
+    "tooMany": "Vous avez atteint 1 000 marqueurs. Supprimez-en avant d'en créer d'autres."
+  },
+  "sharedByPlayer": "Partagée par {owner}",
+  "guests": "{count, plural, one {# invité} other {# invités}}",
+  "share": "Partager",
+  "leave": "Ne plus voir",
+  "leaveFailed": "La collection n'a pas pu être retirée."
+}

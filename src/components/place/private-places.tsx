@@ -18,10 +18,13 @@ export const PRIVATE_ACCENT = "#c4b2ff";
 export function PrivatePlaceBadge({
   place,
 }: {
+  // Sert aussi aux marqueurs d'une collection partagée, qui n'ont que l'org.
   place: Pick<
     PrivatePlaceSummary,
-    "org" | "sharedWithMe" | "guestCount" | "ownerName"
-  >;
+    "sharedWithMe" | "guestCount" | "ownerName"
+  > & {
+    org?: Pick<NonNullable<PrivatePlaceSummary["org"]>, "name" | "tag">;
+  };
 }) {
   const t = useTranslations("Places.private");
   const { org } = place;
