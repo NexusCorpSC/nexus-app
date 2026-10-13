@@ -32,6 +32,9 @@ pub(crate) const POSITION_EVENT: &str = "nps://position";
 /// The window whose being on screen turns the watch on.
 pub(crate) const NPS_WINDOW: &str = "nps";
 
+/// Asks the NPS window to mark the player's position, from the shortcut.
+const MARK_EVENT: &str = "nps://mark";
+
 /// What the game understands, put on the clipboard for the player to paste.
 const SHOW_LOCATION: &str = "/showlocation";
 
@@ -129,6 +132,16 @@ pub(crate) fn install(app: &AppHandle) {
             }
         }
     });
+}
+
+/// The « Marquer ma position » shortcut: the readings live in the NPS window,
+/// so it is the one to make the marker. Brought up without the focus first,
+/// the game keeping the keyboard: hidden, it reads neither the clipboard nor
+/// the screen, and a reading too old would have no way of being renewed.
+pub(crate) fn mark(app: &AppHandle) -> Result<(), String> {
+    crate::show_without_focus(app, NPS_WINDOW)?;
+    app.emit_to(NPS_WINDOW, MARK_EVENT, ())
+        .map_err(|error| error.to_string())
 }
 
 /// Puts `/showlocation` on the clipboard: the player pastes it in the chat,

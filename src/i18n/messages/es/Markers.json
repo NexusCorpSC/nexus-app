@@ -1,0 +1,52 @@
+{
+  "title": "Marcadores",
+  "description": "Los puntos anotados en el juego para volver a ellos: los tuyos y los de las colecciones compartidas con tus organizaciones.",
+  "manage": "Gestionar en el sitio",
+  "mark": "Marcar mi posición",
+  "all": "Todos",
+  "noCollection": "Sin colección",
+  "empty": {
+    "title": "Aún no hay marcadores",
+    "description": "En la superposición del NPS, «Marcar mi posición» guarda el lugar donde estás, para volver más tarde."
+  },
+  "searchLabel": "Buscar un marcador",
+  "searchPlaceholder": "Buscar un marcador, una nota",
+  "sortedByDistance": "Ordenados por distancia · estás en {where}",
+  "sortedByDate": "Del más reciente al más antiguo · muestra el NPS para ordenarlos por distancia",
+  "space": "el espacio",
+  "noResults": "Ningún marcador coincide.",
+  "sharedWith": "Compartida con {org}",
+  "inSpace": "{system}, espacio",
+  "kinds": {
+    "ore": "Mineral",
+    "wreck": "Pecio",
+    "cave": "Cueva",
+    "poi": "Punto de interés",
+    "danger": "Peligro",
+    "other": "Otro"
+  },
+  "otherSystem": "En otro sistema ({system}): el NPS no puede guiar hasta allí desde aquí.",
+  "guide": "Guiar",
+  "edit": "Modificar",
+  "delete": "Eliminar",
+  "form": {
+    "title": "Modificar el marcador",
+    "name": "Nombre",
+    "kind": "Categoría",
+    "collection": "Colección",
+    "note": "Nota",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "nameMissing": "Ponle un nombre al marcador."
+  },
+  "deleteTitle": "¿Eliminar «{name}»?",
+  "deleteDescription": "El marcador desaparece para ti y para quienes ven su colección.",
+  "openFailed": "No se puede abrir el sitio.",
+  "errors": {
+    "unauthorized": "Tu sesión ha caducado. Vuelve a conectarte.",
+    "invalidInput": "El sitio rechazó este marcador: un campo no es válido.",
+    "notFound": "Este marcador o esta colección ya no existe.",
+    "forbidden": "Solo su creador puede modificar este marcador.",
+    "tooMany": "Has llegado a 1000 marcadores. Elimina algunos antes de crear más."
+  }
+}

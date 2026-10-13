@@ -12,7 +12,8 @@
     "talk": "Talk to Nexus Chat",
     "opacity": "Overlay opacity",
     "lock": "Overlay lock",
-    "radial": "Quick radial menu"
+    "radial": "Quick radial menu",
+    "mark": "Mark my position"
   },
   "keys": {
     "shift": "Shift"

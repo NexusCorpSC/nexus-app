@@ -17,7 +17,7 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 
 use crate::diagnostics::log;
-use crate::{window, CHAT_WINDOW};
+use crate::{show_without_focus, CHAT_WINDOW};
 
 /// The event the chat overlay listens to.
 pub const TALK_EVENT: &str = "chat-talk";
@@ -63,7 +63,7 @@ pub fn press(app: &AppHandle) -> Result<(), String> {
         log(format!("talk: microphone not opened ({error})"));
     }
 
-    let told = show_without_focus(app).and_then(|()| {
+    let told = show_without_focus(app, CHAT_WINDOW).and_then(|()| {
         app.emit_to(
             CHAT_WINDOW,
             TALK_EVENT,
@@ -137,30 +137,4 @@ pub fn release(app: &AppHandle) {
 /// Whether the combination is down.
 pub fn is_held() -> bool {
     HELD.load(Ordering::SeqCst)
-}
-
-/// Brings the chat overlay up without activating it: the game keeps the
-/// keyboard and the mouse. Left as it is when already on screen.
-fn show_without_focus(app: &AppHandle) -> Result<(), String> {
-    let overlay = window(app, CHAT_WINDOW)?;
-
-    if overlay.is_visible().map_err(|e| e.to_string())? {
-        return Ok(());
-    }
-
-    #[cfg(windows)]
-    {
-        use windows::Win32::Foundation::HWND;
-        use windows::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_SHOWNOACTIVATE};
-
-        let handle = overlay.hwnd().map_err(|e| e.to_string())?;
-        // `show()` activates the window, which would take the game's focus.
-        unsafe {
-            let _ = ShowWindow(HWND(handle.0), SW_SHOWNOACTIVATE);
-        }
-        Ok(())
-    }
-
-    #[cfg(not(windows))]
-    overlay.show().map_err(|e| e.to_string())
 }

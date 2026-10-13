@@ -10,11 +10,14 @@ import type { PrivatePlaceSummary } from "@/types/nexus";
 /** La couleur de tout ce qui est privé, comme sur le site. */
 export const PRIVATE_ACCENT = "#c4b2ff";
 
-/** « NXS » quand l'organisation le voit, « Moi seul » sinon. */
+/**
+ * « NXS » quand l'organisation le voit, « Moi seul » sinon. Sert aussi aux
+ * marqueurs d'une collection partagée.
+ */
 export function PrivatePlaceBadge({
   org,
 }: {
-  org?: PrivatePlaceSummary["org"];
+  org?: Pick<NonNullable<PrivatePlaceSummary["org"]>, "name" | "tag">;
 }) {
   const t = useTranslations("Places.private");
   const Icon = org ? Users : Lock;

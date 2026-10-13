@@ -19,6 +19,7 @@ import {
 import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
 import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note, type PlacePosition } from "@/types/nexus";
+import { isMarkerKind, type MarkerKind } from "@/types/markers";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -42,6 +43,7 @@ const KEY_SHORTCUT_TALK = "shortcutTalk";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
 const KEY_SHORTCUT_RADIAL = "shortcutRadial";
+const KEY_SHORTCUT_MARK = "shortcutMark";
 const KEY_LOCAL_NOTE = "localNote";
 const KEY_NOTIFICATION_CORNER = "notificationCorner";
 const KEY_CARGO_SHEET = "cargoSheet";
@@ -49,6 +51,7 @@ const KEY_PINNED_MAP = "pinnedMap";
 const KEY_NPS_DESTINATION = "npsDestination";
 const KEY_NPS_SYSTEM = "npsSystem";
 const KEY_NPS_SCREEN = "npsScreen";
+const KEY_MARKER_DEFAULTS = "markerDefaults";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
@@ -146,6 +149,8 @@ export const DEFAULT_SHORTCUTS = {
   lock: "Ctrl+Shift+KeyL",
   // Held, not pressed: the radial menu stays up while it is down.
   radial: "Alt+KeyV",
+  // Not M, which the map already holds: X marks the spot.
+  mark: "Ctrl+Shift+KeyX",
 } as const;
 
 export type ShortcutAction = keyof typeof DEFAULT_SHORTCUTS;
@@ -184,6 +189,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
     radial:
       (await store.get<string>(KEY_SHORTCUT_RADIAL)) ??
       DEFAULT_SHORTCUTS.radial,
+    mark:
+      (await store.get<string>(KEY_SHORTCUT_MARK)) ?? DEFAULT_SHORTCUTS.mark,
   };
 }
 
@@ -202,6 +209,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
   await store.set(KEY_SHORTCUT_RADIAL, shortcuts.radial);
+  await store.set(KEY_SHORTCUT_MARK, shortcuts.mark);
 }
 
 /**
@@ -546,9 +554,9 @@ export async function setPinnedMap(slug: string | null): Promise<void> {
 }
 
 /**
- * Where the NPS overlay guides to: a recorded place, by its slug, or a point
- * typed in by hand. Kept for the same reason as the pinned map: the overlay
- * outlives a hide and a show.
+ * Where the NPS overlay guides to: a recorded place, by its slug, a point
+ * typed in by hand, or one of the player's markers. Kept for the same reason
+ * as the pinned map: the overlay outlives a hide and a show.
  */
 export type NpsDestination =
   | { slug: string }
@@ -560,15 +568,48 @@ export type NpsDestination =
         systemSlug?: string;
         position: PlacePosition;
       };
+    }
+  | {
+      /**
+       * Un marqueur, par son id, avec ce qu'il faut pour y guider encore s'il
+       * disparaît de la liste : supprimé ailleurs, ou la liste pas encore lue.
+       * Le marqueur tel que le site le donne passe devant cette copie.
+       */
+      marker: {
+        id: string;
+        name: string;
+        systemSlug?: string;
+        position: PlacePosition;
+      };
     };
 
 function isNpsDestination(value: unknown): value is NpsDestination {
   if (!value || typeof value !== "object") return false;
   if ("slug" in value) return typeof value.slug === "string";
+  if ("marker" in value) {
+    if (!value.marker || typeof value.marker !== "object") return false;
+    const { id, name, ...rest } = value.marker as {
+      id?: unknown;
+      name?: unknown;
+    };
+    return (
+      typeof id === "string" &&
+      typeof name === "string" &&
+      isNpsPoint(rest)
+    );
+  }
   if (!("point" in value) || !value.point || typeof value.point !== "object") {
     return false;
   }
-  const { name, systemSlug, position } = value.point as {
+  const { name, ...rest } = value.point as { name?: unknown };
+  return (
+    (name === undefined || typeof name === "string") && isNpsPoint(rest)
+  );
+}
+
+/** Un système facultatif et une position : le point et le marqueur en ont. */
+function isNpsPoint(value: unknown): boolean {
+  const { systemSlug, position } = value as {
     name?: unknown;
     systemSlug?: unknown;
     position?: Partial<Record<keyof PlacePosition, unknown>>;
@@ -576,7 +617,6 @@ function isNpsDestination(value: unknown): value is NpsDestination {
   const optionalString = (one: unknown) =>
     one === undefined || typeof one === "string";
   return (
-    optionalString(name) &&
     optionalString(systemSlug) &&
     !!position &&
     optionalString(position.body) &&
@@ -601,6 +641,43 @@ export async function setNpsDestination(
 
   if (destination === null) await store.delete(KEY_NPS_DESTINATION);
   else await store.set(KEY_NPS_DESTINATION, destination);
+}
+
+/**
+ * Ce que le formulaire d'un marqueur propose d'abord, et ce que le raccourci
+ * prend sans rien demander : la dernière collection utilisée (`null` : « Sans
+ * collection ») et la dernière catégorie.
+ */
+export type MarkerDefaults = {
+  collectionId: string | null;
+  kind: MarkerKind;
+};
+
+export const DEFAULT_MARKER_DEFAULTS: MarkerDefaults = {
+  collectionId: null,
+  kind: "ore",
+};
+
+export async function getMarkerDefaults(): Promise<MarkerDefaults> {
+  const store = await getStore();
+  const stored =
+    await store.get<Partial<Record<keyof MarkerDefaults, unknown>>>(
+      KEY_MARKER_DEFAULTS,
+    );
+  return {
+    collectionId:
+      typeof stored?.collectionId === "string" ? stored.collectionId : null,
+    kind: isMarkerKind(stored?.kind)
+      ? stored.kind
+      : DEFAULT_MARKER_DEFAULTS.kind,
+  };
+}
+
+export async function setMarkerDefaults(
+  defaults: MarkerDefaults,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_MARKER_DEFAULTS, defaults);
 }
 
 /**

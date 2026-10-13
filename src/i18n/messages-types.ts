@@ -17,6 +17,7 @@ import type Items from "./messages/fr/Items.json";
 import type Layout from "./messages/fr/Layout.json";
 import type Lore from "./messages/fr/Lore.json";
 import type MapOverlay from "./messages/fr/MapOverlay.json";
+import type Markers from "./messages/fr/Markers.json";
 import type Missions from "./messages/fr/Missions.json";
 import type Native from "./messages/fr/Native.json";
 import type Notes from "./messages/fr/Notes.json";
@@ -69,6 +70,7 @@ export type Messages = {
   Layout: typeof Layout;
   Lore: typeof Lore;
   MapOverlay: typeof MapOverlay;
+  Markers: typeof Markers;
   Missions: typeof Missions;
   Native: typeof Native;
   Notes: typeof Notes;

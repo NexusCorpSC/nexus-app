@@ -4,6 +4,7 @@
  */
 
 import type { PlaceLore } from "@/types/lore";
+import type { Marker } from "@/types/markers";
 
 /* ------------------------------------------------------------------ */
 /* Crafting / blueprints                                               */
@@ -1847,6 +1848,11 @@ export type NpsPlace = {
 export type NpsResponse = {
   bodies: NpsBody[];
   places: NpsPlace[];
+  /**
+   * Connecté : les marqueurs que le joueur voit, les siens et ceux des
+   * collections partagées avec ses organisations.
+   */
+  markers?: Marker[];
 };
 
 /** `POST /api/lieux/{slug}/position`, 201. */

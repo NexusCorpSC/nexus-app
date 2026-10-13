@@ -1,6 +1,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ClipboardEvent,
   type FormEvent,
@@ -16,6 +17,7 @@ import {
   Crosshair,
   Keyboard,
   Lock,
+  MapPinned,
   MapPinPlus,
   Navigation,
   Radar,
@@ -31,7 +33,9 @@ import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { useDebounced } from "@/hooks/use-debounced";
 import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
+import { markersChanged, useMarkersSync } from "@/hooks/use-markers-sync";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import { translator } from "@/i18n/translate";
 import {
   getNpsData,
   positionErrorMessage,
@@ -39,8 +43,28 @@ import {
 } from "@/lib/api/nps";
 import { listPlaces } from "@/lib/api/places";
 import {
+  createMarker,
+  createMarkerCollection,
+  deleteMarker,
+  isNotFound,
+  listMarkers,
+  markerErrorMessage,
+} from "@/lib/api/markers";
+import {
+  defaultMarkerName,
+  isFresh,
+  MARK_FORM_EVENT,
+  MARKER_ARRIVAL_M,
+  markerPositionOf,
+  nextCollectionColor,
+  whereOf,
+  withDistances,
+} from "@/lib/markers";
+import { notify } from "@/lib/notifications";
+import {
   bodyAt,
   compassPoint,
+  formatDistance,
   fromGeo,
   geoOf,
   guide,
@@ -65,16 +89,29 @@ import {
 } from "@/lib/nps-destination";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import {
+  DEFAULT_MARKER_DEFAULTS,
   DEFAULT_NPS_SCREEN,
+  getMarkerDefaults,
   getNpsScreen,
   getNpsSystem,
+  setMarkerDefaults,
   setNpsScreen,
   setNpsSystem,
+  type MarkerDefaults,
   type NpsScreenRegion,
   type NpsScreenSettings,
 } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 import type { NpsBody, NpsPlace, PlacePosition } from "@/types/nexus";
+import {
+  DEFAULT_MARKER_COLOR,
+  MARKER_KINDS,
+  MAX_MARKER_COLLECTION_NAME_LENGTH,
+  MAX_MARKER_NAME_LENGTH,
+  MAX_MARKER_NOTE_LENGTH,
+  type Marker,
+  type MarkerListResponse,
+} from "@/types/markers";
 
 /**
  * Carries a reading of `/showlocation`, from `src-tauri/src/nps.rs`, or one
@@ -103,7 +140,21 @@ type ScreenStatus =
 /** How often the age of the reading is redrawn. */
 const TICK_MS = 1000;
 
-type Panel = "guide" | "destination" | "coordinates" | "record";
+/** Le raccourci « Marquer ma position » (`src-tauri/src/nps.rs`). */
+const MARK_EVENT = "nps://mark";
+
+/** Le bouton « Annuler » de la notification d'un marqueur créé au raccourci. */
+const UNDO_MARK_EVENT = "markers://undo";
+
+/**
+ * Combien attendre un relevé neuf pour le raccourci : le suivi à l'écran en
+ * donne un chaque seconde ou presque ; `/showlocation`, lui, attend que le
+ * joueur le colle dans le chat du jeu.
+ */
+const SCREEN_WAIT_MS = 10_000;
+const PASTE_WAIT_MS = 60_000;
+
+type Panel = "guide" | "destination" | "coordinates" | "record" | "mark";
 
 /** What the overlay guides to: a recorded place, or a point typed in. */
 type Target = {
@@ -114,7 +165,36 @@ type Target = {
   systemName?: string;
   bodyName?: string;
   position: PlacePosition;
+  /** Un marqueur : sa couleur, sa collection et sa note, et s'il est à soi. */
+  marker?: { id: string; color: string; detail?: string; isOwner: boolean };
 };
+
+/**
+ * Le prochain relevé, d'où qu'il vienne, pris à partir de `after` ; `null`
+ * passé `timeoutMs`.
+ */
+function nextReading(after: number, timeoutMs: number): Promise<Fix | null> {
+  return new Promise((resolve) => {
+    let done = false;
+    let stop: (() => void) | null = null;
+    const finish = (reading: Fix | null) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      stop?.();
+      resolve(reading);
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+    void listen<Fix>(POSITION_EVENT, (event) => {
+      if (event.payload.at >= after) finish(event.payload);
+    })
+      .then((unlisten) => {
+        if (done) unlisten();
+        else stop = unlisten;
+      })
+      .catch(() => finish(null));
+  });
+}
 
 /**
  * The NPS — Nexus Positioning System — over the game.
@@ -129,6 +209,10 @@ type Target = {
  *
  * Places have no position until players record one, from here, standing on
  * the spot: the position goes to the site as a contribution.
+ *
+ * Les marqueurs du joueur se posent d'ici aussi, au dernier relevé : par le
+ * formulaire sous « Ma position », ou d'un coup par le raccourci, qui affiche
+ * la fenêtre sans lui donner la main. On s'y fait guider comme vers un lieu.
  */
 export default function NpsOverlayPage() {
   useTransparentWindow();
@@ -162,6 +246,11 @@ export default function NpsOverlayPage() {
   // Where the player was last seen near a body: in open space, a reading does
   // not tell Stanton from Pyro, each centred on its own star.
   const [lastSystem, setLastSystem] = useState<string | null>(null);
+  // Arrivé à un marqueur, « Le garder » range la question pour celui-là.
+  const [keptMarker, setKeptMarker] = useState<string | null>(null);
+  const [arrivalError, setArrivalError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  useMarkersSync();
 
   const data = useQuery({
     queryKey: ["nps"],
@@ -170,6 +259,7 @@ export default function NpsOverlayPage() {
   });
   const bodies = useMemo(() => data.data?.bodies ?? [], [data.data]);
   const places = useMemo(() => data.data?.places ?? [], [data.data]);
+  const markers = useMemo(() => data.data?.markers ?? [], [data.data]);
 
   useEffect(() => {
     const pending = listen<Fix>(POSITION_EVENT, (event) => {
@@ -280,8 +370,12 @@ export default function NpsOverlayPage() {
   }, [locked]);
 
   const target = useMemo(
-    () => targetOf(destination, places, bodies, t("manualName")),
-    [destination, places, bodies, t],
+    () =>
+      targetOf(destination, places, markers, bodies, {
+        manualName: t("manualName"),
+        noCollection: t("mark.noCollection"),
+      }),
+    [destination, places, markers, bodies, t],
   );
   const body = fix ? bodyAt(fix, bodies) : null;
   const system = body?.systemSlug ?? lastSystem;
@@ -312,6 +406,154 @@ export default function NpsOverlayPage() {
       console.error("cannot save the NPS system", error),
     );
   }, [body?.systemSlug, lastSystem]);
+
+  // Ce que le raccourci lit au moment où il part : il écoute une fois pour
+  // toutes, et l'état aura changé d'ici là.
+  const latest = useRef({ fix, system, live });
+  useEffect(() => {
+    latest.current = { fix, system, live };
+  }, [fix, system, live]);
+  const marking = useRef(false);
+
+  useEffect(() => {
+    /**
+     * Le raccourci « Marquer ma position » : sans formulaire, au dernier
+     * relevé s'il a moins de 30 s, sinon au prochain — lu à l'écran si le
+     * suivi tourne, sinon `/showlocation` remis dans le presse-papiers.
+     */
+    async function quickMark() {
+      if (marking.current) return;
+      marking.current = true;
+      const t = translator("NpsOverlay.mark");
+      try {
+        const started = Date.now();
+        let reading = latest.current.fix;
+        if (!isFresh(reading, started)) {
+          const screenOn = latest.current.live;
+          if (!screenOn) {
+            await invoke("nps_copy_command");
+            await notify({
+              kind: "info",
+              title: t("pasteTitle"),
+              body: t("pasteBody"),
+            });
+          }
+          reading = await nextReading(
+            started,
+            screenOn ? SCREEN_WAIT_MS : PASTE_WAIT_MS,
+          );
+          if (!reading) throw new Error(t("noReading"));
+        }
+
+        // Sans les corps, une position sur une planète serait prise dans le
+        // repère du système, qui tourne sous le marqueur.
+        const nps = await queryClient.ensureQueryData({
+          queryKey: ["nps"],
+          queryFn: getNpsData,
+        });
+        const system = latest.current.system;
+        const where = whereOf(reading, nps.bodies, system);
+        const located = markerPositionOf(reading, nps.bodies, system);
+        if (!located.position?.body && !located.systemSlug) {
+          throw new Error(t("noSystem"));
+        }
+        const name = defaultMarkerName(
+          where.body?.name ?? where.systemName ?? t("defaultWhere"),
+          reading.at,
+        );
+        const defaults = await getMarkerDefaults();
+        let collectionId = defaults.collectionId;
+        let created: { id: string };
+        try {
+          created = await createMarker({
+            name,
+            kind: defaults.kind,
+            collectionId: collectionId ?? undefined,
+            ...located,
+          });
+        } catch (error) {
+          // La dernière collection a pu être supprimée sur le site : le
+          // marqueur va « Sans collection » plutôt que nulle part.
+          if (!collectionId || !isNotFound(error)) throw error;
+          collectionId = null;
+          await setMarkerDefaults({ ...defaults, collectionId });
+          created = await createMarker({
+            name,
+            kind: defaults.kind,
+            ...located,
+          });
+        }
+        markersChanged(queryClient);
+
+        const collectionName = collectionId
+          ? queryClient
+              .getQueryData<MarkerListResponse>(["markers"])
+              ?.collections.find((one) => one.id === collectionId)?.name
+          : translator("Markers")("noCollection");
+        await notify({
+          kind: "success",
+          title: t("created", { name }),
+          body: [collectionName, where.body?.name ?? where.systemName]
+            .filter(Boolean)
+            .join(" · "),
+          route: "/markers",
+          action: {
+            label: t("undo"),
+            event: UNDO_MARK_EVENT,
+            payload: { id: created.id, name },
+          },
+        });
+      } catch (error) {
+        console.error("cannot mark the position", error);
+        await notify({
+          kind: "error",
+          title: t("failed"),
+          body: markerErrorMessage(error),
+        }).catch(() => {});
+      } finally {
+        marking.current = false;
+      }
+    }
+
+    /** « Annuler » sur la notification : le marqueur tout juste créé. */
+    async function undo(id: string, name: string) {
+      const t = translator("NpsOverlay.mark");
+      try {
+        await deleteMarker(id);
+        markersChanged(queryClient);
+        await notify({ kind: "info", title: t("undone", { name }) });
+      } catch (error) {
+        await notify({
+          kind: "error",
+          title: t("undoFailed"),
+          body: markerErrorMessage(error),
+        }).catch(() => {});
+      }
+    }
+
+    const mark = listen(MARK_EVENT, () => void quickMark());
+    const form = listen(MARK_FORM_EVENT, () => setPanel("mark"));
+    const undone = listen<{ id: string; name: string }>(
+      UNDO_MARK_EVENT,
+      (event) => void undo(event.payload.id, event.payload.name),
+    );
+    return () => {
+      for (const pending of [mark, form, undone]) {
+        void pending.then((stop) => stop()).catch(() => {});
+      }
+    };
+  }, [queryClient]);
+
+  async function removeArrivedMarker(id: string) {
+    setArrivalError(null);
+    try {
+      await deleteMarker(id);
+      await setDestination(null);
+      markersChanged(queryClient);
+    } catch (error) {
+      setArrivalError(markerErrorMessage(error));
+    }
+  }
 
   async function refreshPosition() {
     setCopyError(false);
@@ -378,9 +620,24 @@ export default function NpsOverlayPage() {
       {open && panel === "destination" ? (
         <DestinationPicker
           places={places}
+          markers={markers}
+          fix={fix}
+          bodies={bodies}
+          system={system}
           onPick={(slug) => {
             setPanel("guide");
             void setDestination({ slug });
+          }}
+          onPickMarker={(marker) => {
+            setPanel("guide");
+            void setDestination({
+              marker: {
+                id: marker.id,
+                name: marker.name,
+                systemSlug: marker.systemSlug,
+                position: marker.position,
+              },
+            });
           }}
           onCancel={() => setPanel("guide")}
         />
@@ -404,6 +661,17 @@ export default function NpsOverlayPage() {
           system={system}
           onDone={() => setPanel("guide")}
           positionFor={() => positionOf(fix, bodies)}
+        />
+      ) : open && panel === "mark" ? (
+        <MarkPanel
+          fix={fix}
+          live={live}
+          bodies={bodies}
+          bodiesReady={data.isSuccess}
+          system={system}
+          waiting={waiting}
+          onRefresh={() => void refreshPosition()}
+          onDone={() => setPanel("guide")}
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3">
@@ -485,6 +753,22 @@ export default function NpsOverlayPage() {
             </section>
           ) : null}
 
+          {/* Sans relevé, le formulaire invite à actualiser. */}
+          <button
+            type="button"
+            onClick={() => setPanel("mark")}
+            disabled={locked}
+            className="flex items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40"
+            style={{
+              color: DEFAULT_MARKER_COLOR,
+              borderColor: `${DEFAULT_MARKER_COLOR}55`,
+              backgroundColor: `${DEFAULT_MARKER_COLOR}14`,
+            }}
+          >
+            <MapPinned className="size-4" />
+            {t("mark.button")}
+          </button>
+
           <section className="space-y-1">
             <div className="flex items-center gap-2">
               <p className="flex-1 text-[11px] uppercase tracking-wide text-slate-500">
@@ -538,13 +822,27 @@ export default function NpsOverlayPage() {
               </p>
             ) : !target ? (
               <p className="text-[12px] text-slate-400">
-                {places.length === 0 ? t("noPlaces") : t("noDestination")}
+                {places.length === 0 && markers.length === 0
+                  ? t("noPlaces")
+                  : t("noDestination")}
               </p>
             ) : (
               <>
-                <p className="truncate text-[13px] font-medium">
-                  {target.name}
+                <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
+                  {target.marker ? (
+                    <MapPinned
+                      className="size-3.5 shrink-0"
+                      style={{ color: target.marker.color }}
+                      aria-label={t("mark.markerLabel")}
+                    />
+                  ) : null}
+                  <span className="truncate">{target.name}</span>
                 </p>
+                {target.marker?.detail ? (
+                  <p className="truncate text-[11px] text-slate-400">
+                    {target.marker.detail}
+                  </p>
+                ) : null}
                 {target.manual ? (
                   <p className="truncate text-[11px] text-slate-500">
                     {t("manualWhere", {
@@ -571,6 +869,20 @@ export default function NpsOverlayPage() {
                     live={fix.source === "screen"}
                   />
                 )}
+                {target.marker &&
+                guidance &&
+                guidance.distance <= MARKER_ARRIVAL_M &&
+                keptMarker !== target.marker.id ? (
+                  <ArrivedAtMarker
+                    canDelete={target.marker.isOwner}
+                    error={arrivalError}
+                    disabled={locked}
+                    onDelete={() =>
+                      void removeArrivedMarker(target.marker!.id)
+                    }
+                    onKeep={() => setKeptMarker(target.marker!.id)}
+                  />
+                ) : null}
               </>
             )}
           </section>
@@ -596,10 +908,41 @@ export default function NpsOverlayPage() {
 function targetOf(
   destination: NpsDestination | null,
   places: NpsPlace[],
+  markers: Marker[],
   bodies: NpsBody[],
-  manualName: string,
+  labels: { manualName: string; noCollection: string },
 ): Target | null {
   if (!destination) return null;
+  if ("marker" in destination) {
+    // Le marqueur tel que le site le donne, renommé ou déplacé depuis ; à
+    // défaut, la copie gardée avec la destination.
+    const kept = destination.marker;
+    const found = markers.find((one) => one.id === kept.id);
+    const position = found?.position ?? kept.position;
+    const systemSlug = found?.systemSlug ?? kept.systemSlug;
+    return {
+      name: found?.name ?? kept.name,
+      manual: false,
+      systemSlug,
+      systemName:
+        found?.systemName ??
+        bodies.find((one) => one.systemSlug === systemSlug)?.systemName,
+      bodyName:
+        found?.bodyName ??
+        bodies.find((one) => one.slug === position.body)?.name,
+      position,
+      marker: {
+        id: kept.id,
+        color: found?.color ?? DEFAULT_MARKER_COLOR,
+        detail: found
+          ? [found.collectionName ?? labels.noCollection, found.note]
+              .filter(Boolean)
+              .join(" · ")
+          : undefined,
+        isOwner: found?.isOwner ?? false,
+      },
+    };
+  }
   if ("slug" in destination) {
     const place = places.find((one) => one.slug === destination.slug);
     return place
@@ -615,7 +958,7 @@ function targetOf(
   }
   const { name, systemSlug, position } = destination.point;
   return {
-    name: name || manualName,
+    name: name || labels.manualName,
     manual: true,
     systemSlug,
     systemName: bodies.find((one) => one.systemSlug === systemSlug)?.systemName,
@@ -629,22 +972,6 @@ type Formatter = ReturnType<typeof useFormatter>;
 /** As `r_displayInfo` writes a coordinate, in km to the metre. */
 function kilometres(meters: number, format: Formatter): string {
   return format.number(meters / 1000, { maximumFractionDigits: 3 });
-}
-
-/** As the game writes distances: metres, kilometres, then Mm and Gm. */
-function formatDistance(meters: number, format: Formatter): string {
-  const abs = Math.abs(meters);
-  const [value, unit, digits] =
-    abs < 1_000
-      ? [meters, "m", 0]
-      : abs < 100_000
-        ? [meters / 1_000, "km", 1]
-        : abs < 10_000_000
-          ? [meters / 1_000, "km", 0]
-          : abs < 1_000_000_000
-            ? [meters / 1_000_000, "Mm", 1]
-            : [meters / 1_000_000_000, "Gm", 2];
-  return `${format.number(value, { maximumFractionDigits: digits })} ${unit}`;
 }
 
 function formatAge(
@@ -862,19 +1189,49 @@ function ScreenTracking({
   );
 }
 
-/** The recorded places, filtered as one types: there are hundreds, not more. */
+/**
+ * The recorded places, filtered as one types: there are hundreds, not more.
+ * Les marqueurs du joueur passent devant, les plus proches d'abord.
+ */
 function DestinationPicker({
   places,
+  markers,
+  fix,
+  bodies,
+  system,
   onPick,
+  onPickMarker,
   onCancel,
 }: {
   places: NpsPlace[];
+  markers: Marker[];
+  fix: Fix | null;
+  bodies: NpsBody[];
+  system: string | null;
   onPick: (slug: string) => void;
+  onPickMarker: (marker: Marker) => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("NpsOverlay");
+  const format = useFormatter();
   const [search, setSearch] = useState("");
   const needle = search.trim().toLowerCase();
+  const shownMarkers = withDistances(
+    markers.filter(
+      (marker) =>
+        !needle ||
+        [
+          marker.name,
+          marker.note,
+          marker.collectionName,
+          marker.bodyName,
+          marker.systemName,
+        ].some((name) => name?.toLowerCase().includes(needle)),
+    ),
+    fix,
+    bodies,
+    system,
+  ).slice(0, 20);
   const shown = places
     .filter(
       (place) =>
@@ -892,10 +1249,54 @@ function DestinationPicker({
         autoFocus
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder={t("searchPlaceholder")}
+        placeholder={
+          markers.length > 0
+            ? t("mark.searchPlaceholder")
+            : t("searchPlaceholder")
+        }
         className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
       />
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+        {shownMarkers.length > 0 ? (
+          <>
+            <p
+              className="px-1 pt-1 text-[11px] uppercase tracking-wide"
+              style={{ color: DEFAULT_MARKER_COLOR }}
+            >
+              {t("mark.section")}
+            </p>
+            {shownMarkers.map(({ marker, distance }) => (
+              <button
+                key={marker.id}
+                type="button"
+                onClick={() => onPickMarker(marker)}
+                className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+              >
+                <span className="flex items-center gap-1.5 truncate text-[13px] text-slate-100">
+                  <MapPinned
+                    className="size-3 shrink-0"
+                    style={{ color: marker.color }}
+                  />
+                  <span className="truncate">{marker.name}</span>
+                </span>
+                <span className="block truncate text-[11px] text-slate-400">
+                  {[
+                    distance !== null
+                      ? formatDistance(distance, format)
+                      : undefined,
+                    marker.bodyName ?? marker.systemName,
+                    marker.collectionName,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </button>
+            ))}
+            <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-slate-500">
+              {t("mark.placesSection")}
+            </p>
+          </>
+        ) : null}
         {places.length === 0 ? (
           <p className="px-1 py-2 text-[12px] text-slate-400">
             {t("noPlaces")}
@@ -1099,6 +1500,375 @@ function RecordPanel({
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * À moins de 50 m d'un marqueur visé : le rocher est miné, l'épave pillée,
+ * on peut s'en défaire. Seul son créateur le supprime ; les autres le gardent
+ * dans la collection partagée.
+ */
+function ArrivedAtMarker({
+  canDelete,
+  error,
+  disabled,
+  onDelete,
+  onKeep,
+}: {
+  canDelete: boolean;
+  error: string | null;
+  disabled: boolean;
+  onDelete: () => void;
+  onKeep: () => void;
+}) {
+  const t = useTranslations("NpsOverlay.mark");
+  return (
+    <div
+      className="space-y-1.5 rounded-lg border px-2.5 py-2 text-[12px]"
+      style={{
+        borderColor: `${DEFAULT_MARKER_COLOR}55`,
+        backgroundColor: `${DEFAULT_MARKER_COLOR}14`,
+      }}
+    >
+      <p style={{ color: DEFAULT_MARKER_COLOR }}>{t("arrived")}</p>
+      {error ? <p className="text-red-300">{error}</p> : null}
+      <div className="flex gap-2">
+        {canDelete ? (
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={onDelete}
+            className="rounded-lg border border-red-300/40 bg-red-300/10 px-2.5 py-1 text-red-200 transition hover:bg-red-300/20 disabled:opacity-40"
+          >
+            {t("delete")}
+          </button>
+        ) : null}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={onKeep}
+          className="rounded-lg px-2.5 py-1 text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+        >
+          {t("keep")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** « Sans collection », et « Nouvelle collection… » dans la liste. */
+const NO_COLLECTION = "";
+const NEW_COLLECTION = "\u0000new";
+
+/**
+ * Un nouveau marqueur au dernier relevé, sous « Ma position ». Le relevé est
+ * figé à l'ouverture : le suivi à l'écran continue pendant qu'on remplit, et
+ * le marqueur doit rester où l'on était. Trop vieux, il est relancé comme
+ * par « Actualiser ma position » et le premier qui arrive est pris.
+ */
+function MarkPanel({
+  fix,
+  live,
+  bodies,
+  bodiesReady,
+  system,
+  waiting,
+  onRefresh,
+  onDone,
+}: {
+  fix: Fix | null;
+  /** Le suivi à l'écran tourne : un relevé arrive sans rien faire. */
+  live: boolean;
+  bodies: NpsBody[];
+  /** Les corps sont lus : la position peut se mettre dans leur repère. */
+  bodiesReady: boolean;
+  system: string | null;
+  /** `/showlocation` est dans le presse-papiers, à coller dans le jeu. */
+  waiting: boolean;
+  onRefresh: () => void;
+  onDone: () => void;
+}) {
+  const t = useTranslations("NpsOverlay.mark");
+  const tk = useTranslations("Markers.kinds");
+  const queryClient = useQueryClient();
+  const [openedAt] = useState(() => Date.now());
+  const [frozen, setFrozen] = useState<Fix | null>(() =>
+    isFresh(fix, openedAt) ? fix : null,
+  );
+  const [defaults, setDefaults] = useState<MarkerDefaults | null>(null);
+  const [typedName, setTypedName] = useState<string | null>(null);
+  const [kind, setKind] = useState<MarkerDefaults["kind"] | null>(null);
+  const [collection, setCollection] = useState<string | null>(null);
+  const [newCollection, setNewCollection] = useState("");
+  const [note, setNote] = useState("");
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<string | null>(null);
+
+  const list = useQuery({
+    queryKey: ["markers"],
+    queryFn: () => listMarkers(),
+  });
+  // On ne range un marqueur que dans ses propres collections.
+  const collections = useMemo(
+    () => list.data?.collections.filter((one) => one.isOwner) ?? [],
+    [list.data],
+  );
+
+  useEffect(() => {
+    let alive = true;
+    void getMarkerDefaults()
+      .then((stored) => {
+        if (alive) setDefaults(stored);
+      })
+      .catch(() => {
+        if (alive) setDefaults(DEFAULT_MARKER_DEFAULTS);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Un relevé trop vieux est relancé une fois, à l'ouverture ; sans relevé
+  // du tout, le panneau invite à actualiser.
+  useEffect(() => {
+    if (!isFresh(fix, openedAt) && fix && !live) onRefresh();
+    // Une fois, à l'ouverture : pas à chaque relevé qui arrive ensuite.
+  }, []);
+
+  useEffect(() => {
+    if (!frozen && fix && fix.at >= openedAt) setFrozen(fix);
+  }, [fix, frozen, openedAt]);
+
+  const where = frozen ? whereOf(frozen, bodies, system) : null;
+  const defaultName = frozen
+    ? defaultMarkerName(
+        where?.body?.name ?? where?.systemName ?? t("defaultWhere"),
+        frozen.at,
+      )
+    : "";
+  const name = typedName ?? defaultName;
+  const chosenKind = kind ?? defaults?.kind ?? DEFAULT_MARKER_DEFAULTS.kind;
+  // La dernière collection, si elle existe encore.
+  const remembered = defaults?.collectionId ?? NO_COLLECTION;
+  const chosenCollection =
+    collection ??
+    (collections.some((one) => one.id === remembered)
+      ? remembered
+      : NO_COLLECTION);
+
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (!frozen || !bodiesReady || sending) return;
+    setError(null);
+    const located = markerPositionOf(frozen, bodies, system);
+    if (!located.position?.body && !located.systemSlug) {
+      setError(t("noSystem"));
+      return;
+    }
+    if (chosenCollection === NEW_COLLECTION && !newCollection.trim()) {
+      setError(t("newCollectionMissing"));
+      return;
+    }
+
+    setSending(true);
+    try {
+      let collectionId: string | null =
+        chosenCollection === NO_COLLECTION ? null : chosenCollection;
+      if (chosenCollection === NEW_COLLECTION) {
+        const made = await createMarkerCollection({
+          name: newCollection.trim(),
+          color: nextCollectionColor(collections),
+        });
+        collectionId = made.id;
+      }
+      const label = name.trim() || defaultName;
+      await createMarker({
+        name: label,
+        kind: chosenKind,
+        collectionId: collectionId ?? undefined,
+        note: note.trim() || undefined,
+        ...located,
+      });
+      await setMarkerDefaults({ collectionId, kind: chosenKind }).catch(
+        (cause) => console.error("cannot save the marker defaults", cause),
+      );
+      markersChanged(queryClient);
+      setCreated(label);
+    } catch (cause) {
+      setError(markerErrorMessage(cause));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  if (created) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-3">
+        <PickerHeader title={t("title")} onCancel={onDone} />
+        <p className="text-[13px]">{t("created", { name: created })}</p>
+        <button
+          type="button"
+          autoFocus
+          onClick={onDone}
+          className="self-start rounded-lg border border-white/15 px-3 py-1 text-[12px] transition hover:bg-white/10"
+        >
+          {translator("NpsOverlay")("back")}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={save}
+      className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3 pb-3"
+    >
+      <PickerHeader title={t("title")} onCancel={onDone} />
+
+      {!frozen ? (
+        <div className="space-y-2 text-[12px]">
+          <p className="text-slate-300">
+            {live
+              ? t("waitingScreen")
+              : fix || waiting
+                ? t("waitingPaste")
+                : t("needFix")}
+          </p>
+          {!live ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-[12px] transition hover:bg-white/10"
+            >
+              <Crosshair className="size-3.5" />
+              {translator("NpsOverlay")("refresh")}
+            </button>
+          ) : null}
+        </div>
+      ) : (
+        <>
+          <label className="space-y-0.5 text-[11px] text-slate-400">
+            <span>{t("name")}</span>
+            <input
+              autoFocus
+              value={name}
+              maxLength={MAX_MARKER_NAME_LENGTH}
+              onChange={(event) => setTypedName(event.target.value)}
+              className={cn(FIELD, "block w-full")}
+            />
+          </label>
+
+          <div className="space-y-0.5 text-[11px] text-slate-400">
+            <span>{t("kind")}</span>
+            <div className="flex flex-wrap gap-1">
+              {MARKER_KINDS.map((one) => (
+                <button
+                  key={one}
+                  type="button"
+                  aria-pressed={chosenKind === one}
+                  onClick={() => setKind(one)}
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 text-[11px] transition",
+                    chosenKind === one
+                      ? "font-medium"
+                      : "border-white/15 text-slate-300 hover:bg-white/10",
+                  )}
+                  style={
+                    chosenKind === one
+                      ? {
+                          color: DEFAULT_MARKER_COLOR,
+                          borderColor: `${DEFAULT_MARKER_COLOR}80`,
+                          backgroundColor: `${DEFAULT_MARKER_COLOR}1f`,
+                        }
+                      : undefined
+                  }
+                >
+                  {tk(one)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <label className="space-y-0.5 text-[11px] text-slate-400">
+            <span>{t("collection")}</span>
+            <select
+              value={chosenCollection}
+              onChange={(event) => setCollection(event.target.value)}
+              className={cn(FIELD, "block w-full")}
+            >
+              <option value={NO_COLLECTION}>{t("noCollection")}</option>
+              {collections.map((one) => (
+                <option key={one.id} value={one.id}>
+                  {one.name}
+                </option>
+              ))}
+              <option value={NEW_COLLECTION}>{t("newCollection")}</option>
+            </select>
+          </label>
+          {chosenCollection === NEW_COLLECTION ? (
+            <input
+              value={newCollection}
+              maxLength={MAX_MARKER_COLLECTION_NAME_LENGTH}
+              placeholder={t("newCollectionPlaceholder")}
+              onChange={(event) => setNewCollection(event.target.value)}
+              className={cn(FIELD, "block w-full")}
+            />
+          ) : null}
+          {list.isError ? (
+            <p className="text-[11px] text-amber-200">
+              {t("collectionsFailed")}
+            </p>
+          ) : null}
+
+          <label className="space-y-0.5 text-[11px] text-slate-400">
+            <span>{t("note")}</span>
+            <textarea
+              value={note}
+              rows={2}
+              maxLength={MAX_MARKER_NOTE_LENGTH}
+              placeholder={t("notePlaceholder")}
+              onChange={(event) => setNote(event.target.value)}
+              onKeyDown={(event) => {
+                // Entrée enregistre, ici aussi ; Maj+Entrée va à la ligne.
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  event.currentTarget.form?.requestSubmit();
+                }
+              }}
+              className={cn(FIELD, "block w-full resize-none")}
+            />
+          </label>
+
+          <p className="text-[11px] text-slate-500">
+            {t("reading", {
+              age: Math.max(0, Math.round((Date.now() - frozen.at) / 1000)),
+              where: where?.body
+                ? t("bodyFrame", { body: where.body.name })
+                : (where?.systemName ?? t("defaultWhere")),
+            })}
+          </p>
+        </>
+      )}
+
+      {error ? <p className="text-[12px] text-red-300">{error}</p> : null}
+
+      {frozen ? (
+        <button
+          type="submit"
+          disabled={sending || !bodiesReady}
+          className="flex shrink-0 items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-50"
+          style={{
+            color: DEFAULT_MARKER_COLOR,
+            borderColor: `${DEFAULT_MARKER_COLOR}66`,
+            backgroundColor: `${DEFAULT_MARKER_COLOR}1f`,
+          }}
+        >
+          <MapPinned className="size-3.5" />
+          {sending || !bodiesReady ? "…" : t("save")}
+        </button>
+      ) : null}
+    </form>
   );
 }
 

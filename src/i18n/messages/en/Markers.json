@@ -1,0 +1,52 @@
+{
+  "title": "Markers",
+  "description": "Spots noted in game to come back to: yours, and those of collections shared with your organizations.",
+  "manage": "Manage on the site",
+  "mark": "Mark my position",
+  "all": "All",
+  "noCollection": "No collection",
+  "empty": {
+    "title": "No markers yet",
+    "description": "In the NPS overlay, “Mark my position” keeps the spot where you stand, to come back to later."
+  },
+  "searchLabel": "Search a marker",
+  "searchPlaceholder": "Search a marker, a note",
+  "sortedByDistance": "Sorted by distance · you are on {where}",
+  "sortedByDate": "Newest first · show the NPS to sort them by distance",
+  "space": "open space",
+  "noResults": "No marker matches.",
+  "sharedWith": "Shared with {org}",
+  "inSpace": "{system}, space",
+  "kinds": {
+    "ore": "Ore",
+    "wreck": "Wreck",
+    "cave": "Cave",
+    "poi": "Point of interest",
+    "danger": "Danger",
+    "other": "Other"
+  },
+  "otherSystem": "In another system ({system}): the NPS cannot guide there from here.",
+  "guide": "Guide",
+  "edit": "Edit",
+  "delete": "Delete",
+  "form": {
+    "title": "Edit the marker",
+    "name": "Name",
+    "kind": "Category",
+    "collection": "Collection",
+    "note": "Note",
+    "save": "Save",
+    "cancel": "Cancel",
+    "nameMissing": "Give the marker a name."
+  },
+  "deleteTitle": "Delete “{name}”?",
+  "deleteDescription": "The marker goes away for you and for everyone who sees its collection.",
+  "openFailed": "Cannot open the site.",
+  "errors": {
+    "unauthorized": "Your session has expired. Sign in again.",
+    "invalidInput": "The site refused this marker: a field is not valid.",
+    "notFound": "This marker or collection no longer exists.",
+    "forbidden": "Only its creator can change this marker.",
+    "tooMany": "You have reached 1,000 markers. Delete some before creating more."
+  }
+}

@@ -489,3 +489,27 @@ export function previousFor(
   }
   return earlier[earlier.length - 1];
 }
+
+/** What `formatDistance` needs of `useFormatter()`. */
+type NumberFormatter = {
+  number: (value: number, options?: Intl.NumberFormatOptions) => string;
+};
+
+/** As the game writes distances: metres, kilometres, then Mm and Gm. */
+export function formatDistance(
+  meters: number,
+  format: NumberFormatter,
+): string {
+  const abs = Math.abs(meters);
+  const [value, unit, digits] =
+    abs < 1_000
+      ? [meters, "m", 0]
+      : abs < 100_000
+        ? [meters / 1_000, "km", 1]
+        : abs < 10_000_000
+          ? [meters / 1_000, "km", 0]
+          : abs < 1_000_000_000
+            ? [meters / 1_000_000, "Mm", 1]
+            : [meters / 1_000_000_000, "Gm", 2];
+  return `${format.number(value, { maximumFractionDigits: digits })} ${unit}`;
+}

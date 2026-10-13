@@ -12,7 +12,8 @@
     "talk": "Parler à Nexus Chat",
     "opacity": "Opacité des superpositions",
     "lock": "Verrouillage des superpositions",
-    "radial": "Menu radial rapide"
+    "radial": "Menu radial rapide",
+    "mark": "Marquer ma position"
   },
   "keys": {
     "shift": "Maj"

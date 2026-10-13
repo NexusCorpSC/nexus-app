@@ -66,6 +66,11 @@
       "label": "Opacidad",
       "hint": "Borra las superposiciones, con el juego visible a través, o las devuelve.",
       "detail": "Borra todas las superposiciones de golpe — con el juego visible a través — o les devuelve su panel. Cada una tiene también el botón, que pasa por el fondo sombreado entre ambos."
+    },
+    "mark": {
+      "label": "Marcar mi posición",
+      "hint": "Crea un marcador en la última lectura del NPS, sin formulario.",
+      "detail": "Crea al instante un marcador en tu posición, en la última colección usada, con el nombre del cuerpo y la hora. La lectura debe tener menos de 30 s: si no, el NPS pide una nueva (seguimiento en pantalla, o /showlocation para pegar en el chat del juego). Una notificación lo confirma."
     }
   }
 }
