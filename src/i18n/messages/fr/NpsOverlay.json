@@ -171,7 +171,6 @@
     "nobody": "Personne ne vous voit : choisissez qui peut voir votre position.",
     "sent": "Envoyée il y a {age}",
     "waitingFix": "En attente d'un relevé à envoyer.",
-    "playingSince": "en jeu",
     "notPlaying": "Vous n'êtes plus en jeu : rien n'est envoyé.",
     "resume": "Reprendre la session",
     "choose": "Choisir qui me voit",

@@ -171,7 +171,6 @@
     "nobody": "Nobody sees you: choose who can see your position.",
     "sent": "Sent {age} ago",
     "waitingFix": "Waiting for a reading to send.",
-    "playingSince": "in game",
     "notPlaying": "You're no longer in game: nothing is sent.",
     "resume": "Resume the session",
     "choose": "Choose who sees me",
