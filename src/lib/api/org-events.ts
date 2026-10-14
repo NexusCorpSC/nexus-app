@@ -9,10 +9,31 @@ import type {
 /**
  * Organization events (see `lib/org-events.ts` in Nexus Tools). Reading and
  * registering happen here; planning or editing one stays on the site.
+ *
+ * `orgId` `null` is a personal event, outside any organization: the same
+ * routes, under `/api/personal-events`.
  */
 
-function eventPath(orgId: string, eventId: string) {
-  return `/api/orgs/${encodeURIComponent(orgId)}/events/${encodeURIComponent(eventId)}`;
+function eventPath(orgId: string | null, eventId: string) {
+  const base =
+    orgId === null
+      ? "/api/personal-events"
+      : `/api/orgs/${encodeURIComponent(orgId)}/events`;
+  return `${base}/${encodeURIComponent(eventId)}`;
+}
+
+/** The event's page on the site. */
+export function eventSitePath(event: { orgId: string | null; id: string }) {
+  return event.orgId === null
+    ? `/events/${event.id}`
+    : `/orgs/${event.orgId}/events/${event.id}`;
+}
+
+/** The event's screen in this app. */
+export function eventRoute(orgId: string | null, eventId: string) {
+  return orgId === null
+    ? `/events/${eventId}`
+    : `/orgs/${orgId}/events/${eventId}`;
 }
 
 /**
@@ -33,7 +54,7 @@ export async function listOrgEvents(
 }
 
 /** One event; a private one answers 404 to anyone but members. */
-export function getOrgEvent(orgId: string, eventId: string) {
+export function getOrgEvent(orgId: string | null, eventId: string) {
   return apiRequest<OrgEventView>(eventPath(orgId, eventId));
 }
 
@@ -42,7 +63,7 @@ export function getOrgEvent(orgId: string, eventId: string) {
  * back. Members only, until the event ends.
  */
 export function registerToOrgEvent(
-  orgId: string,
+  orgId: string | null,
   eventId: string,
   input: OrgEventRegistrationInput,
 ) {
@@ -53,7 +74,7 @@ export function registerToOrgEvent(
 }
 
 /** Withdraws the reader; their answers are kept, out of the counts. */
-export function withdrawFromOrgEvent(orgId: string, eventId: string) {
+export function withdrawFromOrgEvent(orgId: string | null, eventId: string) {
   return apiRequest<OrgEventView>(`${eventPath(orgId, eventId)}/registration`, {
     method: "DELETE",
   });
@@ -64,7 +85,7 @@ export function withdrawFromOrgEvent(orgId: string, eventId: string) {
  * in it. Its creator and the organization's editors only; 409 while the squad
  * exists, or when nobody is registered.
  */
-export function createOrgEventSquad(orgId: string, eventId: string) {
+export function createOrgEventSquad(orgId: string | null, eventId: string) {
   return apiRequest<OrgEventSquadResult>(`${eventPath(orgId, eventId)}/squad`, {
     method: "POST",
   });

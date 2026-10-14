@@ -1398,9 +1398,9 @@ export const PRESENCE_ACTIVITY_SUGGESTIONS = [
  */
 export const PLANNED_SESSION_GRACE_HOURS = 1;
 
-/** The organization event a planned session picks up. */
+/** The event a planned session picks up; `orgId` is `null` for a personal one. */
 export type PlannedEventRef = {
-  orgId: string;
+  orgId: string | null;
   eventId: string;
   title: string;
 };
@@ -1518,7 +1518,8 @@ export type OrgEventParticipant = {
 /** An event as one reader sees it, with what that reader may do with it. */
 export type OrgEventView = {
   id: string;
-  orgId: string;
+  /** `null`: a personal event, outside any organization. */
+  orgId: string | null;
   title: string;
   description: string;
   /** ISO. */
@@ -1575,7 +1576,8 @@ export type OrgEventSquadResult = {
 
 /** An upcoming event the reader is registered to: a planned session to pick. */
 export type MyUpcomingEvent = {
-  orgId: string;
+  /** `null` for a personal event. */
+  orgId: string | null;
   orgName: string;
   eventId: string;
   title: string;
@@ -2069,7 +2071,7 @@ export type Invitation = {
   parentName?: string;
   /** A marker collection: how many markers it holds. */
   markerCount?: number;
-  /** The page on the site, `/orgs/…/events/…` or `/lieux/…`. */
+  /** The page on the site, `/orgs/…/events/…`, `/events/…` or `/lieux/…`. */
   href: string;
   invitedByName: string;
   createdAt: string;

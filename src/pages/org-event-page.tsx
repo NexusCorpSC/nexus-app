@@ -32,6 +32,7 @@ import { translator } from "@/i18n/translate";
 import { ApiError } from "@/lib/api-client";
 import {
   createOrgEventSquad,
+  eventSitePath,
   getOrgEvent,
   registerToOrgEvent,
   withdrawFromOrgEvent,
@@ -101,7 +102,10 @@ function squadErrorMessage(error: unknown): string {
  */
 export default function OrgEventPage() {
   const t = useTranslations("OrgEvents");
-  const { orgId = "", eventId = "" } = useParams();
+  // Without `orgId` in the route, a personal event.
+  const params = useParams();
+  const orgId = params.orgId ?? null;
+  const eventId = params.eventId ?? "";
 
   // As on the organization page: the name comes from the cached list.
   const orgs = useQuery({
@@ -114,7 +118,7 @@ export default function OrgEventPage() {
   const event = useQuery({
     queryKey: ["events", "detail", orgId, eventId],
     queryFn: () => getOrgEvent(orgId, eventId),
-    enabled: Boolean(orgId && eventId),
+    enabled: Boolean(eventId),
     // Others register too: read again now and then.
     refetchInterval: 60_000,
   });
@@ -126,9 +130,12 @@ export default function OrgEventPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const back = (
-    <BackLink to={`/orgs/${orgId}`}>{org?.name ?? t("orgFallback")}</BackLink>
-  );
+  const back =
+    orgId === null ? (
+      <BackLink to="/home">{t("personalBack")}</BackLink>
+    ) : (
+      <BackLink to={`/orgs/${orgId}`}>{org?.name ?? t("orgFallback")}</BackLink>
+    );
 
   if (event.isPending) return <LoadingState />;
 
@@ -154,7 +161,7 @@ export default function OrgEventPage() {
   const view = event.data;
   const status = countdown(view, now);
   const ended = status.state === "over";
-  const sitePath = `/orgs/${view.orgId}/events/${view.id}`;
+  const sitePath = eventSitePath(view);
   const VisibilityIcon = view.visibility === "public" ? Globe : Lock;
 
   return (
@@ -167,11 +174,13 @@ export default function OrgEventPage() {
           <div className="flex flex-wrap gap-1.5">
             <EventPill>
               <VisibilityIcon className="size-3" />
-              {view.visibility === "public"
-                ? t("pill.public")
-                : org
-                  ? t("pill.privateTo", { org: org.name })
-                  : t("pill.private")}
+              {view.orgId === null
+                ? t("pill.personal")
+                : view.visibility === "public"
+                  ? t("pill.public")
+                  : org
+                    ? t("pill.privateTo", { org: org.name })
+                    : t("pill.private")}
             </EventPill>
             <EventPill
               tone={
@@ -228,10 +237,18 @@ export default function OrgEventPage() {
           )}
           <p className="min-w-0 text-nexus-soft">
             <b className="text-cyan-200">
-              {view.guest === "link" ? t("guest.linkTitle") : t("guest.inviteTitle")}
+              {view.guest === "link"
+                ? t("guest.linkTitle")
+                : t("guest.inviteTitle")}
             </b>
             {" · "}
-            {view.guest === "link" ? t("guest.link") : t("guest.invite")}
+            {view.orgId === null
+              ? view.guest === "link"
+                ? t("guest.linkPersonal", { name: view.createdBy.name })
+                : t("guest.invitePersonal", { name: view.createdBy.name })
+              : view.guest === "link"
+                ? t("guest.link")
+                : t("guest.invite")}
           </p>
         </div>
       ) : null}

@@ -130,6 +130,8 @@ export default function App() {
             path="orgs/:orgId/events/:eventId"
             element={<OrgEventPage />}
           />
+          {/* A personal event, outside any organization. */}
+          <Route path="events/:eventId" element={<OrgEventPage />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="refining" element={<RefiningPage />} />
