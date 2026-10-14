@@ -12,7 +12,8 @@
     "live": "En curso",
     "registered": "Inscrito",
     "registeredAs": "Inscrito · {role}",
-    "missing": "{count, plural, one {Falta # {role}} other {Faltan # {role}}}"
+    "missing": "{count, plural, one {Falta # {role}} other {Faltan # {role}}}",
+    "personal": "Privado · por invitación"
   },
   "status": {
     "over": "Terminado",
@@ -96,6 +97,9 @@
     "linkTitle": "Ves este evento por un enlace para compartir",
     "inviteTitle": "Estás invitado a este evento",
     "link": "No eres miembro de la organización: puedes inscribirte, pero el acceso termina si el enlace se desactiva antes de tu inscripción.",
-    "invite": "No eres miembro de la organización, pero puedes ver el programa e inscribirte."
-  }
+    "invite": "No eres miembro de la organización, pero puedes ver el programa e inscribirte.",
+    "linkPersonal": "El evento personal de {name}: puedes inscribirte, pero el acceso termina si el enlace se desactiva antes de tu inscripción.",
+    "invitePersonal": "{name} te invita a su evento personal: puedes ver el programa e inscribirte."
+  },
+  "personalBack": "Inicio"
 }

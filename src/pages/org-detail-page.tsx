@@ -19,7 +19,7 @@ import {
 } from "@/components/ui";
 import { useMyPresence } from "@/hooks/use-presence";
 import { getLocale } from "@/i18n/locale";
-import { listOrgEvents } from "@/lib/api/org-events";
+import { eventRoute, listOrgEvents } from "@/lib/api/org-events";
 import { listOrganizations } from "@/lib/api/orgs";
 import { getOrgPresence } from "@/lib/api/presence";
 import {
@@ -351,7 +351,7 @@ function PlannedRow({
         </p>
         {planned.event ? (
           <Link
-            to={`/orgs/${planned.event.orgId}/events/${planned.event.eventId}`}
+            to={eventRoute(planned.event.orgId, planned.event.eventId)}
             className="block truncate text-xs text-nexus-accent transition-colors hover:text-nexus-bright"
           >
             {t("event", { title: planned.activity ?? planned.event.title })}
@@ -378,7 +378,7 @@ function EventRow({ event, now }: { event: OrgEventView; now: number }) {
   return (
     <li>
       <Link
-        to={`/orgs/${event.orgId}/events/${event.id}`}
+        to={eventRoute(event.orgId, event.id)}
         className="flex items-center gap-4 rounded-xl border border-nexus-accent/12 bg-nexus-card px-4 py-3 transition-colors hover:border-nexus-accent/35"
       >
         <div className="flex w-28 shrink-0 flex-col">

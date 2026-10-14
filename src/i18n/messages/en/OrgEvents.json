@@ -12,7 +12,8 @@
     "live": "Happening now",
     "registered": "Registered",
     "registeredAs": "Registered · {role}",
-    "missing": "{count} {role} missing"
+    "missing": "{count} {role} missing",
+    "personal": "Private · by invitation"
   },
   "status": {
     "over": "Over",
@@ -96,6 +97,9 @@
     "linkTitle": "You see this event through a share link",
     "inviteTitle": "You are invited to this event",
     "link": "You are not a member of the organization: you can sign up, but access ends if the link is disabled before you do.",
-    "invite": "You are not a member of the organization, but you can see the plan and sign up."
-  }
+    "invite": "You are not a member of the organization, but you can see the plan and sign up.",
+    "linkPersonal": "{name}'s personal event: you can register, but access ends if the link is disabled before you register.",
+    "invitePersonal": "{name} invites you to their personal event: you can see the plan and register."
+  },
+  "personalBack": "Home"
 }

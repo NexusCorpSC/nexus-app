@@ -277,7 +277,7 @@ function PlannedForm({
   onPlan: (input: {
     at?: string;
     activity?: string | null;
-    event?: { orgId: string; eventId: string };
+    event?: { orgId: string | null; eventId: string };
   }) => void;
   onCancel: () => void;
 }) {
