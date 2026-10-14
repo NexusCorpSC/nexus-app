@@ -35,6 +35,18 @@ import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { markersChanged, useMarkersSync } from "@/hooks/use-markers-sync";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
+import {
+  usePlayersInGame,
+  usePositionReporting,
+  usePositionSharing,
+} from "@/hooks/use-position-sharing";
+import {
+  PLAYER_COLOR,
+  PlayerAvatar,
+  ShareCard,
+  SharePanel,
+  Tag,
+} from "@/components/nps-position-sharing";
 import { translator } from "@/i18n/translate";
 import {
   getNpsData,
@@ -78,6 +90,7 @@ import {
   parseNumber,
   positionOf,
   previousFor,
+  systemPositionOf,
   toBodyFrame,
   type Fix,
 } from "@/lib/nps";
@@ -112,6 +125,10 @@ import {
   type Marker,
   type MarkerListResponse,
 } from "@/types/markers";
+import {
+  POSITION_STALE_MS,
+  type PlayerInGame,
+} from "@/types/player-positions";
 
 /**
  * Carries a reading of `/showlocation`, from `src-tauri/src/nps.rs`, or one
@@ -154,7 +171,13 @@ const UNDO_MARK_EVENT = "markers://undo";
 const SCREEN_WAIT_MS = 10_000;
 const PASTE_WAIT_MS = 60_000;
 
-type Panel = "guide" | "destination" | "coordinates" | "record" | "mark";
+type Panel =
+  | "guide"
+  | "destination"
+  | "coordinates"
+  | "record"
+  | "mark"
+  | "share";
 
 /** What the overlay guides to: a recorded place, or a point typed in. */
 type Target = {
@@ -167,6 +190,17 @@ type Target = {
   position: PlacePosition;
   /** Un marqueur : sa couleur, sa collection et sa note, et s'il est à soi. */
   marker?: { id: string; color: string; detail?: string; isOwner: boolean };
+  /**
+   * Un joueur en jeu : l'heure de son relevé, son activité, et s'il a cessé
+   * de partager (on va alors à sa dernière position connue).
+   */
+  player?: {
+    id: string;
+    friend: boolean;
+    at: number | null;
+    activity: string | null;
+    gone: boolean;
+  };
 };
 
 /**
@@ -251,6 +285,7 @@ export default function NpsOverlayPage() {
   const [arrivalError, setArrivalError] = useState<string | null>(null);
   const queryClient = useQueryClient();
   useMarkersSync();
+  const share = usePositionSharing();
 
   const data = useQuery({
     queryKey: ["nps"],
@@ -369,16 +404,47 @@ export default function NpsOverlayPage() {
     if (locked) setPanel("guide");
   }, [locked]);
 
+  // Les positions des autres ne se relisent que pour choisir un joueur ou
+  // pour le suivre.
+  const followed =
+    destination && "player" in destination ? destination.player : null;
+  const players = usePlayersInGame(
+    share.sharing !== null && (panel === "destination" || followed !== null),
+  );
+  const others = useMemo(
+    () => players.data?.filter((one) => !one.me),
+    [players.data],
+  );
+
   const target = useMemo(
     () =>
-      targetOf(destination, places, markers, bodies, {
+      targetOf(destination, places, markers, others, bodies, {
         manualName: t("manualName"),
         noCollection: t("mark.noCollection"),
       }),
-    [destination, places, markers, bodies, t],
+    [destination, places, markers, others, bodies, t],
   );
   const body = fix ? bodyAt(fix, bodies) : null;
   const system = body?.systemSlug ?? lastSystem;
+  const shareError = usePositionReporting(fix, bodies, system, share.sharing);
+
+  // Le joueur suivi a bougé : la copie gardée avec la destination suit, pour
+  // guider vers sa dernière position s'il cesse de partager.
+  const followedNow = followed
+    ? others?.find((one) => one.userId === followed.id)
+    : undefined;
+  useEffect(() => {
+    if (!followed || !followedNow || followedNow.at === followed.at) return;
+    void setDestination({
+      player: {
+        id: followed.id,
+        name: followedNow.name,
+        systemSlug: followedNow.systemSlug,
+        position: followedNow.position,
+        at: followedNow.at,
+      },
+    });
+  }, [followed, followedNow]);
   const systemName = bodies.find(
     (one) => one.systemSlug === system,
   )?.systemName;
@@ -621,6 +687,7 @@ export default function NpsOverlayPage() {
         <DestinationPicker
           places={places}
           markers={markers}
+          players={others ?? []}
           fix={fix}
           bodies={bodies}
           system={system}
@@ -639,7 +706,30 @@ export default function NpsOverlayPage() {
               },
             });
           }}
+          onPickPlayer={(player) => {
+            setPanel("guide");
+            void setDestination({
+              player: {
+                id: player.userId,
+                name: player.name,
+                systemSlug: player.systemSlug,
+                position: player.position,
+                at: player.at,
+              },
+            });
+          }}
           onCancel={() => setPanel("guide")}
+        />
+      ) : open && panel === "share" ? (
+        <SharePanel
+          share={share}
+          header={
+            <PickerHeader
+              title={t("share.panelTitle")}
+              onCancel={() => setPanel("guide")}
+            />
+          }
+          onDone={() => setPanel("guide")}
         />
       ) : open && panel === "coordinates" ? (
         <CoordinatesPanel
@@ -769,6 +859,15 @@ export default function NpsOverlayPage() {
             {t("mark.button")}
           </button>
 
+          <ShareCard
+            share={share}
+            error={shareError}
+            now={now}
+            locked={locked}
+            formatAge={(ms) => formatAge(ms, t)}
+            onChoose={() => setPanel("share")}
+          />
+
           <section className="space-y-1">
             <div className="flex items-center gap-2">
               <p className="flex-1 text-[11px] uppercase tracking-wide text-slate-500">
@@ -828,7 +927,23 @@ export default function NpsOverlayPage() {
               </p>
             ) : (
               <>
+                {target.player ? (
+                  <p
+                    className="text-[10px] uppercase tracking-wide"
+                    style={{ color: PLAYER_COLOR }}
+                  >
+                    {t("players.label")}
+                  </p>
+                ) : null}
                 <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
+                  {target.player ? (
+                    <PlayerAvatar
+                      player={{
+                        name: target.name,
+                        friend: target.player.friend,
+                      }}
+                    />
+                  ) : null}
                   {target.marker ? (
                     <MapPinned
                       className="size-3.5 shrink-0"
@@ -842,6 +957,13 @@ export default function NpsOverlayPage() {
                   <p className="truncate text-[11px] text-slate-400">
                     {target.marker.detail}
                   </p>
+                ) : null}
+                {target.player ? (
+                  <PlayerReading
+                    target={target}
+                    player={target.player}
+                    now={now}
+                  />
                 ) : null}
                 {target.manual ? (
                   <p className="truncate text-[11px] text-slate-500">
@@ -909,10 +1031,39 @@ function targetOf(
   destination: NpsDestination | null,
   places: NpsPlace[],
   markers: Marker[],
+  /** Les joueurs en jeu, sauf moi ; `undefined` tant que pas lus. */
+  players: PlayerInGame[] | undefined,
   bodies: NpsBody[],
   labels: { manualName: string; noCollection: string },
 ): Target | null {
   if (!destination) return null;
+  if ("player" in destination) {
+    // Sa dernière position telle que le site la donne ; à défaut, la copie.
+    const kept = destination.player;
+    const found = players?.find((one) => one.userId === kept.id);
+    const position = found?.position ?? kept.position;
+    const systemSlug = found?.systemSlug ?? kept.systemSlug;
+    const at = found?.at ?? kept.at;
+    return {
+      name: found?.name ?? kept.name,
+      manual: false,
+      systemSlug,
+      systemName:
+        found?.systemName ??
+        bodies.find((one) => one.systemSlug === systemSlug)?.systemName,
+      bodyName:
+        found?.bodyName ??
+        bodies.find((one) => one.slug === position.body)?.name,
+      position,
+      player: {
+        id: kept.id,
+        friend: found?.friend ?? true,
+        at: at ? Date.parse(at) : null,
+        activity: found?.activity ?? null,
+        gone: players !== undefined && !found,
+      },
+    };
+  }
   if ("marker" in destination) {
     // Le marqueur tel que le site le donne, renommé ou déplacé depuis ; à
     // défaut, la copie gardée avec la destination.
@@ -956,6 +1107,7 @@ function targetOf(
         }
       : null;
   }
+  if (!("point" in destination)) return null;
   const { name, systemSlug, position } = destination.point;
   return {
     name: name || labels.manualName,
@@ -999,6 +1151,42 @@ function formatDuration(
     hours: Math.floor(total / 3600),
     minutes: Math.floor((total % 3600) / 60),
   });
+}
+
+/** Où est le joueur suivi, depuis quand, et si sa position a vieilli. */
+function PlayerReading({
+  target,
+  player,
+  now,
+}: {
+  target: Target;
+  player: NonNullable<Target["player"]>;
+  now: number;
+}) {
+  const t = useTranslations("NpsOverlay");
+  const age = player.at !== null ? Math.max(0, now - player.at) : null;
+  return (
+    <>
+      <p className="truncate text-[11px] text-slate-400">
+        {[
+          player.activity,
+          target.bodyName ?? target.systemName,
+          age !== null
+            ? t("players.reading", { age: formatAge(age, t) })
+            : undefined,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
+      {player.gone ? (
+        <p className="text-[11px] text-amber-200">{t("players.gone")}</p>
+      ) : age !== null && age > POSITION_STALE_MS ? (
+        <p className="text-[11px] text-amber-200">
+          {t("players.stale", { age: formatAge(age, t) })}
+        </p>
+      ) : null}
+    </>
+  );
 }
 
 function Guidance({
@@ -1191,25 +1379,31 @@ function ScreenTracking({
 
 /**
  * The recorded places, filtered as one types: there are hundreds, not more.
- * Les marqueurs du joueur passent devant, les plus proches d'abord.
+ * Les joueurs en jeu passent devant, puis les marqueurs du joueur, les plus
+ * proches d'abord.
  */
 function DestinationPicker({
   places,
   markers,
+  players,
   fix,
   bodies,
   system,
   onPick,
   onPickMarker,
+  onPickPlayer,
   onCancel,
 }: {
   places: NpsPlace[];
   markers: Marker[];
+  /** Les joueurs en jeu dont je vois la position, sauf moi. */
+  players: PlayerInGame[];
   fix: Fix | null;
   bodies: NpsBody[];
   system: string | null;
   onPick: (slug: string) => void;
   onPickMarker: (marker: Marker) => void;
+  onPickPlayer: (player: PlayerInGame) => void;
   onCancel: () => void;
 }) {
   const t = useTranslations("NpsOverlay");
@@ -1241,6 +1435,21 @@ function DestinationPicker({
         ),
     )
     .slice(0, 30);
+  const shownPlayers = playersWithDistances(
+    players.filter(
+      (player) =>
+        !needle ||
+        [
+          player.name,
+          player.bodyName,
+          player.systemName,
+          ...player.orgs.flatMap((org) => [org.name, org.tag]),
+        ].some((name) => name?.toLowerCase().includes(needle)),
+    ),
+    fix,
+    bodies,
+    system,
+  );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-3">
@@ -1250,13 +1459,59 @@ function DestinationPicker({
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={
-          markers.length > 0
-            ? t("mark.searchPlaceholder")
-            : t("searchPlaceholder")
+          players.length > 0
+            ? t("players.searchPlaceholder")
+            : markers.length > 0
+              ? t("mark.searchPlaceholder")
+              : t("searchPlaceholder")
         }
         className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
       />
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
+        {shownPlayers.length > 0 ? (
+          <>
+            <p
+              className="px-1 pt-1 text-[11px] uppercase tracking-wide"
+              style={{ color: PLAYER_COLOR }}
+            >
+              {t("players.section")}
+            </p>
+            {shownPlayers.map(({ player, distance }) => (
+              <button
+                key={player.userId}
+                type="button"
+                onClick={() => onPickPlayer(player)}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+              >
+                <PlayerAvatar player={player} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] text-slate-100">
+                    {player.name}
+                    {player.orgs.map((org) =>
+                      org.tag ? <Tag key={org.id}>{org.tag}</Tag> : null,
+                    )}
+                  </span>
+                  <span className="block truncate text-[11px] text-slate-400">
+                    {[
+                      player.bodyName ?? player.systemName,
+                      distance !== null
+                        ? formatDistance(distance, format)
+                        : undefined,
+                      player.activity,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </span>
+              </button>
+            ))}
+            {shownMarkers.length === 0 ? (
+              <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-slate-500">
+                {t("mark.placesSection")}
+              </p>
+            ) : null}
+          </>
+        ) : null}
         {shownMarkers.length > 0 ? (
           <>
             <p
@@ -1340,6 +1595,41 @@ function DestinationPicker({
       </div>
     </div>
   );
+}
+
+/**
+ * Les joueurs et leur distance au relevé, les plus proches d'abord, puis ceux
+ * d'un autre système, les relevés les plus récents d'abord. Comme les
+ * marqueurs : d'un autre système, la distance ne veut rien dire.
+ */
+function playersWithDistances(
+  players: PlayerInGame[],
+  fix: Fix | null,
+  bodies: NpsBody[],
+  system: string | null,
+): { player: PlayerInGame; distance: number | null }[] {
+  return players
+    .map((player) => {
+      if (!fix || player.systemSlug !== system) {
+        return { player, distance: null };
+      }
+      const point = systemPositionOf(player.position, bodies, fix.at);
+      return {
+        player,
+        distance: point
+          ? Math.hypot(point.x - fix.x, point.y - fix.y, point.z - fix.z)
+          : null,
+      };
+    })
+    .sort((a, b) =>
+      a.distance !== null && b.distance !== null
+        ? a.distance - b.distance
+        : a.distance !== null
+          ? -1
+          : b.distance !== null
+            ? 1
+            : b.player.at.localeCompare(a.player.at),
+    );
 }
 
 /**

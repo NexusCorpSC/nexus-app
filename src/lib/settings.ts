@@ -583,14 +583,30 @@ export type NpsDestination =
         systemSlug?: string;
         position: PlacePosition;
       };
+    }
+  | {
+      /**
+       * Un joueur en jeu, par son id : le NPS le suit à chaque relevé qu'il
+       * envoie. La copie sert tant que la liste n'est pas lue, ou après
+       * qu'il a cessé de partager : on va alors à sa dernière position.
+       */
+      player: {
+        id: string;
+        name: string;
+        systemSlug?: string;
+        position: PlacePosition;
+        /** L'heure de ce relevé, ISO : la copie suit le joueur. */
+        at?: string;
+      };
     };
 
 function isNpsDestination(value: unknown): value is NpsDestination {
   if (!value || typeof value !== "object") return false;
   if ("slug" in value) return typeof value.slug === "string";
-  if ("marker" in value) {
-    if (!value.marker || typeof value.marker !== "object") return false;
-    const { id, name, ...rest } = value.marker as {
+  if ("marker" in value || "player" in value) {
+    const kept = "marker" in value ? value.marker : value.player;
+    if (!kept || typeof kept !== "object") return false;
+    const { id, name, ...rest } = kept as {
       id?: unknown;
       name?: unknown;
     };

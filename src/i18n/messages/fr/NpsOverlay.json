@@ -160,5 +160,43 @@
     "undo": "Annuler",
     "undone": "Marqueur « {name} » supprimé",
     "undoFailed": "Le marqueur n'a pas pu être supprimé"
+  },
+  "share": {
+    "title": "Partager ma position",
+    "start": "Partager ma position",
+    "stop": "Arrêter le partage",
+    "off": "Vos amis et vos organisations ne voient pas où vous êtes.",
+    "audience": "Visible par {who} sur la Star Map.",
+    "friends": "vos amis",
+    "nobody": "Personne ne vous voit : choisissez qui peut voir votre position.",
+    "sent": "Envoyée il y a {age}",
+    "waitingFix": "En attente d'un relevé à envoyer.",
+    "notPlaying": "Vous n'êtes plus en jeu : rien n'est envoyé.",
+    "resume": "Reprendre la session",
+    "choose": "Choisir qui me voit",
+    "signIn": "Connectez-vous dans l'app pour partager votre position.",
+    "loadFailed": "Le réglage de partage n'a pas pu être lu.",
+    "panelTitle": "Qui voit ma position",
+    "myFriends": "Mes amis",
+    "myOrgs": "Mes organisations",
+    "members": "{count, plural, one {# membre} other {# membres}}",
+    "explain": "Seuls ceux qui sont aussi connectés voient votre position, et seulement pendant que vous êtes en jeu. Elle est effacée à la fin de la session.",
+    "declares": "Si vous n'êtes pas « En jeu », partager vous déclare en jeu jusqu'à ce que vous arrêtiez.",
+    "cancel": "Annuler",
+    "confirm": "Partager",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "errors": {
+      "unauthorized": "Connectez-vous dans l'app pour partager votre position.",
+      "notSharing": "Le partage a été coupé depuis le site."
+    }
+  },
+  "players": {
+    "section": "Joueurs en jeu",
+    "searchPlaceholder": "Lieu, marqueur ou joueur…",
+    "label": "Joueur",
+    "reading": "relevé il y a {age}",
+    "stale": "Son dernier relevé a {age} : il a pu bouger depuis.",
+    "gone": "Il ne partage plus sa position : le NPS guide vers la dernière connue."
   }
 }
