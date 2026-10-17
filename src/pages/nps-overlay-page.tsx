@@ -90,6 +90,7 @@ import {
   parseNumber,
   positionOf,
   previousFor,
+  systemOfZones,
   systemPositionOf,
   toBodyFrame,
   type Fix,
@@ -277,8 +278,9 @@ export default function NpsOverlayPage() {
   const [destination, setDestinationState] = useState<NpsDestination | null>(
     null,
   );
-  // Where the player was last seen near a body: in open space, a reading does
-  // not tell Stanton from Pyro, each centred on its own star.
+  // The last system a reading named or was near a body of: from
+  // `/showlocation` in open space, coordinates do not tell Stanton from Pyro,
+  // each centred on its own star.
   const [lastSystem, setLastSystem] = useState<string | null>(null);
   // Arrivé à un marqueur, « Le garder » range la question pour celui-là.
   const [keptMarker, setKeptMarker] = useState<string | null>(null);
@@ -424,8 +426,28 @@ export default function NpsOverlayPage() {
       }),
     [destination, places, markers, others, bodies, t],
   );
-  const body = fix ? bodyAt(fix, bodies) : null;
-  const system = body?.systemSlug ?? lastSystem;
+  const systems = useMemo(
+    () => [
+      ...new Set(
+        [...bodies, ...places].flatMap((one) =>
+          one.systemSlug ? [one.systemSlug] : [],
+        ),
+      ),
+    ],
+    [bodies, places],
+  );
+  // Ce que les zones de r_displayInfo disent du système : seules à le dire
+  // loin de tout corps, et dans un système dont le site ne décrit pas encore
+  // les corps (Nyx).
+  const named = fix ? systemOfZones(fix.zones, systems) : null;
+  const body = fix
+    ? bodyAt(
+        fix,
+        named ? bodies.filter((one) => one.systemSlug === named) : bodies,
+      )
+    : null;
+  const seen = named ?? body?.systemSlug ?? null;
+  const system = seen ?? lastSystem;
   const shareError = usePositionReporting(fix, bodies, system, share.sharing);
 
   // Le joueur suivi a bougé : la copie gardée avec la destination suit, pour
@@ -445,7 +467,7 @@ export default function NpsOverlayPage() {
       },
     });
   }, [followed, followedNow]);
-  const systemName = bodies.find(
+  const systemName = [...bodies, ...places].find(
     (one) => one.systemSlug === system,
   )?.systemName;
   const bodyFrame = fix && body ? toBodyFrame(fix, body) : null;
@@ -465,13 +487,12 @@ export default function NpsOverlayPage() {
     : undefined;
 
   useEffect(() => {
-    const seen = body?.systemSlug;
     if (!seen || seen === lastSystem) return;
     setLastSystem(seen);
     void setNpsSystem(seen).catch((error) =>
       console.error("cannot save the NPS system", error),
     );
-  }, [body?.systemSlug, lastSystem]);
+  }, [seen, lastSystem]);
 
   // Ce que le raccourci lit au moment où il part : il écoute une fois pour
   // toutes, et l'état aura changé d'ici là.
@@ -999,9 +1020,7 @@ export default function NpsOverlayPage() {
                     canDelete={target.marker.isOwner}
                     error={arrivalError}
                     disabled={locked}
-                    onDelete={() =>
-                      void removeArrivedMarker(target.marker!.id)
-                    }
+                    onDelete={() => void removeArrivedMarker(target.marker!.id)}
                     onKeep={() => setKeptMarker(target.marker!.id)}
                   />
                 ) : null}

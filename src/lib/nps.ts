@@ -31,6 +31,11 @@ export type Fix = {
   /** Milliseconds since the Unix epoch. */
   at: number;
   source?: "clipboard" | "screen";
+  /**
+   * The other zones `r_displayInfo` showed, innermost first, letters only
+   * (`jumppointnyxcastra`): see `src-tauri/src/nps_screen.rs`.
+   */
+  zones?: string[];
 };
 
 type Vector = { x: number; y: number; z: number };
@@ -264,6 +269,32 @@ function zoneSuffix(name: string): string {
       String(ROMAN[roman.toLowerCase()] ?? roman),
     ),
   );
+}
+
+/**
+ * The system a reading names, among `systems` (slugs): coordinates alone do
+ * not tell Stanton from Nyx, each centred on its own star, but the zones
+ * `r_displayInfo` shows do (`Hangar_…_RestStop_Nyx_…`, `jumppoint_nyx_castra`,
+ * `OOC_Stanton_2b_Daymar`). The innermost zone that names one decides, and
+ * in it the name that comes first: a jump point is named after its own system,
+ * then the one it leads to.
+ */
+export function systemOfZones(
+  zones: string[] | undefined,
+  systems: string[],
+): string | null {
+  const keys = systems
+    .map((slug) => ({ slug, key: squash(slug) }))
+    .filter(({ key }) => key.length >= 3);
+  for (const zone of zones ?? []) {
+    let found: { slug: string; at: number } | null = null;
+    for (const { slug, key } of keys) {
+      const at = zone.indexOf(key);
+      if (at >= 0 && (!found || at < found.at)) found = { slug, at };
+    }
+    if (found) return found.slug;
+  }
+  return null;
 }
 
 /** Whether pasted text looks like coordinates from the game at all. */
