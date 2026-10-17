@@ -27,6 +27,8 @@ import { getNpsData } from "@/lib/api/nps";
 import { openMarkForm, withDistances } from "@/lib/markers";
 import {
   bodyAt,
+  systemsOf,
+  withSystem,
   formatDistance,
   inSystem,
   MAX_TRAVEL_AGE_MS,
@@ -129,9 +131,11 @@ export default function MarkersPage() {
   }, []);
 
   // Un relevé de plus de dix minutes ne dit plus où l'on est.
-  const recent = fix && Date.now() - fix.at <= MAX_TRAVEL_AGE_MS ? fix : null;
+  const fresh = fix && Date.now() - fix.at <= MAX_TRAVEL_AGE_MS ? fix : null;
+  const recent =
+    fresh && nps.data ? withSystem(fresh, systemsOf(nps.data)) : fresh;
   const body = recent ? bodyAt(recent, bodies) : null;
-  const system = body?.systemSlug ?? storedSystem;
+  const system = recent?.system ?? body?.systemSlug ?? storedSystem;
 
   const markers = useMemo(() => list.data?.markers ?? [], [list.data]);
   const collections = useMemo(

@@ -90,9 +90,10 @@ import {
   parseNumber,
   positionOf,
   previousFor,
-  systemOfZones,
   systemPositionOf,
+  systemsOf,
   toBodyFrame,
+  withSystem,
   type Fix,
 } from "@/lib/nps";
 import {
@@ -259,8 +260,7 @@ export default function NpsOverlayPage() {
 
   // The readings of the last minutes, oldest first: the latest says where one
   // is, an earlier one far enough behind which way one is going.
-  const [history, setHistory] = useState<Fix[]>([]);
-  const fix = history.length > 0 ? history[history.length - 1] : null;
+  const [readings, setReadings] = useState<Fix[]>([]);
   const [screen, setScreen] = useState<NpsScreenSettings>(DEFAULT_NPS_SCREEN);
   const [screenLoaded, setScreenLoaded] = useState(false);
   const [screenStatus, setScreenStatus] = useState<ScreenStatus>({
@@ -297,11 +297,23 @@ export default function NpsOverlayPage() {
   const bodies = useMemo(() => data.data?.bodies ?? [], [data.data]);
   const places = useMemo(() => data.data?.places ?? [], [data.data]);
   const markers = useMemo(() => data.data?.markers ?? [], [data.data]);
+  const systems = useMemo(
+    () => systemsOf({ bodies, places }),
+    [bodies, places],
+  );
+  // Each reading with the system its zones name: the only word on it far from
+  // any body, or in a system whose bodies the site does not describe yet
+  // (Nyx). Every body found for it is then one of that system.
+  const history = useMemo(
+    () => readings.map((one) => withSystem(one, systems)),
+    [readings, systems],
+  );
+  const fix = history.length > 0 ? history[history.length - 1] : null;
 
   useEffect(() => {
     const pending = listen<Fix>(POSITION_EVENT, (event) => {
       const reading = event.payload;
-      setHistory((last) =>
+      setReadings((last) =>
         [...last, reading]
           .filter((one) => reading.at - one.at <= MAX_TRAVEL_AGE_MS)
           .slice(-MAX_HISTORY),
@@ -426,27 +438,8 @@ export default function NpsOverlayPage() {
       }),
     [destination, places, markers, others, bodies, t],
   );
-  const systems = useMemo(
-    () => [
-      ...new Set(
-        [...bodies, ...places].flatMap((one) =>
-          one.systemSlug ? [one.systemSlug] : [],
-        ),
-      ),
-    ],
-    [bodies, places],
-  );
-  // Ce que les zones de r_displayInfo disent du système : seules à le dire
-  // loin de tout corps, et dans un système dont le site ne décrit pas encore
-  // les corps (Nyx).
-  const named = fix ? systemOfZones(fix.zones, systems) : null;
-  const body = fix
-    ? bodyAt(
-        fix,
-        named ? bodies.filter((one) => one.systemSlug === named) : bodies,
-      )
-    : null;
-  const seen = named ?? body?.systemSlug ?? null;
+  const body = fix ? bodyAt(fix, bodies) : null;
+  const seen = fix?.system ?? body?.systemSlug ?? null;
   const system = seen ?? lastSystem;
   const shareError = usePositionReporting(fix, bodies, system, share.sharing);
 
@@ -538,8 +531,9 @@ export default function NpsOverlayPage() {
           queryKey: ["nps"],
           queryFn: getNpsData,
         });
+        reading = withSystem(reading, systemsOf(nps));
         const system = latest.current.system;
-        const where = whereOf(reading, nps.bodies, system);
+        const where = whereOf(reading, nps, system);
         const located = markerPositionOf(reading, nps.bodies, system);
         if (!located.position?.body && !located.systemSlug) {
           throw new Error(t("noSystem"));
@@ -778,6 +772,7 @@ export default function NpsOverlayPage() {
           fix={fix}
           live={live}
           bodies={bodies}
+          places={places}
           bodiesReady={data.isSuccess}
           system={system}
           waiting={waiting}
@@ -1879,6 +1874,7 @@ function MarkPanel({
   fix,
   live,
   bodies,
+  places,
   bodiesReady,
   system,
   waiting,
@@ -1889,6 +1885,8 @@ function MarkPanel({
   /** Le suivi à l'écran tourne : un relevé arrive sans rien faire. */
   live: boolean;
   bodies: NpsBody[];
+  /** Pour le nom d'un système sans corps décrits (Nyx). */
+  places: NpsPlace[];
   /** Les corps sont lus : la position peut se mettre dans leur repère. */
   bodiesReady: boolean;
   system: string | null;
@@ -1949,7 +1947,7 @@ function MarkPanel({
     if (!frozen && fix && fix.at >= openedAt) setFrozen(fix);
   }, [fix, frozen, openedAt]);
 
-  const where = frozen ? whereOf(frozen, bodies, system) : null;
+  const where = frozen ? whereOf(frozen, { bodies, places }, system) : null;
   const defaultName = frozen
     ? defaultMarkerName(
         where?.body?.name ?? where?.systemName ?? t("defaultWhere"),

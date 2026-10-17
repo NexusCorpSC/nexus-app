@@ -6,7 +6,7 @@ import {
   type Fix,
 } from "@/lib/nps";
 import { showOverlay } from "@/lib/windows";
-import type { NpsBody } from "@/types/nexus";
+import type { NpsBody, NpsPlace } from "@/types/nexus";
 import {
   DEFAULT_MARKER_COLOR,
   MARKER_COLORS,
@@ -58,16 +58,18 @@ export function defaultMarkerName(where: string, at: number): string {
 /** Où se trouve un relevé, pour le nom proposé et le formulaire. */
 export function whereOf(
   fix: Fix,
-  bodies: NpsBody[],
+  { bodies, places }: { bodies: NpsBody[]; places: NpsPlace[] },
   system: string | null,
 ): { body: NpsBody | null; systemSlug: string | null; systemName?: string } {
   const body = bodyAt(fix, bodies);
-  const systemSlug = body?.systemSlug ?? system;
+  const systemSlug = fix.system ?? body?.systemSlug ?? system;
   return {
     body,
     systemSlug,
-    systemName: bodies.find((one) => one.systemSlug === systemSlug)
-      ?.systemName,
+    // Les lieux aussi : Nyx n'a pas encore de corps décrits.
+    systemName: [...bodies, ...places].find(
+      (one) => one.systemSlug === systemSlug,
+    )?.systemName,
   };
 }
 
@@ -82,7 +84,8 @@ export function markerPositionOf(
   bodies: NpsBody[],
   system: string | null,
 ): Pick<MarkerInput, "position" | "systemSlug" | "source"> {
-  const systemSlug = bodyAt(fix, bodies)?.systemSlug ?? system ?? undefined;
+  const systemSlug =
+    fix.system ?? bodyAt(fix, bodies)?.systemSlug ?? system ?? undefined;
   return {
     position: positionOf(fix, bodies),
     systemSlug,

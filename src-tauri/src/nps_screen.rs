@@ -163,6 +163,23 @@ fn zone_key(zone: &str) -> String {
         .collect()
 }
 
+/// A zone's name in lower case, words joined by `_`, without the `Zone:` in
+/// front: `Zone: Hangar_LargeFront_RestStop_Nyx_885986219067` gives
+/// `hangar_largefront_reststop_nyx_885986219067`, and the same with spaces
+/// for underscores, as the OCR often reads them.
+fn zone_name(text: &str) -> Option<String> {
+    let lower = text.to_lowercase();
+    let mut words = lower
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|word| !word.is_empty())
+        .peekable();
+    if words.peek() == Some(&"zone") {
+        words.next();
+    }
+    let name = words.collect::<Vec<_>>().join("_");
+    (!name.is_empty()).then_some(name)
+}
+
 /// The three coordinates after a `Pos:`, in metres.
 fn coordinates(text: &str) -> Option<(f64, f64, f64)> {
     let text = text.replace(['–', '—', '−'], "-").replace(',', ".");
@@ -202,9 +219,9 @@ pub struct Lines {
     pub solar: Option<Position>,
     /// `Zone: Root Pos:`: the same numbers in Stanton, not in Pyro.
     pub root: Option<Position>,
-    /// The other `Zone:` lines, innermost first, as [`zone_key`] gives them
-    /// (`jumppointnyxcastra`, `ooctantonl`…): the system shows in their
-    /// names, and the NPS window tells it from them.
+    /// The other `Zone:` lines, innermost first, as [`zone_name`] gives them
+    /// (`jumppoint_nyx_castra`, `ooc_stanton3_l1`…): the system shows in
+    /// their names, and the NPS window tells it from them.
     pub zones: Vec<String>,
 }
 
@@ -215,19 +232,22 @@ pub fn lines(text: &str) -> Lines {
         let Some(captures) = pos_pattern().captures(line) else {
             continue;
         };
-        let zone = zone_key(&captures[1]);
-        if zone.contains("solarsystem") {
+        // Matched whole, after the `Zone` the OCR may have lost: a zone whose
+        // name merely holds `root` is no `Root` line.
+        let key = zone_key(&captures[1]);
+        let key = key.strip_prefix("zone").unwrap_or(&key);
+        if key.starts_with("solarsystem") {
             if found.solar.is_none() {
                 found.solar = coordinates(&captures[2]);
             }
-        } else if zone.contains("root") {
+        } else if key == "root" {
             if found.root.is_none() {
                 found.root = coordinates(&captures[2]);
             }
-        } else if let Some(name) = zone.strip_prefix("zone") {
+        } else if let Some(name) = zone_name(&captures[1]) {
             // Even with its numbers misread, a zone's name is worth keeping.
-            if !name.is_empty() && !found.zones.iter().any(|one| one == name) {
-                found.zones.push(name.to_owned());
+            if !found.zones.contains(&name) {
+                found.zones.push(name);
             }
         }
     }
@@ -261,15 +281,15 @@ pub fn agreed(plain: &Lines, inverted: &Lines) -> Option<Position> {
     None
 }
 
-/// The zone names of both readings, those of the plain one first.
+/// The zone names of the reading that found the most, innermost first: the
+/// lines come in that order, and putting the other reading's after them
+/// could set an outer zone before an inner one that only it read.
 pub fn zones(plain: Lines, inverted: Lines) -> Vec<String> {
-    let mut zones = plain.zones;
-    for zone in inverted.zones {
-        if !zones.contains(&zone) {
-            zones.push(zone);
-        }
+    if inverted.zones.len() > plain.zones.len() {
+        inverted.zones
+    } else {
+        plain.zones
     }
-    zones
 }
 
 /// Keeps the readings that agree with the way the player moves: a jump no
@@ -577,9 +597,33 @@ Zone: SolarSystem_875701789395 Pos: -13499930.5201km -23382703.3845km -37.4127km
 Zone: Root Pos: -13499930.5201km -23382703.3845km -37.4127km";
         let found = lines(text);
         assert!(found.solar.is_some());
-        assert_eq!(found.zones.len(), 2);
-        assert!(found.zones[0].starts_with("hangarlargefrontreststopnyx"));
-        assert_eq!(found.zones[1], "jumppointnyxcastra");
+        assert_eq!(
+            found.zones,
+            [
+                "hangar_largefront_reststop_nyx_885986219067",
+                "jumppoint_nyx_castra"
+            ]
+        );
+        // As the OCR may read it: spaces for underscores, `Zone` lost.
+        let read = lines("Hangar LargeFront RestStop Nyx Pos: 3.69m -193.14m 6.12m");
+        assert_eq!(read.zones, ["hangar_largefront_reststop_nyx"]);
+    }
+
+    #[test]
+    fn a_zone_that_holds_root_is_a_zone() {
+        let found = lines("Zone: Hangar_Rooted_Nyx Pos: 1.0m 2.0m 3.0m");
+        assert_eq!(found.root, None);
+        assert_eq!(found.zones, ["hangar_rooted_nyx"]);
+    }
+
+    #[test]
+    fn the_reading_with_the_most_zones_gives_them() {
+        let plain = lines("Zone: jumppoint_nyx_castra Pos: 1.0m 2.0m 3.0m");
+        let inverted = lines(
+            "Zone: Hangar_LargeFront_RestStop_Nyx_1 Pos: 1.0m 2.0m 3.0m\n\
+             Zone: jumppoint_nyx_castra Pos: 1.0m 2.0m 3.0m",
+        );
+        assert_eq!(zones(plain, inverted.clone()), inverted.zones);
     }
 
     #[test]
