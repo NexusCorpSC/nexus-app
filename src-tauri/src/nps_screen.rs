@@ -163,6 +163,23 @@ fn zone_key(zone: &str) -> String {
         .collect()
 }
 
+/// A zone's name in lower case, words joined by `_`, without the `Zone:` in
+/// front: `Zone: Hangar_LargeFront_RestStop_Nyx_885986219067` gives
+/// `hangar_largefront_reststop_nyx_885986219067`, and the same with spaces
+/// for underscores, as the OCR often reads them.
+fn zone_name(text: &str) -> Option<String> {
+    let lower = text.to_lowercase();
+    let mut words = lower
+        .split(|c: char| !c.is_ascii_alphanumeric())
+        .filter(|word| !word.is_empty())
+        .peekable();
+    if words.peek() == Some(&"zone") {
+        words.next();
+    }
+    let name = words.collect::<Vec<_>>().join("_");
+    (!name.is_empty()).then_some(name)
+}
+
 /// The three coordinates after a `Pos:`, in metres.
 fn coordinates(text: &str) -> Option<(f64, f64, f64)> {
     let text = text.replace(['–', '—', '−'], "-").replace(',', ".");
@@ -194,13 +211,18 @@ fn coordinates(text: &str) -> Option<(f64, f64, f64)> {
 
 type Position = (f64, f64, f64);
 
-/// The two lines that carry the position, as read in the box.
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+/// The two lines that carry the position, as read in the box, and the names
+/// of the other zones.
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Lines {
     /// `Zone: SolarSystem_… Pos:`, in the frame `/showlocation` uses.
     pub solar: Option<Position>,
     /// `Zone: Root Pos:`: the same numbers in Stanton, not in Pyro.
     pub root: Option<Position>,
+    /// The other `Zone:` lines, innermost first, as [`zone_name`] gives them
+    /// (`jumppoint_nyx_castra`, `ooc_stanton3_l1`…): the system shows in
+    /// their names, and the NPS window tells it from them.
+    pub zones: Vec<String>,
 }
 
 /// The position lines found in the text read in the box, in metres.
@@ -210,14 +232,23 @@ pub fn lines(text: &str) -> Lines {
         let Some(captures) = pos_pattern().captures(line) else {
             continue;
         };
-        let zone = zone_key(&captures[1]);
-        let Some(position) = coordinates(&captures[2]) else {
-            continue;
-        };
-        if zone.contains("solarsystem") && found.solar.is_none() {
-            found.solar = Some(position);
-        } else if zone.contains("root") && found.root.is_none() {
-            found.root = Some(position);
+        // Matched whole, after the `Zone` the OCR may have lost: a zone whose
+        // name merely holds `root` is no `Root` line.
+        let key = zone_key(&captures[1]);
+        let key = key.strip_prefix("zone").unwrap_or(&key);
+        if key.starts_with("solarsystem") {
+            if found.solar.is_none() {
+                found.solar = coordinates(&captures[2]);
+            }
+        } else if key == "root" {
+            if found.root.is_none() {
+                found.root = coordinates(&captures[2]);
+            }
+        } else if let Some(name) = zone_name(&captures[1]) {
+            // Even with its numbers misread, a zone's name is worth keeping.
+            if !found.zones.contains(&name) {
+                found.zones.push(name);
+            }
         }
     }
     found
@@ -235,7 +266,7 @@ fn same(a: Position, b: Position) -> bool {
 /// `SolarSystem` line of both, or that line and the `Root` line, which carry
 /// the same numbers in Stanton. The same mistake twice, on two different
 /// images or on two different lines, is rare enough.
-pub fn agreed(plain: Lines, inverted: Lines) -> Option<Position> {
+pub fn agreed(plain: &Lines, inverted: &Lines) -> Option<Position> {
     let solars = [plain.solar, inverted.solar];
     let roots = [plain.root, inverted.root];
     for (index, solar) in solars.iter().enumerate() {
@@ -248,6 +279,17 @@ pub fn agreed(plain: Lines, inverted: Lines) -> Option<Position> {
     }
     // The `Root` line alone is never taken: in Pyro it is in another frame.
     None
+}
+
+/// The zone names of the reading that found the most, innermost first: the
+/// lines come in that order, and putting the other reading's after them
+/// could set an outer zone before an inner one that only it read.
+pub fn zones(plain: Lines, inverted: Lines) -> Vec<String> {
+    if inverted.zones.len() > plain.zones.len() {
+        inverted.zones
+    } else {
+        plain.zones
+    }
 }
 
 /// Keeps the readings that agree with the way the player moves: a jump no
@@ -327,7 +369,7 @@ pub(crate) async fn calibrate(
         Ok(image) => {
             #[cfg(windows)]
             let found = match read_both(image).await {
-                Ok((plain, inverted)) => agreed(plain, inverted).is_some(),
+                Ok((plain, inverted)) => agreed(&plain, &inverted).is_some(),
                 Err(error) => {
                     log(format!("nps: cannot read the calibrated box: {error}"));
                     false
@@ -422,12 +464,13 @@ async fn read_once(region: Region) -> Result<Option<Fix>, String> {
     .map_err(|e| e.to_string())??;
 
     let (plain, inverted) = read_both(image).await?;
-    Ok(agreed(plain, inverted).map(|(x, y, z)| Fix {
+    Ok(agreed(&plain, &inverted).map(|(x, y, z)| Fix {
         x,
         y,
         z,
         at,
         source: "screen",
+        zones: zones(plain, inverted),
     }))
 }
 
@@ -483,7 +526,7 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
         let found = lines(text);
         assert!(close(found.root.unwrap(), (1_500.0, -2_250.0, 3.0)));
         assert_eq!(parse(text), None);
-        assert_eq!(agreed(found, found), None);
+        assert_eq!(agreed(&found, &found), None);
     }
 
     #[test]
@@ -506,19 +549,21 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
         // A 2 read as a 9 on the `SolarSystem` line, and the `Root` line lost.
         let wrong =
             lines("Zone: SolarSystem_8629 Pos: 16729220.4026km -19942047.4831km 9239.7445km");
-        assert_eq!(agreed(wrong, Lines::default()), None);
-        assert!(agreed(wrong, Lines::default()).is_none());
+        assert_eq!(agreed(&wrong, &Lines::default()), None);
         // The other reading of the same image confirms the right line.
-        assert_eq!(agreed(wrong, right), right.solar);
+        assert_eq!(agreed(&wrong, &right), right.solar);
     }
 
     #[test]
     fn the_root_line_confirms_the_solar_system_line() {
         let both = lines(DISPLAY_INFO);
-        assert_eq!(agreed(both, Lines::default()), both.solar);
-        let solar_only = Lines { root: None, ..both };
-        assert_eq!(agreed(solar_only, Lines::default()), None);
-        assert_eq!(agreed(solar_only, solar_only), both.solar);
+        assert_eq!(agreed(&both, &Lines::default()), both.solar);
+        let solar_only = Lines {
+            root: None,
+            ..both.clone()
+        };
+        assert_eq!(agreed(&solar_only, &Lines::default()), None);
+        assert_eq!(agreed(&solar_only, &solar_only), both.solar);
     }
 
     #[test]
@@ -540,6 +585,45 @@ Zone: Root Pos: 16729220.4026km ee applet 239.7445km";
         assert!(!motion.accept((9.0e9, 0.0, 0.0), 4_000));
         assert!(motion.accept((9.0e9 + 100.0, 0.0, 0.0), 5_000));
         assert!(motion.accept((9.0e9 + 300.0, 0.0, 0.0), 6_000));
+    }
+
+    #[test]
+    fn keeps_the_names_of_the_other_zones() {
+        // Kevin's screen at the Nyx–Castra jump point, on 2026-10-17.
+        let text = "\
+Zone: Hangar_LargeFront_RestStop_Nyx_885986219067 Pos: 3.69m -193.14m 6.12m
+Zone: jumppoint_nyx_castra Pos: 5130.32m 11.7533km -37.4127km
+Zone: SolarSystem_875701789395 Pos: -13499930.5201km -23382703.3845km -37.4127km
+Zone: Root Pos: -13499930.5201km -23382703.3845km -37.4127km";
+        let found = lines(text);
+        assert!(found.solar.is_some());
+        assert_eq!(
+            found.zones,
+            [
+                "hangar_largefront_reststop_nyx_885986219067",
+                "jumppoint_nyx_castra"
+            ]
+        );
+        // As the OCR may read it: spaces for underscores, `Zone` lost.
+        let read = lines("Hangar LargeFront RestStop Nyx Pos: 3.69m -193.14m 6.12m");
+        assert_eq!(read.zones, ["hangar_largefront_reststop_nyx"]);
+    }
+
+    #[test]
+    fn a_zone_that_holds_root_is_a_zone() {
+        let found = lines("Zone: Hangar_Rooted_Nyx Pos: 1.0m 2.0m 3.0m");
+        assert_eq!(found.root, None);
+        assert_eq!(found.zones, ["hangar_rooted_nyx"]);
+    }
+
+    #[test]
+    fn the_reading_with_the_most_zones_gives_them() {
+        let plain = lines("Zone: jumppoint_nyx_castra Pos: 1.0m 2.0m 3.0m");
+        let inverted = lines(
+            "Zone: Hangar_LargeFront_RestStop_Nyx_1 Pos: 1.0m 2.0m 3.0m\n\
+             Zone: jumppoint_nyx_castra Pos: 1.0m 2.0m 3.0m",
+        );
+        assert_eq!(zones(plain, inverted.clone()), inverted.zones);
     }
 
     #[test]

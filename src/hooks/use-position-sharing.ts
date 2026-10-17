@@ -131,7 +131,8 @@ export function usePositionReporting(
     // Comme un marqueur : dans le repère du corps sur une planète, sinon
     // dans celui du système, qu'il faut alors connaître.
     const position = positionOf(fix, bodies);
-    const systemSlug = bodyAt(fix, bodies)?.systemSlug ?? system ?? undefined;
+    const systemSlug =
+      fix.system ?? bodyAt(fix, bodies)?.systemSlug ?? system ?? undefined;
     if (!position.body && !systemSlug) return;
 
     const previous = last.current;

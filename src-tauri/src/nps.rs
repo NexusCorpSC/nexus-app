@@ -54,6 +54,11 @@ pub struct Fix {
     /// Where it was read: `clipboard` for `/showlocation`, `screen` for
     /// `r_displayInfo` (`nps_screen.rs`).
     pub source: &'static str,
+    /// The other zones `r_displayInfo` showed, innermost first, as letters
+    /// only (`jumppointnyxcastra`): their names tell the system, which the
+    /// coordinates alone do not. Empty for `/showlocation`.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub zones: Vec<String>,
 }
 
 fn coordinates_pattern() -> &'static Regex {
@@ -126,6 +131,7 @@ pub(crate) fn install(app: &AppHandle) {
                     z,
                     at,
                     source: "clipboard",
+                    zones: Vec::new(),
                 },
             ) {
                 log(format!("nps: cannot send the position: {error}"));

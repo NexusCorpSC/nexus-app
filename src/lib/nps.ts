@@ -31,6 +31,14 @@ export type Fix = {
   /** Milliseconds since the Unix epoch. */
   at: number;
   source?: "clipboard" | "screen";
+  /**
+   * The other zones `r_displayInfo` showed, innermost first, in lower case
+   * with `_` between words (`jumppoint_nyx_castra`): see
+   * `src-tauri/src/nps_screen.rs`.
+   */
+  zones?: string[];
+  /** The system those zones name, set by `withSystem`. */
+  system?: string;
 };
 
 type Vector = { x: number; y: number; z: number };
@@ -88,12 +96,18 @@ function rotation(body: NpsBody, at: number): number {
 
 /**
  * The body one is on or near, if any: the nearest centre among those whose
- * turning zone holds the point.
+ * turning zone holds the point. A reading that names its system (`withSystem`)
+ * is only near bodies of that system: each system is centred on its own star,
+ * and a point of Nyx can fall within a body of Stanton.
  */
-export function bodyAt(point: Vector, bodies: NpsBody[]): NpsBody | null {
+export function bodyAt(
+  point: Vector & { system?: string },
+  bodies: NpsBody[],
+): NpsBody | null {
   let found: NpsBody | null = null;
   let best = Infinity;
   for (const body of bodies) {
+    if (point.system && body.systemSlug !== point.system) continue;
     const distance = length(sub(point, body));
     if (distance <= body.zoneRadius && distance < best) {
       found = body;
@@ -264,6 +278,55 @@ function zoneSuffix(name: string): string {
       String(ROMAN[roman.toLowerCase()] ?? roman),
     ),
   );
+}
+
+/**
+ * The system a reading names, among `systems` (slugs): coordinates alone do
+ * not tell Stanton from Nyx, each centred on its own star, but the zones
+ * `r_displayInfo` shows do (`hangar_largefront_reststop_nyx_885986219067`,
+ * `jumppoint_nyx_castra`, `ooc_stanton3_l1`). Names are matched word by
+ * word, a number allowed after them (`stanton3`), so that Onyx is not Nyx.
+ * The innermost zone that names one decides, and in it the first name: a jump
+ * point is named after its own system, then the one it leads to. A name
+ * followed by `gateway` is the station that leads there, in another system.
+ */
+export function systemOfZones(
+  zones: string[] | undefined,
+  systems: string[],
+): string | null {
+  const keys = systems.map((slug) => ({ slug, key: squash(slug) }));
+  for (const zone of zones ?? []) {
+    const words = zone.split("_");
+    for (const [index, word] of words.entries()) {
+      if (words[index + 1] === "gateway") continue;
+      const found = keys.find(
+        ({ key }) =>
+          key && word.startsWith(key) && /^\d*$/.test(word.slice(key.length)),
+      );
+      if (found) return found.slug;
+    }
+  }
+  return null;
+}
+
+/** The systems the site knows of, those without bodies yet included (Nyx). */
+export function systemsOf(data: {
+  bodies: NpsBody[];
+  places: NpsPlace[];
+}): string[] {
+  return [
+    ...new Set(
+      [...data.bodies, ...data.places].flatMap((one) =>
+        one.systemSlug ? [one.systemSlug] : [],
+      ),
+    ),
+  ];
+}
+
+/** The reading, with the system its zones name if they name one. */
+export function withSystem(fix: Fix, systems: string[]): Fix {
+  const system = systemOfZones(fix.zones, systems);
+  return system ? { ...fix, system } : fix;
 }
 
 /** Whether pasted text looks like coordinates from the game at all. */

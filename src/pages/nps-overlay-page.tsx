@@ -91,7 +91,9 @@ import {
   positionOf,
   previousFor,
   systemPositionOf,
+  systemsOf,
   toBodyFrame,
+  withSystem,
   type Fix,
 } from "@/lib/nps";
 import {
@@ -258,8 +260,7 @@ export default function NpsOverlayPage() {
 
   // The readings of the last minutes, oldest first: the latest says where one
   // is, an earlier one far enough behind which way one is going.
-  const [history, setHistory] = useState<Fix[]>([]);
-  const fix = history.length > 0 ? history[history.length - 1] : null;
+  const [readings, setReadings] = useState<Fix[]>([]);
   const [screen, setScreen] = useState<NpsScreenSettings>(DEFAULT_NPS_SCREEN);
   const [screenLoaded, setScreenLoaded] = useState(false);
   const [screenStatus, setScreenStatus] = useState<ScreenStatus>({
@@ -277,8 +278,9 @@ export default function NpsOverlayPage() {
   const [destination, setDestinationState] = useState<NpsDestination | null>(
     null,
   );
-  // Where the player was last seen near a body: in open space, a reading does
-  // not tell Stanton from Pyro, each centred on its own star.
+  // The last system a reading named or was near a body of: from
+  // `/showlocation` in open space, coordinates do not tell Stanton from Pyro,
+  // each centred on its own star.
   const [lastSystem, setLastSystem] = useState<string | null>(null);
   // Arrivé à un marqueur, « Le garder » range la question pour celui-là.
   const [keptMarker, setKeptMarker] = useState<string | null>(null);
@@ -295,11 +297,23 @@ export default function NpsOverlayPage() {
   const bodies = useMemo(() => data.data?.bodies ?? [], [data.data]);
   const places = useMemo(() => data.data?.places ?? [], [data.data]);
   const markers = useMemo(() => data.data?.markers ?? [], [data.data]);
+  const systems = useMemo(
+    () => systemsOf({ bodies, places }),
+    [bodies, places],
+  );
+  // Each reading with the system its zones name: the only word on it far from
+  // any body, or in a system whose bodies the site does not describe yet
+  // (Nyx). Every body found for it is then one of that system.
+  const history = useMemo(
+    () => readings.map((one) => withSystem(one, systems)),
+    [readings, systems],
+  );
+  const fix = history.length > 0 ? history[history.length - 1] : null;
 
   useEffect(() => {
     const pending = listen<Fix>(POSITION_EVENT, (event) => {
       const reading = event.payload;
-      setHistory((last) =>
+      setReadings((last) =>
         [...last, reading]
           .filter((one) => reading.at - one.at <= MAX_TRAVEL_AGE_MS)
           .slice(-MAX_HISTORY),
@@ -425,7 +439,8 @@ export default function NpsOverlayPage() {
     [destination, places, markers, others, bodies, t],
   );
   const body = fix ? bodyAt(fix, bodies) : null;
-  const system = body?.systemSlug ?? lastSystem;
+  const seen = fix?.system ?? body?.systemSlug ?? null;
+  const system = seen ?? lastSystem;
   const shareError = usePositionReporting(fix, bodies, system, share.sharing);
 
   // Le joueur suivi a bougé : la copie gardée avec la destination suit, pour
@@ -445,7 +460,7 @@ export default function NpsOverlayPage() {
       },
     });
   }, [followed, followedNow]);
-  const systemName = bodies.find(
+  const systemName = [...bodies, ...places].find(
     (one) => one.systemSlug === system,
   )?.systemName;
   const bodyFrame = fix && body ? toBodyFrame(fix, body) : null;
@@ -465,13 +480,12 @@ export default function NpsOverlayPage() {
     : undefined;
 
   useEffect(() => {
-    const seen = body?.systemSlug;
     if (!seen || seen === lastSystem) return;
     setLastSystem(seen);
     void setNpsSystem(seen).catch((error) =>
       console.error("cannot save the NPS system", error),
     );
-  }, [body?.systemSlug, lastSystem]);
+  }, [seen, lastSystem]);
 
   // Ce que le raccourci lit au moment où il part : il écoute une fois pour
   // toutes, et l'état aura changé d'ici là.
@@ -517,8 +531,9 @@ export default function NpsOverlayPage() {
           queryKey: ["nps"],
           queryFn: getNpsData,
         });
+        reading = withSystem(reading, systemsOf(nps));
         const system = latest.current.system;
-        const where = whereOf(reading, nps.bodies, system);
+        const where = whereOf(reading, nps, system);
         const located = markerPositionOf(reading, nps.bodies, system);
         if (!located.position?.body && !located.systemSlug) {
           throw new Error(t("noSystem"));
@@ -757,6 +772,7 @@ export default function NpsOverlayPage() {
           fix={fix}
           live={live}
           bodies={bodies}
+          places={places}
           bodiesReady={data.isSuccess}
           system={system}
           waiting={waiting}
@@ -999,9 +1015,7 @@ export default function NpsOverlayPage() {
                     canDelete={target.marker.isOwner}
                     error={arrivalError}
                     disabled={locked}
-                    onDelete={() =>
-                      void removeArrivedMarker(target.marker!.id)
-                    }
+                    onDelete={() => void removeArrivedMarker(target.marker!.id)}
                     onKeep={() => setKeptMarker(target.marker!.id)}
                   />
                 ) : null}
@@ -1860,6 +1874,7 @@ function MarkPanel({
   fix,
   live,
   bodies,
+  places,
   bodiesReady,
   system,
   waiting,
@@ -1870,6 +1885,8 @@ function MarkPanel({
   /** Le suivi à l'écran tourne : un relevé arrive sans rien faire. */
   live: boolean;
   bodies: NpsBody[];
+  /** Pour le nom d'un système sans corps décrits (Nyx). */
+  places: NpsPlace[];
   /** Les corps sont lus : la position peut se mettre dans leur repère. */
   bodiesReady: boolean;
   system: string | null;
@@ -1930,7 +1947,7 @@ function MarkPanel({
     if (!frozen && fix && fix.at >= openedAt) setFrozen(fix);
   }, [fix, frozen, openedAt]);
 
-  const where = frozen ? whereOf(frozen, bodies, system) : null;
+  const where = frozen ? whereOf(frozen, { bodies, places }, system) : null;
   const defaultName = frozen
     ? defaultMarkerName(
         where?.body?.name ?? where?.systemName ?? t("defaultWhere"),
