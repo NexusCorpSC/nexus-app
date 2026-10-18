@@ -108,10 +108,6 @@ impl Tracking {
         self.0.lock().map(|s| s.clone()).unwrap_or_default()
     }
 
-    pub(crate) fn region(&self) -> Option<Region> {
-        self.0.lock().ok().and_then(|s| s.region)
-    }
-
     fn set_region(&self, region: Region) {
         if let Ok(mut settings) = self.0.lock() {
             settings.region = Some(region);
