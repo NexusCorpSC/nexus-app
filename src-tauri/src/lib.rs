@@ -978,16 +978,26 @@ fn announce_plan_visibility(app: &AppHandle) -> Result<(), String> {
 /// fed to the OCR engine.
 fn start_capture(app: &AppHandle) -> Result<(), String> {
     hide_window(app, OVERLAY_WINDOW)?;
-    freeze_after_repaint(app, CapturePurpose::Search);
+    freeze_after_repaint(app, CapturePurpose::Search, None);
     Ok(())
 }
 
-/// Takes the NPS window off screen, then freezes the monitor for the player
-/// to draw a box around the game's debug lines.
+/// Takes the NPS window off screen, then freezes the monitor it was on for the
+/// player to draw a box around the game's debug lines.
 #[tauri::command]
 fn nps_calibrate(app: AppHandle) -> Result<(), String> {
+    // Read before hiding: the screen to calibrate is the one the window is
+    // on when the button is clicked, whatever was calibrated before.
+    let nps = window(&app, NPS_WINDOW)?;
+    let position = nps.outer_position().map_err(|e| e.to_string())?;
+    let size = nps.outer_size().map_err(|e| e.to_string())?;
+    let centre = (
+        position.x + size.width as i32 / 2,
+        position.y + size.height as i32 / 2,
+    );
+
     hide_window(&app, NPS_WINDOW)?;
-    freeze_after_repaint(&app, CapturePurpose::NpsCalibration);
+    freeze_after_repaint(&app, CapturePurpose::NpsCalibration, Some(centre));
     Ok(())
 }
 
@@ -1001,7 +1011,8 @@ fn capture_purpose(state: State<CaptureState>) -> Result<CapturePurpose, String>
         .unwrap_or_default())
 }
 
-fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose) {
+/// `at` picks the monitor to freeze; without it, the one under the cursor.
+fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose, at: Option<(i32, i32)>) {
     let app = app.clone();
     std::thread::spawn(move || {
         // Hiding a window only queues the repaint. Grabbing the pixels on this
@@ -1009,7 +1020,7 @@ fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose) {
         // pumping messages — lets the compositor actually clear it first.
         std::thread::sleep(Duration::from_millis(120));
 
-        if let Err(error) = freeze_and_select(&app, purpose) {
+        if let Err(error) = freeze_and_select(&app, purpose, at) {
             log(format!("region capture failed: {error}"));
             if purpose == CapturePurpose::NpsCalibration {
                 let _ = show_window(&app, NPS_WINDOW);
@@ -1026,23 +1037,19 @@ fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose) {
     });
 }
 
-fn freeze_and_select(app: &AppHandle, purpose: CapturePurpose) -> Result<(), String> {
-    // The monitor under the cursor — but a calibration is started from the
-    // NPS window, which may sit on another screen than the game: once a box
-    // has been drawn, its monitor is the game's.
-    let saved = match purpose {
-        CapturePurpose::NpsCalibration => app.state::<nps_screen::Tracking>().region(),
-        CapturePurpose::Search => None,
-    };
+fn freeze_and_select(
+    app: &AppHandle,
+    purpose: CapturePurpose,
+    at: Option<(i32, i32)>,
+) -> Result<(), String> {
     let under_cursor = || -> Result<Capture, String> {
         let cursor = app.cursor_position().map_err(|e| e.to_string())?;
         capture::grab(cursor.x as i32, cursor.y as i32)
     };
-    // A monitor since unplugged falls back on the cursor's.
-    let frame = match saved {
-        Some(region) => {
-            capture::grab(region.monitor_x, region.monitor_y).or_else(|_| under_cursor())?
-        }
+    // A point off every monitor (a window dragged half off screen) falls back
+    // on the cursor's.
+    let frame = match at {
+        Some((x, y)) => capture::grab(x, y).or_else(|_| under_cursor())?,
         None => under_cursor()?,
     };
     let monitor = frame.monitor;
