@@ -40,6 +40,7 @@ import {
   usePositionReporting,
   usePositionSharing,
 } from "@/hooks/use-position-sharing";
+import { useSystemChoice } from "@/hooks/use-system-choice";
 import {
   PLAYER_COLOR,
   PlayerAvatar,
@@ -93,6 +94,7 @@ import {
   systemPositionOf,
   systemsOf,
   toBodyFrame,
+  withSystem,
   type Fix,
 } from "@/lib/nps";
 import {
@@ -101,12 +103,7 @@ import {
   setDestination,
   type NpsDestination,
 } from "@/lib/nps-destination";
-import {
-  onSystemChoiceChange,
-  readSystemChoice,
-  setSystemChoice,
-  withChosenSystem,
-} from "@/lib/nps-system";
+import { withChosenSystem } from "@/lib/nps-system";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import {
   DEFAULT_MARKER_DEFAULTS,
@@ -289,7 +286,7 @@ export default function NpsOverlayPage() {
   const [lastSystem, setLastSystem] = useState<string | null>(null);
   // The system the player picked by hand: it outranks the readings, which
   // still mistake Nyx for Stanton at times, until they go back to automatic.
-  const [chosenSystem, setChosenSystem] = useState<string | null>(null);
+  const [chosenSystem, chooseSystem] = useSystemChoice();
   // Arrivé à un marqueur, « Le garder » range la question pour celui-là.
   const [keptMarker, setKeptMarker] = useState<string | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
@@ -418,25 +415,6 @@ export default function NpsOverlayPage() {
   }, []);
 
   useEffect(() => {
-    let alive = true;
-    function refresh() {
-      void readSystemChoice()
-        .then((slug) => {
-          if (alive) setChosenSystem(slug);
-        })
-        .catch((error) =>
-          console.error("cannot read the chosen NPS system", error),
-        );
-    }
-    refresh();
-    const pending = onSystemChoiceChange(refresh);
-    return () => {
-      alive = false;
-      void pending.then((stop) => stop()).catch(() => {});
-    };
-  }, []);
-
-  useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(timer);
   }, []);
@@ -467,8 +445,16 @@ export default function NpsOverlayPage() {
     [destination, places, markers, others, bodies, t],
   );
   const body = fix ? bodyAt(fix, bodies) : null;
-  const seen = fix?.system ?? body?.systemSlug ?? null;
-  const system = chosenSystem ?? seen ?? lastSystem;
+  // What the last reading says on its own, the choice by hand aside: the
+  // system remembered for automatic detection, and a hint when the two differ.
+  const lastReading =
+    readings.length > 0 ? readings[readings.length - 1] : null;
+  const detected = useMemo(() => {
+    if (!lastReading) return null;
+    const own = withSystem(lastReading, systems);
+    return own.system ?? bodyAt(own, bodies)?.systemSlug ?? null;
+  }, [lastReading, systems, bodies]);
+  const system = chosenSystem ?? detected ?? lastSystem;
   const shareError = usePositionReporting(fix, bodies, system, share.sharing);
 
   // Le joueur suivi a bougé : la copie gardée avec la destination suit, pour
@@ -508,12 +494,14 @@ export default function NpsOverlayPage() {
     : undefined;
 
   useEffect(() => {
-    if (!seen || seen === lastSystem) return;
-    setLastSystem(seen);
-    void setNpsSystem(seen).catch((error) =>
+    // A system picked by hand is not one seen: back to automatic, the last
+    // system detected still holds.
+    if (chosenSystem || !detected || detected === lastSystem) return;
+    setLastSystem(detected);
+    void setNpsSystem(detected).catch((error) =>
       console.error("cannot save the NPS system", error),
     );
-  }, [seen, lastSystem]);
+  }, [chosenSystem, detected, lastSystem]);
 
   // Ce que le raccourci lit au moment où il part : il écoute une fois pour
   // toutes, et l'état aura changé d'ici là.
@@ -841,13 +829,9 @@ export default function NpsOverlayPage() {
               systems={systems}
               names={[...bodies, ...places]}
               chosen={chosenSystem}
+              detected={detected}
               locked={locked}
-              onChange={(slug) => {
-                setChosenSystem(slug);
-                void setSystemChoice(slug).catch((error) =>
-                  console.error("cannot save the chosen NPS system", error),
-                );
-              }}
+              onChange={chooseSystem}
             />
           </section>
 
@@ -1341,12 +1325,14 @@ function SystemPicker({
   systems,
   names,
   chosen,
+  detected,
   locked,
   onChange,
 }: {
   systems: string[];
   names: { systemSlug?: string; systemName?: string }[];
   chosen: string | null;
+  detected: string | null;
   locked: boolean;
   onChange: (slug: string | null) => void;
 }) {
@@ -1381,7 +1367,12 @@ function SystemPicker({
         </select>
       </label>
       {chosen ? (
-        <p className="text-[11px] text-amber-200/90">{t("manual")}</p>
+        <p className="text-[11px] text-amber-200/90">
+          {t("manual")}
+          {detected && detected !== chosen
+            ? ` ${t("disagrees", { system: nameOf(detected) })}`
+            : null}
+        </p>
       ) : null}
     </div>
   );

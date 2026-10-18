@@ -25,7 +25,8 @@
   "system": {
     "label": "Sistema",
     "auto": "Detección automática",
-    "manual": "Elegido a mano: se ignora la detección hasta que vuelvas a la detección automática."
+    "manual": "Elegido a mano: se ignora la detección hasta que vuelvas a la detección automática.",
+    "disagrees": "La detección indica {system}."
   },
   "here": "Mi posición",
   "space": "En el espacio",

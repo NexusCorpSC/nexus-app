@@ -33,11 +33,8 @@ import {
   MAX_TRAVEL_AGE_MS,
   type Fix,
 } from "@/lib/nps";
-import {
-  onSystemChoiceChange,
-  readSystemChoice,
-  withChosenSystem,
-} from "@/lib/nps-system";
+import { withChosenSystem } from "@/lib/nps-system";
+import { useSystemChoice } from "@/hooks/use-system-choice";
 import { readNpsDestination, setDestination } from "@/lib/nps-destination";
 import { notify } from "@/lib/notifications";
 import { getApiBaseUrl, getNpsSystem } from "@/lib/settings";
@@ -98,7 +95,8 @@ export default function MarkersPage() {
   const [deleting, setDeleting] = useState<Marker | null>(null);
   const [fix, setFix] = useState<Fix | null>(null);
   const [storedSystem, setStoredSystem] = useState<string | null>(null);
-  const [chosenSystem, setChosenSystem] = useState<string | null>(null);
+  // Le système choisi à la main dans le NPS l'emporte sur les relevés.
+  const [chosenSystem] = useSystemChoice();
   useMarkersSync();
 
   const list = useQuery({
@@ -135,32 +133,11 @@ export default function MarkersPage() {
     };
   }, []);
 
-  // Le système choisi à la main dans le NPS l'emporte sur les relevés.
-  useEffect(() => {
-    let alive = true;
-    function refresh() {
-      void readSystemChoice()
-        .then((slug) => {
-          if (alive) setChosenSystem(slug);
-        })
-        .catch((error) =>
-          console.error("cannot read the chosen NPS system", error),
-        );
-    }
-    refresh();
-    const pending = onSystemChoiceChange(refresh);
-    return () => {
-      alive = false;
-      void pending.then((stop) => stop()).catch(() => {});
-    };
-  }, []);
-
   // Un relevé de plus de dix minutes ne dit plus où l'on est.
   const fresh = fix && Date.now() - fix.at <= MAX_TRAVEL_AGE_MS ? fix : null;
-  const recent =
-    fresh && nps.data
-      ? withChosenSystem(fresh, systemsOf(nps.data), chosenSystem)
-      : fresh;
+  const recent = fresh
+    ? withChosenSystem(fresh, nps.data ? systemsOf(nps.data) : [], chosenSystem)
+    : null;
   const body = recent ? bodyAt(recent, bodies) : null;
   const system =
     chosenSystem ?? recent?.system ?? body?.systemSlug ?? storedSystem;
