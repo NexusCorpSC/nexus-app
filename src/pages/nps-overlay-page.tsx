@@ -93,7 +93,6 @@ import {
   systemPositionOf,
   systemsOf,
   toBodyFrame,
-  withSystem,
   type Fix,
 } from "@/lib/nps";
 import {
@@ -102,6 +101,12 @@ import {
   setDestination,
   type NpsDestination,
 } from "@/lib/nps-destination";
+import {
+  onSystemChoiceChange,
+  readSystemChoice,
+  setSystemChoice,
+  withChosenSystem,
+} from "@/lib/nps-system";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import {
   DEFAULT_MARKER_DEFAULTS,
@@ -282,6 +287,9 @@ export default function NpsOverlayPage() {
   // `/showlocation` in open space, coordinates do not tell Stanton from Pyro,
   // each centred on its own star.
   const [lastSystem, setLastSystem] = useState<string | null>(null);
+  // The system the player picked by hand: it outranks the readings, which
+  // still mistake Nyx for Stanton at times, until they go back to automatic.
+  const [chosenSystem, setChosenSystem] = useState<string | null>(null);
   // Arrivé à un marqueur, « Le garder » range la question pour celui-là.
   const [keptMarker, setKeptMarker] = useState<string | null>(null);
   const [arrivalError, setArrivalError] = useState<string | null>(null);
@@ -301,12 +309,13 @@ export default function NpsOverlayPage() {
     () => systemsOf({ bodies, places }),
     [bodies, places],
   );
-  // Each reading with the system its zones name: the only word on it far from
-  // any body, or in a system whose bodies the site does not describe yet
-  // (Nyx). Every body found for it is then one of that system.
+  // Each reading with the system picked by hand, or else the one its zones
+  // name: the only word on it far from any body, or in a system whose bodies
+  // the site does not describe yet (Nyx). Every body found for it is then one
+  // of that system.
   const history = useMemo(
-    () => readings.map((one) => withSystem(one, systems)),
-    [readings, systems],
+    () => readings.map((one) => withChosenSystem(one, systems, chosenSystem)),
+    [readings, systems, chosenSystem],
   );
   const fix = history.length > 0 ? history[history.length - 1] : null;
 
@@ -409,6 +418,25 @@ export default function NpsOverlayPage() {
   }, []);
 
   useEffect(() => {
+    let alive = true;
+    function refresh() {
+      void readSystemChoice()
+        .then((slug) => {
+          if (alive) setChosenSystem(slug);
+        })
+        .catch((error) =>
+          console.error("cannot read the chosen NPS system", error),
+        );
+    }
+    refresh();
+    const pending = onSystemChoiceChange(refresh);
+    return () => {
+      alive = false;
+      void pending.then((stop) => stop()).catch(() => {});
+    };
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), TICK_MS);
     return () => clearInterval(timer);
   }, []);
@@ -440,7 +468,7 @@ export default function NpsOverlayPage() {
   );
   const body = fix ? bodyAt(fix, bodies) : null;
   const seen = fix?.system ?? body?.systemSlug ?? null;
-  const system = seen ?? lastSystem;
+  const system = chosenSystem ?? seen ?? lastSystem;
   const shareError = usePositionReporting(fix, bodies, system, share.sharing);
 
   // Le joueur suivi a bougé : la copie gardée avec la destination suit, pour
@@ -489,10 +517,10 @@ export default function NpsOverlayPage() {
 
   // Ce que le raccourci lit au moment où il part : il écoute une fois pour
   // toutes, et l'état aura changé d'ici là.
-  const latest = useRef({ fix, system, live });
+  const latest = useRef({ fix, system, chosenSystem, live });
   useEffect(() => {
-    latest.current = { fix, system, live };
-  }, [fix, system, live]);
+    latest.current = { fix, system, chosenSystem, live };
+  }, [fix, system, chosenSystem, live]);
   const marking = useRef(false);
 
   useEffect(() => {
@@ -531,7 +559,11 @@ export default function NpsOverlayPage() {
           queryKey: ["nps"],
           queryFn: getNpsData,
         });
-        reading = withSystem(reading, systemsOf(nps));
+        reading = withChosenSystem(
+          reading,
+          systemsOf(nps),
+          latest.current.chosenSystem,
+        );
         const system = latest.current.system;
         const where = whereOf(reading, nps, system);
         const located = markerPositionOf(reading, nps.bodies, system);
@@ -805,6 +837,18 @@ export default function NpsOverlayPage() {
             ) : !fix && !live ? (
               <p className="text-[11px] text-slate-400">{t("hint")}</p>
             ) : null}
+            <SystemPicker
+              systems={systems}
+              names={[...bodies, ...places]}
+              chosen={chosenSystem}
+              locked={locked}
+              onChange={(slug) => {
+                setChosenSystem(slug);
+                void setSystemChoice(slug).catch((error) =>
+                  console.error("cannot save the chosen NPS system", error),
+                );
+              }}
+            />
           </section>
 
           {fix ? (
@@ -1288,6 +1332,63 @@ function Guidance({
     </div>
   );
 }
+
+/**
+ * The system the player says they are in, for when the readings get it wrong:
+ * automatic by default, a choice kept until they go back to it.
+ */
+function SystemPicker({
+  systems,
+  names,
+  chosen,
+  locked,
+  onChange,
+}: {
+  systems: string[];
+  names: { systemSlug?: string; systemName?: string }[];
+  chosen: string | null;
+  locked: boolean;
+  onChange: (slug: string | null) => void;
+}) {
+  const t = useTranslations("NpsOverlay.system");
+  const options =
+    chosen && !systems.includes(chosen) ? [...systems, chosen] : systems;
+  const nameOf = (slug: string) =>
+    names.find((one) => one.systemSlug === slug)?.systemName ?? slug;
+  return (
+    <div className="space-y-1">
+      <label className="flex items-center gap-2 text-[12px] text-slate-300">
+        <span className="shrink-0">{t("label")}</span>
+        <select
+          value={chosen ?? AUTO_SYSTEM}
+          disabled={locked}
+          onChange={(event) =>
+            onChange(
+              event.target.value === AUTO_SYSTEM ? null : event.target.value,
+            )
+          }
+          className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-1 py-1 text-[12px] text-slate-200 focus:outline-none disabled:opacity-40"
+        >
+          <option value={AUTO_SYSTEM}>{t("auto")}</option>
+          {options
+            .map((slug) => ({ slug, name: nameOf(slug) }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((one) => (
+              <option key={one.slug} value={one.slug}>
+                {one.name}
+              </option>
+            ))}
+        </select>
+      </label>
+      {chosen ? (
+        <p className="text-[11px] text-amber-200/90">{t("manual")}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** The value of the automatic choice: no system slug looks like it. */
+const AUTO_SYSTEM = "";
 
 /**
  * Following the player off the screen: the game's debug lines, read every

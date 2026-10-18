@@ -22,6 +22,11 @@
     "failed": "La lecture de l'écran a échoué : {message}",
     "reading": "Position suivie à l'écran."
   },
+  "system": {
+    "label": "Système",
+    "auto": "Détection automatique",
+    "manual": "Choisi à la main : la détection est ignorée jusqu'au retour à la détection automatique."
+  },
   "here": "Ma position",
   "space": "Dans l'espace",
   "age": "il y a {age}",

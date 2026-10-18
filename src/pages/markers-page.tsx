@@ -28,12 +28,16 @@ import { openMarkForm, withDistances } from "@/lib/markers";
 import {
   bodyAt,
   systemsOf,
-  withSystem,
   formatDistance,
   inSystem,
   MAX_TRAVEL_AGE_MS,
   type Fix,
 } from "@/lib/nps";
+import {
+  onSystemChoiceChange,
+  readSystemChoice,
+  withChosenSystem,
+} from "@/lib/nps-system";
 import { readNpsDestination, setDestination } from "@/lib/nps-destination";
 import { notify } from "@/lib/notifications";
 import { getApiBaseUrl, getNpsSystem } from "@/lib/settings";
@@ -94,6 +98,7 @@ export default function MarkersPage() {
   const [deleting, setDeleting] = useState<Marker | null>(null);
   const [fix, setFix] = useState<Fix | null>(null);
   const [storedSystem, setStoredSystem] = useState<string | null>(null);
+  const [chosenSystem, setChosenSystem] = useState<string | null>(null);
   useMarkersSync();
 
   const list = useQuery({
@@ -130,18 +135,38 @@ export default function MarkersPage() {
     };
   }, []);
 
+  // Le système choisi à la main dans le NPS l'emporte sur les relevés.
+  useEffect(() => {
+    let alive = true;
+    function refresh() {
+      void readSystemChoice()
+        .then((slug) => {
+          if (alive) setChosenSystem(slug);
+        })
+        .catch((error) =>
+          console.error("cannot read the chosen NPS system", error),
+        );
+    }
+    refresh();
+    const pending = onSystemChoiceChange(refresh);
+    return () => {
+      alive = false;
+      void pending.then((stop) => stop()).catch(() => {});
+    };
+  }, []);
+
   // Un relevé de plus de dix minutes ne dit plus où l'on est.
   const fresh = fix && Date.now() - fix.at <= MAX_TRAVEL_AGE_MS ? fix : null;
   const recent =
-    fresh && nps.data ? withSystem(fresh, systemsOf(nps.data)) : fresh;
+    fresh && nps.data
+      ? withChosenSystem(fresh, systemsOf(nps.data), chosenSystem)
+      : fresh;
   const body = recent ? bodyAt(recent, bodies) : null;
-  const system = recent?.system ?? body?.systemSlug ?? storedSystem;
+  const system =
+    chosenSystem ?? recent?.system ?? body?.systemSlug ?? storedSystem;
 
   const markers = useMemo(() => list.data?.markers ?? [], [list.data]);
-  const collections = useMemo(
-    () => list.data?.collections ?? [],
-    [list.data],
-  );
+  const collections = useMemo(() => list.data?.collections ?? [], [list.data]);
   const loose = markers.filter((marker) => !marker.collectionId).length;
 
   const needle = search.trim().toLowerCase();

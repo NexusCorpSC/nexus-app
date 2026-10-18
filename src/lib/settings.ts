@@ -50,6 +50,7 @@ const KEY_CARGO_SHEET = "cargoSheet";
 const KEY_PINNED_MAP = "pinnedMap";
 const KEY_NPS_DESTINATION = "npsDestination";
 const KEY_NPS_SYSTEM = "npsSystem";
+const KEY_NPS_SYSTEM_CHOICE = "npsSystemChoice";
 const KEY_NPS_SCREEN = "npsScreen";
 const KEY_MARKER_DEFAULTS = "markerDefaults";
 const KEY_CARGO_SHIPS = "cargoShips";
@@ -710,6 +711,21 @@ export async function getNpsSystem(): Promise<string | null> {
 export async function setNpsSystem(slug: string): Promise<void> {
   const store = await getStore();
   await store.set(KEY_NPS_SYSTEM, slug);
+}
+
+/**
+ * The star system the player said they are in, from the NPS overlay: it
+ * outranks what the readings say until they go back to automatic (`null`).
+ */
+export async function getNpsSystemChoice(): Promise<string | null> {
+  const store = await getStore();
+  return (await store.get<string>(KEY_NPS_SYSTEM_CHOICE)) ?? null;
+}
+
+export async function setNpsSystemChoice(slug: string | null): Promise<void> {
+  const store = await getStore();
+  if (slug) await store.set(KEY_NPS_SYSTEM_CHOICE, slug);
+  else await store.delete(KEY_NPS_SYSTEM_CHOICE);
 }
 
 /**
