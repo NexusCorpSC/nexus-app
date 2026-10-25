@@ -5,10 +5,16 @@
 //! Rust rather than from a webview for the reason the squad overlay used to
 //! poll from *its* webview and nowhere else: a window knows nothing of the
 //! others, and seven of them each holding a stream would be seven sessions
-//! checked for one user. Here there is one, opened as soon as a session
-//! exists — whatever window is up, since a notification has to arrive while
-//! the app sits in the tray — and each event is handed to the window that
-//! draws it.
+//! checked for one user. Here there is one, and each event is handed to the
+//! window that draws it.
+//!
+//! It is open only while a session exists *and* a window that draws one of
+//! its topics is on screen (see [`CONSUMER_WINDOWS`]), plus a minute. An open
+//! stream keeps a server function running, and the server pays for every
+//! second of it whether anything is said or not: an app left in the tray all
+//! day held one all day, three quarters of the site's function memory bill.
+//! Nothing it carries is needed off screen — the last views are kept, and the
+//! snapshots sent when the stream opens again bring them up to date.
 //!
 //! The protocol is the server's (`types/events.ts` in nexus-tools): every topic
 //! sends a snapshot when the stream opens, then an event per change, a `: ping`
@@ -29,7 +35,7 @@ use tauri_plugin_store::StoreExt;
 use tokio::sync::watch;
 
 use crate::diagnostics::log;
-use crate::SQUAD_WINDOW;
+use crate::{MAIN_WINDOW, NOTES_WINDOW, PLAN_WINDOW, SQUAD_WINDOW};
 
 /// Carries a `SquadView` to the squad overlay, tagged with the squad it was
 /// asked for.
@@ -79,6 +85,16 @@ const BACKOFF_MAX: Duration = Duration::from_secs(30);
 const STABLE_AFTER: Duration = Duration::from_secs(30);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// The windows that draw a topic of the stream: the main one (home page and
+/// notepad), the notepad overlay, the squad overlay and the plan overlay.
+const CONSUMER_WINDOWS: [&str; 4] = [MAIN_WINDOW, NOTES_WINDOW, SQUAD_WINDOW, PLAN_WINDOW];
+
+/// How often the windows are looked at.
+const DEMAND_CHECK: Duration = Duration::from_secs(2);
+/// How long the stream outlives the last of them, so an overlay toggled off
+/// and on again finds it still there.
+const DEMAND_LINGER: Duration = Duration::from_secs(60);
+
 /// Against a server without `/api/events`, how often the squad is read instead.
 const POLL_FALLBACK: Duration = Duration::from_secs(10);
 /// How long that lasts before the stream is tried again.
@@ -88,7 +104,7 @@ const REPROBE_AFTER: Duration = Duration::from_secs(5 * 60);
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum FeedStatus {
-    /// No session: nothing to connect with.
+    /// No session, or no window that needs the stream: nothing is open.
     #[default]
     Idle,
     Connecting,
@@ -153,6 +169,9 @@ struct FeedState {
     /// Whether the squad overlay is on screen. Only the polling fallback
     /// cares: a stream costs the same whatever is visible, a poll does not.
     squad_visible: bool,
+    /// Whether a window that draws the stream is on screen, or was a moment
+    /// ago. Without it, no stream is open even with a session.
+    demand: bool,
     status: FeedStatus,
     last_squad: Option<SquadFeedView>,
     last_note: Option<Value>,
@@ -187,6 +206,50 @@ fn lock(app: &AppHandle) -> Result<MutexGuard<'_, FeedState>, String> {
 pub(crate) fn install(app: &AppHandle) {
     let handle = app.clone();
     app.listen_any(SESSION_CHANGED_EVENT, move |_| sync(&handle));
+
+    let handle = app.clone();
+    tauri::async_runtime::spawn(watch_demand(handle));
+}
+
+/// Whether a window that draws the stream is shown: neither hidden (closed to
+/// the tray, overlay toggled off) nor minimized.
+fn consumer_on_screen(app: &AppHandle) -> bool {
+    CONSUMER_WINDOWS.iter().any(|label| {
+        app.get_webview_window(label).is_some_and(|window| {
+            window.is_visible().unwrap_or(false) && !window.is_minimized().unwrap_or(false)
+        })
+    })
+}
+
+/// Keeps `demand` in step with the windows, and the stream with `demand`.
+///
+/// Looked at every couple of seconds rather than told by every place that
+/// shows or hides a window: there are many such places, a missed one would
+/// leave the stream open or a window without it, and the check costs nothing.
+async fn watch_demand(app: AppHandle) {
+    let mut last_seen: Option<Instant> = None;
+    let mut interval = tokio::time::interval(DEMAND_CHECK);
+
+    loop {
+        interval.tick().await;
+
+        if consumer_on_screen(&app) {
+            last_seen = Some(Instant::now());
+        }
+        let demand = last_seen.is_some_and(|seen| seen.elapsed() < DEMAND_LINGER);
+
+        let changed = match lock(&app) {
+            Ok(mut state) if state.demand != demand => {
+                state.demand = demand;
+                true
+            }
+            _ => false,
+        };
+
+        if changed {
+            sync(&app);
+        }
+    }
 }
 
 /// Told by `announce_squad_visibility`, which is where showing and hiding happen.
@@ -236,7 +299,8 @@ pub(crate) fn sync(app: &AppHandle) {
         return;
     };
 
-    let wanted = cookie.map(|cookie| Target {
+    let signed_in = cookie.is_some();
+    let wanted = cookie.filter(|_| state.demand).map(|cookie| Target {
         base_url,
         cookie,
         squad: state.squad.clone(),
@@ -253,12 +317,20 @@ pub(crate) fn sync(app: &AppHandle) {
     match wanted {
         None => {
             state.status = FeedStatus::Idle;
-            state.last_squad = None;
-            state.last_note = None;
-            state.last_plan = None;
+            // Off screen, the last views are kept for the window that comes
+            // back; signed out, they belong to nobody any more.
+            if !signed_in {
+                state.last_squad = None;
+                state.last_note = None;
+                state.last_plan = None;
+            }
             drop(state);
             announce_status(app, FeedStatus::Idle);
-            log("event feed: stopped (no session)");
+            log(if signed_in {
+                "event feed: stopped (no window needs it)"
+            } else {
+                "event feed: stopped (no session)"
+            });
         }
         Some(target) => {
             state.generation += 1;
