@@ -938,7 +938,8 @@ export type SquadMemberPatch = {
  * Where the event stream Rust holds to the API stands. Mirrors `FeedStatus`
  * in `src-tauri/src/event_feed.rs`, string for string.
  *
- * - `idle`: no session, nothing to connect with;
+ * - `idle`: no session, or no window that draws the stream on screen (it
+ *   closes a minute after the last one is hidden), so nothing is open;
  * - `polling`: the server has no stream to offer (it predates it), and the
  *   squad is read every few seconds while its overlay is up instead;
  * - `unauthorized`: the session was refused; stopped until it changes.
