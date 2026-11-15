@@ -5,11 +5,13 @@ import {
   getNotificationCorner,
   getInviteNotifications,
   getOrderNotifications,
+  getRequestNotifications,
   getRefiningNotifications,
   setContribNotifications,
   setNotificationCorner,
   setInviteNotifications,
   setOrderNotifications,
+  setRequestNotifications,
   setRefiningNotifications,
 } from "@/lib/settings";
 import {
@@ -45,6 +47,7 @@ export function NotificationsSection() {
 
   const [contrib, setContrib] = useState(true);
   const [orders, setOrders] = useState(true);
+  const [requests, setRequests] = useState(true);
   const [invites, setInvites] = useState(true);
   const [refining, setRefining] = useState(true);
 
@@ -52,6 +55,7 @@ export function NotificationsSection() {
     void getNotificationCorner().then(setCorner);
     void getContribNotifications().then(setContrib);
     void getOrderNotifications().then(setOrders);
+    void getRequestNotifications().then(setRequests);
     void getInviteNotifications().then(setInvites);
     void getRefiningNotifications().then(setRefining);
   }, []);
@@ -80,6 +84,16 @@ export function NotificationsSection() {
     setOrders(next);
     void setOrderNotifications(next).catch((cause) => {
       setOrders(!next);
+      setNotificationError(
+        cause instanceof Error ? cause.message : t("contribError"),
+      );
+    });
+  }
+
+  function handleRequestsChange(next: boolean) {
+    setRequests(next);
+    void setRequestNotifications(next).catch((cause) => {
+      setRequests(!next);
       setNotificationError(
         cause instanceof Error ? cause.message : t("contribError"),
       );
@@ -205,6 +219,21 @@ export function NotificationsSection() {
               {t("orders")}
               <small className="mt-0.5 block text-xs text-nexus-dim">
                 {t("ordersHint")}
+              </small>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={requests}
+              onChange={(event) => handleRequestsChange(event.target.checked)}
+              className="mt-0.5 accent-nexus-accent"
+            />
+            <span>
+              {t("requests")}
+              <small className="mt-0.5 block text-xs text-nexus-dim">
+                {t("requestsHint")}
               </small>
             </span>
           </label>

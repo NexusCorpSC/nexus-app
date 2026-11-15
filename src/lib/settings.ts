@@ -62,6 +62,8 @@ const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
 const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
 const KEY_ORDERS_SINCE = "ordersSince";
+const KEY_REQUEST_NOTIFICATIONS = "requestNotifications";
+const KEY_REQUESTS_SINCE = "requestsSince";
 const KEY_REFINING_NOTIFICATIONS = "refiningNotifications";
 const KEY_REFINING_NOTIFIED = "refiningNotified";
 const KEY_INVITE_NOTIFICATIONS = "inviteNotifications";
@@ -516,6 +518,46 @@ export async function setOrdersSince(
   const store = await getStore();
   const marks = await store.get<unknown>(KEY_ORDERS_SINCE);
   await store.set(KEY_ORDERS_SINCE, {
+    ...(marks && typeof marks === "object" ? marks : {}),
+    [await accountInstanceKey(userId)]: since,
+  });
+}
+
+/**
+ * Whether activity on the request board raises a notification: a request from
+ * a friend or an organization, an offer, a message, a step on an offer. On
+ * unless turned off. The site's own setting («Me prévenir des nouvelles
+ * demandes») decides whether new requests are recorded at all.
+ */
+export async function getRequestNotifications(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_REQUEST_NOTIFICATIONS);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setRequestNotifications(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_REQUEST_NOTIFICATIONS, enabled);
+}
+
+/** The site's clock at the last read of the requests, like the orders'. */
+export async function getRequestsSince(userId: string): Promise<string | null> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_REQUESTS_SINCE);
+  if (!marks || typeof marks !== "object") return null;
+  const value = (marks as Record<string, unknown>)[
+    await accountInstanceKey(userId)
+  ];
+  return typeof value === "string" ? value : null;
+}
+
+export async function setRequestsSince(
+  userId: string,
+  since: string,
+): Promise<void> {
+  const store = await getStore();
+  const marks = await store.get<unknown>(KEY_REQUESTS_SINCE);
+  await store.set(KEY_REQUESTS_SINCE, {
     ...(marks && typeof marks === "object" ? marks : {}),
     [await accountInstanceKey(userId)]: since,
   });

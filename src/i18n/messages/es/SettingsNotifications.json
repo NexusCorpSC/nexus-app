@@ -23,6 +23,8 @@
   "contribError": "No se pudo guardar el ajuste.",
   "orders": "Mis pedidos",
   "ordersHint": "Un pedido recibido por una de mis tiendas, o un paso dado en un pedido.",
+  "requests": "Tablón de peticiones",
+  "requestsHint": "Una petición de un amigo o de una org, una oferta en mis peticiones, un mensaje o un paso en una oferta.",
   "refining": "Órdenes de refinado terminadas",
   "refiningHint": "Cuando una orden de refinado llega a su fin, para ir a recogerla.",
   "invites": "Invitaciones",

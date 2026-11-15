@@ -26,6 +26,8 @@ import OrgDetailPage from "@/pages/org-detail-page";
 import OrgEventPage from "@/pages/org-event-page";
 import FriendsPage from "@/pages/friends-page";
 import OrdersPage from "@/pages/orders-page";
+import RequestDetailPage from "@/pages/request-detail-page";
+import RequestsPage from "@/pages/requests-page";
 import RefiningPage from "@/pages/refining-page";
 import SettingsPage from "@/pages/settings-page";
 import HomePage from "@/pages/home-page";
@@ -134,6 +136,8 @@ export default function App() {
           <Route path="events/:eventId" element={<OrgEventPage />} />
           <Route path="friends" element={<FriendsPage />} />
           <Route path="orders" element={<OrdersPage />} />
+          <Route path="requests" element={<RequestsPage />} />
+          <Route path="requests/:requestId" element={<RequestDetailPage />} />
           <Route path="refining" element={<RefiningPage />} />
           <Route path="markers" element={<MarkersPage />} />
           <Route

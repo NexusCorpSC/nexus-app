@@ -1,0 +1,209 @@
+{
+  "title": "Tableau des demandes",
+  "subtitle": "Ce que vos amis, vos orgas et la communauté cherchent. Répondez « J'en ai » et négociez en privé.",
+  "backToBoard": "Retour au tableau",
+  "iHaveIt": "J'en ai",
+  "negotiable": "à négocier",
+  "unitShort": "u.",
+  "cancel": "Annuler",
+  "sending": "Envoi…",
+  "tabs": {
+    "label": "Vues du tableau",
+    "board": "Tableau",
+    "mine": "Mes demandes",
+    "offers": "Mes offres"
+  },
+  "filters": {
+    "search": "Rechercher un objet, un matériau…",
+    "all": "Tout",
+    "audience": {
+      "friends": "Amis",
+      "orgs": "Mes orgas",
+      "public": "Public"
+    },
+    "kind": {
+      "resource": "Matériaux",
+      "item": "Objets",
+      "vehicle": "Vaisseaux"
+    },
+    "supply": "Je peux fournir"
+  },
+  "kinds": {
+    "resource": "Matériau",
+    "item": "Objet",
+    "weapon": "Arme",
+    "vehicle": "Vaisseau",
+    "other": "Saisie libre"
+  },
+  "audience": {
+    "friends": "Amis",
+    "org": "Orga",
+    "public": "Public"
+  },
+  "requestStatus": {
+    "OPEN": "Ouverte",
+    "FILLED": "Pourvue",
+    "EXPIRED": "Expirée",
+    "CLOSED": "Clôturée"
+  },
+  "offerStatus": {
+    "NEW": "Nouvelle",
+    "KEPT": "Retenue",
+    "RECEIVED": "Reçue",
+    "DECLINED": "Déclinée",
+    "WITHDRAWN": "Retirée"
+  },
+  "fields": {
+    "quantity": "Quantité",
+    "requested": "Demandé",
+    "quality": "Qualité",
+    "pricePer": "Prix / {unit}",
+    "pricePerUnit": "Prix / u."
+  },
+  "progress": "{received} reçus sur {quantity}",
+  "receivedRemaining": "Reçu {received} · reste {remaining} · {offers, plural, =0 {aucune offre en cours} one {# offre en cours} other {# offres en cours}}",
+  "pickupAt": "Remise {place}",
+  "expires": "expire {when}",
+  "youHave": "Vous en avez {quantity}{quality}",
+  "youHaveAt": "Vous en avez {quantity}{quality} à {place}",
+  "offerCount": "{count, plural, one {# offre} other {# offres}}",
+  "openMyOffer": "Voir mon offre",
+  "emptyBoard": "Aucune demande ouverte ici pour l'instant.",
+  "emptyMine": "Vous n'avez publié aucune demande ces derniers jours.",
+  "emptyOffers": "Vous n'avez fait aucune offre ces derniers jours.",
+  "moreResults": "{shown} demandes affichées sur {total} : affinez la recherche pour voir les autres.",
+  "tradeInGame": "L'échange se fait en jeu : Nexus garde seulement la trace de ce qui reste à trouver.",
+  "offers": {
+    "label": "Offres",
+    "title": "{count, plural, =0 {Offres} one {# offre} other {# offres}}",
+    "mine": "Mon offre",
+    "emptyMine": "Aucune offre pour l'instant. Vos amis et vos orgas ont été prévenus.",
+    "emptyOther": "Vous n'avez pas encore répondu à cette demande.",
+    "to": "pour {name}"
+  },
+  "offer": {
+    "title": "Proposer à {name} · {item}",
+    "fromInventory": "Depuis mon inventaire",
+    "belowMinimum": "Sous le minimum demandé",
+    "noLot": "Sans lot",
+    "noLotHint": "Je n'ai pas encore la marchandise",
+    "quantity": "Quantité proposée",
+    "quality": "Qualité",
+    "message": "Message",
+    "messagePlaceholder": "Dispo ce soir, je peux livrer…",
+    "send": "Envoyer l'offre",
+    "subtitle": "Il reste {quantity} à trouver. Vous négociez ensuite en privé ; l’échange se fait en jeu.",
+    "total": "Total : {total} aUEC"
+  },
+  "thread": {
+    "label": "Conversation",
+    "yourOffer": "Votre offre",
+    "you": "Vous",
+    "lotAt": "Lot de l'inventaire à {place}",
+    "priceProposal": "Prix proposé : {price} aUEC / {unit}",
+    "write": "Écrire un message…",
+    "send": "Envoyer"
+  },
+  "events": {
+    "NEW": "Offre envoyée par {name}",
+    "KEPT": "Offre retenue par {name}",
+    "RECEIVED": "{name} a reçu {quantity}",
+    "DECLINED": "Offre déclinée par {name}",
+    "WITHDRAWN": "Offre retirée par {name}"
+  },
+  "actions": {
+    "price": "Proposer un prix",
+    "proposePrice": "Proposer",
+    "keep": "Retenir l'offre",
+    "receive": "Reçu",
+    "decline": "Décliner",
+    "withdraw": "Retirer mon offre"
+  },
+  "receive": {
+    "title": "Reçu de {name}",
+    "subtitle": "La quantité reçue est déduite de ce qui reste à trouver.",
+    "quantity": "Quantité reçue",
+    "store": "Ajouter à mon inventaire",
+    "where": "Lieu de rangement",
+    "confirm": "Marquer reçu",
+    "inventoryFailed": "Reçu enregistré, mais l'ajout à votre inventaire a échoué : rangez-le à la main."
+  },
+  "owner": {
+    "edit": "Modifier",
+    "extend": "Prolonger",
+    "extendBy": "Prolonger de",
+    "close": "Clôturer",
+    "closeConfirm": "Clôturer la demande ?",
+    "closeYes": "Oui, clôturer"
+  },
+  "form": {
+    "title": "Publier une demande",
+    "editTitle": "Modifier la demande",
+    "subtitle": "Vos amis et vos orgas la voient sur le tableau et sont prévenus. Ceux qui en ont vous font une offre, puis vous négociez en privé.",
+    "what": "Ce que je cherche",
+    "whatPlaceholder": "Riccite, FS-9 LMG, Cutlass Black…",
+    "whatHint": "Un objet du catalogue ou un texte libre.",
+    "catalogKind": "{kind} du catalogue",
+    "freeText": "Pas dans le catalogue : la demande garde ce nom.",
+    "unit": "Unité",
+    "units": "Unités",
+    "minQuality": "Qualité minimale",
+    "minQualityPlaceholder": "sur 1000",
+    "pickup": "Lieu de remise",
+    "pickupPlaceholder": "Station, ville, avant-poste…",
+    "clearPickup": "Retirer le lieu",
+    "priceHint": "Vide : « à négocier ».",
+    "audience": "Visible par",
+    "myFriends": "Mes amis",
+    "audienceHint": "Vos amis et les membres des orgas cochées la voient et sont prévenus. Public : tout joueur connecté.",
+    "expiresIn": "Expire dans",
+    "days": "{count, plural, one {# jour} other {# jours}}",
+    "note": "Note",
+    "notePlaceholder": "Pour quoi, quand, si vous pouvez venir chercher…",
+    "optional": "facultatif",
+    "publish": "Publier",
+    "save": "Enregistrer"
+  },
+  "errors": {
+    "generic": "Ça n'a pas marché. Réessayez.",
+    "load": "La demande n'a pas pu être lue.",
+    "name": "Dites ce que vous cherchez.",
+    "quantity": "Indiquez une quantité supérieure à zéro.",
+    "wholeQuantity": "Des objets se comptent en nombre entier.",
+    "audience": "Choisissez qui voit la demande : amis, orgas ou public.",
+    "location": "Choisissez où ranger ce que vous recevez.",
+    "invalid": "Un champ n'est pas valide. Vérifiez la saisie.",
+    "notFound": "Cette demande n'existe plus ou ne vous est pas visible.",
+    "notAllowed": "Ce n'est plus possible : l'offre a changé entre-temps.",
+    "tooManyOpen": "Vous avez déjà 20 demandes ouvertes. Clôturez-en une avant d'en publier une autre.",
+    "tooManyOffers": "Vous avez envoyé 30 offres aujourd'hui. Réessayez demain.",
+    "alreadyOffered": "Vous avez déjà une offre en cours sur cette demande.",
+    "ownRequest": "Vous ne pouvez pas répondre à votre propre demande.",
+    "closed": "Cette demande n'est plus ouverte.",
+    "notMember": "Vous n'êtes pas membre d'une des orgas choisies.",
+    "receivedTooMuch": "Vous ne pouvez pas recevoir plus que la quantité de l'offre."
+  },
+  "onSite": "Sur le site",
+  "byYou": "Vous",
+  "open": "Ouvrir",
+  "minQuality": "Q ≥ {quality}",
+  "priceEach": "{price} aUEC / {unit}",
+  "alerts": "Annoncer les demandes de mes amis et orgas",
+  "notify": {
+    "request": "{name} cherche…",
+    "requestOrg": "{name} ({org}) cherche…",
+    "offer": "{name} vous fait une offre",
+    "message": "{name} vous a écrit",
+    "price": "{name} propose {price} aUEC",
+    "status": {
+      "NEW": "{name} a fait une offre",
+      "KEPT": "{name} a retenu votre offre",
+      "RECEIVED": "{name} a reçu votre livraison",
+      "DECLINED": "{name} a décliné votre offre",
+      "WITHDRAWN": "{name} a retiré son offre"
+    },
+    "backlogTitle": "Demandes",
+    "backlog": "{count, plural, one {# autre nouvelle sur le tableau des demandes.} other {# autres nouvelles sur le tableau des demandes.}}"
+  },
+  "publish": "Publier une demande"
+}

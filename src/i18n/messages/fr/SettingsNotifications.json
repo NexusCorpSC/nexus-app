@@ -23,6 +23,8 @@
   "contribError": "Le réglage n'a pas pu être enregistré.",
   "orders": "Mes commandes",
   "ordersHint": "Commande reçue par un de mes magasins, ou étape franchie sur une commande.",
+  "requests": "Tableau des demandes",
+  "requestsHint": "Une demande d’un ami ou d’une orga, une offre sur mes demandes, un message ou une étape sur une offre.",
   "refining": "Ordres de raffinage terminés",
   "refiningHint": "Quand un ordre de raffinage arrive à son terme, pour aller le collecter.",
   "invites": "Invitations",
