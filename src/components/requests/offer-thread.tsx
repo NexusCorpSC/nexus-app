@@ -53,6 +53,8 @@ export function OfferThread({
   const [price, setPrice] = useState("");
   const [receiving, setReceiving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Après « Reçu » : l'ajout à l'inventaire a échoué, à ranger à la main.
+  const [inventoryFailed, setInventoryFailed] = useState(false);
 
   const refresh = () => {
     void queryClient.invalidateQueries({
@@ -83,7 +85,8 @@ export function OfferThread({
       action: OfferAction;
       input?: OfferActionInput;
     }) => actOnOffer(offer.id, action, input),
-    onSuccess: () => {
+    onSuccess: (result) => {
+      setInventoryFailed(result.inventory?.added === false);
       setPricing(false);
       setPrice("");
       setReceiving(false);
@@ -140,6 +143,11 @@ export function OfferThread({
 
       {error ? (
         <p className="px-4 pb-2 text-[13px] text-red-300">{error}</p>
+      ) : null}
+      {inventoryFailed ? (
+        <p className="px-4 pb-3 text-[13px] text-amber-300">
+          {t("receive.inventoryFailed")}
+        </p>
       ) : null}
 
       {active ? (
@@ -370,6 +378,7 @@ function ReceiveModal({
     if (!Number.isFinite(amount) || amount <= 0) {
       return setError(t("errors.quantity"));
     }
+    if (amount > offer.quantity) return setError(t("errors.receivedTooMuch"));
     if (store && !location) return setError(t("errors.location"));
     onConfirm({
       quantity: amount,

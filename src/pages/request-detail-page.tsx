@@ -32,6 +32,7 @@ import {
 } from "@/lib/requests";
 import { formatAgo, formatDate } from "@/lib/utils";
 import {
+  ACTIVE_OFFER_STATUSES,
   quantityLabel,
   REQUEST_EXPIRY_DAYS,
   requestPath,
@@ -83,8 +84,11 @@ export default function RequestDetailPage() {
   }
 
   const { request, offers } = detail.data;
+  // Une offre déclinée ou retirée n'empêche pas d'en refaire une, comme sur le site.
   const canOffer =
-    !request.mine && !request.myOffer && request.status === "OPEN";
+    !request.mine &&
+    !offers.some((offer) => ACTIVE_OFFER_STATUSES.includes(offer.status)) &&
+    request.status === "OPEN";
 
   return (
     <>

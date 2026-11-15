@@ -120,10 +120,15 @@ export function actOnOffer(
   action: OfferAction,
   input: OfferActionInput = {},
 ) {
-  return apiRequest<{ offer: RequestOffer; request: PlayerRequest }>(
-    `/api/requests/offers/${encodeURIComponent(offerId)}`,
-    { method: "POST", body: { ...input, action } },
-  );
+  return apiRequest<{
+    offer: RequestOffer;
+    request: PlayerRequest;
+    /** Pour `receive` avec rangement : si l'ajout à l'inventaire a réussi. */
+    inventory?: { added: boolean; error?: string };
+  }>(`/api/requests/offers/${encodeURIComponent(offerId)}`, {
+    method: "POST",
+    body: { ...input, action },
+  });
 }
 
 /**

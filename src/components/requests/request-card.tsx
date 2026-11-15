@@ -4,7 +4,11 @@ import { useTranslations } from "use-intl";
 import { Button } from "@/components/ui";
 import { requestRoute } from "@/lib/requests";
 import { formatAgo } from "@/lib/utils";
-import { quantityLabel, type PlayerRequest } from "@/types/requests";
+import {
+  ACTIVE_OFFER_STATUSES,
+  quantityLabel,
+  type PlayerRequest,
+} from "@/types/requests";
 import {
   AudienceTags,
   OfferStatusTag,
@@ -26,8 +30,12 @@ export function RequestCard({
 }) {
   const t = useTranslations("Requests");
   const navigate = useNavigate();
-  const canOffer =
-    !request.mine && !request.myOffer && request.status === "OPEN";
+  // Une offre déclinée ou retirée n'empêche pas d'en refaire une, comme sur le site.
+  const activeOffer =
+    request.myOffer && ACTIVE_OFFER_STATUSES.includes(request.myOffer.status)
+      ? request.myOffer
+      : undefined;
+  const canOffer = !request.mine && !activeOffer && request.status === "OPEN";
   const supply = request.supply;
 
   return (
