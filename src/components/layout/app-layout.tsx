@@ -36,6 +36,7 @@ import {
   Search,
   Settings as SettingsIcon,
   ShoppingBag,
+  ClipboardList,
   Star,
   UserRound,
   Users,
@@ -47,6 +48,7 @@ import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useContribWatcher } from "@/hooks/use-contrib-watcher";
 import { useInvitationsWatcher } from "@/hooks/use-invitations-watcher";
 import { useOrdersWatcher } from "@/hooks/use-orders-watcher";
+import { useRequestsWatcher } from "@/hooks/use-requests-watcher";
 import {
   useReadyRefiningCount,
   useRefiningWatcher,
@@ -73,6 +75,7 @@ type NavKey =
   | "lore"
   | "inventory"
   | "orders"
+  | "requests"
   | "refining"
   | "reputations"
   | "friends"
@@ -134,6 +137,13 @@ const NAV_GROUPS: NavGroup[] = [
         to: "/orders",
         label: "orders",
         icon: ShoppingBag,
+        requiresAuth: true,
+      },
+      // Ce que les amis et les orgas cherchent, à côté des commandes.
+      {
+        to: "/requests",
+        label: "requests",
+        icon: ClipboardList,
         requiresAuth: true,
       },
       {
@@ -212,6 +222,7 @@ export default function AppLayout() {
   useContribWatcher(user?.id ?? null);
   useInvitationsWatcher(user?.id ?? null);
   useOrdersWatcher(user?.id ?? null);
+  useRequestsWatcher(user?.id ?? null);
   // Refining orders reaching their end, told from here as well.
   useRefiningWatcher(user?.id ?? null);
 

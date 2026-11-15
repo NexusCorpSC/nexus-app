@@ -40,6 +40,7 @@ import type Raid from "./messages/fr/Raid.json";
 import type Refining from "./messages/fr/Refining.json";
 import type Report from "./messages/fr/Report.json";
 import type Reputations from "./messages/fr/Reputations.json";
+import type Requests from "./messages/fr/Requests.json";
 import type Search from "./messages/fr/Search.json";
 import type SellLot from "./messages/fr/SellLot.json";
 import type Settings from "./messages/fr/Settings.json";
@@ -95,6 +96,7 @@ export type Messages = {
   Refining: typeof Refining;
   Report: typeof Report;
   Reputations: typeof Reputations;
+  Requests: typeof Requests;
   Search: typeof Search;
   SellLot: typeof SellLot;
   Settings: typeof Settings;

@@ -1,0 +1,207 @@
+{
+  "title": "Tablón de peticiones",
+  "subtitle": "Lo que buscan tus amigos, tus orgs y la comunidad. Responde «Lo tengo» y negocia en privado.",
+  "backToBoard": "Volver al tablón",
+  "iHaveIt": "Lo tengo",
+  "negotiable": "a negociar",
+  "unitShort": "ud.",
+  "cancel": "Cancelar",
+  "sending": "Enviando…",
+  "tabs": {
+    "label": "Vistas del tablón",
+    "board": "Tablón",
+    "mine": "Mis peticiones",
+    "offers": "Mis ofertas"
+  },
+  "filters": {
+    "search": "Buscar un objeto, un material…",
+    "all": "Todo",
+    "audience": {
+      "friends": "Amigos",
+      "orgs": "Mis orgs",
+      "public": "Público"
+    },
+    "kind": {
+      "resource": "Materiales",
+      "item": "Objetos",
+      "vehicle": "Naves"
+    },
+    "supply": "Puedo proveer"
+  },
+  "kinds": {
+    "resource": "Material",
+    "item": "Objeto",
+    "weapon": "Arma",
+    "vehicle": "Nave",
+    "other": "Texto libre"
+  },
+  "audience": {
+    "friends": "Amigos",
+    "org": "Org",
+    "public": "Público"
+  },
+  "requestStatus": {
+    "OPEN": "Abierta",
+    "FILLED": "Cubierta",
+    "EXPIRED": "Caducada",
+    "CLOSED": "Cerrada"
+  },
+  "offerStatus": {
+    "NEW": "Nueva",
+    "KEPT": "Retenida",
+    "RECEIVED": "Recibida",
+    "DECLINED": "Rechazada",
+    "WITHDRAWN": "Retirada"
+  },
+  "fields": {
+    "quantity": "Cantidad",
+    "requested": "Pedido",
+    "quality": "Calidad",
+    "pricePer": "Precio / {unit}",
+    "pricePerUnit": "Precio / ud."
+  },
+  "progress": "{received} recibidos de {quantity}",
+  "receivedRemaining": "Recibido {received} · faltan {remaining} · {offers, plural, =0 {ninguna oferta en curso} one {# oferta en curso} other {# ofertas en curso}}",
+  "pickupAt": "Entrega en {place}",
+  "expires": "caduca {when}",
+  "youHave": "Tienes {quantity}{quality}",
+  "youHaveAt": "Tienes {quantity}{quality} en {place}",
+  "offerCount": "{count, plural, one {# oferta} other {# ofertas}}",
+  "openMyOffer": "Ver mi oferta",
+  "emptyBoard": "Todavía no hay peticiones abiertas aquí.",
+  "emptyMine": "No has publicado ninguna petición estos días.",
+  "emptyOffers": "No has hecho ninguna oferta estos días.",
+  "moreResults": "Se muestran {shown} de {total} peticiones: afina la búsqueda para ver las demás.",
+  "tradeInGame": "El intercambio se hace en el juego: Nexus solo lleva la cuenta de lo que falta.",
+  "offers": {
+    "label": "Ofertas",
+    "title": "{count, plural, =0 {Ofertas} one {# oferta} other {# ofertas}}",
+    "mine": "Mi oferta",
+    "emptyMine": "Todavía no hay ofertas. Tus amigos y tus orgs han sido avisados.",
+    "emptyOther": "Todavía no has respondido a esta petición.",
+    "to": "para {name}"
+  },
+  "offer": {
+    "title": "Ofrecer a {name} · {item}",
+    "fromInventory": "Desde mi inventario",
+    "belowMinimum": "Por debajo del mínimo pedido",
+    "noLot": "Sin lote",
+    "noLotHint": "Todavía no tengo la mercancía",
+    "quantity": "Cantidad ofrecida",
+    "quality": "Calidad",
+    "message": "Mensaje",
+    "messagePlaceholder": "Disponible esta noche, puedo entregar…",
+    "send": "Enviar la oferta",
+    "subtitle": "Faltan {quantity}. Luego negociáis en privado; el intercambio se hace en el juego.",
+    "total": "Total: {total} aUEC"
+  },
+  "thread": {
+    "label": "Conversación",
+    "yourOffer": "Tu oferta",
+    "you": "Tú",
+    "lotAt": "Lote del inventario en {place}",
+    "priceProposal": "Precio propuesto: {price} aUEC / {unit}",
+    "write": "Escribir un mensaje…",
+    "send": "Enviar"
+  },
+  "events": {
+    "NEW": "Oferta enviada por {name}",
+    "KEPT": "Oferta retenida por {name}",
+    "RECEIVED": "{name} recibió {quantity}",
+    "DECLINED": "Oferta rechazada por {name}",
+    "WITHDRAWN": "Oferta retirada por {name}"
+  },
+  "actions": {
+    "price": "Proponer un precio",
+    "proposePrice": "Proponer",
+    "keep": "Retener la oferta",
+    "receive": "Recibido",
+    "decline": "Rechazar",
+    "withdraw": "Retirar mi oferta"
+  },
+  "receive": {
+    "title": "Recibido de {name}",
+    "subtitle": "La cantidad recibida se descuenta de lo que falta.",
+    "quantity": "Cantidad recibida",
+    "store": "Añadir a mi inventario",
+    "where": "Lugar de almacenamiento",
+    "confirm": "Marcar recibido"
+  },
+  "owner": {
+    "edit": "Modificar",
+    "extend": "Prolongar",
+    "extendBy": "Prolongar",
+    "close": "Cerrar",
+    "closeConfirm": "¿Cerrar la petición?",
+    "closeYes": "Sí, cerrar"
+  },
+  "form": {
+    "title": "Publicar una petición",
+    "editTitle": "Modificar la petición",
+    "subtitle": "Tus amigos y tus orgs la ven en el tablón y reciben un aviso. Quien lo tenga te hace una oferta y negociáis en privado.",
+    "what": "Lo que busco",
+    "whatPlaceholder": "Riccite, FS-9 LMG, Cutlass Black…",
+    "whatHint": "Un objeto del catálogo o un texto libre.",
+    "catalogKind": "{kind} del catálogo",
+    "freeText": "No está en el catálogo: la petición conserva este nombre.",
+    "unit": "Unidad",
+    "units": "Unidades",
+    "minQuality": "Calidad mínima",
+    "minQualityPlaceholder": "sobre 1000",
+    "pickup": "Lugar de entrega",
+    "pickupPlaceholder": "Estación, ciudad, puesto avanzado…",
+    "clearPickup": "Quitar el lugar",
+    "priceHint": "Vacío: «a negociar».",
+    "audience": "Visible para",
+    "myFriends": "Mis amigos",
+    "audienceHint": "Tus amigos y los miembros de las orgs marcadas la ven y reciben un aviso. Público: cualquier jugador conectado.",
+    "expiresIn": "Caduca en",
+    "days": "{count, plural, one {# día} other {# días}}",
+    "note": "Nota",
+    "notePlaceholder": "Para qué, cuándo, si puedes ir a buscarlo…",
+    "optional": "opcional",
+    "publish": "Publicar",
+    "save": "Guardar"
+  },
+  "errors": {
+    "generic": "No ha funcionado. Inténtalo de nuevo.",
+    "load": "No se pudo leer la petición.",
+    "name": "Indica lo que buscas.",
+    "quantity": "Indica una cantidad mayor que cero.",
+    "wholeQuantity": "Los objetos se cuentan en números enteros.",
+    "audience": "Elige quién ve la petición: amigos, orgs o público.",
+    "location": "Elige dónde guardar lo que recibes.",
+    "invalid": "Un campo no es válido. Revisa lo que has escrito.",
+    "notFound": "Esta petición ya no existe o no es visible para ti.",
+    "notAllowed": "Ya no es posible: la oferta ha cambiado mientras tanto.",
+    "tooManyOpen": "Ya tienes 20 peticiones abiertas. Cierra una antes de publicar otra.",
+    "tooManyOffers": "Has enviado 30 ofertas hoy. Inténtalo mañana.",
+    "alreadyOffered": "Ya tienes una oferta en curso en esta petición.",
+    "ownRequest": "No puedes responder a tu propia petición.",
+    "closed": "Esta petición ya no está abierta.",
+    "notMember": "No eres miembro de una de las orgs elegidas."
+  },
+  "onSite": "En el sitio",
+  "byYou": "Tú",
+  "open": "Abrir",
+  "minQuality": "C ≥ {quality}",
+  "priceEach": "{price} aUEC / {unit}",
+  "alerts": "Anunciar las peticiones de mis amigos y orgs",
+  "notify": {
+    "request": "{name} busca…",
+    "requestOrg": "{name} ({org}) busca…",
+    "offer": "{name} te hace una oferta",
+    "message": "{name} te ha escrito",
+    "price": "{name} propone {price} aUEC",
+    "status": {
+      "NEW": "{name} ha hecho una oferta",
+      "KEPT": "{name} ha retenido tu oferta",
+      "RECEIVED": "{name} ha recibido tu entrega",
+      "DECLINED": "{name} ha rechazado tu oferta",
+      "WITHDRAWN": "{name} ha retirado su oferta"
+    },
+    "backlogTitle": "Peticiones",
+    "backlog": "{count, plural, one {# novedad más en el tablón de peticiones.} other {# novedades más en el tablón de peticiones.}}"
+  },
+  "publish": "Publicar una petición"
+}

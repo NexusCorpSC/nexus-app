@@ -23,6 +23,8 @@
   "contribError": "The setting could not be saved.",
   "orders": "My orders",
   "ordersHint": "An order received by one of my shops, or a step taken on an order.",
+  "requests": "Request board",
+  "requestsHint": "A request from a friend or an org, an offer on my requests, a message or a step on an offer.",
   "refining": "Finished refining orders",
   "refiningHint": "When a refining order reaches its end, so you can go and collect it.",
   "invites": "Invitations",
