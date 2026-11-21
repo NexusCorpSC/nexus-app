@@ -69,7 +69,7 @@
     "refused": "Imposible: {name}",
     "failed": "Error: {name}",
     "gameConfirmTitle": "Acción del juego por confirmar",
-    "gameConfirmBody": "Nexus Chat quiere activar {action} en el juego. Esta acción no tiene vuelta atrás.",
+    "gameConfirmBody": "Nexus Chat quiere activar {action} en el juego. Esta acción tiene un gran impacto.",
     "gameConfirm": "Activar",
     "names": {
       "search": "Búsqueda en Nexus Tools",

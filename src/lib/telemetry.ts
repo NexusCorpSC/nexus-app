@@ -254,10 +254,35 @@ export type GameAction = {
 export type TriggerResult = { status: number; message: string };
 
 /**
- * Actions that cannot be taken back (ejecting, self-destruct, an emergency
- * exit) or that kill the character. Mirrors `is_dangerous` in
+ * Actions that cannot be taken back, or that leave the ship or its crew
+ * exposed (power, shields, quantum drive, landing gear, every door…), and any
+ * name that looks like the worst of them. Mirrors `is_dangerous` in
  * `src-tauri/src/telemetry.rs`, which refuses them without `confirmed`.
  */
+const DANGEROUS_ACTIONS = new Set([
+  "v_eject",
+  "v_emergency_exit",
+  "v_self_destruct",
+  "v_power_set_off",
+  "v_power_toggle",
+  "v_power_set_thrusters_off",
+  "v_power_toggle_thrusters",
+  "v_power_set_shields_off",
+  "v_power_toggle_shields",
+  "v_toggle_qdrive_engagement",
+  "v_retract_landing_system",
+  "v_toggle_landing_system",
+  "v_open_all_doors",
+  "v_unlock_all_doors",
+  "v_unlock_all_ports",
+  "v_toggle_all_doors",
+  "v_toggle_all_doorlocks",
+  "v_toggle_all_portlocks",
+  "v_ifcs_gsafe_off",
+  "v_ifcs_toggle_gforce_safety",
+  "v_ifcs_proximity_assist_off",
+]);
+
 const DANGEROUS_WORDS = [
   "eject",
   "self_destruct",
@@ -268,8 +293,11 @@ const DANGEROUS_WORDS = [
 ];
 
 export function isDangerousAction(name: string): boolean {
-  const lower = name.toLowerCase();
-  return DANGEROUS_WORDS.some((word) => lower.includes(word));
+  const lower = name.trim().toLowerCase();
+  return (
+    DANGEROUS_ACTIONS.has(lower) ||
+    DANGEROUS_WORDS.some((word) => lower.includes(word))
+  );
 }
 
 /** The longest hold the app asks for. Mirrors `MAX_HOLD_MS` in Rust. */

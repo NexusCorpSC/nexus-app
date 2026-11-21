@@ -94,7 +94,7 @@
   },
   "actions": {
     "title": "Actions du jeu",
-    "hint": "Chaque action part au clic. Les actions sans retour (éjection, autodestruction, sortie d'urgence) demandent une confirmation. Pour une action maintenue, indiquez une durée en secondes.",
+    "hint": "Chaque action part au clic. Celles à fort impact (éjection, autodestruction, sortie d'urgence, coupure de puissance ou de boucliers, quantum, train d'atterrissage, ouverture des portes) demandent une confirmation. Pour une action maintenue, indiquez une durée en secondes.",
     "notConnected": "Les actions sont disponibles quand l'app est connectée au jeu.",
     "loading": "Chargement des actions…",
     "loadError": "La liste des actions n'a pas pu être lue.",
@@ -106,7 +106,7 @@
     "holdPlaceholder": "Maintien (s)",
     "trigger": "Déclencher",
     "confirmTitle": "Déclencher cette action ?",
-    "confirmBody": "Cette action est sans retour en jeu. Elle sera déclenchée immédiatement.",
+    "confirmBody": "Cette action a un fort impact en jeu. Elle sera déclenchée immédiatement.",
     "cancel": "Annuler",
     "confirm": "Déclencher"
   },

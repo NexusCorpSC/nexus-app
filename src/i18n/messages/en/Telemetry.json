@@ -94,7 +94,7 @@
   },
   "actions": {
     "title": "Game actions",
-    "hint": "Each action runs on click. Actions that cannot be undone (eject, self-destruct, emergency exit) ask for confirmation. For a held action, enter a duration in seconds.",
+    "hint": "Each action runs on click. High-impact ones (eject, self-destruct, emergency exit, power or shields off, quantum drive, landing gear, opening the doors) ask for confirmation. For a held action, enter a duration in seconds.",
     "notConnected": "Actions are available once the app is connected to the game.",
     "loading": "Loading actions…",
     "loadError": "The list of actions could not be read.",
@@ -106,7 +106,7 @@
     "holdPlaceholder": "Hold (s)",
     "trigger": "Trigger",
     "confirmTitle": "Trigger this action?",
-    "confirmBody": "This action cannot be undone in game. It will be triggered right away.",
+    "confirmBody": "This action has a strong effect in game. It will be triggered right away.",
     "cancel": "Cancel",
     "confirm": "Trigger"
   },

@@ -94,7 +94,7 @@
   },
   "actions": {
     "title": "Acciones del juego",
-    "hint": "Cada acción se activa al hacer clic. Las acciones sin vuelta atrás (eyección, autodestrucción, salida de emergencia) piden confirmación. Para una acción mantenida, indica una duración en segundos.",
+    "hint": "Cada acción se activa al hacer clic. Las de alto impacto (eyección, autodestrucción, salida de emergencia, apagar energía o escudos, motor cuántico, tren de aterrizaje, abrir las puertas) piden confirmación. Para una acción mantenida, indica una duración en segundos.",
     "notConnected": "Las acciones están disponibles cuando la app está conectada al juego.",
     "loading": "Cargando acciones…",
     "loadError": "No se pudo leer la lista de acciones.",
@@ -106,7 +106,7 @@
     "holdPlaceholder": "Mantener (s)",
     "trigger": "Activar",
     "confirmTitle": "¿Activar esta acción?",
-    "confirmBody": "Esta acción no tiene vuelta atrás en el juego. Se activará de inmediato.",
+    "confirmBody": "Esta acción tiene un gran impacto en el juego. Se activará de inmediato.",
     "cancel": "Cancelar",
     "confirm": "Activar"
   },

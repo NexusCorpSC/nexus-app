@@ -430,12 +430,39 @@ pub struct Action {
     pub dangerous: bool,
 }
 
-/// Actions that cannot be taken back — leaving the ship in flight, blowing it
-/// up — or that kill the character. They are triggered only with the
-/// player's confirmation, here and in Nexus Chat. Matched by words rather than
-/// by a fixed list: the game's names change between patches, and a new one
-/// that looks like these is better asked about than run.
+/// Actions that cannot be taken back, or that leave the ship or its crew
+/// exposed: ejecting, self-destruct, cutting power, thrusters or shields,
+/// spooling the quantum drive, the landing gear (fatal on the pad), opening or
+/// unlocking every door, G-safe and proximity assist off. Triggered only with
+/// the player's confirmation, here and in Nexus Chat. The list is the game's
+/// (PTU 5.0, build 13248297); a name it does not hold that looks like one of
+/// the worst (eject, self-destruct, emergency…) is asked about too, since the
+/// names change between patches.
 /// Mirrors `isDangerousAction` in `src/lib/telemetry.ts`.
+const DANGEROUS_ACTIONS: [&str; 21] = [
+    "v_eject",
+    "v_emergency_exit",
+    "v_self_destruct",
+    "v_power_set_off",
+    "v_power_toggle",
+    "v_power_set_thrusters_off",
+    "v_power_toggle_thrusters",
+    "v_power_set_shields_off",
+    "v_power_toggle_shields",
+    "v_toggle_qdrive_engagement",
+    "v_retract_landing_system",
+    "v_toggle_landing_system",
+    "v_open_all_doors",
+    "v_unlock_all_doors",
+    "v_unlock_all_ports",
+    "v_toggle_all_doors",
+    "v_toggle_all_doorlocks",
+    "v_toggle_all_portlocks",
+    "v_ifcs_gsafe_off",
+    "v_ifcs_toggle_gforce_safety",
+    "v_ifcs_proximity_assist_off",
+];
+
 pub fn is_dangerous(action: &str) -> bool {
     const WORDS: [&str; 6] = [
         "eject",
@@ -445,8 +472,8 @@ pub fn is_dangerous(action: &str) -> bool {
         "suicide",
         "jettison",
     ];
-    let action = action.to_ascii_lowercase();
-    WORDS.iter().any(|word| action.contains(word))
+    let action = action.trim().to_ascii_lowercase();
+    DANGEROUS_ACTIONS.contains(&action.as_str()) || WORDS.iter().any(|word| action.contains(word))
 }
 
 fn client(app: &AppHandle) -> Result<GameTelemetryServiceClient<Channel>, String> {
@@ -741,6 +768,11 @@ mod tests {
         assert!(!is_dangerous("v_starmap"));
         assert!(!is_dangerous("toggle_flashlight"));
         assert!(!is_dangerous("v_deploy_landing_system"));
+        assert!(is_dangerous("v_power_set_off"));
+        assert!(is_dangerous("v_toggle_qdrive_engagement"));
+        assert!(is_dangerous("v_unlock_all_doors"));
+        assert!(!is_dangerous("v_lock_all_doors"));
+        assert!(!is_dangerous("v_master_mode_set_nav"));
     }
 
     #[test]

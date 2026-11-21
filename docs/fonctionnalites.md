@@ -76,9 +76,14 @@ Aucune position dans ce flux : le NPS reste sur `/showlocation` et
 **Actions.** `ListTriggerableActions` donne la liste des actions déclenchables
 (une centaine), `TriggerGameAction` en déclenche une, avec une durée de
 maintien pour les actions qui le permettent (10 s au plus). La page
-**Télémétrie** les déclenche une par une, au clic. Les actions sans retour sont
-reconnues à leur nom (`eject`, `self_destruct`, `emergency`, `suicide`,
-`jettison`) : `is_dangerous` en Rust, `isDangerousAction` en TypeScript.
+**Télémétrie** les déclenche une par une, au clic. Les actions à fort impact demandent
+une confirmation : éjection, sortie d'urgence, autodestruction, coupure de la
+puissance, des propulseurs ou des boucliers, moteur quantique, train
+d'atterrissage (rentré ou basculé), ouverture ou déverrouillage de toutes les
+portes, G-safe et assistance de proximité coupés. La liste vient des 112
+actions du PTU 5.0 ; un nom inconnu qui ressemble aux pires (`eject`,
+`self_destruct`, `emergency`, `suicide`, `jettison`) est aussi demandé.
+`is_dangerous` en Rust, `isDangerousAction` en TypeScript.
 Rust refuse de les déclencher sans `confirmed`, que le frontend ne passe
 qu'après le « oui » du joueur.
 
