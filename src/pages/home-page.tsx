@@ -28,6 +28,11 @@ import {
 import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import type { Squad } from "@/types/nexus";
+import { useTelemetry } from "@/hooks/use-telemetry";
+import {
+  TelemetryBadge,
+  TelemetryPanel,
+} from "@/components/telemetry/telemetry-panel";
 
 /** The windows worth opening before the game, with the shortcut each has. */
 const LAUNCHERS: {
@@ -151,6 +156,8 @@ export default function HomePage() {
         <NotesCard signedIn={signedIn} sessionLoading={loading} />
       </div>
 
+      <TelemetryCard />
+
       <section>
         <SectionTitle>{t("database.title")}</SectionTitle>
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -171,6 +178,30 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/** What the game says right now, when its telemetry is on. */
+function TelemetryCard() {
+  const t = useTranslations("Telemetry");
+  const telemetry = useTelemetry();
+  return (
+    <section>
+      <SectionTitle
+        aside={
+          <Link to="/telemetry" className="text-nexus-accent hover:underline">
+            {t("home.open")}
+          </Link>
+        }
+      >
+        <span className="inline-flex items-center gap-2">
+          {t("home.title")} <TelemetryBadge telemetry={telemetry} />
+        </span>
+      </SectionTitle>
+      <Card className="p-4">
+        <TelemetryPanel telemetry={telemetry} compact />
+      </Card>
+    </section>
   );
 }
 

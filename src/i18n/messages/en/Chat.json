@@ -68,6 +68,11 @@
     "declined": "Declined: {name}",
     "refused": "Not possible: {name}",
     "failed": "Failed: {name}",
+    "gameConfirmTitle": "Game action to confirm",
+    "gameConfirmBody": "Nexus Chat wants to trigger {action} in the game.",
+    "gameConfirm": "Trigger",
+    "gameConfirmDanger": "This action has a strong effect.",
+    "gameConfirmExpired": "Action {action} not confirmed: the conversation moved on.",
     "names": {
       "search": "Searching Nexus Tools",
       "search_items": "Searching items",
@@ -201,7 +206,10 @@
       "confirm_data": "Confirming the data",
       "list_my_contributions": "Reading your contributions",
       "list_missing": "Reading what's missing in the catalog",
-      "get_leaderboard": "Reading the contributor leaderboard"
+      "get_leaderboard": "Reading the contributor leaderboard",
+      "game_status": "Reading the game telemetry",
+      "game_list_actions": "Listing the game actions",
+      "game_trigger_action": "Game action"
     }
   },
   "errors": {

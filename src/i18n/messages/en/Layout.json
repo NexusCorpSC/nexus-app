@@ -24,6 +24,7 @@
     "notes": "Scratch pad",
     "chat": "Nexus Chat",
     "cargo": "Cargo",
+    "telemetry": "Telemetry",
     "orgs": "Organizations"
   },
   "friendsPlaying": "{count} playing",

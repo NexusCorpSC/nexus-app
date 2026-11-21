@@ -60,11 +60,15 @@ const MAX_READ: u64 = 4 * 1024 * 1024;
 /* Parsing                                                             */
 /* ------------------------------------------------------------------ */
 
-/// What a line of the log can mean. One variant for now; the rest of the log
-/// is there for the next ones.
+/// What a line of the log can mean.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LogEvent {
     BlueprintReceived(BlueprintReceived),
+    /// The game's telemetry service listens on this port of 127.0.0.1
+    /// (`src/telemetry.rs`).
+    TelemetryService {
+        port: u16,
+    },
 }
 
 /// A « Received Blueprint » notification, as the HUD showed it.
@@ -87,8 +91,23 @@ fn blueprint_pattern() -> &'static Regex {
     })
 }
 
+/// `… GameTelemetryService: 127.0.0.1:2942 …`. Only the loopback address:
+/// a service opened to the network is not one the app should talk to.
+fn telemetry_pattern() -> &'static Regex {
+    static PATTERN: OnceLock<Regex> = OnceLock::new();
+    PATTERN.get_or_init(|| {
+        Regex::new(r"GameTelemetryService:\s*127\.0\.0\.1:(\d{1,5})\b")
+            .expect("the telemetry pattern compiles")
+    })
+}
+
 /// What `line` says, if it says anything this module knows about.
 pub fn parse_line(line: &str) -> Option<LogEvent> {
+    if let Some(captures) = telemetry_pattern().captures(line) {
+        let port = captures.get(1)?.as_str().parse::<u16>().ok()?;
+        return (port != 0).then_some(LogEvent::TelemetryService { port });
+    }
+
     let captures = blueprint_pattern().captures(line)?;
     let name = captures.get(2)?.as_str().trim();
 
@@ -267,6 +286,16 @@ fn lock(app: &AppHandle) -> Result<MutexGuard<'_, WatcherState>, String> {
     game_log.0.lock().map_err(|error| error.to_string())
 }
 
+/// The folder of the game build the log is read from (`LIVE` unless told
+/// otherwise): the telemetry module finds `attributes.xml` from it.
+pub(crate) fn game_dir(app: &AppHandle) -> PathBuf {
+    read_config(app)
+        .path
+        .parent()
+        .map(Path::to_path_buf)
+        .unwrap_or_else(|| PathBuf::from(DEFAULT_GAME_DIR))
+}
+
 /// The settings as the frontend stored them, defaults for what it has not.
 ///
 /// The store is not open until a webview has loaded it, so this is first
@@ -369,6 +398,9 @@ async fn run(app: AppHandle, path: PathBuf, generation: u64, mut cancelled: watc
                                 log(format!("game log: cannot emit blueprint: {error}"));
                             }
                         }
+                        Some(LogEvent::TelemetryService { port }) => {
+                            crate::telemetry::set_port(&app, port);
+                        }
                         None => {}
                     }
                 }
@@ -438,6 +470,17 @@ mod tests {
             parse_line(line),
             blueprint("Arrowhead Sniper Rifle: Mk II", "t")
         );
+    }
+
+    #[test]
+    fn parses_the_telemetry_port() {
+        assert_eq!(
+            parse_line("<2026-11-21T12:00:00.000Z> [Notice] GameTelemetryService: 127.0.0.1:2942 [Team_Network]"),
+            Some(LogEvent::TelemetryService { port: 2942 })
+        );
+        assert_eq!(parse_line("GameTelemetryService: 0.0.0.0:2942"), None);
+        assert_eq!(parse_line("GameTelemetryService: 127.0.0.1:0"), None);
+        assert_eq!(parse_line("GameTelemetryService: 127.0.0.1:99999"), None);
     }
 
     #[test]

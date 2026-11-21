@@ -4,6 +4,7 @@ import { LoadingState } from "@/components/ui";
 import AppLayout from "@/components/layout/app-layout";
 import RequireAuth from "@/components/layout/require-auth";
 import BlueprintsPage from "@/pages/blueprints-page";
+import TelemetryPage from "@/pages/telemetry-page";
 import BlueprintDetailPage from "@/pages/blueprint-detail-page";
 import ItemsPage from "@/pages/items-page";
 import ItemDetailPage from "@/pages/item-detail-page";
@@ -108,6 +109,7 @@ export default function App() {
         <Route path="lore/:id" element={<LoreArticlePage />} />
 
         <Route path="cargo" element={<CargoPage />} />
+        <Route path="telemetry" element={<TelemetryPage />} />
         <Route path="orgs" element={<OrgsPage />} />
         <Route
           path="notes"

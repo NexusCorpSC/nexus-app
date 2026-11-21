@@ -1,0 +1,59 @@
+// The local gRPC service of Star Citizen (`GameTelemetryService`), as the
+// game itself describes it: reconstructed from the file descriptors embedded
+// in StarCitizen.exe (PTU 5.0, build 13248297). Field numbers are the game's;
+// do not renumber.
+syntax = "proto3";
+
+package sc.game.telemetry.v1;
+
+import "sc/game/telemetry/v1/types.proto";
+
+enum TriggerGameActionStatus {
+  TRIGGER_GAME_ACTION_STATUS_UNSPECIFIED = 0;
+  TRIGGER_GAME_ACTION_STATUS_OK = 1;
+  TRIGGER_GAME_ACTION_STATUS_UNKNOWN_ACTION = 2;
+  TRIGGER_GAME_ACTION_STATUS_MAP_INACTIVE = 3;
+  TRIGGER_GAME_ACTION_STATUS_RATE_LIMITED = 4;
+  TRIGGER_GAME_ACTION_STATUS_FAILED = 5;
+  TRIGGER_GAME_ACTION_STATUS_HOLD_NOT_ALLOWED = 6;
+  TRIGGER_GAME_ACTION_STATUS_FILTERED = 7;
+}
+
+message TelemetryStreamRequest {}
+
+message TelemetryStreamResponse {
+  VehicleFrame vehicle = 3;
+  WeaponsFrame weapons = 4;
+  EventsFrame events = 5;
+  ActorFrame actor = 6;
+  ForceFeedbackFrame force_feedback = 7;
+  TurretFrame turret = 8;
+}
+
+message TriggerGameActionRequest {
+  string action_name = 1;
+  optional uint32 hold_ms = 2;
+}
+
+message TriggerGameActionResponse {
+  TriggerGameActionStatus status = 1;
+  string message = 2;
+}
+
+message ListTriggerableActionsRequest {}
+
+message TriggerableAction {
+  string action_name = 1;
+  string category = 2;
+  bool holdable = 3;
+}
+
+message ListTriggerableActionsResponse {
+  repeated TriggerableAction actions = 1;
+}
+
+service GameTelemetryService {
+  rpc TelemetryStream(TelemetryStreamRequest) returns (stream TelemetryStreamResponse);
+  rpc TriggerGameAction(TriggerGameActionRequest) returns (TriggerGameActionResponse);
+  rpc ListTriggerableActions(ListTriggerableActionsRequest) returns (ListTriggerableActionsResponse);
+}

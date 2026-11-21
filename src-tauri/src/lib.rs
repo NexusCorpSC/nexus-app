@@ -13,6 +13,7 @@ mod nps_screen;
 mod radial;
 mod screenshots;
 mod talk;
+mod telemetry;
 mod tray;
 #[cfg(windows)]
 mod voice;
@@ -1660,6 +1661,7 @@ pub fn run() {
         .manage(OverlayLocks::default())
         .manage(event_feed::EventFeed::default())
         .manage(game_log::GameLog::default())
+        .manage(telemetry::Telemetry::default())
         .manage(browser_auth::BrowserSignIn::default())
         .manage(native_labels::NativeLabelsState::default())
         .invoke_handler(tauri::generate_handler![
@@ -1715,6 +1717,12 @@ pub fn run() {
             event_feed::feed_status,
             game_log::game_log_sync,
             game_log::game_log_status,
+            telemetry::telemetry_sync,
+            telemetry::telemetry_status,
+            telemetry::telemetry_actions,
+            telemetry::telemetry_trigger,
+            telemetry::telemetry_activation,
+            telemetry::telemetry_enable_in_game,
             screenshots::latest_screenshot,
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,

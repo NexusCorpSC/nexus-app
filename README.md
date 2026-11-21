@@ -66,6 +66,22 @@ avec une boussole.
 
 <br clear="right" />
 
+### Télémétrie du jeu
+
+Star Citizen peut donner à l'app, sur votre PC seulement, votre solde aUEC,
+votre santé, votre oxygène, le vaisseau où vous êtes assis, son carburant
+hydrogène et quantum, sa vitesse et son altitude. La page **Télémétrie** les
+affiche en direct, avec les dernières morts et réapparitions, et peut
+déclencher des actions du jeu (carte stellaire, lampe, train
+d'atterrissage…) ; celles qui sont sans retour, comme l'éjection ou
+l'autodestruction, demandent une confirmation. Nexus Chat peut aussi les lire
+(« combien de quantum me reste-t-il ? ») et déclencher une action à votre
+demande.
+
+Pour l'activer : **Paramètres › Jeu › Télémétrie du jeu › Activer**, jeu
+fermé. L'app ajoute `GameTelemetryEnabled` au fichier `attributes.xml` du jeu,
+après en avoir gardé une copie.
+
 ### Nexus Chat, à la voix
 
 <img src="docs/images/nexus-chat-superposition.png" alt="Nexus Chat en superposition" width="300" align="right" />
@@ -144,8 +160,10 @@ Tous se changent dans **Paramètres**.
 
 **Est-ce compatible avec l'anti-triche ?** L'application ne touche pas au jeu :
 elle ne lit que le clavier (comme les autres overlays de la communauté), le
-presse-papiers quand le NPS est ouvert, le journal `Game.log` et les captures
-d'écran que vous déclenchez. Elle n'injecte rien dans le processus du jeu.
+presse-papiers quand le NPS est ouvert, le journal `Game.log`, les captures
+d'écran que vous déclenchez et, si vous l'activez, le service de télémétrie que
+le jeu ouvre lui-même sur votre PC. Elle n'injecte rien dans le processus du
+jeu.
 
 **Un raccourci ne réagit pas.** Vérifiez dans **Paramètres** qu'il n'est pas
 pris deux fois. Le journal de l'application, dans
