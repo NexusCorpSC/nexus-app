@@ -1,0 +1,31 @@
+{
+  "title": "Mapa de superficie",
+  "relief": "Relieve de {min} a {max} m",
+  "kinds": {
+    "place": "Lugares",
+    "private": "Lugares privados",
+    "marker": "Mis marcadores"
+  },
+  "contours": "Curvas de nivel",
+  "mapLabel": "Mapa de superficie",
+  "destination": "Destino",
+  "heading": "rumbo {heading}°",
+  "youAreHere": "Estás en este cuerpo",
+  "you": "Tú",
+  "zoomIn": "Acercar",
+  "zoomOut": "Alejar",
+  "fit": "Ver todo el cuerpo",
+  "openPlace": "Ficha del lugar",
+  "openMarkers": "Mis marcadores",
+  "close": "Cerrar",
+  "menuLabel": "Acciones en este punto",
+  "addMarker": "Añadir un marcador aquí",
+  "copyCoordinates": "Copiar coordenadas",
+  "cancel": "Cancelar",
+  "save": "Añadir",
+  "hint": "Clic derecho para poner un marcador",
+  "follow": "Seguir mi posición",
+  "noFix": "No hay lectura reciente del NPS en este cuerpo.",
+  "pin": "Mostrar en overlay",
+  "unpin": "Quitar del overlay"
+}

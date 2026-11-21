@@ -1,0 +1,31 @@
+{
+  "title": "Surface map",
+  "relief": "Relief from {min} to {max} m",
+  "kinds": {
+    "place": "Places",
+    "private": "Private places",
+    "marker": "My markers"
+  },
+  "contours": "Contour lines",
+  "mapLabel": "Surface map",
+  "destination": "Destination",
+  "heading": "heading {heading}°",
+  "youAreHere": "You are on this body",
+  "you": "You",
+  "zoomIn": "Zoom in",
+  "zoomOut": "Zoom out",
+  "fit": "Show the whole body",
+  "openPlace": "Place page",
+  "openMarkers": "My markers",
+  "close": "Close",
+  "menuLabel": "Actions on this point",
+  "addMarker": "Add a marker here",
+  "copyCoordinates": "Copy coordinates",
+  "cancel": "Cancel",
+  "save": "Add",
+  "hint": "Right-click to drop a marker",
+  "follow": "Follow my position",
+  "noFix": "No recent NPS reading on this body.",
+  "pin": "Show as overlay",
+  "unpin": "Remove from overlay"
+}

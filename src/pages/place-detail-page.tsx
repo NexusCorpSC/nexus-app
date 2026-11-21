@@ -5,7 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslations } from "use-intl";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Compass, ExternalLink, Map as MapIcon, Pin } from "lucide-react";
-import { getPlace } from "@/lib/api/places";
+import { getPlace, getPlanetMap } from "@/lib/api/places";
+import { SurfaceMapSection } from "@/components/planet-map/surface-map-section";
 import { getPrivatePlace } from "@/lib/api/private-places";
 import { ApiError } from "@/lib/api-client";
 import { PrivatePlaceDetail } from "@/components/place/private-place-detail";
@@ -66,6 +67,16 @@ export default function PlaceDetailPage() {
     enabled: Boolean(slug && user && notInCatalogue),
     retry: false,
   });
+
+  // Une planète ou une lune dont on a extrait le relief a sa carte de surface.
+  const placeType = placeQuery.data?.type;
+  const surfaceQuery = useQuery({
+    queryKey: ["planet-map", slug],
+    queryFn: () => getPlanetMap(slug),
+    enabled: placeType === "planet" || placeType === "moon",
+    staleTime: 5 * 60 * 1000,
+  });
+  const surface = surfaceQuery.data ?? null;
 
   async function openOnWeb() {
     const baseUrl = await getApiBaseUrl();
@@ -155,7 +166,12 @@ export default function PlaceDetailPage() {
 
           {place.lore ? <PlaceLoreSection lore={place.lore} /> : null}
 
-          <MapsSection place={place} plans={plans} />
+          {surface ? <SurfaceMapSection slug={place.slug} data={surface} /> : null}
+
+          {/* Une planète qui a sa carte de surface n'annonce pas « aucun plan relevé ». */}
+          {surface && plans.length === 0 ? null : (
+            <MapsSection place={place} plans={plans} />
+          )}
 
           {place.children.length > 0 ? (
             <Section

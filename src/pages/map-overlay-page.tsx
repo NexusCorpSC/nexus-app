@@ -7,12 +7,15 @@ import { useTranslations } from "use-intl";
 import { OverlayLockButton } from "@/components/overlay-lock-button";
 import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { MapView } from "@/components/place/map-view";
+import { PlanetMap } from "@/components/planet-map/planet-map";
+import { usePlanetLive } from "@/hooks/use-planet-live";
+import type { PlanetMapResponse } from "@/types/planet-maps";
 import { PlaceThumbnail } from "@/components/place-card";
 import { useDebounced } from "@/hooks/use-debounced";
 import { useOverlayLocked } from "@/hooks/use-overlay-lock";
 import { useOverlayMode } from "@/hooks/use-overlay-opacity";
 import { useTransparentWindow } from "@/hooks/use-transparent-window";
-import { getPlacePlans, listPlaces } from "@/lib/api/places";
+import { getPlacePlans, getPlanetMap, listPlaces } from "@/lib/api/places";
 import { overlaySkin } from "@/lib/overlay-opacity";
 import { onPinnedMapChange, pinMap, readPinnedMap } from "@/lib/pinned-map";
 import { cn } from "@/lib/utils";
@@ -33,6 +36,10 @@ import { cn } from "@/lib/utils";
  * est coupé et le sélecteur fermé : une fenêtre qui prendrait la souris la
  * prendrait au jeu.
  *
+ * Une planète ou une lune épinglée qui a sa carte de surface se montre en
+ * mode « Planète » : le relief autour du joueur, qu'elle suit, et le trait
+ * vers la destination du NPS. Un corps qui a aussi des plans offre les deux.
+ *
  * Ce que la v1 ne fait pas : descendre dans le lieu qu'un repère ouvre. La
  * fiche le fait, et ici cela demanderait de savoir repère par repère si la
  * cible a une carte — sans quoi on offrirait un bouton qui ne fait rien.
@@ -49,6 +56,8 @@ export default function MapOverlayPage() {
   const [read, setRead] = useState(false);
   const [picking, setPicking] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  /** Le plan d'un lieu, ou la carte de surface de son corps. */
+  const [view, setView] = useState<"plan" | "planet">("planet");
 
   // L'épingle vit dans le magasin, et cette fenêtre est créée au démarrage :
   // sans l'événement elle montrerait, toute la session, ce qui était épinglé
@@ -81,7 +90,16 @@ export default function MapOverlayPage() {
     enabled: Boolean(slug),
   });
 
+  const surfaceQuery = useQuery({
+    queryKey: ["planet-map", slug],
+    queryFn: () => getPlanetMap(slug ?? ""),
+    enabled: Boolean(slug),
+    staleTime: 5 * 60 * 1000,
+  });
+  const surface = surfaceQuery.data ?? null;
+
   const plans = query.data?.plans ?? [];
+  const showPlanet = Boolean(surface) && (view === "planet" || plans.length === 0);
   // Un identifiant qui ne correspond plus — on a changé de lieu — retombe sur
   // la première carte de lui-même, sans effet à écrire ni à nettoyer.
   const active = plans.find((plan) => plan.id === activeId) ?? plans[0];
@@ -164,16 +182,33 @@ export default function MapOverlayPage() {
         </button>
       </div>
 
-      {plans.length > 1 && !open ? (
+      {(plans.length > 1 || (surface && plans.length > 0)) && !open ? (
         <div className="flex shrink-0 gap-1 overflow-x-auto px-3 pb-2">
+          {surface ? (
+            <button
+              type="button"
+              onClick={() => setView("planet")}
+              className={cn(
+                "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
+                showPlanet
+                  ? "bg-white/10 text-slate-100"
+                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
+              )}
+            >
+              {t("planet")}
+            </button>
+          ) : null}
           {plans.map((plan) => (
             <button
               key={plan.id}
               type="button"
-              onClick={() => setActiveId(plan.id)}
+              onClick={() => {
+                setActiveId(plan.id);
+                setView("plan");
+              }}
               className={cn(
                 "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
-                plan.id === active?.id
+                !showPlanet && plan.id === active?.id
                   ? "bg-white/10 text-slate-100"
                   : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
               )}
@@ -206,6 +241,8 @@ export default function MapOverlayPage() {
             {t("retry")}
           </button>
         </Note>
+      ) : showPlanet && surface ? (
+        <OverlayPlanet slug={slug} data={surface} locked={locked} />
       ) : !active ? (
         <Note>{t("notSurveyed")}</Note>
       ) : (
@@ -217,6 +254,28 @@ export default function MapOverlayPage() {
         />
       )}
     </div>
+  );
+}
+
+/** La carte de surface en jeu : elle suit le joueur, sans outils. */
+function OverlayPlanet({
+  slug,
+  data,
+  locked,
+}: {
+  slug: string;
+  data: PlanetMapResponse;
+  locked: boolean;
+}) {
+  const live = usePlanetLive(slug, data.manifest.radius);
+  return (
+    <PlanetMap
+      map={data}
+      points={data.points}
+      live={live}
+      compact
+      className={cn("min-h-0 flex-1 px-3 pb-3", locked && "pointer-events-none")}
+    />
   );
 }
 

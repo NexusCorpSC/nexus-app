@@ -1,0 +1,31 @@
+{
+  "title": "Carte de surface",
+  "relief": "Relief de {min} à {max} m",
+  "kinds": {
+    "place": "Lieux",
+    "private": "Lieux privés",
+    "marker": "Mes marqueurs"
+  },
+  "contours": "Courbes de niveau",
+  "mapLabel": "Carte de surface",
+  "destination": "Destination",
+  "heading": "cap {heading}°",
+  "youAreHere": "Vous êtes sur ce corps",
+  "you": "Vous",
+  "zoomIn": "Zoomer",
+  "zoomOut": "Dézoomer",
+  "fit": "Voir tout le corps",
+  "openPlace": "Fiche du lieu",
+  "openMarkers": "Mes marqueurs",
+  "close": "Fermer",
+  "menuLabel": "Actions sur ce point",
+  "addMarker": "Ajouter un marqueur ici",
+  "copyCoordinates": "Copier les coordonnées",
+  "cancel": "Annuler",
+  "save": "Ajouter",
+  "hint": "Clic droit pour poser un marqueur",
+  "follow": "Suivre ma position",
+  "noFix": "Pas de relevé récent du NPS sur ce corps.",
+  "pin": "Afficher en overlay",
+  "unpin": "Retirer de l'overlay"
+}

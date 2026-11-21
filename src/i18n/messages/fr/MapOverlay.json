@@ -9,5 +9,6 @@
   "searchPlaceholder": "Nom d'un lieu…",
   "searchFailed": "La recherche a échoué.",
   "noResults": "Aucun lieu trouvé.",
-  "notSurveyedYet": "Pas encore relevé"
+  "notSurveyedYet": "Pas encore relevé",
+  "planet": "Planète"
 }

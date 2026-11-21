@@ -32,6 +32,7 @@ import type Overlay from "./messages/fr/Overlay.json";
 import type Parcels from "./messages/fr/Parcels.json";
 import type Places from "./messages/fr/Places.json";
 import type Plan from "./messages/fr/Plan.json";
+import type PlanetMap from "./messages/fr/PlanetMap.json";
 import type Presence from "./messages/fr/Presence.json";
 import type Price from "./messages/fr/Price.json";
 import type QuickAdd from "./messages/fr/QuickAdd.json";
@@ -88,6 +89,7 @@ export type Messages = {
   Parcels: typeof Parcels;
   Places: typeof Places;
   Plan: typeof Plan;
+  PlanetMap: typeof PlanetMap;
   Presence: typeof Presence;
   Price: typeof Price;
   QuickAdd: typeof QuickAdd;
