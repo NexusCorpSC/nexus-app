@@ -166,7 +166,7 @@ export default function PlaceDetailPage() {
 
           {place.lore ? <PlaceLoreSection lore={place.lore} /> : null}
 
-          {surface ? <SurfaceMapSection slug={place.slug} data={surface} /> : null}
+          {surface ? <SurfaceMapSection key={place.slug} slug={place.slug} data={surface} /> : null}
 
           {/* Une planète qui a sa carte de surface n'annonce pas « aucun plan relevé ». */}
           {surface && plans.length === 0 ? null : (

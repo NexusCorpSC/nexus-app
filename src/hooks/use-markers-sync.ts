@@ -12,10 +12,14 @@ import { useQueryClient, type QueryClient } from "@tanstack/react-query";
  */
 const MARKERS_CHANGED_EVENT = "markers://changed";
 
-/** Les marqueurs se lisent avec la liste et avec les données du NPS. */
+/**
+ * Les marqueurs se lisent avec la liste, avec les données du NPS et avec les
+ * cartes de surface.
+ */
 function invalidate(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ["markers"] });
   void queryClient.invalidateQueries({ queryKey: ["nps"] });
+  void queryClient.invalidateQueries({ queryKey: ["planet-map"] });
 }
 
 /** À appeler après chaque changement : cette fenêtre-ci, puis les autres. */

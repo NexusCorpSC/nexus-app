@@ -3,14 +3,14 @@ import type * as Leaflet from "leaflet";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Maximize2, Minus, Plus } from "lucide-react";
+import { Crosshair, Maximize2, Minus, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "use-intl";
 import { createMarker, markerErrorMessage } from "@/lib/api/markers";
 import { markersChanged } from "@/hooks/use-markers-sync";
 import type { PlanetLive } from "@/hooks/use-planet-live";
 import {
   altitudeAt,
-  decodeAltitude,
+  loadAltitude,
   formatDistance,
   formatLatLon,
   groundDistance,
@@ -79,6 +79,8 @@ export function PlanetMap({
   const [selected, setSelected] = useState<PlanetMapPoint | null>(null);
   const [menu, setMenu] = useState<Menu | null>(null);
   const [adding, setAdding] = useState<Spot | null>(null);
+  /** L'altitude se charge après la carte : sans elle, pas de marqueur posé au sol. */
+  const [altitudeStatus, setAltitudeStatus] = useState<"loading" | "ready" | "failed">("loading");
 
   useEffect(() => {
     follow.current = following;
@@ -147,28 +149,24 @@ export function PlanetMap({
       instance.current = created;
       setReady(true);
 
-      const image = new Image();
-      image.crossOrigin = "anonymous";
-      image.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = manifest.altitude.width;
-        canvas.height = manifest.altitude.height;
-        const context = canvas.getContext("2d", { willReadFrequently: true });
-        if (!context) return;
-        context.drawImage(image, 0, 0);
-        altitude.current = decodeAltitude(
-          context.getImageData(0, 0, canvas.width, canvas.height).data,
-          manifest,
-        );
-      };
-      image.src = planetMapUrl(baseUrl, manifest.altitude.url);
+      loadAltitude(planetMapUrl(baseUrl, manifest.altitude.url), manifest)
+        .then((grid) => {
+          if (cancelled) return;
+          altitude.current = grid;
+          setAltitudeStatus("ready");
+        })
+        .catch((error) => {
+          console.error("cannot load the altitude map", error);
+          if (!cancelled) setAltitudeStatus("failed");
+        });
     })();
     return () => {
       cancelled = true;
       created?.remove();
       instance.current = null;
     };
-    // Une carte par corps : un autre corps remonte le composant.
+    // Une carte par corps : ceux qui l'affichent lui donnent `key={slug}`,
+    // et un autre corps remonte donc le composant.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -211,6 +209,7 @@ export function PlanetMap({
       });
       marker.on("click", () => {
         setMenu(null);
+        setAdding(null);
         setSelected(point);
       });
       marker.addTo(group);
@@ -233,14 +232,24 @@ export function PlanetMap({
         fillColor: "#9ed0ff",
         fillOpacity: 1,
       })
-        .bindTooltip(destination.name, { direction: "right", offset: [8, 0] })
+        // Un nœud texte, jamais une chaîne : Leaflet poserait le nom en HTML,
+        // et ce nom vient d'un joueur (lieu privé d'orga, point, marqueur).
+        .bindTooltip(
+          Object.assign(document.createElement("span"), { textContent: destination.name }),
+          { direction: "right", offset: [8, 0] },
+        )
         .addTo(group);
     }
     if (player && destination) {
+      // Par le plus court, comme la distance et le cap : à travers
+      // l'antiméridien plutôt que tout le tour de la carte.
+      let lon = destination.lon;
+      if (lon - player.lon > 180) lon -= 360;
+      if (player.lon - lon > 180) lon += 360;
       L.polyline(
         [
           [player.lat, player.lon],
-          [destination.lat, destination.lon],
+          [destination.lat, lon],
         ],
         { color: "#9ed0ff", weight: 2.5, dashArray: "8 6", interactive: false },
       ).addTo(group);
@@ -318,7 +327,7 @@ export function PlanetMap({
             ) : null}
             {toward ? (
               <span className="font-mono text-xs text-nexus-bright">
-                {formatDistance(toward.metres, locale)} · {t("heading", { heading: Math.round(toward.heading) })}
+                {formatDistance(toward.metres, locale)} · {t("heading", { heading: Math.round(toward.heading) % 360 })}
               </span>
             ) : null}
             {live.player && !live.destination ? (
@@ -352,7 +361,7 @@ export function PlanetMap({
             {live.player ? (
               <p className="mt-1 font-mono text-[11.5px] text-nexus-bright">
                 {formatDistance(groundDistance(live.player, selected, manifest.radius), locale)} ·{" "}
-                {t("heading", { heading: Math.round(headingTo(live.player, selected)) })}
+                {t("heading", { heading: Math.round(headingTo(live.player, selected)) % 360 })}
               </p>
             ) : null}
             {selected.note ? <p className="mt-2 text-xs whitespace-pre-line text-nexus-muted">{selected.note}</p> : null}
@@ -379,11 +388,14 @@ export function PlanetMap({
             <button
               type="button"
               role="menuitem"
+              disabled={altitudeStatus !== "ready"}
+              title={altitudeStatus === "ready" ? undefined : t(altitudeStatus === "failed" ? "altitudeFailed" : "altitudeLoading")}
               onClick={() => {
+                setSelected(null);
                 setAdding(menu);
                 setMenu(null);
               }}
-              className="rounded-md px-2.5 py-1.5 text-left text-[13px] text-nexus-bright hover:bg-nexus-accent/10"
+              className="rounded-md px-2.5 py-1.5 text-left text-[13px] text-nexus-bright hover:bg-nexus-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("addMarker")}
             </button>
@@ -391,7 +403,7 @@ export function PlanetMap({
               type="button"
               role="menuitem"
               onClick={() => {
-                void navigator.clipboard.writeText(`${menu.lat.toFixed(4)}, ${menu.lon.toFixed(4)}`);
+                void navigator.clipboard?.writeText(`${menu.lat.toFixed(4)}, ${menu.lon.toFixed(4)}`).catch(() => {});
                 setMenu(null);
               }}
               className="rounded-md px-2.5 py-1.5 text-left text-[13px] text-nexus-bright hover:bg-nexus-accent/10"
@@ -402,7 +414,13 @@ export function PlanetMap({
         )}
 
         {adding && (
-          <AddMarkerForm spot={adding} slug={manifest.slug} radius={manifest.radius} onClose={() => setAdding(null)} />
+          <AddMarkerForm
+            spot={adding}
+            slug={manifest.slug}
+            radius={manifest.radius}
+            altitudeOf={(spot) => (altitude.current ? altitudeAt(altitude.current, spot) : null)}
+            onClose={() => setAdding(null)}
+          />
         )}
 
         {!compact && (
@@ -413,6 +431,20 @@ export function PlanetMap({
                 ? `${t("you")} : ${formatLatLon(live.player, locale)}`
                 : t("hint")}
           </span>
+        )}
+        {compact && !following && live.player && (
+          <button
+            type="button"
+            aria-label={t("recenter")}
+            title={t("recenter")}
+            onClick={() => {
+              setFollowing(true);
+              instance.current?.panTo([live.player!.lat, live.player!.lon]);
+            }}
+            className={cn("absolute bottom-2.5 right-2.5 z-[500] grid size-8 place-items-center text-nexus-bright hover:bg-nexus-accent/10", PANEL)}
+          >
+            <Crosshair className="size-4" />
+          </button>
         )}
         {!compact && (
           <span className="pointer-events-none absolute right-2.5 bottom-2.5 z-[500] rounded bg-[#030912]/60 px-1.5 py-0.5 text-[10px] text-nexus-dim">
@@ -425,7 +457,7 @@ export function PlanetMap({
         toward ? (
           <div className="flex justify-between px-1 font-mono text-xs text-slate-200">
             <span>{formatDistance(toward.metres, locale)}</span>
-            <span>{t("heading", { heading: Math.round(toward.heading) })}</span>
+            <span>{t("heading", { heading: Math.round(toward.heading) % 360 })}</span>
           </div>
         ) : null
       ) : (
@@ -454,11 +486,14 @@ function AddMarkerForm({
   spot,
   slug,
   radius,
+  altitudeOf,
   onClose,
 }: {
   spot: Spot;
   slug: string;
   radius: number;
+  /** L'altitude du sol lue sur la carte ; `null` tant qu'elle n'est pas chargée. */
+  altitudeOf: (spot: LatLon) => number | null;
   onClose: () => void;
 }) {
   const t = useTranslations("PlanetMap");
@@ -472,17 +507,23 @@ function AddMarkerForm({
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    setPending(true);
     setError(null);
+    // Jamais au rayon nu : sans le relief, le marqueur serait sous le sol.
+    const alt = altitudeOf(spot);
+    if (alt === null) {
+      setError(t("altitudeLoading"));
+      return;
+    }
+    setPending(true);
     try {
       await createMarker({
         name,
         kind,
-        position: { body: slug, ...pointOfGeo(spot, spot.alt ?? 0, radius) },
+        position: { body: slug, ...pointOfGeo(spot, alt, radius) },
         source: "map",
       });
+      // Toutes les fenêtres relisent, cartes de surface comprises.
       markersChanged(queryClient);
-      void queryClient.invalidateQueries({ queryKey: ["planet-map", slug] });
       onClose();
     } catch (failure) {
       setError(markerErrorMessage(failure));

@@ -27,5 +27,8 @@
   "follow": "Follow my position",
   "noFix": "No recent NPS reading on this body.",
   "pin": "Show as overlay",
-  "unpin": "Remove from overlay"
+  "unpin": "Remove from overlay",
+  "altitudeLoading": "The ground altitude is still loading: try again in a moment.",
+  "altitudeFailed": "The ground altitude could not be loaded: a marker cannot be placed on the ground.",
+  "recenter": "Recenter on me and follow"
 }

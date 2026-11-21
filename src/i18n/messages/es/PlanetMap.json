@@ -27,5 +27,8 @@
   "follow": "Seguir mi posición",
   "noFix": "No hay lectura reciente del NPS en este cuerpo.",
   "pin": "Mostrar en overlay",
-  "unpin": "Quitar del overlay"
+  "unpin": "Quitar del overlay",
+  "altitudeLoading": "La altitud del suelo aún se está cargando: inténtalo de nuevo en un momento.",
+  "altitudeFailed": "No se pudo cargar la altitud del suelo: no se puede poner un marcador en el suelo.",
+  "recenter": "Centrar en mí y seguirme"
 }

@@ -9,6 +9,7 @@ import { OverlayOpacityButton } from "@/components/overlay-opacity-button";
 import { MapView } from "@/components/place/map-view";
 import { PlanetMap } from "@/components/planet-map/planet-map";
 import { usePlanetLive } from "@/hooks/use-planet-live";
+import { useMarkersSync } from "@/hooks/use-markers-sync";
 import type { PlanetMapResponse } from "@/types/planet-maps";
 import { PlaceThumbnail } from "@/components/place-card";
 import { useDebounced } from "@/hooks/use-debounced";
@@ -48,6 +49,8 @@ export default function MapOverlayPage() {
   useTransparentWindow();
   const t = useTranslations("MapOverlay");
 
+  // Un marqueur posé ou supprimé ailleurs se voit aussi sur la carte de surface.
+  useMarkersSync();
   const mode = useOverlayMode("map");
   const locked = useOverlayLocked("map");
 
@@ -242,7 +245,7 @@ export default function MapOverlayPage() {
           </button>
         </Note>
       ) : showPlanet && surface ? (
-        <OverlayPlanet slug={slug} data={surface} locked={locked} />
+        <OverlayPlanet key={slug} slug={slug} data={surface} locked={locked} />
       ) : !active ? (
         <Note>{t("notSurveyed")}</Note>
       ) : (
