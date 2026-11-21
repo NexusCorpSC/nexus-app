@@ -50,7 +50,7 @@ jobs:
           $pubkey = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).plugins.updater.pubkey
 
           if ([string]::IsNullOrWhiteSpace($pubkey)) {
-            throw 'plugins.updater.pubkey is empty. Generate a key pair (see README) and store the private half in the repository secrets before releasing.'
+            throw 'plugins.updater.pubkey is empty. Generate a key pair (see docs/publication.md) and store the private half in the repository secrets before releasing.'
           }
 
       # Checked here rather than next to the upload: a missing release then
