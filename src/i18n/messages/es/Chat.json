@@ -69,8 +69,10 @@
     "refused": "Imposible: {name}",
     "failed": "Error: {name}",
     "gameConfirmTitle": "Acción del juego por confirmar",
-    "gameConfirmBody": "Nexus Chat quiere activar {action} en el juego. Esta acción tiene un gran impacto.",
+    "gameConfirmBody": "Nexus Chat quiere activar {action} en el juego.",
     "gameConfirm": "Activar",
+    "gameConfirmDanger": "Esta acción tiene un gran impacto.",
+    "gameConfirmExpired": "Acción {action} no confirmada: la conversación siguió adelante.",
     "names": {
       "search": "Búsqueda en Nexus Tools",
       "search_items": "Búsqueda de objetos",

@@ -69,8 +69,10 @@
     "refused": "Impossible : {name}",
     "failed": "Échec : {name}",
     "gameConfirmTitle": "Action en jeu à confirmer",
-    "gameConfirmBody": "Nexus Chat veut déclencher {action} dans le jeu. Cette action a un fort impact.",
+    "gameConfirmBody": "Nexus Chat veut déclencher {action} dans le jeu.",
     "gameConfirm": "Déclencher",
+    "gameConfirmDanger": "Cette action a un fort impact.",
+    "gameConfirmExpired": "Action {action} non confirmée : la conversation est passée à autre chose.",
     "names": {
       "search": "Recherche dans Nexus Tools",
       "search_items": "Recherche d'objets",

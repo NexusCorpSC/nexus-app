@@ -75,7 +75,7 @@ Aucune position dans ce flux : le NPS reste sur `/showlocation` et
 
 **Actions.** `ListTriggerableActions` donne la liste des actions déclenchables
 (une centaine), `TriggerGameAction` en déclenche une, avec une durée de
-maintien pour les actions qui le permettent (10 s au plus). La page
+maintien pour les actions qui le permettent (10 s au plus, le délai de l'appel s'y ajoute). La page
 **Télémétrie** les déclenche une par une, au clic. Les actions à fort impact demandent
 une confirmation : éjection, sortie d'urgence, autodestruction, coupure de la
 puissance, des propulseurs ou des boucliers, moteur quantique, train
@@ -99,8 +99,16 @@ attendue n'est pas modifié.
 exécuter (`lib/chat/game-tools.ts` dans nexus-tools, seulement quand la
 requête porte `gameTools: true`) ; l'app y répond (`src/lib/chat-game-tools.ts`)
 et renvoie le message, dont le site ne reprend que les réponses aux appels en
-attente. Une action sans retour demandée par le chat affiche une carte de
-confirmation dans la conversation ; elle n'est déclenchée qu'après le clic.
+attente. Le chat ne déclenche seul que des actions anodines (carte stellaire,
+lampe, mobiGlas, lumières, emotes, ping radar…, `HARMLESS_ACTIONS`) : il lit
+des textes écrits par d'autres joueurs, et un texte piégé pourrait lui en
+demander une. Toute autre action, et tout nom que le jeu ne liste pas, est
+refusée ou passe par une carte de confirmation dans la conversation, active
+seulement dans le dernier message. Une action faite compte comme une écriture
+confirmée : « Réessayer » ne la rejoue pas.
+
+Le flux n'a pas de délai de silence (le jeu se tait au menu) : un jeu figé est
+détecté par les pings HTTP/2 (toutes les 20 s, 10 s pour répondre).
 
 ## NPS (Nexus Positioning System)
 

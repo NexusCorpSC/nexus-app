@@ -255,7 +255,8 @@ export type TriggerResult = { status: number; message: string };
 
 /**
  * Actions that cannot be taken back, or that leave the ship or its crew
- * exposed (power, shields, quantum drive, landing gear, every door…), and any
+ * exposed (power, shields, weapons, NAV mode, quantum drive, landing gear,
+ * every door…), and any
  * name that looks like the worst of them. Mirrors `is_dangerous` in
  * `src-tauri/src/telemetry.rs`, which refuses them without `confirmed`.
  */
@@ -281,6 +282,10 @@ const DANGEROUS_ACTIONS = new Set([
   "v_ifcs_gsafe_off",
   "v_ifcs_toggle_gforce_safety",
   "v_ifcs_proximity_assist_off",
+  "v_master_mode_set_nav",
+  "v_master_mode_cycle",
+  "v_power_set_weapons_off",
+  "v_power_toggle_weapons",
 ]);
 
 const DANGEROUS_WORDS = [

@@ -17,9 +17,11 @@ import {
  * makes (`src/components/chat/chat-view.tsx`). Their names must match the
  * site's.
  *
- * A dangerous action (ejecting, self-destruct…) is never run on the model's
- * word: the conversation shows a confirmation, and only the player's yes runs
- * it (`confirmGameAction`).
+ * An action is never run on the model's word alone, unless it is one of the
+ * harmless ones below: the model reads what other players wrote (listings,
+ * messages, requests), and a crafted text could ask it for one. The
+ * conversation shows a confirmation, and only the player's yes runs it
+ * (`confirmGameAction`). The name must also be one the game lists.
  */
 export const GAME_TOOL_STATUS = "game_status";
 export const GAME_TOOL_LIST_ACTIONS = "game_list_actions";
@@ -35,6 +37,36 @@ export type GameToolName = (typeof GAME_TOOLS)[number];
 
 export function isGameTool(name: string | undefined): name is GameToolName {
   return GAME_TOOLS.some((tool) => tool === name);
+}
+
+/**
+ * What the chat may trigger without asking: nothing in it changes the ship's
+ * state for the worse. Everything else, unknown names included, waits for
+ * the player's yes.
+ */
+const HARMLESS_ACTIONS = new Set([
+  "mobiglas",
+  "toggle_flashlight",
+  "v_starmap",
+  "visor_wipe",
+  "v_lights",
+  "v_lights_on",
+  "v_lights_off",
+  "v_light_amplification_on",
+  "v_light_amplification_off",
+  "v_light_amplification_toggle",
+  "v_deploy_landing_system",
+  "v_flight_advanced_hud_on",
+  "v_flight_advanced_hud_off",
+  "v_flight_advanced_hud_toggle",
+  "v_ifcs_reset_gmeter_max",
+  "v_invoke_ping",
+  "v_atc_request",
+]);
+
+export function isHarmlessAction(name: string): boolean {
+  const lower = name.trim().toLowerCase();
+  return HARMLESS_ACTIONS.has(lower) || lower.startsWith("emote_");
 }
 
 /** The most actions handed to the model at once. */
@@ -69,7 +101,29 @@ export function needsConfirmation(
 ) {
   if (toolName !== GAME_TOOL_TRIGGER) return false;
   const parsed = triggerInput(input);
+  return parsed !== null && !isHarmlessAction(parsed.action);
+}
+
+/** Whether the action a call asks for is one of the high-impact ones. */
+export function isDangerousRequest(input: unknown): boolean {
+  const parsed = triggerInput(input);
   return parsed !== null && isDangerousAction(parsed.action);
+}
+
+/**
+ * Whether `part` is a game action the app ran and the game took: retrying the
+ * turn would run it again (`hasConfirmedWrite`). Mirrors the site's.
+ */
+export function isTriggeredGameAction(part: {
+  type: string;
+  state?: string;
+  output?: unknown;
+}): boolean {
+  return (
+    part.type === `tool-${GAME_TOOL_TRIGGER}` &&
+    part.state === "output-available" &&
+    (part.output as { status?: unknown } | null)?.status === "ok"
+  );
 }
 
 /** The action a call of `game_trigger_action` asks for, for the card. */
@@ -86,6 +140,22 @@ function failure(cause: unknown): GameToolResult {
         ? "The game's telemetry is not connected: Star Citizen is closed, or GameTelemetryEnabled is not set (Nexus App settings, Game section)."
         : (code ?? String(cause)),
   };
+}
+
+/** `null` if the game lists `action`, else the error for the model. */
+async function unknownAction(action: string): Promise<GameToolResult | null> {
+  try {
+    const lower = action.toLowerCase();
+    const actions = await listGameActions();
+    return actions.some((known) => known.name.toLowerCase() === lower)
+      ? null
+      : {
+          kind: "error",
+          errorText: `The game has no action named ${action}: pick one from game_list_actions.`,
+        };
+  } catch (cause) {
+    return failure(cause);
+  }
 }
 
 async function trigger(
@@ -159,13 +229,15 @@ export async function runGameTool(
     case GAME_TOOL_TRIGGER: {
       const parsed = triggerInput(input);
       if (!parsed) return { kind: "error", errorText: "`action` is required." };
-      if (isDangerousAction(parsed.action)) return { kind: "confirm" };
+      const unknown = await unknownAction(parsed.action);
+      if (unknown) return unknown;
+      if (!isHarmlessAction(parsed.action)) return { kind: "confirm" };
       return trigger(parsed, false);
     }
   }
 }
 
-/** The player answered the confirmation of a dangerous action. */
+/** The player answered the confirmation of an action. */
 export async function confirmGameAction(
   input: unknown,
   approved: boolean,
@@ -178,5 +250,7 @@ export async function confirmGameAction(
       output: { action: parsed.action, status: "declinedByPlayer" },
     };
   }
+  const unknown = await unknownAction(parsed.action);
+  if (unknown) return unknown;
   return trigger(parsed, true);
 }

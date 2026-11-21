@@ -69,8 +69,10 @@
     "refused": "Not possible: {name}",
     "failed": "Failed: {name}",
     "gameConfirmTitle": "Game action to confirm",
-    "gameConfirmBody": "Nexus Chat wants to trigger {action} in the game. This action has a strong effect.",
+    "gameConfirmBody": "Nexus Chat wants to trigger {action} in the game.",
     "gameConfirm": "Trigger",
+    "gameConfirmDanger": "This action has a strong effect.",
+    "gameConfirmExpired": "Action {action} not confirmed: the conversation moved on.",
     "names": {
       "search": "Searching Nexus Tools",
       "search_items": "Searching items",

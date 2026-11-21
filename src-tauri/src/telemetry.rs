@@ -58,9 +58,11 @@ const MIN_BACKOFF: Duration = Duration::from_secs(2);
 const MAX_BACKOFF: Duration = Duration::from_secs(15);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(2);
 const CALL_TIMEOUT: Duration = Duration::from_secs(5);
-/// A stream that stays silent this long is dropped and dialled again: the
-/// game can leave a stream open across a crash of its own.
-const SILENCE_TIMEOUT: Duration = Duration::from_secs(60);
+/// The game sends nothing at the menu, so silence is not a sign of a dead
+/// stream: HTTP/2 pings are. A game that stops answering them (frozen,
+/// crashed with the socket held) ends the stream.
+const KEEP_ALIVE_INTERVAL: Duration = Duration::from_secs(20);
+const KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(10);
 /// The game events kept for a window that opens late.
 const MAX_EVENTS: usize = 20;
 
@@ -193,8 +195,9 @@ pub(crate) fn set_port(app: &AppHandle, port: u16) {
     if PORT.swap(port, Ordering::Relaxed) != port {
         log(format!("telemetry: the game listens on port {port}"));
         // A connection on the old port is wrong; one still waiting will pick
-        // the new port up at its next try, sooner if restarted now.
-        restart(app);
+        // the new port up at its next try, sooner if restarted now. The log
+        // has just been read: no need to read it again.
+        restart(app, false);
     }
 }
 
@@ -214,21 +217,27 @@ pub(crate) fn sync(app: &AppHandle) {
     let enabled = enabled(app);
     let running = lock(app).running.is_some();
     match (enabled, running) {
-        (true, false) => restart(app),
+        (true, false) => restart(app, true),
         (false, true) => stop(app),
         _ => {}
     }
 }
 
 fn stop(app: &AppHandle) {
-    if let Some(cancel) = lock(app).running.take() {
-        let _ = cancel.send(true);
+    {
+        let mut inner = lock(app);
+        if let Some(cancel) = inner.running.take() {
+            let _ = cancel.send(true);
+        }
+        // A task still connecting must not mark itself connected afterwards.
+        inner.generation += 1;
     }
     set_connection(app, Connection::Disabled);
 }
 
-/// Starts the stream over, or starts it, if the settings want one.
-fn restart(app: &AppHandle) {
+/// Starts the stream over, or starts it, if the settings want one. With
+/// `read_log`, the port is first looked up in `Game.log`, off the main thread.
+fn restart(app: &AppHandle, read_log: bool) {
     if !enabled(app) {
         return;
     }
@@ -238,15 +247,23 @@ fn restart(app: &AppHandle) {
             let _ = cancel.send(true);
         }
         inner.generation += 1;
+        // What the previous connection knew is not this one's.
+        inner.channel = None;
+        inner.actions = None;
         let (cancel, cancelled) = watch::channel(false);
         inner.running = Some(cancel);
         (inner.generation, cancelled)
     };
-    if let Some(port) = port_from_log(&crate::game_log::game_dir(app)) {
-        PORT.store(port, Ordering::Relaxed);
-    }
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
+        if read_log {
+            let dir = crate::game_log::game_dir(&app);
+            if let Ok(Some(port)) =
+                tauri::async_runtime::spawn_blocking(move || port_from_log(&dir)).await
+            {
+                PORT.store(port, Ordering::Relaxed);
+            }
+        }
         run(app, generation, cancelled).await;
     });
 }
@@ -258,7 +275,7 @@ async fn run(app: AppHandle, generation: u64, mut cancelled: watch::Receiver<boo
             return;
         }
         let port = PORT.load(Ordering::Relaxed);
-        match stream_once(&app, port, &mut cancelled).await {
+        match stream_once(&app, port, generation, &mut cancelled).await {
             Ended::Cancelled => return,
             // The game was there: when it comes back, it is soon.
             Ended::Closed => backoff = MIN_BACKOFF,
@@ -288,33 +305,59 @@ fn endpoint(port: u16) -> Endpoint {
     Endpoint::from_shared(format!("http://127.0.0.1:{port}"))
         .expect("a loopback address is a valid URI")
         .connect_timeout(CONNECT_TIMEOUT)
+        .http2_keep_alive_interval(KEEP_ALIVE_INTERVAL)
+        .keep_alive_timeout(KEEP_ALIVE_TIMEOUT)
+        .keep_alive_while_idle(true)
 }
 
-async fn stream_once(app: &AppHandle, port: u16, cancelled: &mut watch::Receiver<bool>) -> Ended {
-    let channel = match endpoint(port).connect().await {
-        Ok(channel) => channel,
-        Err(_) => return Ended::Unreachable,
-    };
+async fn open_stream(
+    port: u16,
+) -> Option<(Channel, tonic::Streaming<proto::TelemetryStreamResponse>)> {
+    let channel = endpoint(port).connect().await.ok()?;
     let mut client = GameTelemetryServiceClient::new(channel.clone());
-    let mut stream = match client
+    match client
         .telemetry_stream(proto::TelemetryStreamRequest {})
         .await
     {
-        Ok(response) => response.into_inner(),
+        Ok(response) => Some((channel, response.into_inner())),
         Err(status) => {
             log(format!("telemetry: stream refused: {}", status.message()));
-            return Ended::Unreachable;
+            None
         }
+    }
+}
+
+async fn stream_once(
+    app: &AppHandle,
+    port: u16,
+    generation: u64,
+    cancelled: &mut watch::Receiver<bool>,
+) -> Ended {
+    // Bounded, and given up as soon as the stream is cancelled: a game that
+    // takes the connection without answering would hold this task forever.
+    let opened = tokio::select! {
+        opened = tokio::time::timeout(CALL_TIMEOUT, open_stream(port)) => opened,
+        _ = cancelled.changed() => return Ended::Cancelled,
+    };
+    let Ok(Some((channel, mut stream))) = opened else {
+        return Ended::Unreachable;
     };
 
-    lock(app).channel = Some(channel);
+    // Told to stop while connecting: this connection is not the current one.
+    {
+        let mut inner = lock(app);
+        if inner.generation != generation || *cancelled.borrow() {
+            return Ended::Cancelled;
+        }
+        inner.channel = Some(channel);
+    }
     set_connection(app, Connection::Connected);
 
     let mut last_emit: Option<Instant> = None;
     let mut pending = false;
     loop {
         let next = tokio::select! {
-            next = tokio::time::timeout(SILENCE_TIMEOUT, stream.message()) => next,
+            next = stream.message() => next,
             _ = cancelled.changed() => return Ended::Cancelled,
             // A frame held back by the throttle goes out even if the game
             // stops sending.
@@ -326,7 +369,7 @@ async fn stream_once(app: &AppHandle, port: u16, cancelled: &mut watch::Receiver
             }
         };
         match next {
-            Ok(Ok(Some(frame))) => {
+            Ok(Some(frame)) => {
                 for event in record(app, frame) {
                     let _ = app.emit(GAME_EVENT, &event);
                 }
@@ -338,13 +381,9 @@ async fn stream_once(app: &AppHandle, port: u16, cancelled: &mut watch::Receiver
                     pending = true;
                 }
             }
-            Ok(Ok(None)) => return Ended::Closed,
-            Ok(Err(status)) => {
+            Ok(None) => return Ended::Closed,
+            Err(status) => {
                 log(format!("telemetry: stream ended: {}", status.message()));
-                return Ended::Closed;
-            }
-            Err(_) => {
-                log("telemetry: stream silent, dialling again");
                 return Ended::Closed;
             }
         }
@@ -432,14 +471,15 @@ pub struct Action {
 
 /// Actions that cannot be taken back, or that leave the ship or its crew
 /// exposed: ejecting, self-destruct, cutting power, thrusters or shields,
-/// spooling the quantum drive, the landing gear (fatal on the pad), opening or
+/// weapons, spooling the quantum drive, the NAV master mode (it drops shields
+/// and weapons), the landing gear (fatal on the pad), opening or
 /// unlocking every door, G-safe and proximity assist off. Triggered only with
 /// the player's confirmation, here and in Nexus Chat. The list is the game's
 /// (PTU 5.0, build 13248297); a name it does not hold that looks like one of
 /// the worst (eject, self-destruct, emergency…) is asked about too, since the
 /// names change between patches.
 /// Mirrors `isDangerousAction` in `src/lib/telemetry.ts`.
-const DANGEROUS_ACTIONS: [&str; 21] = [
+const DANGEROUS_ACTIONS: [&str; 25] = [
     "v_eject",
     "v_emergency_exit",
     "v_self_destruct",
@@ -461,6 +501,10 @@ const DANGEROUS_ACTIONS: [&str; 21] = [
     "v_ifcs_gsafe_off",
     "v_ifcs_toggle_gforce_safety",
     "v_ifcs_proximity_assist_off",
+    "v_master_mode_set_nav",
+    "v_master_mode_cycle",
+    "v_power_set_weapons_off",
+    "v_power_toggle_weapons",
 ];
 
 pub fn is_dangerous(action: &str) -> bool {
@@ -544,7 +588,10 @@ pub async fn telemetry_trigger(
         action_name: action.clone(),
         hold_ms: hold_ms.map(|hold| hold.min(MAX_HOLD_MS)),
     });
-    request.set_timeout(CALL_TIMEOUT);
+    // The game may answer only once the hold is over.
+    request.set_timeout(
+        CALL_TIMEOUT + Duration::from_millis(u64::from(hold_ms.unwrap_or(0).min(MAX_HOLD_MS))),
+    );
     let response = client
         .trigger_game_action(request)
         .await
@@ -683,9 +730,16 @@ fn game_running() -> bool {
     false
 }
 
+/// Off the main thread: `tasklist` takes a moment.
 #[tauri::command]
-pub fn telemetry_activation(app: AppHandle) -> Activation {
-    let game_dir = crate::game_log::game_dir(&app);
+pub async fn telemetry_activation(app: AppHandle) -> Result<Activation, String> {
+    tauri::async_runtime::spawn_blocking(move || activation(&app))
+        .await
+        .map_err(|error| error.to_string())
+}
+
+fn activation(app: &AppHandle) -> Activation {
+    let game_dir = crate::game_log::game_dir(app);
     Activation {
         game_running: game_running(),
         builds: builds(&game_dir)
@@ -705,18 +759,24 @@ pub fn telemetry_activation(app: AppHandle) -> Activation {
 /// Sets `GameTelemetryEnabled` in the `attributes.xml` of the build `name`,
 /// after a copy of the file next to it. Refused while the game runs.
 #[tauri::command]
-pub fn telemetry_enable_in_game(app: AppHandle, build: String) -> Result<Activation, String> {
+pub async fn telemetry_enable_in_game(app: AppHandle, build: String) -> Result<Activation, String> {
+    tauri::async_runtime::spawn_blocking(move || enable_in_game(&app, &build))
+        .await
+        .map_err(|error| error.to_string())?
+}
+
+fn enable_in_game(app: &AppHandle, build: &str) -> Result<Activation, String> {
     if game_running() {
         return Err("gameRunning".to_string());
     }
-    let game_dir = crate::game_log::game_dir(&app);
+    let game_dir = crate::game_log::game_dir(app);
     let (_, path) = builds(&game_dir)
         .into_iter()
         .find(|(name, _)| *name == build)
         .ok_or_else(|| "buildNotFound".to_string())?;
     let xml = std::fs::read_to_string(&path).map_err(|error| error.to_string())?;
     if attribute_value(&xml).is_some_and(|value| value.trim() == "1") {
-        return Ok(telemetry_activation(app));
+        return Ok(activation(app));
     }
     let updated = with_telemetry_enabled(&xml).ok_or_else(|| "unexpectedFile".to_string())?;
     let backup = path.with_file_name(format!("attributes.xml.nexus-{}.bak", now_ms() / 1000));
@@ -727,7 +787,7 @@ pub fn telemetry_enable_in_game(app: AppHandle, build: String) -> Result<Activat
         path.display(),
         backup.display()
     ));
-    Ok(telemetry_activation(app))
+    Ok(activation(app))
 }
 
 #[cfg(test)]
@@ -772,7 +832,8 @@ mod tests {
         assert!(is_dangerous("v_toggle_qdrive_engagement"));
         assert!(is_dangerous("v_unlock_all_doors"));
         assert!(!is_dangerous("v_lock_all_doors"));
-        assert!(!is_dangerous("v_master_mode_set_nav"));
+        assert!(is_dangerous("v_master_mode_set_nav"));
+        assert!(!is_dangerous("v_master_mode_set_scm"));
     }
 
     #[test]

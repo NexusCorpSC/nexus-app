@@ -6,7 +6,11 @@ import { Button } from "@/components/ui";
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { toolLabel } from "@/lib/api/chat";
 import { cn } from "@/lib/utils";
-import { needsConfirmation, requestedAction } from "@/lib/chat-game-tools";
+import {
+  isDangerousRequest,
+  needsConfirmation,
+  requestedAction,
+} from "@/lib/chat-game-tools";
 import type { ChatUIMessage } from "@/types/chat";
 
 /** What an answer shows: text, tools, a confirmation. */
@@ -79,12 +83,18 @@ export function ChatMessage({
   message,
   onApproval,
   onGameConfirm,
+  isLast = false,
   disabled,
 }: {
   message: ChatUIMessage;
   onApproval: (approvalId: string, approved: boolean) => void;
-  /** The player answered the confirmation of a dangerous game action. */
+  /** The player answered the confirmation of a game action. */
   onGameConfirm?: (part: DynamicToolUIPart, approved: boolean) => void;
+  /**
+   * The last message of the conversation: the only one whose game action can
+   * still be confirmed. One the player went past is expired, even reloaded.
+   */
+  isLast?: boolean;
   disabled?: boolean;
 }) {
   if (message.role === "user") {
@@ -122,7 +132,7 @@ export function ChatMessage({
               <GameConfirmCard
                 key={block.key}
                 part={block.part}
-                onAnswer={onGameConfirm}
+                onAnswer={isLast ? onGameConfirm : undefined}
                 disabled={disabled}
               />
             );
@@ -185,8 +195,9 @@ function ApprovalCard({
 }
 
 /**
- * The confirmation of a dangerous game action (ejecting, self-destruct…): the
- * app runs it only on this yes (`src/lib/chat-game-tools.ts`).
+ * The confirmation of a game action the chat asked for: the app runs it only
+ * on this yes (`src/lib/chat-game-tools.ts`). Without `onAnswer` — a message
+ * the conversation went past — it is shown expired, without buttons.
  */
 function GameConfirmCard({
   part,
@@ -200,32 +211,47 @@ function GameConfirmCard({
   const t = useTranslations("Chat.tool");
   const [answered, setAnswered] = useState(false);
   const action = requestedAction(part.input);
+  const dangerous = isDangerousRequest(part.input);
+
+  if (!onAnswer) {
+    return (
+      <p className="text-xs text-[#8fb1d6]">
+        {t("gameConfirmExpired", { action: action ?? "" })}
+      </p>
+    );
+  }
   const answer = (approved: boolean) => {
     setAnswered(true);
-    onAnswer?.(part, approved);
+    onAnswer(part, approved);
   };
 
   return (
-    <div className="chat-confirm space-y-2.5 rounded-2xl border border-amber-300/50 p-3.5">
+    <div
+      className={cn(
+        "chat-confirm space-y-2.5 rounded-2xl border p-3.5",
+        dangerous ? "border-amber-300/50" : "border-[#8fd0ff]/45",
+      )}
+    >
       <p className="text-[10.5px] font-bold tracking-[0.18em] text-amber-200 uppercase">
         {t("gameConfirmTitle")}
       </p>
       <p className="text-[13px] text-[#cfe2f7]">
         {t("gameConfirmBody", { action: action ?? "" })}
+        {dangerous ? ` ${t("gameConfirmDanger")}` : ""}
       </p>
       <div className="flex flex-wrap justify-end gap-2">
         <Button
           size="sm"
           variant="outline"
-          disabled={disabled || answered || !onAnswer}
+          disabled={disabled || answered}
           onClick={() => answer(false)}
         >
           {t("decline")}
         </Button>
         <Button
           size="sm"
-          variant="danger"
-          disabled={disabled || answered || !onAnswer}
+          variant={dangerous ? "danger" : "primary"}
+          disabled={disabled || answered}
           onClick={() => answer(true)}
         >
           {t("gameConfirm")}

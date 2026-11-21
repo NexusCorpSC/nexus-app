@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils";
 import {
   confirmGameAction,
   isGameTool,
+  isTriggeredGameAction,
   needsConfirmation,
   runGameTool,
   type GameToolResult,
@@ -39,14 +40,30 @@ import {
   withRemaining,
 } from "@/types/chat";
 
-/** Whether the message holds a write the player confirmed: it was made. */
+/**
+ * Whether the message holds a write the player confirmed, or a game action
+ * the app triggered: it was made, and must not be made again.
+ */
 function hasConfirmedWrite(message: ChatUIMessage): boolean {
   return message.parts.some(
     (part) =>
       isToolUIPart(part) &&
-      "approval" in part &&
-      part.approval?.approved === true,
+      (("approval" in part && part.approval?.approved === true) ||
+        isTriggeredGameAction(part)),
   );
+}
+
+/** Whether the last step of the last message called one of the game's tools. */
+function lastStepCalledGameTools(messages: ChatUIMessage[]): boolean {
+  const message = messages[messages.length - 1];
+  if (message?.role !== "assistant") return false;
+  const start = message.parts.reduce(
+    (last, part, index) => (part.type === "step-start" ? index : last),
+    -1,
+  );
+  return message.parts
+    .slice(start + 1)
+    .some((part) => isToolUIPart(part) && isGameTool(getToolName(part)));
 }
 
 /**
@@ -95,6 +112,8 @@ export function ChatView({
   const t = useTranslations("Chat");
   const locale = useLocale();
   const [input, setInput] = useState("");
+  // Bumped by « Arrêter »: a game tool answering afterwards is dropped.
+  const stopCount = useRef(0);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   // The text parts already read, by message: after a confirmation the rest of
@@ -141,15 +160,24 @@ export function ChatView({
     transport,
     // After the player's answers to the confirmations, and after the app's
     // answers to the game's tools: the model goes on.
+    // Only a step that called the game's tools: one that ended on the site's
+    // own tools (at the step or budget limit) is over, and sent again it
+    // would only be refused.
     sendAutomaticallyWhen: (options) =>
       lastAssistantMessageIsCompleteWithApprovalResponses(options) ||
-      lastAssistantMessageIsCompleteWithToolCalls(options),
+      (lastStepCalledGameTools(options.messages) &&
+        lastAssistantMessageIsCompleteWithToolCalls(options)),
     onToolCall: ({ toolCall }) => {
       if (toolCall.dynamic || !isGameTool(toolCall.toolName)) return;
       const { toolName, toolCallId, input } = toolCall;
-      void runGameTool(toolName, input).then((result) =>
-        answerGameTool(toolName, toolCallId, result),
-      );
+      const stops = stopCount.current;
+      void runGameTool(toolName, input).then((result) => {
+        // Stopped meanwhile: the answer is not sent on, which would start
+        // the conversation again.
+        if (stopCount.current === stops) {
+          answerGameTool(toolName, toolCallId, result);
+        }
+      });
     },
     onFinish: ({ message, isError, isAbort, isDisconnect }) => {
       const reader = voiceRef.current;
@@ -182,7 +210,7 @@ export function ChatView({
     },
   });
 
-  // Stable across renders: `onToolCall` above keeps the first one it saw.
+  // The latest `addToolOutput`, for answers that arrive after a render.
   const addToolOutputRef = useRef(addToolOutput);
   addToolOutputRef.current = addToolOutput;
   function answerGameTool(
@@ -190,7 +218,7 @@ export function ChatView({
     toolCallId: string,
     result: GameToolResult,
   ) {
-    // A dangerous action waits for the card in the message.
+    // An action to confirm waits for the card in the message.
     if (result.kind === "confirm") return;
     void addToolOutputRef.current(
       result.kind === "output"
@@ -325,10 +353,11 @@ export function ChatView({
             )}
           </div>
         )}
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <ChatMessage
             key={message.id}
             message={message}
+            isLast={index === messages.length - 1}
             disabled={busy}
             onApproval={(approvalId, approved) =>
               void addToolApprovalResponse({ id: approvalId, approved })
@@ -503,6 +532,7 @@ export function ChatView({
                   variant="outline"
                   className="w-9.5 rounded-full px-0"
                   onClick={() => {
+                    stopCount.current += 1;
                     void stop();
                     void requestChatStop().catch(() => {});
                   }}
