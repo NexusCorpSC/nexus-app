@@ -1,4 +1,5 @@
-import { apiRequest } from "@/lib/api-client";
+import { ApiError, apiRequest } from "@/lib/api-client";
+import type { PlanetMapResponse } from "@/types/planet-maps";
 import type {
   PlaceDetails,
   PlaceFacets,
@@ -72,4 +73,22 @@ export function getPlacePlans(slug: string) {
   return apiRequest<PlacePlansResponse>(
     `${PLACES}/${encodeURIComponent(slug)}/plans`,
   );
+}
+
+/**
+ * La carte de surface d'une planète ou d'une lune, et ce qui s'y pose : les
+ * lieux du catalogue et, connecté, ses lieux privés et ses marqueurs. `null`
+ * quand le corps n'a pas de carte.
+ */
+export async function getPlanetMap(
+  slug: string,
+): Promise<PlanetMapResponse | null> {
+  try {
+    return await apiRequest<PlanetMapResponse>(
+      `${PLACES}/${encodeURIComponent(slug)}/carte`,
+    );
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
 }
