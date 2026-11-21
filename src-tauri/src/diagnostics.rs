@@ -32,7 +32,7 @@ pub fn init<R: Runtime, M: Manager<R>>(manager: &M) {
         .path()
         .app_log_dir()
         // Not every platform hands out a log dir. Fall back to the app data,
-        // keeping the `logs/` level so the file stays where the README sends
+        // keeping the `logs/` level so the file stays where the docs send
         // whoever is trying to diagnose a start-up that produced no window.
         .or_else(|_| manager.path().app_data_dir().map(|dir| dir.join("logs")))
         .ok();
