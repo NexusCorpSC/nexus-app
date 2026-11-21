@@ -1,10 +1,12 @@
-import { isToolUIPart, type DynamicToolUIPart } from "ai";
+import { useState } from "react";
+import { getToolName, isToolUIPart, type DynamicToolUIPart } from "ai";
 import { useTranslations } from "use-intl";
 import { Check, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { ChatMarkdown } from "@/components/chat/chat-markdown";
 import { toolLabel } from "@/lib/api/chat";
 import { cn } from "@/lib/utils";
+import { needsConfirmation, requestedAction } from "@/lib/chat-game-tools";
 import type { ChatUIMessage } from "@/types/chat";
 
 /** What an answer shows: text, tools, a confirmation. */
@@ -16,7 +18,9 @@ type Block =
       parts: DynamicToolUIPart[];
       closed: boolean;
     }
-  | { kind: "approval"; key: string; part: DynamicToolUIPart };
+  | { kind: "approval"; key: string; part: DynamicToolUIPart }
+  /** A dangerous game action, run only on the player's yes. */
+  | { kind: "game-confirm"; key: string; part: DynamicToolUIPart };
 
 /**
  * The parts of an answer, with the tools that follow each other grouped:
@@ -33,7 +37,20 @@ function blocks(message: ChatUIMessage): Block[] {
       return;
     }
     if (!isToolUIPart(part)) return;
-    const tool = part as DynamicToolUIPart;
+    // The game's tools are declared by the site, not found on its MCP server:
+    // they come as typed parts, named by their type rather than `toolName`.
+    const tool = (
+      part.type === "dynamic-tool"
+        ? part
+        : { ...part, toolName: getToolName(part) }
+    ) as DynamicToolUIPart;
+    if (
+      tool.state === "input-available" &&
+      needsConfirmation(tool.toolName, tool.input)
+    ) {
+      result.push({ kind: "game-confirm", key: tool.toolCallId, part: tool });
+      return;
+    }
     if (tool.state === "approval-requested") {
       result.push({ kind: "approval", key: tool.toolCallId, part: tool });
       return;
@@ -61,10 +78,13 @@ function blocks(message: ChatUIMessage): Block[] {
 export function ChatMessage({
   message,
   onApproval,
+  onGameConfirm,
   disabled,
 }: {
   message: ChatUIMessage;
   onApproval: (approvalId: string, approved: boolean) => void;
+  /** The player answered the confirmation of a dangerous game action. */
+  onGameConfirm?: (part: DynamicToolUIPart, approved: boolean) => void;
   disabled?: boolean;
 }) {
   if (message.role === "user") {
@@ -94,6 +114,15 @@ export function ChatMessage({
                 key={block.key}
                 part={block.part}
                 onApproval={onApproval}
+                disabled={disabled}
+              />
+            );
+          case "game-confirm":
+            return (
+              <GameConfirmCard
+                key={block.key}
+                part={block.part}
+                onAnswer={onGameConfirm}
                 disabled={disabled}
               />
             );
@@ -149,6 +178,57 @@ function ApprovalCard({
           onClick={() => onApproval(part.approval.id, true)}
         >
           {t("confirm")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The confirmation of a dangerous game action (ejecting, self-destruct…): the
+ * app runs it only on this yes (`src/lib/chat-game-tools.ts`).
+ */
+function GameConfirmCard({
+  part,
+  onAnswer,
+  disabled,
+}: {
+  part: DynamicToolUIPart;
+  onAnswer?: (part: DynamicToolUIPart, approved: boolean) => void;
+  disabled?: boolean;
+}) {
+  const t = useTranslations("Chat.tool");
+  const [answered, setAnswered] = useState(false);
+  const action = requestedAction(part.input);
+  const answer = (approved: boolean) => {
+    setAnswered(true);
+    onAnswer?.(part, approved);
+  };
+
+  return (
+    <div className="chat-confirm space-y-2.5 rounded-2xl border border-amber-300/50 p-3.5">
+      <p className="text-[10.5px] font-bold tracking-[0.18em] text-amber-200 uppercase">
+        {t("gameConfirmTitle")}
+      </p>
+      <p className="text-[13px] text-[#cfe2f7]">
+        {t("gameConfirmBody", { action: action ?? "" })}
+      </p>
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={disabled || answered || !onAnswer}
+          onClick={() => answer(false)}
+        >
+          {t("decline")}
+        </Button>
+        <Button
+          size="sm"
+          variant="danger"
+          disabled={disabled || answered || !onAnswer}
+          onClick={() => answer(true)}
+        >
+          {t("gameConfirm")}
         </Button>
       </div>
     </div>

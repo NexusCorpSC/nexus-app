@@ -10,5 +10,23 @@
   "found": "Game.log encontrado",
   "missing": "Game.log no encontrado",
   "saveError": "No se pudieron guardar los ajustes.",
-  "save": "Guardar"
+  "save": "Guardar",
+  "telemetry": {
+    "title": "Telemetría del juego",
+    "description": "Star Citizen puede abrir en tu PC (solo 127.0.0.1) un servicio que da tu estado, el de tu nave, y permite activar acciones. La app se conecta sola mientras el juego está abierto.",
+    "enable": "Conectarse a la telemetría del juego",
+    "port": "Puerto {port}",
+    "inGame": "Activación en el juego",
+    "noBuild": "No se ha encontrado ninguna versión del juego junto a la carpeta del Game.log de arriba.",
+    "enabled": "Activada",
+    "notEnabled": "Desactivada",
+    "activate": "Activar",
+    "gameRunning": "Star Citizen está abierto: ciérralo para activar la telemetría, reescribe este archivo al salir.",
+    "done": "Telemetría activada para {build}. Estará activa la próxima vez que se abra el juego.",
+    "refresh": "Actualizar",
+    "confirmTitle": "¿Activar la telemetría para {build}?",
+    "confirmBody": "La app añade GameTelemetryEnabled al archivo de abajo, tras guardar una copia a su lado (attributes.xml.nexus-….bak). El servicio solo escucha en 127.0.0.1.",
+    "cancel": "Cancelar",
+    "confirm": "Activar"
+  }
 }

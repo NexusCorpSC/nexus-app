@@ -1,0 +1,129 @@
+{
+  "title": "Game telemetry",
+  "description": "What Star Citizen says about your character and your ship, live, and the actions the app can trigger in game. Nothing leaves your PC, except what you ask Nexus Chat.",
+  "status": {
+    "disabled": "Disabled",
+    "waiting": "Waiting for the game",
+    "live": "Live",
+    "noCharacter": "Connected, no character"
+  },
+  "empty": {
+    "disabled": "Telemetry is disabled in the settings.",
+    "waiting": "The game is not running, or its telemetry is not enabled.",
+    "noCharacter": "Connected to the game. Data comes in as soon as a character is in game."
+  },
+  "help": {
+    "disabled": "Telemetry is disabled.",
+    "waiting": "No telemetry service answers on 127.0.0.1:{port}. Start the game after enabling GameTelemetryEnabled.",
+    "settings": "Open the settings"
+  },
+  "home": {
+    "title": "In game",
+    "open": "See all"
+  },
+  "player": {
+    "balance": "Balance",
+    "auec": "{amount} aUEC",
+    "health": "Health",
+    "oxygen": "Oxygen",
+    "hunger": "Hunger",
+    "thirst": "Thirst",
+    "bodyTemperature": "Body temp.",
+    "heartRate": "Heart rate",
+    "externalTemperature": "Outside temp.",
+    "radiation": "Radiation",
+    "atmosphere": "Atmosphere",
+    "breathable": "Breathable",
+    "notBreathable": "Not breathable",
+    "seat": "Seat"
+  },
+  "vehicle": {
+    "title": "Ship",
+    "landed": "Landed",
+    "decoupled": "Decoupled",
+    "hydrogen": "Hydrogen",
+    "quantum": "Quantum",
+    "hull": "Hull",
+    "shields": "Shields",
+    "speed": "Speed",
+    "altitude": "Altitude",
+    "radarAltitude": "Radar alt.",
+    "verticalSpeed": "Vertical speed",
+    "heading": "Heading",
+    "gear": "Gear"
+  },
+  "units": {
+    "celsius": "{value} °C",
+    "bpm": "{value} bpm",
+    "ms": "{value} m/s",
+    "m": "{value} m",
+    "degrees": "{value}°"
+  },
+  "locomotion": {
+    "onFoot": "On foot",
+    "eva": "EVA",
+    "seated": "Seated"
+  },
+  "role": {
+    "pilot": "Pilot",
+    "gunner": "Gunner",
+    "crew": "Crew"
+  },
+  "masterMode": {
+    "navigation": "NAV",
+    "scm": "SCM",
+    "stealth": "Stealth"
+  },
+  "deployment": {
+    "retracted": "Retracted",
+    "deploying": "Deploying",
+    "deployed": "Deployed",
+    "retracting": "Retracting"
+  },
+  "events": {
+    "title": "Events",
+    "empty": "No event since the app opened.",
+    "kinds": {
+      "spawn": "Spawned",
+      "dead": "Died",
+      "enterSeat": "Took a seat",
+      "leaveSeat": "Left a seat",
+      "respawn": "Respawned",
+      "downed": "Downed"
+    }
+  },
+  "actions": {
+    "title": "Game actions",
+    "hint": "Each action runs on click. Actions that cannot be undone (eject, self-destruct, emergency exit) ask for confirmation. For a held action, enter a duration in seconds.",
+    "notConnected": "Actions are available once the app is connected to the game.",
+    "loading": "Loading actions…",
+    "loadError": "The list of actions could not be read.",
+    "search": "Search an action",
+    "none": "No action found",
+    "otherCategory": "Other",
+    "dangerous": "Confirmation",
+    "holdLabel": "How long to hold {action}, in seconds",
+    "holdPlaceholder": "Hold (s)",
+    "trigger": "Trigger",
+    "confirmTitle": "Trigger this action?",
+    "confirmBody": "This action cannot be undone in game. It will be triggered right away.",
+    "cancel": "Cancel",
+    "confirm": "Trigger"
+  },
+  "triggerStatus": {
+    "ok": "Triggered.",
+    "unknownAction": "The game does not know this action.",
+    "mapInactive": "Action unavailable right now.",
+    "rateLimited": "Too many actions in a row, try again in a moment.",
+    "failed": "The game could not trigger the action.",
+    "holdNotAllowed": "This action cannot be held.",
+    "filtered": "The game refuses this action."
+  },
+  "errors": {
+    "notConnected": "The app is not connected to the game.",
+    "confirmationRequired": "This action needs a confirmation.",
+    "gameRunning": "Close Star Citizen first: it rewrites this file when it exits.",
+    "buildNotFound": "Game build not found.",
+    "unexpectedFile": "attributes.xml is not shaped as expected: nothing was changed."
+  }
+}

@@ -16,6 +16,7 @@ import {
   SettingsError,
   SettingsSectionHeader,
 } from "@/components/settings/section-header";
+import { TelemetrySettingsCard } from "@/components/settings/telemetry-card";
 
 export function GameSection() {
   const t = useTranslations("SettingsGame");
@@ -133,6 +134,10 @@ export function GameSection() {
           </div>
         </div>
       </Card>
+
+      <div className="mt-4">
+        <TelemetrySettingsCard />
+      </div>
     </section>
   );
 }

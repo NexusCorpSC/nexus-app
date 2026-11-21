@@ -68,6 +68,9 @@
     "declined": "Refusé : {name}",
     "refused": "Impossible : {name}",
     "failed": "Échec : {name}",
+    "gameConfirmTitle": "Action en jeu à confirmer",
+    "gameConfirmBody": "Nexus Chat veut déclencher {action} dans le jeu. Cette action est sans retour.",
+    "gameConfirm": "Déclencher",
     "names": {
       "search": "Recherche dans Nexus Tools",
       "search_items": "Recherche d'objets",
@@ -201,7 +204,10 @@
       "confirm_data": "Confirmation de la donnée",
       "list_my_contributions": "Lecture de vos contributions",
       "list_missing": "Lecture de ce qui manque au catalogue",
-      "get_leaderboard": "Lecture du classement des contributeurs"
+      "get_leaderboard": "Lecture du classement des contributeurs",
+      "game_status": "Lecture de la télémétrie du jeu",
+      "game_list_actions": "Liste des actions du jeu",
+      "game_trigger_action": "Action en jeu"
     }
   },
   "errors": {

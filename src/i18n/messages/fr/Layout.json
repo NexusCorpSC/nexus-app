@@ -24,6 +24,7 @@
     "notes": "Bloc-notes",
     "chat": "Nexus Chat",
     "cargo": "Cargo",
+    "telemetry": "Télémétrie",
     "orgs": "Organisations"
   },
   "friendsPlaying": "{count} en jeu",

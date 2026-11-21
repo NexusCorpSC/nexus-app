@@ -38,6 +38,65 @@ notification du système : le jeu garde le fichier ouvert en écriture toute la
 session, et Windows ne signale pas de manière fiable ce qui change dans un
 fichier tenu ainsi.
 
+## Télémétrie du jeu
+
+Star Citizen (depuis la 5.0) ouvre un service gRPC local quand l'attribut
+`GameTelemetryEnabled` vaut `1` dans
+`StarCitizen\<LIVE|PTU>\user\client\0\Profiles\default\attributes.xml` :
+HTTP/2 sans TLS, sur `127.0.0.1:2942` par défaut. Le port réel est lu dans
+`Game.log` (ligne `GameTelemetryService: 127.0.0.1:<port>`), par le suivi du
+journal ou, au démarrage, dans les premiers Mo du fichier. Seule l'adresse de
+bouclage est acceptée ; l'option du jeu qui l'ouvrirait sur le réseau
+(`LocalServicesExternal`) n'est jamais touchée.
+
+Le schéma (`sc.game.telemetry.v1`) est dans `src-tauri/proto/`, reconstruit
+d'après les descripteurs intégrés à `StarCitizen.exe` (PTU 5.0, build
+13248297) ; les numéros de champs sont ceux du jeu. `build.rs` le compile avec
+`protox` et `tonic-prost-build` : pas de `protoc` à installer.
+
+`src-tauri/src/telemetry.rs` tient le flux `TelemetryStream` (environ 20 trames
+par seconde, seulement avec un personnage en jeu) :
+
+- connexion au démarrage de la fenêtre principale (`telemetry_sync`, réglage
+  `telemetryEnabled`, activé par défaut), puis nouvel essai toutes les 2 à 15 s
+  tant que rien ne répond ; un flux muet 60 s est rouvert ;
+- chaque partie d'une trame (personnage, vaisseau, armes) est gardée avec son
+  heure : le frontend considère une partie de plus de 3 s comme absente
+  (`fresh` dans `src/lib/telemetry.ts`), le vaisseau disparaît donc quand on
+  quitte son siège ;
+- les fenêtres reçoivent l'état au plus 4 fois par seconde
+  (`telemetry://frame`), chaque événement du jeu (mort, réapparition, à terre,
+  siège) dès qu'il arrive (`telemetry://event`), et les changements de
+  connexion (`telemetry://status`) ;
+- rien n'est envoyé au serveur, sauf ce que Nexus Chat lit à la demande.
+
+Aucune position dans ce flux : le NPS reste sur `/showlocation` et
+`r_displayInfo`.
+
+**Actions.** `ListTriggerableActions` donne la liste des actions déclenchables
+(une centaine), `TriggerGameAction` en déclenche une, avec une durée de
+maintien pour les actions qui le permettent (10 s au plus). La page
+**Télémétrie** les déclenche une par une, au clic. Les actions sans retour sont
+reconnues à leur nom (`eject`, `self_destruct`, `emergency`, `suicide`,
+`jettison`) : `is_dangerous` en Rust, `isDangerousAction` en TypeScript.
+Rust refuse de les déclencher sans `confirmed`, que le frontend ne passe
+qu'après le « oui » du joueur.
+
+**Activation.** **Paramètres › Jeu** liste les versions du jeu à côté du
+dossier du `Game.log` (`LIVE`, `PTU`…) et l'état de l'attribut dans chacune.
+**Activer** refuse tant que `StarCitizen.exe` tourne (le jeu réécrit le fichier
+en quittant), copie `attributes.xml` en `attributes.xml.nexus-<horodatage>.bak`,
+puis ajoute l'attribut (ou le passe à `1`). Un fichier qui n'a pas la forme
+attendue n'est pas modifié.
+
+**Nexus Chat.** Dans l'app, le chat a trois outils de plus : `game_status`,
+`game_list_actions` et `game_trigger_action`. Le site les déclare sans les
+exécuter (`lib/chat/game-tools.ts` dans nexus-tools, seulement quand la
+requête porte `gameTools: true`) ; l'app y répond (`src/lib/chat-game-tools.ts`)
+et renvoie le message, dont le site ne reprend que les réponses aux appels en
+attente. Une action sans retour demandée par le chat affiche une carte de
+confirmation dans la conversation ; elle n'est déclenchée qu'après le clic.
+
 ## NPS (Nexus Positioning System)
 
 La superposition NPS (`Ctrl+Shift+K`) dit à quelle distance est un lieu et

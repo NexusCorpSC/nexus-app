@@ -1,6 +1,6 @@
 [package]
 name = "nexus-app"
-version = "0.53.0"
+version = "0.54.0"
 description = "Desktop client for Nexus Tools"
 authors = ["Nexus Corp"]
 edition = "2021"
@@ -16,6 +16,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+# The game's telemetry service (`proto/`, `src/telemetry.rs`) is compiled from
+# its `.proto` files by `protox`, a protobuf compiler written in Rust: no
+# `protoc` to install on the machines that build the app.
+protox = "0.10"
+tonic-prost-build = "0.14"
 
 [dependencies]
 # `tray-icon`: the notification area icon, which is what says the app is
@@ -44,6 +49,12 @@ tokio = { version = "1", features = ["sync", "time", "macros", "net", "io-util"]
 # Reads the lines `Game.log` is followed for (`src/game_log.rs`). Already in
 # the tree through Tauri's own dependencies.
 regex = "1"
+# The local gRPC service of the game (`src/telemetry.rs`): HTTP/2 without TLS
+# on 127.0.0.1, so the client side of `tonic` only — `hyper`, `h2` and `tower`
+# are already in the tree through `reqwest`.
+tonic = { version = "0.14", default-features = false, features = ["channel", "codegen"] }
+tonic-prost = "0.14"
+prost = "0.14"
 
 # Screen capture and OCR are Windows-only, matching the only target platform.
 # `xcap` grabs the monitor pixels; `windows` exposes Windows.Media.Ocr, the OCR

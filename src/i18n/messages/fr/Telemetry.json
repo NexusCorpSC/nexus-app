@@ -1,0 +1,129 @@
+{
+  "title": "Télémétrie du jeu",
+  "description": "Ce que Star Citizen dit de votre personnage et de votre vaisseau, en direct, et les actions que l'app peut déclencher en jeu. Rien ne quitte votre PC, sauf ce que vous demandez à Nexus Chat.",
+  "status": {
+    "disabled": "Désactivée",
+    "waiting": "En attente du jeu",
+    "live": "En direct",
+    "noCharacter": "Connecté, sans personnage"
+  },
+  "empty": {
+    "disabled": "La télémétrie est désactivée dans les réglages.",
+    "waiting": "Le jeu n'est pas lancé, ou sa télémétrie n'est pas activée.",
+    "noCharacter": "Connecté au jeu. Les données arrivent dès qu'un personnage est en jeu."
+  },
+  "help": {
+    "disabled": "La télémétrie est désactivée.",
+    "waiting": "Aucun service de télémétrie ne répond sur 127.0.0.1:{port}. Lancez le jeu après avoir activé GameTelemetryEnabled.",
+    "settings": "Ouvrir les réglages"
+  },
+  "home": {
+    "title": "En jeu",
+    "open": "Tout voir"
+  },
+  "player": {
+    "balance": "Solde",
+    "auec": "{amount} aUEC",
+    "health": "Santé",
+    "oxygen": "Oxygène",
+    "hunger": "Faim",
+    "thirst": "Soif",
+    "bodyTemperature": "Temp. corporelle",
+    "heartRate": "Rythme cardiaque",
+    "externalTemperature": "Temp. extérieure",
+    "radiation": "Radiation",
+    "atmosphere": "Atmosphère",
+    "breathable": "Respirable",
+    "notBreathable": "Irrespirable",
+    "seat": "Siège"
+  },
+  "vehicle": {
+    "title": "Vaisseau",
+    "landed": "Posé",
+    "decoupled": "Découplé",
+    "hydrogen": "Hydrogène",
+    "quantum": "Quantum",
+    "hull": "Coque",
+    "shields": "Boucliers",
+    "speed": "Vitesse",
+    "altitude": "Altitude",
+    "radarAltitude": "Alt. radar",
+    "verticalSpeed": "Vitesse verticale",
+    "heading": "Cap",
+    "gear": "Train"
+  },
+  "units": {
+    "celsius": "{value} °C",
+    "bpm": "{value} bpm",
+    "ms": "{value} m/s",
+    "m": "{value} m",
+    "degrees": "{value}°"
+  },
+  "locomotion": {
+    "onFoot": "À pied",
+    "eva": "EVA",
+    "seated": "Assis"
+  },
+  "role": {
+    "pilot": "Pilote",
+    "gunner": "Artilleur",
+    "crew": "Équipage"
+  },
+  "masterMode": {
+    "navigation": "NAV",
+    "scm": "SCM",
+    "stealth": "Furtif"
+  },
+  "deployment": {
+    "retracted": "Rentré",
+    "deploying": "Sortie",
+    "deployed": "Sorti",
+    "retracting": "Rentrée"
+  },
+  "events": {
+    "title": "Événements",
+    "empty": "Aucun événement depuis l'ouverture de l'app.",
+    "kinds": {
+      "spawn": "Apparition",
+      "dead": "Mort",
+      "enterSeat": "Assis à un poste",
+      "leaveSeat": "Poste quitté",
+      "respawn": "Réapparition",
+      "downed": "À terre"
+    }
+  },
+  "actions": {
+    "title": "Actions du jeu",
+    "hint": "Chaque action part au clic. Les actions sans retour (éjection, autodestruction, sortie d'urgence) demandent une confirmation. Pour une action maintenue, indiquez une durée en secondes.",
+    "notConnected": "Les actions sont disponibles quand l'app est connectée au jeu.",
+    "loading": "Chargement des actions…",
+    "loadError": "La liste des actions n'a pas pu être lue.",
+    "search": "Chercher une action",
+    "none": "Aucune action trouvée",
+    "otherCategory": "Autres",
+    "dangerous": "Confirmation",
+    "holdLabel": "Durée de maintien de {action}, en secondes",
+    "holdPlaceholder": "Maintien (s)",
+    "trigger": "Déclencher",
+    "confirmTitle": "Déclencher cette action ?",
+    "confirmBody": "Cette action est sans retour en jeu. Elle sera déclenchée immédiatement.",
+    "cancel": "Annuler",
+    "confirm": "Déclencher"
+  },
+  "triggerStatus": {
+    "ok": "Déclenchée.",
+    "unknownAction": "Action inconnue du jeu.",
+    "mapInactive": "Action indisponible dans la situation actuelle.",
+    "rateLimited": "Trop d'actions d'affilée, réessayez dans un instant.",
+    "failed": "Le jeu n'a pas pu déclencher l'action.",
+    "holdNotAllowed": "Cette action ne peut pas être maintenue.",
+    "filtered": "Le jeu refuse cette action."
+  },
+  "errors": {
+    "notConnected": "L'app n'est pas connectée au jeu.",
+    "confirmationRequired": "Cette action demande une confirmation.",
+    "gameRunning": "Fermez Star Citizen d'abord : il réécrit ce fichier en quittant.",
+    "buildNotFound": "Version du jeu introuvable.",
+    "unexpectedFile": "Le fichier attributes.xml n'a pas la forme attendue : rien n'a été modifié."
+  }
+}

@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import {
   DefaultChatTransport,
+  getToolName,
   isToolUIPart,
   lastAssistantMessageIsCompleteWithApprovalResponses,
+  lastAssistantMessageIsCompleteWithToolCalls,
 } from "ai";
 import { useLocale, useTranslations } from "use-intl";
 import {
@@ -23,6 +25,13 @@ import type { ChatVoice } from "@/hooks/use-chat-voice";
 import { chatErrorCode, chatFetch, requestChatStop } from "@/lib/api/chat";
 import { logVoice, speechText, textPartCount } from "@/lib/chat-voice";
 import { cn } from "@/lib/utils";
+import {
+  confirmGameAction,
+  isGameTool,
+  needsConfirmation,
+  runGameTool,
+  type GameToolResult,
+} from "@/lib/chat-game-tools";
 import {
   CHAT_MESSAGE_MAX_LENGTH,
   type ChatStatus,
@@ -107,6 +116,9 @@ export function ChatView({
             id: chatId,
             message: messages[messages.length - 1],
             ...(voiceTurns.has(chatId) && { voice: true }),
+            // The game's tools, answered from this computer
+            // (`src/lib/chat-game-tools.ts`).
+            gameTools: true,
           },
         }),
       }),
@@ -117,6 +129,7 @@ export function ChatView({
     messages,
     sendMessage,
     addToolApprovalResponse,
+    addToolOutput,
     regenerate,
     stop,
     status: chatStatus,
@@ -126,7 +139,18 @@ export function ChatView({
     id,
     messages: initialMessages,
     transport,
-    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
+    // After the player's answers to the confirmations, and after the app's
+    // answers to the game's tools: the model goes on.
+    sendAutomaticallyWhen: (options) =>
+      lastAssistantMessageIsCompleteWithApprovalResponses(options) ||
+      lastAssistantMessageIsCompleteWithToolCalls(options),
+    onToolCall: ({ toolCall }) => {
+      if (toolCall.dynamic || !isGameTool(toolCall.toolName)) return;
+      const { toolName, toolCallId, input } = toolCall;
+      void runGameTool(toolName, input).then((result) =>
+        answerGameTool(toolName, toolCallId, result),
+      );
+    },
     onFinish: ({ message, isError, isAbort, isDisconnect }) => {
       const reader = voiceRef.current;
       // An answer the player stopped, or that was cut off, is not read.
@@ -158,6 +182,23 @@ export function ChatView({
     },
   });
 
+  // Stable across renders: `onToolCall` above keeps the first one it saw.
+  const addToolOutputRef = useRef(addToolOutput);
+  addToolOutputRef.current = addToolOutput;
+  function answerGameTool(
+    tool: string,
+    toolCallId: string,
+    result: GameToolResult,
+  ) {
+    // A dangerous action waits for the card in the message.
+    if (result.kind === "confirm") return;
+    void addToolOutputRef.current(
+      result.kind === "output"
+        ? { tool, toolCallId, output: result.output }
+        : { tool, toolCallId, state: "output-error", errorText: result.errorText },
+    );
+  }
+
   const busy = chatStatus === "submitted" || chatStatus === "streaming";
   const exhausted = status.remainingMicros <= 0;
   const voiceOpen = Boolean(voice && status.voice);
@@ -172,7 +213,11 @@ export function ChatView({
       errorCode === "busy") &&
     !(last?.role === "assistant" && hasConfirmedWrite(last));
   const pendingApproval = last?.parts.some(
-    (part) => "state" in part && part.state === "approval-requested",
+    (part) =>
+      ("state" in part && part.state === "approval-requested") ||
+      (isToolUIPart(part) &&
+        part.state === "input-available" &&
+        needsConfirmation(getToolName(part), part.input)),
   );
 
   useEffect(() => {
@@ -287,6 +332,11 @@ export function ChatView({
             disabled={busy}
             onApproval={(approvalId, approved) =>
               void addToolApprovalResponse({ id: approvalId, approved })
+            }
+            onGameConfirm={(part, approved) =>
+              void confirmGameAction(part.input, approved).then((result) =>
+                answerGameTool(getToolName(part), part.toolCallId, result),
+              )
             }
           />
         ))}

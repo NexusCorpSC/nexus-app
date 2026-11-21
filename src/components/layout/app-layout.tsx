@@ -22,6 +22,7 @@ import {
   Archive,
   Bot,
   Container,
+  Gauge,
   FlaskConical,
   Flag,
   Hammer,
@@ -58,6 +59,7 @@ import { useFriends } from "@/hooks/use-friends";
 import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { useGameLog } from "@/hooks/use-game-log";
+import { syncTelemetry } from "@/lib/telemetry";
 import { useNavigationTracker } from "@/hooks/use-navigation-tracker";
 import { useScrollRestoration } from "@/hooks/use-scroll-restoration";
 import { cn } from "@/lib/utils";
@@ -82,6 +84,7 @@ type NavKey =
   | "notes"
   | "chat"
   | "cargo"
+  | "telemetry"
   | "orgs";
 
 type NavItem = {
@@ -156,6 +159,8 @@ const NAV_GROUPS: NavGroup[] = [
       { to: "/notes", label: "notes", icon: NotebookPen },
       { to: "/chat", label: "chat", icon: Bot, requiresAuth: true },
       { to: "/cargo", label: "cargo", icon: Container },
+      // Ce que le jeu dit du joueur et de son vaisseau, et ses actions.
+      { to: "/telemetry", label: "telemetry", icon: Gauge },
       { to: "/orgs", label: "orgs", icon: Users },
     ],
   },
@@ -216,6 +221,14 @@ export default function AppLayout() {
   // Star Citizen's own log, followed from Rust: a blueprint received in game is
   // offered for «mes blueprints» from here, the window holding the session.
   useGameLog(Boolean(user));
+
+  // The game's telemetry, held from Rust: it starts once this window has
+  // opened the settings store it reads.
+  useEffect(() => {
+    void syncTelemetry().catch((error) =>
+      console.error("cannot follow the game telemetry", error),
+    );
+  }, []);
 
   // What became of the player's contributions on the site: published, sent
   // back, an achievement, a level. Read from here, the window with the session.

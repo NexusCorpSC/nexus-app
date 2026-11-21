@@ -54,6 +54,7 @@ import type Share from "./messages/fr/Share.json";
 import type Shortcuts from "./messages/fr/Shortcuts.json";
 import type Squad from "./messages/fr/Squad.json";
 import type SquadRoles from "./messages/fr/SquadRoles.json";
+import type Telemetry from "./messages/fr/Telemetry.json";
 import type Updates from "./messages/fr/Updates.json";
 
 export type Messages = {
@@ -111,5 +112,6 @@ export type Messages = {
   Shortcuts: typeof Shortcuts;
   Squad: typeof Squad;
   SquadRoles: typeof SquadRoles;
+  Telemetry: typeof Telemetry;
   Updates: typeof Updates;
 };
