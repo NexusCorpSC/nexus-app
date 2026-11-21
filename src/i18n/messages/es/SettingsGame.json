@@ -27,6 +27,8 @@
     "confirmTitle": "¿Activar la telemetría para {build}?",
     "confirmBody": "La app añade GameTelemetryEnabled al archivo de abajo, tras guardar una copia a su lado (attributes.xml.nexus-….bak). El servicio solo escucha en 127.0.0.1.",
     "cancel": "Cancelar",
-    "confirm": "Activar"
+    "confirm": "Activar",
+    "squadAutoDown": "Marcarme «abatido» en el escuadrón cuando caiga o muera",
+    "squadAutoDownHint": "Y «activo» al reaparecer. El juego no avisa cuando te reaniman: vuelve a activo desde el escuadrón o el menú radial."
   }
 }

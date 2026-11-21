@@ -77,5 +77,10 @@
     "readyCheckBody": "{by} asks everybody to say they are ready.",
     "ready": "Ready",
     "announcementTitle": "Announcement — {name}"
+  },
+  "telemetry": {
+    "down": "Down in {name}",
+    "alive": "Active in {name}",
+    "body": "From the game's telemetry"
   }
 }

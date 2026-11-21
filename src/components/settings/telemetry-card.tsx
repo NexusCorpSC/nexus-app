@@ -5,7 +5,12 @@ import {
   SettingsCardTitle,
   SettingsError,
 } from "@/components/settings/section-header";
-import { getTelemetryEnabled, setTelemetryEnabled } from "@/lib/settings";
+import {
+  getSquadAutoDown,
+  getTelemetryEnabled,
+  setSquadAutoDown,
+  setTelemetryEnabled,
+} from "@/lib/settings";
 import {
   enableTelemetryInGame,
   getTelemetryActivation,
@@ -26,6 +31,7 @@ export function TelemetrySettingsCard() {
   const errors = useTranslations("Telemetry.errors");
   const telemetry = useTelemetry();
   const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [autoDown, setAutoDown] = useState<boolean | null>(null);
   const [activation, setActivation] = useState<Activation | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,6 +48,7 @@ export function TelemetrySettingsCard() {
 
   useEffect(() => {
     void getTelemetryEnabled().then(setEnabled);
+    void getSquadAutoDown().then(setAutoDown);
     refresh();
   }, [refresh]);
 
@@ -49,6 +56,11 @@ export function TelemetrySettingsCard() {
     setEnabled(next);
     await setTelemetryEnabled(next);
     await syncTelemetry().catch(() => {});
+  }
+
+  async function toggleAutoDown(next: boolean) {
+    setAutoDown(next);
+    await setSquadAutoDown(next);
   }
 
   function describe(cause: unknown) {
@@ -87,6 +99,22 @@ export function TelemetrySettingsCard() {
           />
           {t("enable")}
         </label>
+
+        <div className="space-y-1">
+          <label className="flex cursor-pointer items-center gap-2 text-[13.5px] text-nexus-bright">
+            <input
+              type="checkbox"
+              checked={autoDown ?? true}
+              disabled={autoDown === null || enabled === false}
+              onChange={(event) => void toggleAutoDown(event.target.checked)}
+              className="accent-nexus-accent"
+            />
+            {t("squadAutoDown")}
+          </label>
+          <p className="pl-6 text-xs text-nexus-muted">
+            {t("squadAutoDownHint")}
+          </p>
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 text-xs text-nexus-muted">
           <TelemetryBadge telemetry={telemetry} />

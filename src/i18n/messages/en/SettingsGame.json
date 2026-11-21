@@ -27,6 +27,8 @@
     "confirmTitle": "Enable telemetry for {build}?",
     "confirmBody": "The app adds GameTelemetryEnabled to the file below, after keeping a copy next to it (attributes.xml.nexus-….bak). The service only listens on 127.0.0.1.",
     "cancel": "Cancel",
-    "confirm": "Enable"
+    "confirm": "Enable",
+    "squadAutoDown": "Mark me \"down\" in my squad when I'm downed or dead",
+    "squadAutoDownHint": "And \"active\" on respawn. The game doesn't report being revived: switch back to active from the squad or the radial menu."
   }
 }
