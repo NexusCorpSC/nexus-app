@@ -87,6 +87,19 @@ actions du PTU 5.0 ; un nom inconnu qui ressemble aux pires (`eject`,
 Rust refuse de les déclencher sans `confirmed`, que le frontend ne passe
 qu'après le « oui » du joueur.
 
+**Escouade.** La fenêtre d'escouade (créée cachée au démarrage, elle a la
+session et vit autant que l'app) écoute `telemetry://event`
+(`src/hooks/use-telemetry-squad-status.ts`) : `ACTOR_DOWNED` et `ACTOR_DEAD`
+passent la ligne du joueur en `alive: false, ready: false`, `ACTOR_SPAWN` et
+`ACTOR_RESPAWN` la repassent en `alive: true`. Le site n'a rien de nouveau :
+c'est le même `PATCH /api/squads/members/<id>` que le bouton de la ligne. À
+chaque évènement, l'app relit la vue (le cache d'une fenêtre cachée peut être
+vieux) et n'écrit que si la ligne dit autre chose, dans chaque escouade où le
+joueur a une ligne (l'organisateur d'un raid peut en avoir plusieurs) ; aucun
+envoi périodique. Le jeu n'envoie rien quand un joueur à terre est relevé :
+repasser actif reste un clic. Réglage `squadAutoDown` (activé par défaut),
+dans la carte Télémétrie de **Paramètres › Jeu**.
+
 **Activation.** **Paramètres › Jeu** liste les versions du jeu à côté du
 dossier du `Game.log` (`LIVE`, `PTU`…) et l'état de l'attribut dans chacune.
 **Activer** refuse tant que `StarCitizen.exe` tourne (le jeu réécrit le fichier

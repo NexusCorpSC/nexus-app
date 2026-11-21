@@ -77,5 +77,10 @@
     "readyCheckBody": "{by} pide a todos que se declaren listos.",
     "ready": "Listo",
     "announcementTitle": "Anuncio — {name}"
+  },
+  "telemetry": {
+    "down": "Abatido en {name}",
+    "alive": "Activo en {name}",
+    "body": "Según la telemetría del juego"
   }
 }

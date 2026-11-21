@@ -59,6 +59,7 @@ const KEY_RAID_LAYOUT = "raidLayout";
 const KEY_GAME_LOG_DIR = "gameLogDir";
 const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
 const KEY_TELEMETRY_ENABLED = "telemetryEnabled";
+const KEY_SQUAD_AUTO_DOWN = "squadAutoDown";
 const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
 const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
@@ -400,6 +401,21 @@ export async function getTelemetryEnabled(): Promise<boolean> {
 export async function setTelemetryEnabled(enabled: boolean): Promise<void> {
   const store = await getStore();
   await store.set(KEY_TELEMETRY_ENABLED, enabled);
+}
+
+/**
+ * Whether the game's telemetry marks the player «éliminé» in their squad when
+ * they go down or die, and «actif» when they respawn. On unless turned off.
+ */
+export async function getSquadAutoDown(): Promise<boolean> {
+  const store = await getStore();
+  const value = await store.get<unknown>(KEY_SQUAD_AUTO_DOWN);
+  return typeof value === "boolean" ? value : true;
+}
+
+export async function setSquadAutoDown(enabled: boolean): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_SQUAD_AUTO_DOWN, enabled);
 }
 
 /**

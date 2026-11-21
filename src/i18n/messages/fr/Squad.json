@@ -77,5 +77,10 @@
     "readyCheckBody": "{by} demande à tout le monde de se déclarer prêt.",
     "ready": "Prêt",
     "announcementTitle": "Annonce — {name}"
+  },
+  "telemetry": {
+    "down": "Éliminé dans {name}",
+    "alive": "Actif dans {name}",
+    "body": "D'après la télémétrie du jeu"
   }
 }

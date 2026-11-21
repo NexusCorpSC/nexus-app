@@ -78,6 +78,10 @@ l'autodestruction, demandent une confirmation. Nexus Chat peut aussi les lire
 (« combien de quantum me reste-t-il ? ») et déclencher une action à votre
 demande.
 
+Dans une escouade, l'app vous passe aussi **éliminé** dès que vous êtes à
+terre ou mort, et **actif** à la réapparition (le jeu ne dit pas quand on vous
+relève : repassez actif vous-même). Réglage dans **Paramètres › Jeu**.
+
 Pour l'activer : **Paramètres › Jeu › Télémétrie du jeu › Activer**, jeu
 fermé. L'app ajoute `GameTelemetryEnabled` au fichier `attributes.xml` du jeu,
 après en avoir gardé une copie.
