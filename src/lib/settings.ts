@@ -41,6 +41,7 @@ const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_NPS = "shortcutNps";
 const KEY_SHORTCUT_CHAT = "shortcutChat";
 const KEY_SHORTCUT_RADAR = "shortcutRadar";
+const KEY_SHORTCUT_HALO = "shortcutHalo";
 const KEY_SHORTCUT_TALK = "shortcutTalk";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
@@ -59,6 +60,8 @@ const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_RADAR_SCREEN = "radarScreen";
 const KEY_RADAR_SIGNATURES = "radarSignatures";
 const KEY_RADAR_CONTEXT = "radarContext";
+const KEY_HALO_DATA = "haloData";
+const KEY_HALO_ROUTE = "haloRoute";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
 const KEY_GAME_LOG_DIR = "gameLogDir";
@@ -156,6 +159,8 @@ export const DEFAULT_SHORTCUTS = {
   nps: "Ctrl+Shift+KeyK",
   chat: "Ctrl+Shift+KeyH",
   radar: "Ctrl+Shift+KeyR",
+  // A for Aaron: H is the chat's.
+  halo: "Ctrl+Shift+KeyA",
   // Held, not pressed: the microphone is open while it is down.
   talk: "Ctrl+Shift+KeyJ",
   opacity: "Ctrl+Shift+KeyO",
@@ -194,6 +199,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_CHAT)) ?? DEFAULT_SHORTCUTS.chat,
     radar:
       (await store.get<string>(KEY_SHORTCUT_RADAR)) ?? DEFAULT_SHORTCUTS.radar,
+    halo:
+      (await store.get<string>(KEY_SHORTCUT_HALO)) ?? DEFAULT_SHORTCUTS.halo,
     talk:
       (await store.get<string>(KEY_SHORTCUT_TALK)) ?? DEFAULT_SHORTCUTS.talk,
     opacity:
@@ -221,6 +228,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_NPS, shortcuts.nps);
   await store.set(KEY_SHORTCUT_CHAT, shortcuts.chat);
   await store.set(KEY_SHORTCUT_RADAR, shortcuts.radar);
+  await store.set(KEY_SHORTCUT_HALO, shortcuts.halo);
   await store.set(KEY_SHORTCUT_TALK, shortcuts.talk);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
@@ -266,6 +274,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     nps: storedMode(stored?.nps, "nps"),
     chat: storedMode(stored?.chat, "chat"),
     radar: storedMode(stored?.radar, "radar"),
+    halo: storedMode(stored?.halo, "halo"),
   };
 }
 
@@ -1016,4 +1025,43 @@ export async function setInvitesNotified(
     ...(marks && typeof marks === "object" ? marks : {}),
     [await accountInstanceKey(userId)]: ids,
   });
+}
+
+/** What the Aaron Halo navigator was last set to. */
+export type HaloRouteSettings = {
+  from: string;
+  /** `null`: the destination with the widest window into the band. */
+  to: string | null;
+  band: number;
+};
+
+export async function getHaloRoute(): Promise<Partial<HaloRouteSettings>> {
+  const store = await getStore();
+  const stored = await store.get<unknown>(KEY_HALO_ROUTE);
+  if (!stored || typeof stored !== "object") return {};
+  const { from, to, band } = stored as Record<string, unknown>;
+  return {
+    ...(typeof from === "string" ? { from } : {}),
+    ...(typeof to === "string" || to === null ? { to } : {}),
+    ...(typeof band === "number" ? { band } : {}),
+  };
+}
+
+export async function setHaloRoute(route: HaloRouteSettings): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_HALO_ROUTE, route);
+}
+
+/**
+ * Last known bands and jump targets from `/api/aaron-halo`, so the navigator
+ * works with no connection.
+ */
+export async function getCachedHaloData(): Promise<unknown> {
+  const store = await getStore();
+  return (await store.get<unknown>(KEY_HALO_DATA)) ?? null;
+}
+
+export async function setCachedHaloData(data: unknown): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_HALO_DATA, data);
 }

@@ -1,0 +1,40 @@
+{
+  "title": "Aaron Halo",
+  "close": "Close",
+  "from": "Departure",
+  "to": "Destination",
+  "band": "Band",
+  "bestTo": "Best window",
+  "swap": "Swap departure and destination",
+  "bandDensity": "Surveyed density: {density}%",
+  "cutAt": "Cut the jump at",
+  "remaining": "left to {to}",
+  "window": {
+    "narrow": "narrow window, {width}",
+    "normal": "{width} window",
+    "wide": "wide window, {width}"
+  },
+  "between": "between {enter} and {exit}",
+  "twice": "This route crosses the band twice: the widest crossing is shown.",
+  "noCrossing": "{from} → {to} does not cross band {band}.",
+  "noCandidate": "No route from {from} crosses band {band}.",
+  "others": "Other destinations into band {band}",
+  "guide": "Guide with the NPS",
+  "guideHint": "Sets the middle of the crossing as the NPS destination, to check afterwards",
+  "guided": "NPS destination set.",
+  "pointName": "Aaron Halo, band {band}",
+  "position": {
+    "none": "Run the NPS (screen reading or /showlocation) to know which band you are in.",
+    "inBand": "You are in band {band}.",
+    "before": "{gap} short of band {band}: keep going outwards.",
+    "after": "{gap} past band {band}: head back inwards.",
+    "age": "position from {age} ago"
+  },
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "source": {
+    "network": "Bands up to date from Nexus Tools.",
+    "cache": "Offline: bands kept from the last connection.",
+    "builtin": "Offline: bands built into the app."
+  }
+}

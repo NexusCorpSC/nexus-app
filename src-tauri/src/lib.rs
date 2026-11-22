@@ -55,6 +55,8 @@ use nps::NPS_WINDOW;
 use radar_screen::RADAR_WINDOW;
 /// Nexus Chat: the site's assistant, over the game.
 pub(crate) const CHAT_WINDOW: &str = "chat";
+/// The Aaron Halo navigator: where to cut a quantum jump to land in a band.
+pub(crate) const HALO_WINDOW: &str = "halo";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
 /// The large, centred notifications: what is asked of the whole squad.
 pub(crate) const BANNERS_WINDOW: &str = "banners";
@@ -148,6 +150,9 @@ struct OverlayOpacity {
     /// Missing from what a frontend older than the radar scanner sends.
     #[serde(default = "default_radar_mode")]
     radar: OverlayMode,
+    /// Missing from what a frontend older than the Aaron Halo navigator sends.
+    #[serde(default = "default_halo_mode")]
+    halo: OverlayMode,
 }
 
 fn default_nps_mode() -> OverlayMode {
@@ -159,6 +164,10 @@ fn default_chat_mode() -> OverlayMode {
 }
 
 fn default_radar_mode() -> OverlayMode {
+    OverlayMode::Shaded
+}
+
+fn default_halo_mode() -> OverlayMode {
     OverlayMode::Shaded
 }
 
@@ -184,6 +193,8 @@ impl Default for OverlayOpacity {
             chat: default_chat_mode(),
             // A name and a count, read over the game: shaded, like the NPS.
             radar: default_radar_mode(),
+            // One distance to watch during the jump: shaded, like the NPS.
+            halo: default_halo_mode(),
         }
     }
 }
@@ -199,6 +210,7 @@ impl OverlayOpacity {
             NPS_WINDOW => Some(self.nps),
             CHAT_WINDOW => Some(self.chat),
             RADAR_WINDOW => Some(self.radar),
+            HALO_WINDOW => Some(self.halo),
             _ => None,
         }
     }
@@ -214,6 +226,7 @@ impl OverlayOpacity {
             NPS_WINDOW => &mut self.nps,
             CHAT_WINDOW => &mut self.chat,
             RADAR_WINDOW => &mut self.radar,
+            HALO_WINDOW => &mut self.halo,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -225,7 +238,7 @@ impl OverlayOpacity {
     fn any_drawn(&self) -> bool {
         [
             self.notes, self.cargo, self.squad, self.plan, self.map, self.nps, self.chat,
-            self.radar,
+            self.radar, self.halo,
         ]
         .iter()
         .any(|mode| *mode != OverlayMode::Clear)
@@ -240,6 +253,7 @@ impl OverlayOpacity {
         self.nps = mode;
         self.chat = mode;
         self.radar = mode;
+        self.halo = mode;
     }
 }
 
@@ -295,6 +309,7 @@ fn is_overlay(label: &str) -> bool {
             | NPS_WINDOW
             | CHAT_WINDOW
             | RADAR_WINDOW
+            | HALO_WINDOW
     )
 }
 
@@ -330,6 +345,8 @@ pub(crate) enum Action {
     Chat,
     /// The radar signature scanner (`radar_screen.rs`).
     Radar,
+    /// The Aaron Halo navigator.
+    Halo,
     /// Held rather than fired: see `talk.rs`.
     Talk,
     Opacity,
@@ -355,6 +372,7 @@ impl Action {
             Action::Nps => "nps",
             Action::Chat => "chat",
             Action::Radar => "radar",
+            Action::Halo => "halo",
             Action::Talk => "talk",
             Action::Opacity => "opacity",
             Action::Lock => "lock",
@@ -404,6 +422,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Nps => toggle_overlay(app, NPS_WINDOW),
         Action::Chat => toggle_overlay(app, CHAT_WINDOW),
         Action::Radar => toggle_overlay(app, RADAR_WINDOW),
+        Action::Halo => toggle_overlay(app, HALO_WINDOW),
         // Never routed here either: both shortcut paths handle its two edges.
         Action::Talk => talk::press(app),
         Action::Opacity => flip_all_overlay_opacity(app),
@@ -465,6 +484,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the radar scanner sends.
     #[serde(default = "default_radar_shortcut")]
     radar: String,
+    /// Missing from what a frontend older than the Aaron Halo navigator sends.
+    #[serde(default = "default_halo_shortcut")]
+    halo: String,
     /// Missing from what a frontend older than the voice sends.
     #[serde(default = "default_talk_shortcut")]
     talk: String,
@@ -500,6 +522,11 @@ fn default_radar_shortcut() -> String {
     "Ctrl+Shift+KeyR".to_string()
 }
 
+/// A for Aaron: H is the chat's.
+fn default_halo_shortcut() -> String {
+    "Ctrl+Shift+KeyA".to_string()
+}
+
 fn default_talk_shortcut() -> String {
     "Ctrl+Shift+KeyJ".to_string()
 }
@@ -522,6 +549,7 @@ impl Default for ShortcutSettings {
             nps: default_nps_shortcut(),
             chat: default_chat_shortcut(),
             radar: default_radar_shortcut(),
+            halo: default_halo_shortcut(),
             talk: default_talk_shortcut(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
@@ -571,6 +599,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Nps, &requested.nps),
         (Action::Chat, &requested.chat),
         (Action::Radar, &requested.radar),
+        (Action::Halo, &requested.halo),
         (Action::Talk, &requested.talk),
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
@@ -1157,7 +1186,7 @@ fn show_overlay(app: AppHandle, label: String) -> Result<(), String> {
             announce_plan_visibility(&app)
         }
         OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW | CHAT_WINDOW
-        | RADAR_WINDOW => show_window(&app, &label),
+        | RADAR_WINDOW | HALO_WINDOW => show_window(&app, &label),
         other => Err(format!("{other} is not an overlay")),
     }
 }
@@ -1269,6 +1298,11 @@ fn close_nps_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_radar_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, RADAR_WINDOW)
+}
+
+#[tauri::command]
+fn close_halo_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, HALO_WINDOW)
 }
 
 #[tauri::command]
@@ -1584,6 +1618,7 @@ fn flip_all_overlay_locks(app: &AppHandle) -> Result<(), String> {
         NPS_WINDOW,
         CHAT_WINDOW,
         RADAR_WINDOW,
+        HALO_WINDOW,
     ] {
         let visible = window(app, label)?
             .is_visible()
@@ -1752,6 +1787,7 @@ pub fn run() {
             open_map_overlay,
             close_nps_overlay,
             close_radar_overlay,
+            close_halo_overlay,
             close_chat_overlay,
             voice_start,
             voice_stop,

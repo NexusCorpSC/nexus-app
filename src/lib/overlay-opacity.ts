@@ -25,7 +25,8 @@ export type OverlayLabel =
   | "map"
   | "nps"
   | "chat"
-  | "radar";
+  | "radar"
+  | "halo";
 
 /**
  * The three modes, in the order the button steps through them.
@@ -80,6 +81,8 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   chat: "shaded",
   // A name and a count read over the game: shaded, like the NPS.
   radar: "shaded",
+  // One distance watched during the jump: shaded, like the NPS.
+  halo: "shaded",
 };
 
 /** Steps one overlay to its next mode. Called by the button that overlay carries. */

@@ -47,6 +47,10 @@
       "label": "Radar scanner",
       "hint": "Reads the scan's radar signature and tells what it points to."
     },
+    "halo": {
+      "label": "Aaron Halo",
+      "hint": "Tells you at what remaining distance to cut the quantum jump to land in a band of the Aaron Halo."
+    },
     "chat": {
       "label": "Nexus Chat",
       "hint": "The Nexus Tools assistant, over the game."

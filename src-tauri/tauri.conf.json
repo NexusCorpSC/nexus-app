@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Nexus App",
-  "version": "0.56.0",
+  "version": "0.57.0",
   "identifier": "services.nexus.app",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -141,6 +141,22 @@
         "height": 420,
         "minWidth": 260,
         "minHeight": 200,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "visible": false
+      },
+      {
+        "label": "halo",
+        "title": "Nexus - Aaron Halo",
+        "url": "index.html#/halo-overlay",
+        "width": 340,
+        "height": 460,
+        "minWidth": 260,
+        "minHeight": 220,
         "resizable": true,
         "decorations": false,
         "transparent": true,

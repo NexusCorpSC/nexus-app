@@ -76,6 +76,15 @@ la valeur. Indiquez où vous scannez (vaisseau, ROC, à pied) pour que ce que
 vous pouvez y croiser passe en tête. Les signatures connues viennent du site et
 restent disponibles hors ligne.
 
+### Navigation vers l'Aaron Halo
+
+L'Aaron Halo, la ceinture d'astéroïdes de Stanton, n'a pas de balise de saut :
+on y entre en coupant un saut quantique qui la traverse. La superposition
+Aaron Halo (`Ctrl+Maj+A`) dit, pour un départ et une bande, à quelle distance
+restante couper le saut (le nombre à surveiller au HUD), la marge dont vous
+disposez, et les autres arrivées possibles. Une fois sorti du saut, le NPS lui
+dit dans quelle bande vous êtes. Le même calcul est sur le site.
+
 ### Télémétrie du jeu
 
 Star Citizen peut donner à l'app, sur votre PC seulement, votre solde aUEC,
@@ -162,6 +171,7 @@ votre espace :
 | `Ctrl+Maj+K` | NPS |
 | `Ctrl+Maj+X` | marquer ma position |
 | `Ctrl+Maj+R` | scanner de signature radar |
+| `Ctrl+Maj+A` | navigation vers l'Aaron Halo |
 | `Ctrl+Maj+H` | Nexus Chat |
 | `Ctrl+Maj+J` (maintenu) | parler à Nexus Chat |
 | `Ctrl+Maj+E` | escouade |
