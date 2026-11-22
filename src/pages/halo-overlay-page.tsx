@@ -14,6 +14,8 @@ import { getHaloData } from "@/lib/api/aaron-halo";
 import { getHaloRoute, setHaloRoute } from "@/lib/settings";
 import { setDestination } from "@/lib/nps-destination";
 import { showOverlay } from "@/lib/windows";
+import { onQuantumPoint } from "@/lib/quantum-navigation";
+import { QuantumRoutePanel } from "@/components/quantum-route-panel";
 import { systemOfZones, type Fix } from "@/lib/nps";
 import {
   DEFAULT_HALO_BAND,
@@ -118,6 +120,8 @@ export default function HaloOverlayPage() {
   const [fromId, setFromId] = useState("arc-l1");
   const [toId, setToId] = useState<string | null>(null);
   const [bandId, setBandId] = useState(DEFAULT_HALO_BAND);
+  const [tab, setTab] = useState<"band" | "point">("band");
+  const [pointFrom, setPointFrom] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [fix, setFix] = useState<Fix | null>(null);
   /** The route whose crossing was last set as the NPS destination. */
@@ -132,6 +136,8 @@ export default function HaloOverlayPage() {
         if (stored.from) setFromId(stored.from);
         if (stored.to !== undefined) setToId(stored.to);
         if (stored.band) setBandId(stored.band);
+        if (stored.mode) setTab(stored.mode);
+        if (stored.pointFrom !== undefined) setPointFrom(stored.pointFrom);
       })
       .catch((error) => console.error("cannot read the halo route", error))
       .finally(() => alive && setLoaded(true));
@@ -139,20 +145,27 @@ export default function HaloOverlayPage() {
     const position = listen<Fix>(POSITION_EVENT, (event) =>
       setFix(event.payload),
     );
+    // « Y aller » depuis un marqueur : l'onglet du point.
+    const point = onQuantumPoint(() => setTab("point"));
     const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
     return () => {
       alive = false;
       window.clearInterval(timer);
       void position.then((stop) => stop()).catch(() => {});
+      void point.then((stop) => stop()).catch(() => {});
     };
   }, []);
 
   useEffect(() => {
     if (!loaded) return;
-    void setHaloRoute({ from: fromId, to: toId, band: bandId }).catch((error) =>
-      console.error("cannot save the halo route", error),
-    );
-  }, [fromId, toId, bandId, loaded]);
+    void setHaloRoute({
+      from: fromId,
+      to: toId,
+      band: bandId,
+      mode: tab,
+      pointFrom,
+    }).catch((error) => console.error("cannot save the halo route", error));
+  }, [fromId, toId, bandId, tab, pointFrom, loaded]);
 
   const from = findHaloPoint(fromId, points) ?? points[0];
   const band =
@@ -188,6 +201,8 @@ export default function HaloOverlayPage() {
   const recent =
     fix && now - fix.at < POSITION_MAX_AGE_MS && isStanton(fix) ? fix : null;
   const placement = recent ? haloPlacement(recent, bands) : null;
+  // Vers un point, la lecture compte dans tous les systèmes.
+  const recentAnywhere = fix && now - fix.at < POSITION_MAX_AGE_MS ? fix : null;
 
   function close() {
     void invoke("close_halo_overlay");
@@ -263,190 +278,225 @@ export default function HaloOverlayPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-slate-100">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-1.5">
-          <label className="min-w-0 space-y-0.5">
-            <span className="text-[11px] text-slate-400">{t("from")}</span>
-            <select
-              value={from.id}
-              disabled={locked}
-              onChange={(event) => {
-                setFromId(event.target.value);
-                if (event.target.value === toId) setToId(null);
-              }}
-              className={SELECT}
-            >
-              <PointOptions points={points} />
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={swap}
-            disabled={locked || !to}
-            title={t("swap")}
-            className="rounded-lg border border-white/15 bg-white/5 p-1.5 text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
-          >
-            <span className="sr-only">{t("swap")}</span>
-            <ArrowLeftRight className="size-3.5" />
-          </button>
-          <label className="min-w-0 space-y-0.5">
-            <span className="text-[11px] text-slate-400">{t("to")}</span>
-            <select
-              value={toId && toId !== from.id ? toId : ""}
-              disabled={locked}
-              onChange={(event) => setToId(event.target.value || null)}
-              className={SELECT}
-            >
-              <option value="">{t("bestTo")}</option>
-              <PointOptions points={points} exclude={from.id} />
-            </select>
-          </label>
-        </div>
-
-        <div
-          role="radiogroup"
-          aria-label={t("band")}
-          className="grid grid-cols-10 gap-0.5"
-        >
-          {bands.map((one) => (
+        <div role="tablist" className="grid grid-cols-2 gap-1">
+          {(["band", "point"] as const).map((one) => (
             <button
-              key={one.id}
+              key={one}
               type="button"
-              role="radio"
-              aria-checked={band.id === one.id}
+              role="tab"
+              aria-selected={tab === one}
               disabled={locked}
-              title={t("bandDensity", {
-                density: Math.round(one.density * 100),
-              })}
-              onClick={() => setBandId(one.id)}
+              onClick={() => setTab(one)}
               className={cn(
-                "flex flex-col items-center gap-0.5 rounded border px-0.5 pt-0.5 pb-1 font-mono text-[11px] transition disabled:opacity-40",
-                band.id === one.id
+                "rounded-lg border px-2 py-1 text-[12px] transition disabled:opacity-60",
+                tab === one
                   ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
                   : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
               )}
             >
-              {one.id}
-              <span className="h-0.5 w-full rounded-full bg-white/10">
-                <span
-                  className="block h-full rounded-full bg-sky-300"
-                  style={{ width: `${Math.max(6, one.density * 100)}%` }}
-                />
-              </span>
+              {t(`tabs.${one}`)}
             </button>
           ))}
         </div>
 
-        {to && pass ? (
-          <section className="space-y-1.5 rounded-lg border border-sky-300/30 bg-sky-300/5 p-2.5">
-            <p className="text-[11px] uppercase tracking-wide text-slate-400">
-              {t("cutAt")}
-            </p>
-            <p className="font-mono text-4xl font-semibold tracking-wide text-sky-50">
-              {gm(pass.targetRemaining)}
-            </p>
-            <p className="text-[12px] text-slate-300">
-              {t("remaining", { to: to.label })}
-            </p>
-            <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-              <span
-                className={cn(
-                  "rounded border px-1.5 py-0.5 font-mono",
-                  WINDOW_TONE[haloWindowSize(pass.width)],
-                )}
-              >
-                {t(`window.${haloWindowSize(pass.width)}`, {
-                  width: mm(pass.width),
-                })}
-              </span>
-              <span className="text-slate-400">
-                {t("between", {
-                  enter: gm(pass.enterRemaining),
-                  exit: gm(pass.exitRemaining),
-                })}
-              </span>
-            </div>
-            {passes.length > 1 ? (
-              <p className="text-[11px] text-slate-400">{t("twice")}</p>
-            ) : null}
-            <button
-              type="button"
-              onClick={guide}
-              disabled={locked}
-              title={t("guideHint")}
-              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
-            >
-              <Compass className="size-3.5" />
-              {guided ? t("guided") : t("guide")}
-            </button>
-          </section>
+        {tab === "point" ? (
+          <QuantumRoutePanel
+            locked={locked}
+            fix={recentAnywhere}
+            pointFrom={pointFrom}
+            onPointFromChange={setPointFrom}
+          />
         ) : (
-          <p className="text-[12px] text-amber-200">
-            {to
-              ? t("noCrossing", {
-                  from: from.label,
-                  to: to.label,
-                  band: band.id,
-                })
-              : t("noCandidate", { from: from.label, band: band.id })}
-          </p>
-        )}
-
-        {others.length > 0 ? (
-          <div className="space-y-1">
-            <p className="text-[11px] uppercase tracking-wide text-slate-400">
-              {t("others", { band: band.id })}
-            </p>
-            {others.map((candidate) => (
+          <>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-1.5">
+              <label className="min-w-0 space-y-0.5">
+                <span className="text-[11px] text-slate-400">{t("from")}</span>
+                <select
+                  value={from.id}
+                  disabled={locked}
+                  onChange={(event) => {
+                    setFromId(event.target.value);
+                    if (event.target.value === toId) setToId(null);
+                  }}
+                  className={SELECT}
+                >
+                  <PointOptions points={points} />
+                </select>
+              </label>
               <button
-                key={candidate.to.id}
                 type="button"
-                disabled={locked}
-                onClick={() => setToId(candidate.to.id)}
-                className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-left text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+                onClick={swap}
+                disabled={locked || !to}
+                title={t("swap")}
+                className="rounded-lg border border-white/15 bg-white/5 p-1.5 text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
               >
-                <span className="truncate text-slate-200">
-                  {candidate.to.label}
-                </span>
-                <span className="shrink-0 font-mono text-[11px] text-slate-300">
-                  {gm(candidate.pass.targetRemaining)} ·{" "}
-                  {mm(candidate.pass.width)}
-                </span>
+                <span className="sr-only">{t("swap")}</span>
+                <ArrowLeftRight className="size-3.5" />
               </button>
-            ))}
-          </div>
-        ) : null}
+              <label className="min-w-0 space-y-0.5">
+                <span className="text-[11px] text-slate-400">{t("to")}</span>
+                <select
+                  value={toId && toId !== from.id ? toId : ""}
+                  disabled={locked}
+                  onChange={(event) => setToId(event.target.value || null)}
+                  className={SELECT}
+                >
+                  <option value="">{t("bestTo")}</option>
+                  <PointOptions points={points} exclude={from.id} />
+                </select>
+              </label>
+            </div>
 
-        <div className="rounded-lg border border-white/10 px-2 py-1.5 text-[12px]">
-          {placement && recent ? (
-            <>
-              <p
-                className={
-                  placement.inside ? "text-emerald-200" : "text-slate-200"
-                }
-              >
-                {placement.inside
-                  ? t("position.inBand", { band: placement.band.id })
-                  : t(
-                      placement.towards === "out"
-                        ? "position.before"
-                        : "position.after",
-                      { band: placement.nearest.id, gap: mm(placement.gap) },
+            <div
+              role="radiogroup"
+              aria-label={t("band")}
+              className="grid grid-cols-10 gap-0.5"
+            >
+              {bands.map((one) => (
+                <button
+                  key={one.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={band.id === one.id}
+                  disabled={locked}
+                  title={t("bandDensity", {
+                    density: Math.round(one.density * 100),
+                  })}
+                  onClick={() => setBandId(one.id)}
+                  className={cn(
+                    "flex flex-col items-center gap-0.5 rounded border px-0.5 pt-0.5 pb-1 font-mono text-[11px] transition disabled:opacity-40",
+                    band.id === one.id
+                      ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
+                      : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+                  )}
+                >
+                  {one.id}
+                  <span className="h-0.5 w-full rounded-full bg-white/10">
+                    <span
+                      className="block h-full rounded-full bg-sky-300"
+                      style={{ width: `${Math.max(6, one.density * 100)}%` }}
+                    />
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {to && pass ? (
+              <section className="space-y-1.5 rounded-lg border border-sky-300/30 bg-sky-300/5 p-2.5">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                  {t("cutAt")}
+                </p>
+                <p className="font-mono text-4xl font-semibold tracking-wide text-sky-50">
+                  {gm(pass.targetRemaining)}
+                </p>
+                <p className="text-[12px] text-slate-300">
+                  {t("remaining", { to: to.label })}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                  <span
+                    className={cn(
+                      "rounded border px-1.5 py-0.5 font-mono",
+                      WINDOW_TONE[haloWindowSize(pass.width)],
                     )}
+                  >
+                    {t(`window.${haloWindowSize(pass.width)}`, {
+                      width: mm(pass.width),
+                    })}
+                  </span>
+                  <span className="text-slate-400">
+                    {t("between", {
+                      enter: gm(pass.enterRemaining),
+                      exit: gm(pass.exitRemaining),
+                    })}
+                  </span>
+                </div>
+                {passes.length > 1 ? (
+                  <p className="text-[11px] text-slate-400">{t("twice")}</p>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={guide}
+                  disabled={locked}
+                  title={t("guideHint")}
+                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+                >
+                  <Compass className="size-3.5" />
+                  {guided ? t("guided") : t("guide")}
+                </button>
+              </section>
+            ) : (
+              <p className="text-[12px] text-amber-200">
+                {to
+                  ? t("noCrossing", {
+                      from: from.label,
+                      to: to.label,
+                      band: band.id,
+                    })
+                  : t("noCandidate", { from: from.label, band: band.id })}
               </p>
-              <p className="text-[10px] text-slate-500">
-                {t("position.age", { age: formatAge(now - recent.at, t) })}
-              </p>
-            </>
-          ) : (
-            <p className="text-slate-400">{t("position.none")}</p>
-          )}
-        </div>
+            )}
 
-        {data.data ? (
-          <p className="text-[10px] text-slate-500">
-            {t(`source.${data.data.source}`)}
-          </p>
-        ) : null}
+            {others.length > 0 ? (
+              <div className="space-y-1">
+                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                  {t("others", { band: band.id })}
+                </p>
+                {others.map((candidate) => (
+                  <button
+                    key={candidate.to.id}
+                    type="button"
+                    disabled={locked}
+                    onClick={() => setToId(candidate.to.id)}
+                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-left text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+                  >
+                    <span className="truncate text-slate-200">
+                      {candidate.to.label}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] text-slate-300">
+                      {gm(candidate.pass.targetRemaining)} ·{" "}
+                      {mm(candidate.pass.width)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="rounded-lg border border-white/10 px-2 py-1.5 text-[12px]">
+              {placement && recent ? (
+                <>
+                  <p
+                    className={
+                      placement.inside ? "text-emerald-200" : "text-slate-200"
+                    }
+                  >
+                    {placement.inside
+                      ? t("position.inBand", { band: placement.band.id })
+                      : t(
+                          placement.towards === "out"
+                            ? "position.before"
+                            : "position.after",
+                          {
+                            band: placement.nearest.id,
+                            gap: mm(placement.gap),
+                          },
+                        )}
+                  </p>
+                  <p className="text-[10px] text-slate-500">
+                    {t("position.age", { age: formatAge(now - recent.at, t) })}
+                  </p>
+                </>
+              ) : (
+                <p className="text-slate-400">{t("position.none")}</p>
+              )}
+            </div>
+
+            {data.data ? (
+              <p className="text-[10px] text-slate-500">
+                {t(`source.${data.data.source}`)}
+              </p>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );

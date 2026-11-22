@@ -7,6 +7,7 @@ import {
   Compass,
   ExternalLink,
   MapPinned,
+  Navigation,
   Pencil,
   Share2,
   Trash2,
@@ -39,6 +40,7 @@ import { readNpsDestination, setDestination } from "@/lib/nps-destination";
 import { notify } from "@/lib/notifications";
 import { getApiBaseUrl, getNpsSystem } from "@/lib/settings";
 import { showOverlay } from "@/lib/windows";
+import { goWithQuantumJump } from "@/lib/quantum-navigation";
 import { PrivatePlaceBadge } from "@/components/place/private-places";
 import {
   Button,
@@ -175,6 +177,17 @@ export default function MarkersPage() {
     })
       .then(() => showOverlay("nps"))
       .catch((error) => console.error("cannot guide to the marker", error));
+  }
+
+  function jump(marker: Marker) {
+    void goWithQuantumJump({
+      marker: {
+        id: marker.id,
+        name: marker.name,
+        systemSlug: marker.systemSlug,
+        position: marker.position,
+      },
+    }).catch((error) => console.error("cannot open the quantum jump", error));
   }
 
   async function openSite() {
@@ -335,6 +348,7 @@ export default function MarkersPage() {
                   }
                   reachable={inSystem(marker, system)}
                   onGuide={() => guide(marker)}
+                  onJump={() => jump(marker)}
                   onEdit={() => setEditing(marker)}
                   onDelete={() => setDeleting(marker)}
                 />
@@ -419,6 +433,7 @@ function MarkerRow({
   distance,
   reachable,
   onGuide,
+  onJump,
   onEdit,
   onDelete,
 }: {
@@ -428,6 +443,7 @@ function MarkerRow({
   /** Dans le système du joueur, ou on ne sait pas. */
   reachable: boolean;
   onGuide: () => void;
+  onJump: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -485,6 +501,15 @@ function MarkerRow({
       >
         <Compass className="h-3.5 w-3.5" />
         {t("guide")}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onJump}
+        title={t("quantumHint")}
+      >
+        <Navigation className="h-3.5 w-3.5" />
+        {t("quantum")}
       </Button>
       {marker.isOwner ? (
         <>

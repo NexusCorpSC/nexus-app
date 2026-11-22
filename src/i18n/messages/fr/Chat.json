@@ -116,6 +116,7 @@
       "search_wikelo_trades": "Recherche dans les échanges de Wikelo",
       "identify_radar_signature": "Identification d'une signature radar",
       "plan_aaron_halo_route": "Calcul d'un saut vers l'Aaron Halo",
+      "plan_quantum_route": "Calcul d'un saut quantique vers un point",
       "search_official_events": "Recherche dans les évènements officiels",
       "get_official_event": "Lecture de l'évènement officiel",
       "list_official_event_bugs": "Lecture des bugs de l'évènement",
