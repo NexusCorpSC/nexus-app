@@ -1,0 +1,40 @@
+{
+  "title": "Aaron Halo",
+  "close": "Fermer",
+  "from": "Départ",
+  "to": "Arrivée",
+  "band": "Bande",
+  "bestTo": "Meilleure fenêtre",
+  "swap": "Inverser le départ et l'arrivée",
+  "bandDensity": "Densité relevée : {density} %",
+  "cutAt": "Coupez le saut à",
+  "remaining": "restants jusqu'à {to}",
+  "window": {
+    "narrow": "fenêtre étroite, {width}",
+    "normal": "fenêtre de {width}",
+    "wide": "large fenêtre, {width}"
+  },
+  "between": "entre {enter} et {exit}",
+  "twice": "Le trajet traverse cette bande deux fois : la traversée la plus large est donnée.",
+  "noCrossing": "{from} → {to} ne traverse pas la bande {band}.",
+  "noCandidate": "Aucun trajet depuis {from} ne traverse la bande {band}.",
+  "others": "Autres arrivées vers la bande {band}",
+  "guide": "Guider avec le NPS",
+  "guideHint": "Pose le milieu de la traversée comme destination du NPS, pour vérifier après coup",
+  "guided": "Destination du NPS posée.",
+  "pointName": "Aaron Halo, bande {band}",
+  "position": {
+    "none": "Ouvrez le NPS (lecture à l'écran ou /showlocation) : ses relevés disent ici dans quelle bande vous êtes.",
+    "inBand": "Vous êtes dans la bande {band}.",
+    "before": "{gap} avant la bande {band} : continuez vers l'extérieur.",
+    "after": "{gap} après la bande {band} : revenez vers l'intérieur.",
+    "age": "position d'il y a {age}"
+  },
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "source": {
+    "network": "Bandes à jour depuis Nexus Tools.",
+    "cache": "Hors ligne : bandes gardées de la dernière connexion.",
+    "builtin": "Hors ligne : bandes intégrées à l'app."
+  }
+}

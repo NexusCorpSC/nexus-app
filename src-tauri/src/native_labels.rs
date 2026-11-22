@@ -36,6 +36,9 @@ pub(crate) struct NativeLabels {
     /// Missing from what a frontend older than the radar scanner sends.
     #[serde(default = "default_radar_label")]
     pub radar: String,
+    /// Missing from what a frontend older than the Aaron Halo navigator sends.
+    #[serde(default = "default_halo_label")]
+    pub halo: String,
     pub quit: String,
     pub capture_failed: String,
     pub ocr_failed: String,
@@ -58,6 +61,7 @@ impl Default for NativeLabels {
             nps: default_nps_label(),
             chat: default_chat_label(),
             radar: default_radar_label(),
+            halo: default_halo_label(),
             quit: "Quitter Nexus App".into(),
             capture_failed: "Capture impossible".into(),
             ocr_failed: "Lecture du texte impossible".into(),
@@ -72,6 +76,10 @@ fn default_nps_label() -> String {
 
 fn default_radar_label() -> String {
     "Scanner radar".into()
+}
+
+fn default_halo_label() -> String {
+    "Aaron Halo".into()
 }
 
 fn default_chat_label() -> String {

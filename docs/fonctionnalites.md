@@ -774,3 +774,26 @@ qui tient la souris rend très possible — ne l'épingle pas pour autant : pass
 > redimensionnement au plus juste. Et comme toute fenêtre en surimpression,
 > elles sont invisibles d'un jeu en plein écran exclusif ; en plein écran
 > fenêtré, elles s'affichent.
+
+## Navigation vers l'Aaron Halo
+
+La superposition **Aaron Halo** (`Ctrl+Shift+A`, fenêtre `halo`) dit à quelle
+distance restante couper un saut quantique pour tomber dans une bande de la
+ceinture.
+
+- Le calcul (`src/lib/aaron-halo.ts`, copie de `lib/aaron-halo.ts` du site) :
+  les bandes sont des couronnes centrées sur l'origine du repère de Stanton,
+  dans le plan des orbites ; le trajet est une ligne droite entre deux cibles
+  de saut (stations des points de Lagrange, planètes) ; la portion dans la
+  bande est la fenêtre, et l'on vise son milieu. Un trajet peut traverser une
+  bande deux fois : la traversée la plus large est donnée.
+- Sans arrivée choisie, celle dont la fenêtre dans la bande est la plus large.
+  Départ, arrivée et bande sont gardés dans le store `haloRoute`.
+- Les bandes et les cibles viennent de `GET /api/aaron-halo`, gardées dans le
+  store `haloData`, avec les valeurs intégrées en dernier recours.
+- La fenêtre écoute `nps://position` : un relevé de moins de 10 min, dans
+  Stanton ou sans système connu, dit dans quelle bande on est, ou à quelle
+  distance de la plus proche. Rust n'émet ces relevés que tant que la
+  fenêtre du NPS est affichée (`nps::watched`) : il faut l'ouvrir aussi.
+- « Guider avec le NPS » pose le milieu de la traversée comme destination
+  du NPS (un point de Stanton, dans le repère du système) et affiche le NPS.

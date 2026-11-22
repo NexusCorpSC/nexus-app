@@ -11,6 +11,7 @@ import type Factions from "./messages/fr/Factions.json";
 import type Format from "./messages/fr/Format.json";
 import type Friends from "./messages/fr/Friends.json";
 import type GameLog from "./messages/fr/GameLog.json";
+import type HaloOverlay from "./messages/fr/HaloOverlay.json";
 import type Home from "./messages/fr/Home.json";
 import type Inventory from "./messages/fr/Inventory.json";
 import type Invitations from "./messages/fr/Invitations.json";
@@ -70,6 +71,7 @@ export type Messages = {
   Format: typeof Format;
   Friends: typeof Friends;
   GameLog: typeof GameLog;
+  HaloOverlay: typeof HaloOverlay;
   Home: typeof Home;
   Inventory: typeof Inventory;
   Invitations: typeof Invitations;

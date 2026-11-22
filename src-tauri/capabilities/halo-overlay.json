@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "halo-overlay",
+  "description": "Aaron Halo navigator overlay. Like the NPS one it has no decorations, so its header doubles as the title bar and the webview has to be allowed to drag the window — `core:default` does not cover that. The rest — the API for the bands, the store for its settings, the NPS position events — comes from `default`, whose window list it joins.",
+  "windows": ["halo"],
+  "permissions": ["core:window:allow-start-dragging"]
+}

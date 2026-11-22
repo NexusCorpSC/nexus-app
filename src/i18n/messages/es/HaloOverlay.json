@@ -1,0 +1,40 @@
+{
+  "title": "Aaron Halo",
+  "close": "Cerrar",
+  "from": "Salida",
+  "to": "Llegada",
+  "band": "Banda",
+  "bestTo": "Mejor ventana",
+  "swap": "Intercambiar salida y llegada",
+  "bandDensity": "Densidad medida: {density} %",
+  "cutAt": "Corta el salto a",
+  "remaining": "restantes hasta {to}",
+  "window": {
+    "narrow": "ventana estrecha, {width}",
+    "normal": "ventana de {width}",
+    "wide": "ventana amplia, {width}"
+  },
+  "between": "entre {enter} y {exit}",
+  "twice": "La ruta atraviesa esta banda dos veces: se indica el cruce más amplio.",
+  "noCrossing": "{from} → {to} no atraviesa la banda {band}.",
+  "noCandidate": "Ninguna ruta desde {from} atraviesa la banda {band}.",
+  "others": "Otras llegadas hacia la banda {band}",
+  "guide": "Guiar con el NPS",
+  "guideHint": "Pone el centro del cruce como destino del NPS, para comprobarlo después",
+  "guided": "Destino del NPS fijado.",
+  "pointName": "Aaron Halo, banda {band}",
+  "position": {
+    "none": "Abre el NPS (lectura de pantalla o /showlocation): sus lecturas te dicen aquí en qué banda estás.",
+    "inBand": "Estás en la banda {band}.",
+    "before": "{gap} antes de la banda {band}: sigue hacia fuera.",
+    "after": "{gap} después de la banda {band}: vuelve hacia dentro.",
+    "age": "posición de hace {age}"
+  },
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "source": {
+    "network": "Bandas al día desde Nexus Tools.",
+    "cache": "Sin conexión: bandas guardadas de la última conexión.",
+    "builtin": "Sin conexión: bandas integradas en la app."
+  }
+}

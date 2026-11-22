@@ -53,6 +53,7 @@ const WINDOW_ROWS: ShortcutAction[] = [
   "map",
   "nps",
   "radar",
+  "halo",
   "chat",
 ];
 

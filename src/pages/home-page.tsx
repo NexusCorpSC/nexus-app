@@ -10,6 +10,7 @@ import {
   Container,
   Map as MapIcon,
   NotebookPen,
+  Orbit,
   Route as RouteIcon,
   Search,
   Users,
@@ -47,7 +48,8 @@ const LAUNCHERS: {
     | "notes"
     | "cargo"
     | "chat"
-    | "radar";
+    | "radar"
+    | "halo";
   icon: LucideIcon;
   shortcut: keyof Shortcuts;
 }[] = [
@@ -56,6 +58,7 @@ const LAUNCHERS: {
   { label: "map", title: "map", icon: MapIcon, shortcut: "map" },
   { label: "nps", title: "nps", icon: Compass, shortcut: "nps" },
   { label: "radar", title: "radar", icon: Radar, shortcut: "radar" },
+  { label: "halo", title: "halo", icon: Orbit, shortcut: "halo" },
   { label: "plan", title: "plan", icon: RouteIcon, shortcut: "plan" },
   { label: "notes", title: "notes", icon: NotebookPen, shortcut: "notes" },
   { label: "cargo", title: "cargo", icon: Container, shortcut: "cargo" },
