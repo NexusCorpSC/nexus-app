@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useQuery } from "@tanstack/react-query";
@@ -20,8 +20,8 @@ import {
 } from "@/lib/settings";
 import {
   DEFAULT_RADAR_SIGNATURES,
-  MAX_RADAR_READING,
   identifyRadarSignature,
+  parseRadarReading,
   type RadarMatch,
 } from "@/lib/radar";
 import { cn } from "@/lib/utils";
@@ -58,14 +58,6 @@ type Calibration =
 type Reading = { value: number; at: number };
 
 type Translator = ReturnType<typeof useTranslations<"RadarOverlay">>;
-
-/** The digits only: « 12 680 », « 12,680 » and « 12680 » are the same. */
-function parseManual(text: string): number | null {
-  const digits = text.replace(/\D/g, "");
-  if (!digits) return null;
-  const value = Number(digits);
-  return value > 0 && value <= MAX_RADAR_READING ? value : null;
-}
 
 function formatAge(ms: number, t: Translator): string {
   const seconds = Math.max(0, Math.round(ms / 1000));
@@ -107,6 +99,11 @@ export default function RadarOverlayPage() {
   });
   const known = signatures.data?.signatures ?? DEFAULT_RADAR_SIGNATURES;
 
+  // The last signature the screen gave: Rust sends it again at every
+  // reading while it stays on screen, which must not take the place of one
+  // typed or picked from the history in the meantime.
+  const lastFromScreen = useRef<number | null>(null);
+
   function show(value: number, at: number) {
     setCurrent({ value, at });
     setHistory((last) =>
@@ -130,7 +127,17 @@ export default function RadarOverlayPage() {
       .catch((error) => console.error("cannot read the radar settings", error));
 
     const reading = listen<Reading>(READING_EVENT, (event) => {
-      show(event.payload.value, event.payload.at);
+      const { value, at } = event.payload;
+      if (value === lastFromScreen.current) {
+        // The same scan still on screen: it only gets younger, and only if
+        // it is the one shown.
+        setCurrent((shown) =>
+          shown && shown.value === value ? { value, at } : shown,
+        );
+        return;
+      }
+      lastFromScreen.current = value;
+      show(value, at);
     });
     const statusChange = listen<ScreenStatus>(STATUS_EVENT, (event) => {
       setStatus(event.payload);
@@ -148,7 +155,10 @@ export default function RadarOverlayPage() {
       setCalibration(
         value === null ? { state: "empty" } : { state: "found", value },
       );
-      if (value !== null) show(value, Date.now());
+      if (value !== null) {
+        lastFromScreen.current = value;
+        show(value, Date.now());
+      }
       // A box that reads turns the reading on: that is what it was drawn for.
       setScreen((last) => ({
         ...last,
@@ -199,7 +209,7 @@ export default function RadarOverlayPage() {
 
   function submitManual(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const value = parseManual(manual);
+    const value = parseRadarReading(manual);
     if (value === null) return;
     show(value, Date.now());
     setManual("");
@@ -337,7 +347,7 @@ export default function RadarOverlayPage() {
           />
           <button
             type="submit"
-            disabled={locked || parseManual(manual) === null}
+            disabled={locked || parseRadarReading(manual) === null}
             className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
           >
             {t("manual")}

@@ -42,6 +42,11 @@ const MAX_INTERVAL_MS: u64 = 10_000;
 const MIN_SIGNATURE: u32 = 100;
 const MAX_SIGNATURE: u32 = 2_000_000;
 
+/// Readings in a row that find a number without confirming it, before the
+/// box is said unreadable.
+#[cfg(windows)]
+const MAX_UNCONFIRMED: u32 = 3;
+
 /// How long to wait, with the scanner off, before looking at the settings
 /// again.
 const IDLE_INTERVAL: Duration = Duration::from_millis(500);
@@ -112,71 +117,193 @@ pub fn radar_screen_configure(app: AppHandle, settings: Settings) {
     }
 }
 
-fn number_pattern() -> &'static Regex {
+fn grouped_pattern() -> &'static Regex {
     static PATTERN: OnceLock<Regex> = OnceLock::new();
     PATTERN.get_or_init(|| {
-        // Groups of three after the first, split by whatever the game or the
-        // OCR puts between thousands — `12,680`, `12 680`, `12.680` — or
-        // digits in one run.
-        Regex::new(r"\d{1,3}(?:[ ,.\u{a0}\u{202f}']\d{3})+\b|\d+")
-            .expect("the number pattern is valid")
+        // A whole word of groups of three after the first, split by what the
+        // game or the OCR puts between thousands: `12,680`, `12.680`.
+        Regex::new(r"^\d{1,3}(?:[,.'\u{a0}\u{202f}]\d{3})+$").expect("the grouped pattern is valid")
     })
 }
 
-/// A word with the letters the OCR takes for digits turned back into them,
-/// when it is mostly digits already: `I2,68O` is `12,680`, but `RS` stays.
-fn undo_mix_ups(word: &str) -> String {
-    let digits = word.chars().filter(char::is_ascii_digit).count();
-    let letters = word.chars().filter(|c| c.is_alphabetic()).count();
-    if digits == 0 || letters > digits {
-        return word.to_string();
+/// What the OCR takes for a digit.
+fn as_digit(c: char) -> Option<char> {
+    match c {
+        '0'..='9' => Some(c),
+        'O' | 'o' | 'D' | 'Q' => Some('0'),
+        'I' | 'i' | 'l' | '|' | '!' => Some('1'),
+        'S' | 's' => Some('5'),
+        'B' => Some('8'),
+        'Z' | 'z' => Some('2'),
+        _ => None,
     }
-    word.chars()
-        .map(|c| match c {
-            'O' | 'o' | 'D' | 'Q' => '0',
-            'I' | 'i' | 'l' | '|' | '!' => '1',
-            'S' | 's' => '5',
-            'B' => '8',
-            'Z' | 'z' => '2',
-            other => other,
-        })
-        .collect()
 }
 
-/// The signature in the text read in the box: the longest number in it, the
-/// first one when two are as long, within [`MIN_SIGNATURE`] and
-/// [`MAX_SIGNATURE`].
-pub fn signature(text: &str) -> Option<u32> {
-    let cleaned: String = text
-        .split_inclusive(char::is_whitespace)
-        .map(|word| {
-            let trimmed = word.trim_end();
-            let mut fixed = undo_mix_ups(trimmed);
-            fixed.push_str(&word[trimmed.len()..]);
-            fixed
-        })
-        .collect();
+fn is_separator(c: char) -> bool {
+    matches!(c, ',' | '.' | '\'' | '\u{a0}' | '\u{202f}')
+}
 
-    let mut best: Option<(usize, u32)> = None;
-    for line in cleaned.lines() {
-        for found in number_pattern().find_iter(line) {
-            let digits: String = found
-                .as_str()
-                .chars()
-                .filter(char::is_ascii_digit)
-                .collect();
-            let Ok(value) = digits.parse::<u32>() else {
+/// One word of the text read, once the OCR's mix-ups are undone.
+#[derive(Clone, Debug, PartialEq)]
+enum Word {
+    /// Digits only, with their thousands separators gone; `grouped` when
+    /// there were some.
+    Number { digits: String, grouped: bool },
+    /// A distance (`450m`, `1.2km`): never the signature.
+    Distance,
+    /// Anything else, a decimal number included.
+    Other,
+}
+
+fn is_unit(word: &str) -> bool {
+    matches!(word.to_lowercase().as_str(), "m" | "km")
+}
+
+/// Reads one word: a label glued in front (`RS8600`) is dropped, a unit
+/// glued behind makes it a distance, and only then are the letters taken
+/// for digits turned back into them (`I2,68O` is `12,680`).
+fn word(raw: &str) -> Word {
+    // Punctuation around the word (`(8,600)`, `8,600.`), but not the bars
+    // and bangs the OCR reads for ones.
+    let raw = raw.trim_matches(|c: char| !c.is_alphanumeric() && c != '|' && c != '!');
+    if !raw.chars().any(|c| c.is_ascii_digit()) {
+        return Word::Other;
+    }
+
+    let chars: Vec<char> = raw.chars().collect();
+    // A run of letters in front is a label as soon as one of them cannot be
+    // a digit: the `R` of `RS` says the `S` is no 5.
+    let lead = chars.iter().take_while(|c| c.is_alphabetic()).count();
+    let body_start = if chars[..lead].iter().any(|&c| as_digit(c).is_none()) {
+        lead
+    } else {
+        0
+    };
+    // `RS:8600`: the colon after the label goes with it.
+    let body_start = body_start
+        + chars[body_start..]
+            .iter()
+            .take_while(|&&c| !c.is_alphanumeric() && c != '|' && c != '!')
+            .count();
+    let trail = chars[body_start..]
+        .iter()
+        .rev()
+        .take_while(|c| c.is_alphabetic())
+        .count();
+    let body_end = chars.len() - trail;
+    let tail: String = chars[body_end..].iter().collect();
+    if is_unit(&tail) {
+        return Word::Distance;
+    }
+    let body_end = if chars[body_end..].iter().any(|&c| as_digit(c).is_none()) {
+        body_end
+    } else {
+        chars.len()
+    };
+
+    let mut body = String::new();
+    for &c in &chars[body_start..body_end] {
+        if is_separator(c) {
+            body.push(c);
+        } else if let Some(digit) = as_digit(c) {
+            body.push(digit);
+        } else {
+            return Word::Other;
+        }
+    }
+
+    if body.chars().all(|c| c.is_ascii_digit()) {
+        return Word::Number {
+            digits: body,
+            grouped: false,
+        };
+    }
+    if grouped_pattern().is_match(&body) {
+        return Word::Number {
+            digits: body.chars().filter(char::is_ascii_digit).collect(),
+            grouped: true,
+        };
+    }
+    // `1.2`, `12,5`: a decimal, which a signature never is.
+    Word::Other
+}
+
+/// A number found in the text, and whether it took a space between
+/// thousands to make it: `12 680` is likelier two numbers than `12680` is.
+struct Candidate {
+    digits: String,
+    spaced: bool,
+}
+
+fn candidates(line: &str) -> Vec<Candidate> {
+    let raw: Vec<&str> = line.split_whitespace().collect();
+    let mut words: Vec<Word> = raw.iter().map(|w| word(w)).collect();
+    // A number followed by its unit is a distance: `1.250 km`, `450 m`.
+    for index in 0..words.len() {
+        if index + 1 < raw.len() && is_unit(raw[index + 1]) {
+            if let Word::Number { .. } = words[index] {
+                words[index] = Word::Distance;
+            }
+        }
+    }
+
+    let mut found = Vec::new();
+    let mut index = 0;
+    while index < words.len() {
+        let Word::Number { digits, grouped } = &words[index] else {
+            index += 1;
+            continue;
+        };
+        let mut joined = digits.clone();
+        let mut next = index + 1;
+        // Thousands split by spaces: a short head, then words of exactly
+        // three digits.
+        if !grouped && digits.len() <= 3 {
+            while let Some(Word::Number {
+                digits: group,
+                grouped: false,
+            }) = words.get(next)
+            {
+                if group.len() != 3 {
+                    break;
+                }
+                joined.push_str(group);
+                next += 1;
+            }
+        }
+        found.push(Candidate {
+            spaced: next > index + 1,
+            digits: joined,
+        });
+        index = next;
+    }
+    found
+}
+
+/// The signature in the text read in the box, within [`MIN_SIGNATURE`] and
+/// [`MAX_SIGNATURE`]: a number written in one piece before one put together
+/// from words split by spaces, then the longest, then the first.
+pub fn signature(text: &str) -> Option<u32> {
+    let mut best: Option<(bool, usize, u32)> = None;
+    for line in text.lines() {
+        for candidate in candidates(line) {
+            let Ok(value) = candidate.digits.parse::<u32>() else {
                 continue;
             };
             if !(MIN_SIGNATURE..=MAX_SIGNATURE).contains(&value) {
                 continue;
             }
-            if best.is_none_or(|(length, _)| digits.len() > length) {
-                best = Some((digits.len(), value));
+            let length = candidate.digits.len();
+            let better = best.is_none_or(|(spaced, best_length, _)| {
+                (spaced && !candidate.spaced)
+                    || (spaced == candidate.spaced && length > best_length)
+            });
+            if better {
+                best = Some((candidate.spaced, length, value));
             }
         }
     }
-    best.map(|(_, value)| value)
+    best.map(|(_, _, value)| value)
 }
 
 /// Keeps the signatures two readings agree on: the box read as it is and
@@ -298,6 +425,12 @@ pub(crate) fn install(app: &AppHandle) {
         let mut last = Status::Idle;
         #[cfg(windows)]
         let mut agreement = Agreement::default();
+        // The box the agreement was built on: another one starts it over.
+        #[cfg(windows)]
+        let mut watching: Option<Region> = None;
+        // Readings in a row that found a number but could not confirm it.
+        #[cfg(windows)]
+        let mut unconfirmed = 0u32;
         loop {
             let settings = app.state::<Tracking>().get();
             #[cfg(windows)]
@@ -308,6 +441,14 @@ pub(crate) fn install(app: &AppHandle) {
             let region: Option<Region> = None;
 
             let Some(region) = region else {
+                // Off or hidden: what was read before is no witness for what
+                // comes after.
+                #[cfg(windows)]
+                {
+                    agreement = Agreement::default();
+                    watching = None;
+                    unconfirmed = 0;
+                }
                 announce(&app, &mut last, Status::Idle);
                 tokio::time::sleep(IDLE_INTERVAL).await;
                 continue;
@@ -318,6 +459,11 @@ pub(crate) fn install(app: &AppHandle) {
 
             #[cfg(windows)]
             {
+                if watching != Some(region) {
+                    agreement = Agreement::default();
+                    watching = Some(region);
+                    unconfirmed = 0;
+                }
                 let status = match read_once(region).await {
                     Ok((plain, inverted)) => match agreement.accept(plain, inverted) {
                         Some(value) => {
@@ -328,12 +474,23 @@ pub(crate) fn install(app: &AppHandle) {
                             if let Err(error) = app.emit_to(RADAR_WINDOW, READING_EVENT, reading) {
                                 log(format!("radar: cannot send the reading: {error}"));
                             }
+                            unconfirmed = 0;
                             Status::Reading
                         }
-                        // A number not confirmed yet is still a box that
-                        // reads: only an empty one is unreadable.
-                        None if plain.is_some() || inverted.is_some() => last.clone(),
-                        None => Status::Unreadable,
+                        // A number not confirmed yet still reads, for a
+                        // moment: past a few readings that never agree, the
+                        // box is as good as unreadable.
+                        None if (plain.is_some() || inverted.is_some())
+                            && last == Status::Reading
+                            && unconfirmed < MAX_UNCONFIRMED =>
+                        {
+                            unconfirmed += 1;
+                            Status::Reading
+                        }
+                        None => {
+                            unconfirmed = 0;
+                            Status::Unreadable
+                        }
                     },
                     Err(message) => Status::Failed { message },
                 };
@@ -379,6 +536,37 @@ mod tests {
     }
 
     #[test]
+    fn a_glyph_glued_to_the_number_is_not_the_number() {
+        // Found in review: the last three digits used to win.
+        assert_eq!(signature("8,600»"), Some(8_600));
+        assert_eq!(signature("(12,680)"), Some(12_680));
+        assert_eq!(signature("12,680."), Some(12_680));
+    }
+
+    #[test]
+    fn a_label_glued_in_front_is_dropped() {
+        assert_eq!(signature("RS8600"), Some(8_600));
+        assert_eq!(signature("RS:8,600"), Some(8_600));
+        // All of it could be digits: `I` is a 1, `S` a 5.
+        assert_eq!(signature("I2680"), Some(12_680));
+        assert_eq!(signature("S100"), Some(5_100));
+    }
+
+    #[test]
+    fn distances_are_never_the_signature() {
+        assert_eq!(signature("12,680m"), None);
+        assert_eq!(signature("1.250 km\n4300"), Some(4_300));
+        assert_eq!(signature("450 m 3170"), Some(3_170));
+        assert_eq!(signature("1.2km"), None);
+    }
+
+    #[test]
+    fn a_number_in_one_piece_wins_over_spaced_words() {
+        assert_eq!(signature("1 250 4300"), Some(4_300));
+        assert_eq!(signature("12 680 45"), Some(12_680));
+    }
+
+    #[test]
     fn undoes_the_ocr_mix_ups() {
         assert_eq!(signature("I2,68O"), Some(12_680));
         assert_eq!(signature("43OO"), Some(4_300));
@@ -397,6 +585,7 @@ mod tests {
         // A distance in metres next to the signature.
         assert_eq!(signature("45m\n12,680"), Some(12_680));
         assert_eq!(signature("1.2 km 4300"), Some(4_300));
+        assert_eq!(signature("12.5 3170"), Some(3_170));
     }
 
     #[test]

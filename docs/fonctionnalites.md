@@ -177,9 +177,12 @@ du jeu affiche (la signature radar) et le compare aux signatures connues.
   réglages dans le store `radarScreen`).
 - Contre les chiffres mal lus : la zone est lue telle quelle et inversée ; un
   nombre compte quand les deux lectures concordent, ou quand une seule le
-  trouve deux fois de suite. Les séparateurs de milliers et les lettres prises
-  pour des chiffres (`O`, `I`, `l`…) sont corrigés ; le nombre le plus long de
-  la zone l'emporte.
+  trouve deux fois de suite (accord remis à zéro fenêtre cachée ou zone
+  changée). Les séparateurs de milliers et les lettres prises pour des
+  chiffres (`O`, `I`, `l`…) sont corrigés, une étiquette collée devant
+  (`RS8600`) est écartée, un nombre suivi de `m` ou `km` est une distance et
+  ne compte pas. Un nombre d'un seul tenant passe avant un nombre recollé à
+  partir de mots séparés par des espaces, puis le plus long l'emporte.
 - L'identification (`src/lib/radar.ts`, copie de `lib/radar.ts` du site)
   cherche les signatures dont la valeur est un multiple, de 1 à 20 éléments,
   la grappe la plus petite d'abord ; sans multiple exact, les plus proches à
