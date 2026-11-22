@@ -24,7 +24,7 @@
   "guided": "Destination du NPS posée.",
   "pointName": "Aaron Halo, bande {band}",
   "position": {
-    "none": "Lancez le NPS (lecture à l'écran ou /showlocation) pour savoir dans quelle bande vous êtes.",
+    "none": "Ouvrez le NPS (lecture à l'écran ou /showlocation) : ses relevés disent ici dans quelle bande vous êtes.",
     "inBand": "Vous êtes dans la bande {band}.",
     "before": "{gap} avant la bande {band} : continuez vers l'extérieur.",
     "after": "{gap} après la bande {band} : revenez vers l'intérieur.",

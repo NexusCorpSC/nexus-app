@@ -599,12 +599,15 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Nps, &requested.nps),
         (Action::Chat, &requested.chat),
         (Action::Radar, &requested.radar),
-        (Action::Halo, &requested.halo),
         (Action::Talk, &requested.talk),
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
         (Action::Radial, &requested.radial),
         (Action::Mark, &requested.mark),
+        // Last, like any shortcut added later: the first to claim a
+        // combination keeps it, and a new default must not take one the
+        // player already gave to another action.
+        (Action::Halo, &requested.halo),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();

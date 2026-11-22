@@ -793,6 +793,7 @@ ceinture.
   store `haloData`, avec les valeurs intégrées en dernier recours.
 - La fenêtre écoute `nps://position` : un relevé de moins de 10 min, dans
   Stanton ou sans système connu, dit dans quelle bande on est, ou à quelle
-  distance de la plus proche.
+  distance de la plus proche. Rust n'émet ces relevés que tant que la
+  fenêtre du NPS est affichée (`nps::watched`) : il faut l'ouvrir aussi.
 - « Guider avec le NPS » pose le milieu de la traversée comme destination
-  du NPS (un point, dans le repère du système).
+  du NPS (un point de Stanton, dans le repère du système) et affiche le NPS.

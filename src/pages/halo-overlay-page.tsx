@@ -13,6 +13,7 @@ import { overlaySkin } from "@/lib/overlay-opacity";
 import { getHaloData } from "@/lib/api/aaron-halo";
 import { getHaloRoute, setHaloRoute } from "@/lib/settings";
 import { setDestination } from "@/lib/nps-destination";
+import { showOverlay } from "@/lib/windows";
 import { systemOfZones, type Fix } from "@/lib/nps";
 import {
   DEFAULT_HALO_BAND,
@@ -154,7 +155,10 @@ export default function HaloOverlayPage() {
   }, [fromId, toId, bandId, loaded]);
 
   const from = findHaloPoint(fromId, points) ?? points[0];
-  const band = bands.find((one) => one.id === bandId) ?? bands[0];
+  const band =
+    bands.find((one) => one.id === bandId) ??
+    bands.find((one) => one.id === DEFAULT_HALO_BAND) ??
+    bands[0];
   const candidates = useMemo(
     () => haloBandRoutes(from, band.id, points, bands),
     [from, band, points, bands],
@@ -204,9 +208,15 @@ export default function HaloOverlayPage() {
     void setDestination({
       point: {
         name: t("pointName", { band: band.id }),
+        // The halo is Stanton's: from another system, the NPS says so
+        // rather than guiding to these coordinates in the wrong frame.
+        systemSlug: "stanton",
         position: { x, y, z },
       },
     })
+      // As from a place's page: the destination is only of use with the
+      // NPS on screen, which also sends the readings back here.
+      .then(() => showOverlay("nps"))
       .then(() => setGuidedRoute(routeKey))
       .catch((error) => console.error("cannot set the NPS destination", error));
   }

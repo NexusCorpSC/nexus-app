@@ -24,7 +24,7 @@
   "guided": "NPS destination set.",
   "pointName": "Aaron Halo, band {band}",
   "position": {
-    "none": "Run the NPS (screen reading or /showlocation) to know which band you are in.",
+    "none": "Open the NPS (screen reading or /showlocation): its readings tell you here which band you are in.",
     "inBand": "You are in band {band}.",
     "before": "{gap} short of band {band}: keep going outwards.",
     "after": "{gap} past band {band}: head back inwards.",
