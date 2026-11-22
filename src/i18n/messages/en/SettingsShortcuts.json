@@ -48,8 +48,8 @@
       "hint": "Reads the scan's radar signature and tells what it points to."
     },
     "halo": {
-      "label": "Aaron Halo",
-      "hint": "Tells you at what remaining distance to cut the quantum jump to land in a band of the Aaron Halo."
+      "label": "Quantum navigation",
+      "hint": "Tells at which remaining distance to cut a quantum jump to drop into a band of the Aaron Halo or get close to a point with no beacon."
     },
     "chat": {
       "label": "Nexus Chat",

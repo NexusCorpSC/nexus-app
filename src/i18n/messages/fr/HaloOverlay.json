@@ -1,6 +1,10 @@
 {
-  "title": "Aaron Halo",
+  "title": "Navigation quantique",
   "close": "Fermer",
+  "tabs": {
+    "band": "Aaron Halo",
+    "point": "Point"
+  },
   "from": "Départ",
   "to": "Arrivée",
   "band": "Bande",
@@ -36,5 +40,39 @@
     "network": "Bandes à jour depuis Nexus Tools.",
     "cache": "Hors ligne : bandes gardées de la dernière connexion.",
     "builtin": "Hors ligne : bandes intégrées à l'app."
+  },
+  "point": {
+    "target": "Destination du NPS",
+    "noTarget": "Choisissez une destination dans le NPS, « Y aller » sur un marqueur, ou collez des coordonnées.",
+    "unknownBody": "Le corps de ce point n'a pas encore de relevé : impossible de le placer.",
+    "manualName": "Coordonnées saisies",
+    "pastePlaceholder": "Coller /showlocation",
+    "system": "Système",
+    "pasteUse": "Viser",
+    "pasteInvalid": "Collez la ligne de /showlocation ou la ligne Zone: SolarSystem… Pos: de r_displayInfo.",
+    "from": "Départ",
+    "fromMe": "Ma position (NPS)",
+    "fromMeNone": "Ma position : ouvrez le NPS",
+    "anyFrom": "Meilleure paire de balises",
+    "routeLine": "{from} → {to}",
+    "routeFromHere": "D'ici → {to}",
+    "cutAt": "Coupez le saut à",
+    "remaining": "restants jusqu'à {to}",
+    "goToEnd": "Sautez vers {to} et allez jusqu'au bout.",
+    "expected": "Vous sortirez à environ {error} de la cible (la ligne passe à {offset}).",
+    "goFirst": "Rendez-vous d'abord à {from}, puis préparez le saut.",
+    "noRoute": "Aucun trajet dégagé ne mène près de ce point.",
+    "others": "Autres trajets",
+    "end": "au bout",
+    "distanceNow": "Vous êtes à {distance} de la cible.",
+    "noPosition": "Ouvrez le NPS : ses relevés disent ici à quelle distance vous êtes.",
+    "openNps": "Finir avec le NPS",
+    "precision": "L'écart compte une coupe à la main précise à {share} % de la distance restante, au plus {max}. Trajets dans une planète, une lune ou l'étoile écartés.",
+    "surface": {
+      "intro": "Ce point est près du sol de {body} (altitude {altitude}) : on n'y coupe pas de saut.",
+      "jumpTo": "Sautez vers {place}, à {distance}, puis finissez en vol.",
+      "other": "ou {place}, à {distance}",
+      "jumpToBody": "Sautez vers {body} : il restera au moins {distance} depuis les marqueurs orbitaux."
+    }
   }
 }

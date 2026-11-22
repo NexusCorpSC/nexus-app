@@ -76,14 +76,20 @@ la valeur. Indiquez où vous scannez (vaisseau, ROC, à pied) pour que ce que
 vous pouvez y croiser passe en tête. Les signatures connues viennent du site et
 restent disponibles hors ligne.
 
-### Navigation vers l'Aaron Halo
+### Navigation quantique : Aaron Halo et point sans balise
 
 L'Aaron Halo, la ceinture d'astéroïdes de Stanton, n'a pas de balise de saut :
 on y entre en coupant un saut quantique qui la traverse. La superposition
-Aaron Halo (`Ctrl+Maj+A`) dit, pour un départ et une bande, à quelle distance
+Navigation quantique (`Ctrl+Maj+A`), onglet Aaron Halo, dit, pour un départ et une bande, à quelle distance
 restante couper le saut (le nombre à surveiller au HUD), la marge dont vous
 disposez, et les autres arrivées possibles. Une fois sorti du saut, le NPS lui
 dit dans quelle bande vous êtes. Le même calcul est sur le site.
+
+L'onglet Point fait de même pour la destination du NPS (un marqueur, un lieu,
+des coordonnées collées) : depuis votre position ou la meilleure paire de
+balises, le saut dont la ligne passe le plus près et la distance restante où le
+couper, sans traverser de planète. Un point au sol mène au lieu le plus proche
+sur le corps. Le bouton « Y aller » d'un marqueur ouvre cet onglet.
 
 ### Télémétrie du jeu
 
@@ -171,7 +177,7 @@ votre espace :
 | `Ctrl+Maj+K` | NPS |
 | `Ctrl+Maj+X` | marquer ma position |
 | `Ctrl+Maj+R` | scanner de signature radar |
-| `Ctrl+Maj+A` | navigation vers l'Aaron Halo |
+| `Ctrl+Maj+A` | navigation quantique (Aaron Halo, point sans balise) |
 | `Ctrl+Maj+H` | Nexus Chat |
 | `Ctrl+Maj+J` (maintenu) | parler à Nexus Chat |
 | `Ctrl+Maj+E` | escouade |

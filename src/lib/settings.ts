@@ -1027,23 +1027,34 @@ export async function setInvitesNotified(
   });
 }
 
-/** What the Aaron Halo navigator was last set to. */
+/** What the quantum navigation overlay was last set to. */
 export type HaloRouteSettings = {
   from: string;
   /** `null`: the destination with the widest window into the band. */
   to: string | null;
   band: number;
+  /** Its tab: a band of the Aaron Halo, or the NPS destination. */
+  mode?: "band" | "point";
+  /**
+   * The departure towards the NPS destination: `me` (the NPS reading), a
+   * beacon's slug, or `null` for the best pair of beacons.
+   */
+  pointFrom?: string | null;
 };
 
 export async function getHaloRoute(): Promise<Partial<HaloRouteSettings>> {
   const store = await getStore();
   const stored = await store.get<unknown>(KEY_HALO_ROUTE);
   if (!stored || typeof stored !== "object") return {};
-  const { from, to, band } = stored as Record<string, unknown>;
+  const { from, to, band, mode, pointFrom } = stored as Record<string, unknown>;
   return {
     ...(typeof from === "string" ? { from } : {}),
     ...(typeof to === "string" || to === null ? { to } : {}),
     ...(typeof band === "number" ? { band } : {}),
+    ...(mode === "band" || mode === "point" ? { mode } : {}),
+    ...(typeof pointFrom === "string" || pointFrom === null
+      ? { pointFrom }
+      : {}),
   };
 }
 

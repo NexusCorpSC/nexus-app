@@ -777,7 +777,7 @@ qui tient la souris rend très possible — ne l'épingle pas pour autant : pass
 
 ## Navigation vers l'Aaron Halo
 
-La superposition **Aaron Halo** (`Ctrl+Shift+A`, fenêtre `halo`) dit à quelle
+La superposition **Navigation quantique**, onglet Aaron Halo (`Ctrl+Shift+A`, fenêtre `halo`) dit à quelle
 distance restante couper un saut quantique pour tomber dans une bande de la
 ceinture.
 
@@ -797,3 +797,32 @@ ceinture.
   fenêtre du NPS est affichée (`nps::watched`) : il faut l'ouvrir aussi.
 - « Guider avec le NPS » pose le milieu de la traversée comme destination
   du NPS (un point de Stanton, dans le repère du système) et affiche le NPS.
+
+## Saut quantique vers un point
+
+L'onglet **Point** de la même superposition (fenêtre `halo`, store
+`haloRoute.mode`) vise la destination du NPS (`npsDestination` : lieu,
+marqueur, point saisi, joueur).
+
+- Le calcul (`src/lib/quantum-route.ts`, copie de `lib/quantum-route.ts` du
+  site, seuls les imports diffèrent) : balises = corps (arrivée sur leurs
+  marqueurs orbitaux, `zoneRadius / 3`) et lieux publics dans l'espace ou en
+  orbite (au-delà de 1,2 rayon), vus à l'instant du calcul ; pour chaque paire
+  départ → arrivée, le point de la ligne le plus proche de la cible, la
+  distance restante à cet endroit et l'écart ; un saut jusqu'au bout compte
+  aussi. Écart attendu = écart de la ligne et imprécision de la coupe (1 % de
+  la distance restante, au plus 10 Mm), en quadrature. Trajets écartés : ceux
+  qui passent à moins de 1,2 rayon d'un corps ou à moins de 1 Gm de l'étoile.
+- Une cible sous les marqueurs orbitaux d'un corps : on propose le lieu
+  relevé le plus proche sur ce corps (les avant-postes ont une balise), sinon
+  le corps.
+- Départ (`haloRoute.pointFrom`) : `me` (dernier relevé du NPS de moins de
+  10 min, dans le système de la cible ou sans système connu), `null` (toutes
+  les paires de balises) ou le slug d'une balise.
+- Données : `GET /api/lieux/nps` (requête `nps`), comme le NPS.
+- « Y aller » sur un marqueur (`goWithQuantumJump`,
+  `src/lib/quantum-navigation.ts`) pose la destination du NPS, passe l'onglet
+  sur Point (événement `halo://point` pour une fenêtre déjà ouverte) et affiche
+  la superposition.
+- Un champ colle une ligne `/showlocation` ou `Zone: SolarSystem… Pos:` comme
+  destination du NPS, dans le système choisi.

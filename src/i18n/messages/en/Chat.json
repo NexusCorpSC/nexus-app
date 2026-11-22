@@ -115,6 +115,7 @@
       "get_star_system": "Reading the starmap",
       "identify_radar_signature": "Identifying a radar signature",
       "plan_aaron_halo_route": "Planning a jump into the Aaron Halo",
+      "plan_quantum_route": "Planning a quantum jump to a point",
       "search_official_events": "Searching the official events",
       "get_official_event": "Reading the official event",
       "list_official_event_bugs": "Reading the event's bugs",

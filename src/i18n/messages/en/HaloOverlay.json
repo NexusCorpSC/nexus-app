@@ -1,6 +1,10 @@
 {
-  "title": "Aaron Halo",
+  "title": "Quantum navigation",
   "close": "Close",
+  "tabs": {
+    "band": "Aaron Halo",
+    "point": "Point"
+  },
   "from": "Departure",
   "to": "Destination",
   "band": "Band",
@@ -36,5 +40,39 @@
     "network": "Bands up to date from Nexus Tools.",
     "cache": "Offline: bands kept from the last connection.",
     "builtin": "Offline: bands built into the app."
+  },
+  "point": {
+    "target": "NPS destination",
+    "noTarget": "Pick a destination in the NPS, “Go there” on a marker, or paste coordinates.",
+    "unknownBody": "This point's body has no survey yet: it cannot be placed.",
+    "manualName": "Entered coordinates",
+    "pastePlaceholder": "Paste /showlocation",
+    "system": "System",
+    "pasteUse": "Aim",
+    "pasteInvalid": "Paste the /showlocation line or the r_displayInfo Zone: SolarSystem… Pos: line.",
+    "from": "Departure",
+    "fromMe": "My position (NPS)",
+    "fromMeNone": "My position: open the NPS",
+    "anyFrom": "Best pair of beacons",
+    "routeLine": "{from} → {to}",
+    "routeFromHere": "From here → {to}",
+    "cutAt": "Cut the jump at",
+    "remaining": "left to {to}",
+    "goToEnd": "Jump to {to} and go all the way.",
+    "expected": "You will drop about {error} from the target (the line passes {offset} away).",
+    "goFirst": "First go to {from}, then spool the jump.",
+    "noRoute": "No clear route leads near this point.",
+    "others": "Other routes",
+    "end": "all the way",
+    "distanceNow": "You are {distance} from the target.",
+    "noPosition": "Open the NPS: its readings tell here how far you are.",
+    "openNps": "Finish with the NPS",
+    "precision": "The offset counts a hand cut accurate to {share}% of the remaining distance, at most {max}. Routes through a planet, a moon or the star are left out.",
+    "surface": {
+      "intro": "This point is near the ground of {body} (altitude {altitude}): no jump is cut there.",
+      "jumpTo": "Jump to {place}, {distance} away, then finish flying.",
+      "other": "or {place}, {distance} away",
+      "jumpToBody": "Jump to {body}: at least {distance} will be left from the orbital markers."
+    }
   }
 }
