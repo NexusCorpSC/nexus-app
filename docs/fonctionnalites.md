@@ -374,6 +374,14 @@ poser :
   (403) toute organisation dont l'appelant n'est pas membre, et la liste
   proposée est justement celle de ses organisations.
 
+- **Échanges de Wikelo**, sur la fiche d'un objet (champ `wikelo` de
+  `/api/items/:slug`) et d'un blueprint (`wikeloTrades` de
+  `/api/blueprints/:slug`) : ce qu'il faut apporter au marchand banu et ce qu'il
+  donne, comme sur le site (`src/components/wikelo-trades.tsx`, même rendu que
+  `components/wikelo-trades.tsx` de nexus-tools). Titres et noms restent ceux
+  du jeu, en anglais. Un site plus ancien n'envoie pas ces champs : la section
+  ne s'affiche pas.
+
 > Ce qui n'a pas pu suivre : un filtre par statistique sur les blueprints.
 > `/api/blueprints/stat-names` n'est qu'une autocomplétion pour le formulaire
 > de création côté site — `/api/blueprints` n'accepte aucun paramètre de

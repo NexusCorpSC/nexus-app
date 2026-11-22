@@ -49,6 +49,54 @@ export type Blueprint = {
   statistics?: BlueprintStatistics;
   recipe?: BlueprintRecipe;
   obtention?: string;
+  /** Wikelo trades that give this blueprint (detail route only). */
+  wikeloTrades?: WikeloTrade[];
+};
+
+/* ------------------------------------------------------------------ */
+/* Wikelo trades                                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * A trade of Wikelo, the Banu trader of the Emporium: what to bring him, what
+ * he gives. Mirrors `WikeloTradeView` in nexus-tools `types/wikelo.ts`. Names
+ * and titles are the in-game English ones.
+ */
+export type WikeloTradeEntry = {
+  name: string;
+  quantity?: number;
+  /** A volume in SCU, for a resource delivered in bulk. */
+  scu?: number;
+  /** Slug of the item fiche, when the catalogue has it. */
+  itemSlug?: string;
+};
+
+export type WikeloTrade = {
+  id: string;
+  title: string;
+  description: string;
+  requirements: WikeloTradeEntry[];
+  /** One group in general; several means the game draws one at random. */
+  rewardChoices: WikeloTradeEntry[][];
+  blueprints: {
+    gameId: string;
+    name: string;
+    /** Between 0 and 1; absent when certain. */
+    chance?: number;
+    slug?: string;
+  }[];
+  reputation?: number;
+  onceOnly: boolean;
+  version: string;
+  /** Id of the mission fiche, when it exists. */
+  missionId?: string;
+};
+
+export type ItemWikeloTrades = {
+  /** Trades that give this item. */
+  rewards: WikeloTrade[];
+  /** Trades that ask for it. */
+  wanted: WikeloTrade[];
 };
 
 export type BlueprintCategory = {
@@ -329,6 +377,8 @@ export type ItemDetails = Item & {
   weaponPeers: WeaponPeer[];
   /** Vehicles and weapons carrying this object in one of their slots. */
   mountedOn: ItemSummary[];
+  /** Wikelo trades giving or asking for it; absent from an older site. */
+  wikelo?: ItemWikeloTrades;
 };
 
 export type ItemCategory = {

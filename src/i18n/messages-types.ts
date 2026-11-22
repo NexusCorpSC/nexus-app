@@ -58,6 +58,7 @@ import type Squad from "./messages/fr/Squad.json";
 import type SquadRoles from "./messages/fr/SquadRoles.json";
 import type Telemetry from "./messages/fr/Telemetry.json";
 import type Updates from "./messages/fr/Updates.json";
+import type Wikelo from "./messages/fr/Wikelo.json";
 
 export type Messages = {
   Api: typeof Api;
@@ -118,4 +119,5 @@ export type Messages = {
   SquadRoles: typeof SquadRoles;
   Telemetry: typeof Telemetry;
   Updates: typeof Updates;
+  Wikelo: typeof Wikelo;
 };

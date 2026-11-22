@@ -7,6 +7,7 @@ import { ExternalLink } from "lucide-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { getBlueprint } from "@/lib/api/blueprints";
 import { BlueprintOrgOwners } from "@/components/blueprint-org-owners";
+import { BlueprintWikeloSection } from "@/components/wikelo-trades";
 import {
   BlueprintAddButton,
   BlueprintRemoveButton,
@@ -171,6 +172,13 @@ export default function BlueprintDetailPage() {
               </p>
             )}
           </Card>
+
+          {blueprint.wikeloTrades?.length ? (
+            <BlueprintWikeloSection
+              blueprintSlug={blueprint.slug}
+              trades={blueprint.wikeloTrades}
+            />
+          ) : null}
         </div>
 
         <div className="space-y-4">
