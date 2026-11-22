@@ -46,6 +46,7 @@ import SquadOverlayPage from "@/pages/squad-overlay-page";
 import PlanOverlayPage from "@/pages/plan-overlay-page";
 import MapOverlayPage from "@/pages/map-overlay-page";
 import NpsOverlayPage from "@/pages/nps-overlay-page";
+import RadarOverlayPage from "@/pages/radar-overlay-page";
 import RadialOverlayPage from "@/pages/radial-overlay-page";
 // Loaded on first visit too: the AI SDK and the Markdown renderer are only
 // needed by the chat, in the main window and over the game.
@@ -73,6 +74,7 @@ export default function App() {
       <Route path="plan-overlay" element={<PlanOverlayPage />} />
       <Route path="map-overlay" element={<MapOverlayPage />} />
       <Route path="nps-overlay" element={<NpsOverlayPage />} />
+      <Route path="radar-overlay" element={<RadarOverlayPage />} />
       <Route path="radial" element={<RadialOverlayPage />} />
       <Route
         path="chat-overlay"

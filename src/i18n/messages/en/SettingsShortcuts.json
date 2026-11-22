@@ -43,6 +43,10 @@
       "label": "NPS",
       "hint": "Distance and heading to a place, from /showlocation."
     },
+    "radar": {
+      "label": "Radar scanner",
+      "hint": "Reads the scan's radar signature and tells what it points to."
+    },
     "chat": {
       "label": "Nexus Chat",
       "hint": "The Nexus Tools assistant, over the game."

@@ -36,6 +36,7 @@ import type PlanetMap from "./messages/fr/PlanetMap.json";
 import type Presence from "./messages/fr/Presence.json";
 import type Price from "./messages/fr/Price.json";
 import type QuickAdd from "./messages/fr/QuickAdd.json";
+import type RadarOverlay from "./messages/fr/RadarOverlay.json";
 import type Radial from "./messages/fr/Radial.json";
 import type Raid from "./messages/fr/Raid.json";
 import type Refining from "./messages/fr/Refining.json";
@@ -94,6 +95,7 @@ export type Messages = {
   Presence: typeof Presence;
   Price: typeof Price;
   QuickAdd: typeof QuickAdd;
+  RadarOverlay: typeof RadarOverlay;
   Radial: typeof Radial;
   Raid: typeof Raid;
   Refining: typeof Refining;

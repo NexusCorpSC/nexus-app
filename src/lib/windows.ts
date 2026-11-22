@@ -12,7 +12,8 @@ export type OverlayLabel =
   | "nps"
   | "notes"
   | "cargo"
-  | "chat";
+  | "chat"
+  | "radar";
 
 /** Shows an overlay — never hides it, unlike its shortcut. */
 export function showOverlay(label: OverlayLabel): Promise<void> {

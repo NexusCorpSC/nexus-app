@@ -165,6 +165,36 @@ d'orientation : la commande `/showlocation`, tapée dans le chat, copie
 La fiche d'un lieu relevé propose **Y aller (NPS)**, qui en fait la
 destination et affiche la superposition.
 
+## Scanner de signature radar
+
+La superposition **Scanner radar** (`Ctrl+Shift+R`) lit le nombre que le scan
+du jeu affiche (la signature radar) et le compare aux signatures connues.
+
+- La calibration passe par la fenêtre de capture, comme celle du NPS
+  (`CapturePurpose::RadarCalibration`) : le joueur trace une zone autour du
+  nombre ; elle est ensuite lue par l'OCR de Windows toutes les secondes
+  environ, fenêtre affichée seulement (`src-tauri/src/radar_screen.rs`,
+  réglages dans le store `radarScreen`).
+- Contre les chiffres mal lus : la zone est lue telle quelle et inversée ; un
+  nombre compte quand les deux lectures concordent, ou quand une seule le
+  trouve deux fois de suite (accord remis à zéro fenêtre cachée ou zone
+  changée). Les séparateurs de milliers et les lettres prises pour des
+  chiffres (`O`, `I`, `l`…) sont corrigés, une étiquette collée devant
+  (`RS8600`) est écartée, un nombre suivi de `m` ou `km` est une distance et
+  ne compte pas. Un nombre d'un seul tenant passe avant un nombre recollé à
+  partir de mots séparés par des espaces, puis le plus long l'emporte.
+- L'identification (`src/lib/radar.ts`, copie de `lib/radar.ts` du site)
+  cherche les signatures dont la valeur est un multiple, de 1 à 20 éléments,
+  la grappe la plus petite d'abord ; sans multiple exact, les plus proches à
+  1 % près. À écart égal, le contexte choisi (partout, vaisseau, ROC, à
+  pied ; store `radarContext`) met ses catégories en tête avant la taille de
+  la grappe : en vaisseau, minerais, astéroïdes et récupération ; en ROC, les
+  gisements ROC ; à pied, les gisements à la main. La valeur peut aussi être
+  saisie à la main.
+- Les signatures viennent de `GET /api/radar-signatures` (corrigées par les
+  administrateurs du site), gardées dans le store `radarSignatures`, avec la
+  liste du patch 4.10.3 intégrée en dernier recours.
+
 ## Nexus Chat
 
 L'assistant du site (Claude), dans l'écran **Nexus Chat** et en superposition

@@ -20,6 +20,7 @@ import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
 import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note, type PlacePosition } from "@/types/nexus";
 import { isMarkerKind, type MarkerKind } from "@/types/markers";
+import { isRadarContext, type RadarContext } from "@/lib/radar";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -39,6 +40,7 @@ const KEY_SHORTCUT_PLAN = "shortcutPlan";
 const KEY_SHORTCUT_MAP = "shortcutMap";
 const KEY_SHORTCUT_NPS = "shortcutNps";
 const KEY_SHORTCUT_CHAT = "shortcutChat";
+const KEY_SHORTCUT_RADAR = "shortcutRadar";
 const KEY_SHORTCUT_TALK = "shortcutTalk";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
@@ -54,6 +56,9 @@ const KEY_NPS_SYSTEM_CHOICE = "npsSystemChoice";
 const KEY_NPS_SCREEN = "npsScreen";
 const KEY_MARKER_DEFAULTS = "markerDefaults";
 const KEY_CARGO_SHIPS = "cargoShips";
+const KEY_RADAR_SCREEN = "radarScreen";
+const KEY_RADAR_SIGNATURES = "radarSignatures";
+const KEY_RADAR_CONTEXT = "radarContext";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
 const KEY_GAME_LOG_DIR = "gameLogDir";
@@ -150,6 +155,7 @@ export const DEFAULT_SHORTCUTS = {
   map: "Ctrl+Shift+KeyM",
   nps: "Ctrl+Shift+KeyK",
   chat: "Ctrl+Shift+KeyH",
+  radar: "Ctrl+Shift+KeyR",
   // Held, not pressed: the microphone is open while it is down.
   talk: "Ctrl+Shift+KeyJ",
   opacity: "Ctrl+Shift+KeyO",
@@ -186,6 +192,8 @@ export async function getShortcuts(): Promise<Shortcuts> {
     nps: (await store.get<string>(KEY_SHORTCUT_NPS)) ?? DEFAULT_SHORTCUTS.nps,
     chat:
       (await store.get<string>(KEY_SHORTCUT_CHAT)) ?? DEFAULT_SHORTCUTS.chat,
+    radar:
+      (await store.get<string>(KEY_SHORTCUT_RADAR)) ?? DEFAULT_SHORTCUTS.radar,
     talk:
       (await store.get<string>(KEY_SHORTCUT_TALK)) ?? DEFAULT_SHORTCUTS.talk,
     opacity:
@@ -212,6 +220,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_MAP, shortcuts.map);
   await store.set(KEY_SHORTCUT_NPS, shortcuts.nps);
   await store.set(KEY_SHORTCUT_CHAT, shortcuts.chat);
+  await store.set(KEY_SHORTCUT_RADAR, shortcuts.radar);
   await store.set(KEY_SHORTCUT_TALK, shortcuts.talk);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
@@ -256,6 +265,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     map: storedMode(stored?.map, "map"),
     nps: storedMode(stored?.nps, "nps"),
     chat: storedMode(stored?.chat, "chat"),
+    radar: storedMode(stored?.radar, "radar"),
   };
 }
 
@@ -494,7 +504,9 @@ export async function getRefiningNotifications(): Promise<boolean> {
   return typeof value === "boolean" ? value : true;
 }
 
-export async function setRefiningNotifications(enabled: boolean): Promise<void> {
+export async function setRefiningNotifications(
+  enabled: boolean,
+): Promise<void> {
   const store = await getStore();
   await store.set(KEY_REFINING_NOTIFICATIONS, enabled);
 }
@@ -686,18 +698,14 @@ function isNpsDestination(value: unknown): value is NpsDestination {
       name?: unknown;
     };
     return (
-      typeof id === "string" &&
-      typeof name === "string" &&
-      isNpsPoint(rest)
+      typeof id === "string" && typeof name === "string" && isNpsPoint(rest)
     );
   }
   if (!("point" in value) || !value.point || typeof value.point !== "object") {
     return false;
   }
   const { name, ...rest } = value.point as { name?: unknown };
-  return (
-    (name === undefined || typeof name === "string") && isNpsPoint(rest)
-  );
+  return (name === undefined || typeof name === "string") && isNpsPoint(rest);
 }
 
 /** Un système facultatif et une position : le point et le marqueur en ont. */
@@ -849,6 +857,62 @@ export async function getCachedCargoShips(): Promise<unknown> {
 export async function setCachedCargoShips(ships: unknown): Promise<void> {
   const store = await getStore();
   await store.set(KEY_CARGO_SHIPS, ships);
+}
+
+/** The radar scanner reading the scan's signature (`src-tauri/src/radar_screen.rs`). */
+export type RadarScreenSettings = {
+  enabled: boolean;
+  intervalMs: number;
+  /** The box around the signature, as drawn in the calibration. */
+  region: NpsScreenRegion | null;
+};
+
+export const DEFAULT_RADAR_SCREEN: RadarScreenSettings = {
+  enabled: false,
+  intervalMs: 1000,
+  region: null,
+};
+
+export async function getRadarScreen(): Promise<RadarScreenSettings> {
+  const store = await getStore();
+  const stored =
+    await store.get<Partial<RadarScreenSettings>>(KEY_RADAR_SCREEN);
+  return { ...DEFAULT_RADAR_SCREEN, ...stored };
+}
+
+export async function setRadarScreen(
+  settings: RadarScreenSettings,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_RADAR_SCREEN, settings);
+}
+
+/** Where the player scans, so what they can meet there comes first. */
+export async function getRadarContext(): Promise<RadarContext> {
+  const store = await getStore();
+  const stored = await store.get<unknown>(KEY_RADAR_CONTEXT);
+  return isRadarContext(stored) ? stored : "all";
+}
+
+export async function setRadarContext(context: RadarContext): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_RADAR_CONTEXT, context);
+}
+
+/**
+ * Last known list from `/api/radar-signatures`, so the scanner identifies
+ * what it reads with no connection.
+ */
+export async function getCachedRadarSignatures(): Promise<unknown> {
+  const store = await getStore();
+  return (await store.get<unknown>(KEY_RADAR_SIGNATURES)) ?? null;
+}
+
+export async function setCachedRadarSignatures(
+  signatures: unknown,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_RADAR_SIGNATURES, signatures);
 }
 
 /** Turns `Ctrl+Shift+KeyB` into `Ctrl + Maj + B` for display (in French). */

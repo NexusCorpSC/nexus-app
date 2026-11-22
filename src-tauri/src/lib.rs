@@ -10,6 +10,7 @@ mod native_labels;
 mod notifications;
 mod nps;
 mod nps_screen;
+mod radar_screen;
 mod radial;
 mod screenshots;
 mod talk;
@@ -51,6 +52,7 @@ const MAP_WINDOW: &str = "map";
 /// The NPS — Nexus Positioning System: distance and heading to a place, from
 /// the game's `/showlocation` (`nps.rs`).
 use nps::NPS_WINDOW;
+use radar_screen::RADAR_WINDOW;
 /// Nexus Chat: the site's assistant, over the game.
 pub(crate) const CHAT_WINDOW: &str = "chat";
 pub(crate) const NOTIFICATIONS_WINDOW: &str = "notifications";
@@ -143,6 +145,9 @@ struct OverlayOpacity {
     /// Missing from what a frontend older than the chat sends.
     #[serde(default = "default_chat_mode")]
     chat: OverlayMode,
+    /// Missing from what a frontend older than the radar scanner sends.
+    #[serde(default = "default_radar_mode")]
+    radar: OverlayMode,
 }
 
 fn default_nps_mode() -> OverlayMode {
@@ -150,6 +155,10 @@ fn default_nps_mode() -> OverlayMode {
 }
 
 fn default_chat_mode() -> OverlayMode {
+    OverlayMode::Shaded
+}
+
+fn default_radar_mode() -> OverlayMode {
     OverlayMode::Shaded
 }
 
@@ -173,6 +182,8 @@ impl Default for OverlayOpacity {
             nps: default_nps_mode(),
             // Text read and written over the game: shaded, like the NPS.
             chat: default_chat_mode(),
+            // A name and a count, read over the game: shaded, like the NPS.
+            radar: default_radar_mode(),
         }
     }
 }
@@ -187,6 +198,7 @@ impl OverlayOpacity {
             MAP_WINDOW => Some(self.map),
             NPS_WINDOW => Some(self.nps),
             CHAT_WINDOW => Some(self.chat),
+            RADAR_WINDOW => Some(self.radar),
             _ => None,
         }
     }
@@ -201,6 +213,7 @@ impl OverlayOpacity {
             MAP_WINDOW => &mut self.map,
             NPS_WINDOW => &mut self.nps,
             CHAT_WINDOW => &mut self.chat,
+            RADAR_WINDOW => &mut self.radar,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -212,6 +225,7 @@ impl OverlayOpacity {
     fn any_drawn(&self) -> bool {
         [
             self.notes, self.cargo, self.squad, self.plan, self.map, self.nps, self.chat,
+            self.radar,
         ]
         .iter()
         .any(|mode| *mode != OverlayMode::Clear)
@@ -225,6 +239,7 @@ impl OverlayOpacity {
         self.map = mode;
         self.nps = mode;
         self.chat = mode;
+        self.radar = mode;
     }
 }
 
@@ -279,6 +294,7 @@ fn is_overlay(label: &str) -> bool {
             | MAP_WINDOW
             | NPS_WINDOW
             | CHAT_WINDOW
+            | RADAR_WINDOW
     )
 }
 
@@ -296,6 +312,8 @@ enum CapturePurpose {
     Search,
     /// Where the NPS reads the game's debug lines (`nps_screen.rs`).
     NpsCalibration,
+    /// Where the scanner reads the radar signature (`radar_screen.rs`).
+    RadarCalibration,
 }
 
 /// What a global shortcut triggers.
@@ -310,6 +328,8 @@ pub(crate) enum Action {
     Map,
     Nps,
     Chat,
+    /// The radar signature scanner (`radar_screen.rs`).
+    Radar,
     /// Held rather than fired: see `talk.rs`.
     Talk,
     Opacity,
@@ -334,6 +354,7 @@ impl Action {
             Action::Map => "map",
             Action::Nps => "nps",
             Action::Chat => "chat",
+            Action::Radar => "radar",
             Action::Talk => "talk",
             Action::Opacity => "opacity",
             Action::Lock => "lock",
@@ -382,6 +403,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Map => toggle_overlay(app, MAP_WINDOW),
         Action::Nps => toggle_overlay(app, NPS_WINDOW),
         Action::Chat => toggle_overlay(app, CHAT_WINDOW),
+        Action::Radar => toggle_overlay(app, RADAR_WINDOW),
         // Never routed here either: both shortcut paths handle its two edges.
         Action::Talk => talk::press(app),
         Action::Opacity => flip_all_overlay_opacity(app),
@@ -440,6 +462,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the chat sends.
     #[serde(default = "default_chat_shortcut")]
     chat: String,
+    /// Missing from what a frontend older than the radar scanner sends.
+    #[serde(default = "default_radar_shortcut")]
+    radar: String,
     /// Missing from what a frontend older than the voice sends.
     #[serde(default = "default_talk_shortcut")]
     talk: String,
@@ -471,6 +496,10 @@ fn default_chat_shortcut() -> String {
     "Ctrl+Shift+KeyH".to_string()
 }
 
+fn default_radar_shortcut() -> String {
+    "Ctrl+Shift+KeyR".to_string()
+}
+
 fn default_talk_shortcut() -> String {
     "Ctrl+Shift+KeyJ".to_string()
 }
@@ -492,6 +521,7 @@ impl Default for ShortcutSettings {
             map: "Ctrl+Shift+KeyM".to_string(),
             nps: default_nps_shortcut(),
             chat: default_chat_shortcut(),
+            radar: default_radar_shortcut(),
             talk: default_talk_shortcut(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
@@ -540,6 +570,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         (Action::Map, &requested.map),
         (Action::Nps, &requested.nps),
         (Action::Chat, &requested.chat),
+        (Action::Radar, &requested.radar),
         (Action::Talk, &requested.talk),
         (Action::Opacity, &requested.opacity),
         (Action::Lock, &requested.lock),
@@ -983,23 +1014,49 @@ fn start_capture(app: &AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-/// Takes the NPS window off screen, then freezes the monitor it was on for the
-/// player to draw a box around the game's debug lines.
-#[tauri::command]
-fn nps_calibrate(app: AppHandle) -> Result<(), String> {
+impl CapturePurpose {
+    /// The window a calibration was started from, put away while the box is
+    /// drawn and brought back after.
+    fn calibrated_window(self) -> Option<&'static str> {
+        match self {
+            CapturePurpose::Search => None,
+            CapturePurpose::NpsCalibration => Some(NPS_WINDOW),
+            CapturePurpose::RadarCalibration => Some(RADAR_WINDOW),
+        }
+    }
+}
+
+/// Takes a calibrated window off screen, then freezes the monitor it was on
+/// for the player to draw a box.
+fn start_calibration(app: &AppHandle, purpose: CapturePurpose) -> Result<(), String> {
+    let label = purpose
+        .calibrated_window()
+        .ok_or_else(|| "not a calibration".to_string())?;
     // Read before hiding: the screen to calibrate is the one the window is
     // on when the button is clicked, whatever was calibrated before.
-    let nps = window(&app, NPS_WINDOW)?;
-    let position = nps.outer_position().map_err(|e| e.to_string())?;
-    let size = nps.outer_size().map_err(|e| e.to_string())?;
+    let calibrated = window(app, label)?;
+    let position = calibrated.outer_position().map_err(|e| e.to_string())?;
+    let size = calibrated.outer_size().map_err(|e| e.to_string())?;
     let centre = (
         position.x + size.width as i32 / 2,
         position.y + size.height as i32 / 2,
     );
 
-    hide_window(&app, NPS_WINDOW)?;
-    freeze_after_repaint(&app, CapturePurpose::NpsCalibration, Some(centre));
+    hide_window(app, label)?;
+    freeze_after_repaint(app, purpose, Some(centre));
     Ok(())
+}
+
+/// The box around the game's debug lines, drawn from the NPS window.
+#[tauri::command]
+fn nps_calibrate(app: AppHandle) -> Result<(), String> {
+    start_calibration(&app, CapturePurpose::NpsCalibration)
+}
+
+/// The box around the scan's signature, drawn from the scanner window.
+#[tauri::command]
+fn radar_calibrate(app: AppHandle) -> Result<(), String> {
+    start_calibration(&app, CapturePurpose::RadarCalibration)
 }
 
 /// What the selection window is open for, so it can say what to draw.
@@ -1023,8 +1080,8 @@ fn freeze_after_repaint(app: &AppHandle, purpose: CapturePurpose, at: Option<(i3
 
         if let Err(error) = freeze_and_select(&app, purpose, at) {
             log(format!("region capture failed: {error}"));
-            if purpose == CapturePurpose::NpsCalibration {
-                let _ = show_window(&app, NPS_WINDOW);
+            if let Some(label) = purpose.calibrated_window() {
+                let _ = show_window(&app, label);
             }
             // The shortcut fires with no window of ours on screen, so a
             // notification is the only place this can be seen.
@@ -1059,12 +1116,14 @@ fn freeze_and_select(
         .state::<CaptureState>()
         .lock()?
         .replace((frame, purpose));
-    // A search capture started over a calibration ends it: the NPS window,
-    // put away for it, comes back.
-    if matches!(replaced, Some((_, CapturePurpose::NpsCalibration)))
-        && purpose != CapturePurpose::NpsCalibration
-    {
-        show_window(app, NPS_WINDOW)?;
+    // A capture started over a calibration ends it: the window put away for
+    // it comes back, unless the new capture is for that same window.
+    if let Some((_, previous)) = replaced {
+        if previous != purpose {
+            if let Some(label) = previous.calibrated_window() {
+                show_window(app, label)?;
+            }
+        }
     }
 
     let selection_window = window(app, CAPTURE_WINDOW)?;
@@ -1097,9 +1156,8 @@ fn show_overlay(app: AppHandle, label: String) -> Result<(), String> {
             show_window(&app, PLAN_WINDOW)?;
             announce_plan_visibility(&app)
         }
-        OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW | CHAT_WINDOW => {
-            show_window(&app, &label)
-        }
+        OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW | CHAT_WINDOW
+        | RADAR_WINDOW => show_window(&app, &label),
         other => Err(format!("{other} is not an overlay")),
     }
 }
@@ -1206,6 +1264,11 @@ fn close_map_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_nps_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, NPS_WINDOW)
+}
+
+#[tauri::command]
+fn close_radar_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, RADAR_WINDOW)
 }
 
 #[tauri::command]
@@ -1520,6 +1583,7 @@ fn flip_all_overlay_locks(app: &AppHandle) -> Result<(), String> {
         MAP_WINDOW,
         NPS_WINDOW,
         CHAT_WINDOW,
+        RADAR_WINDOW,
     ] {
         let visible = window(app, label)?
             .is_visible()
@@ -1580,9 +1644,9 @@ fn open_main_route(app: AppHandle, route: String) -> Result<(), String> {
 fn cancel_capture(app: AppHandle, state: State<CaptureState>) -> Result<(), String> {
     let taken = state.take()?;
     hide_window(&app, CAPTURE_WINDOW)?;
-    // The NPS window was put away for the calibration: it comes back.
-    if matches!(taken, Some((_, CapturePurpose::NpsCalibration))) {
-        show_window(&app, NPS_WINDOW)?;
+    // The window put away for a calibration comes back.
+    if let Some(label) = taken.and_then(|(_, purpose)| purpose.calibrated_window()) {
+        show_window(&app, label)?;
     }
     Ok(())
 }
@@ -1605,6 +1669,12 @@ async fn recognize_selection(
     if purpose == CapturePurpose::NpsCalibration {
         let calibrated = nps_screen::calibrate(&app, frame, selection).await;
         show_window(&app, NPS_WINDOW)?;
+        return calibrated.map(|()| String::new());
+    }
+
+    if purpose == CapturePurpose::RadarCalibration {
+        let calibrated = radar_screen::calibrate(&app, frame, selection).await;
+        show_window(&app, RADAR_WINDOW)?;
         return calibrated.map(|()| String::new());
     }
 
@@ -1654,6 +1724,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .manage(CaptureState::default())
         .manage(nps_screen::Tracking::default())
+        .manage(radar_screen::Tracking::default())
         .manage(Shortcuts::default())
         .manage(ShortcutSupport::default())
         .manage(notifications::Notifications::default())
@@ -1680,6 +1751,7 @@ pub fn run() {
             close_map_overlay,
             open_map_overlay,
             close_nps_overlay,
+            close_radar_overlay,
             close_chat_overlay,
             voice_start,
             voice_stop,
@@ -1692,6 +1764,8 @@ pub fn run() {
             nps::nps_copy_command,
             nps_screen::nps_screen_configure,
             nps_calibrate,
+            radar_screen::radar_screen_configure,
+            radar_calibrate,
             capture_purpose,
             toggle_overlay_opacity,
             set_overlay_opacity,
@@ -1864,6 +1938,7 @@ pub fn run() {
             // Reads the game's debug lines off the screen, when the player
             // has asked for it.
             nps_screen::install(app.handle());
+            radar_screen::install(app.handle());
 
             Ok(())
         })

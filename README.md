@@ -66,6 +66,16 @@ avec une boussole.
 
 <br clear="right" />
 
+### Scanner de signature radar
+
+Le scan du jeu affiche une signature radar au-dessus d'un rocher, d'un
+astéroïde ou d'une épave. Le scanner (`Ctrl+Maj+R`) la lit à l'écran, dans une
+zone que vous tracez une fois, et dit ce que c'est : quel minerai, quel type
+d'astéroïde, et combien de rochers forment la grappe. Vous pouvez aussi taper
+la valeur. Indiquez où vous scannez (vaisseau, ROC, à pied) pour que ce que
+vous pouvez y croiser passe en tête. Les signatures connues viennent du site et
+restent disponibles hors ligne.
+
 ### Télémétrie du jeu
 
 Star Citizen peut donner à l'app, sur votre PC seulement, votre solde aUEC,
@@ -151,6 +161,7 @@ votre espace :
 | `Ctrl+Maj+S` | capture de zone et recherche du texte |
 | `Ctrl+Maj+K` | NPS |
 | `Ctrl+Maj+X` | marquer ma position |
+| `Ctrl+Maj+R` | scanner de signature radar |
 | `Ctrl+Maj+H` | Nexus Chat |
 | `Ctrl+Maj+J` (maintenu) | parler à Nexus Chat |
 | `Ctrl+Maj+E` | escouade |
@@ -169,7 +180,7 @@ Tous se changent dans **Paramètres**.
 **Est-ce compatible avec l'anti-triche ?** L'application ne touche pas au jeu :
 elle ne lit que le clavier (comme les autres overlays de la communauté), le
 presse-papiers quand le NPS est ouvert, le journal `Game.log`, les captures
-d'écran que vous déclenchez et, si vous l'activez, le service de télémétrie que
+d'écran que vous déclenchez (et la zone calibrée du NPS ou du scanner radar) et, si vous l'activez, le service de télémétrie que
 le jeu ouvre lui-même sur votre PC. Elle n'injecte rien dans le processus du
 jeu.
 

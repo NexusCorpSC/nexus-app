@@ -1,0 +1,58 @@
+{
+  "title": "Escáner de radar",
+  "close": "Cerrar",
+  "screen": {
+    "on": "Lectura en pantalla activa",
+    "off": "Lectura en pantalla",
+    "start": "Leer la firma en pantalla",
+    "stop": "Detener la lectura en pantalla",
+    "calibrate": "Calibrar",
+    "recalibrate": "Recalibrar",
+    "calibrateHint": "Trazar la zona donde el escaneo muestra la firma de radar",
+    "interval": "Intervalo de lectura",
+    "every": "{seconds} s",
+    "setup": "Escanea una roca o unos restos y calibra trazando una zona alrededor del número de la firma que muestra el escaneo. Mantén luego la misma posición de cámara.",
+    "calibrationFound": "Zona guardada: se leyó {value}.",
+    "calibrationEmpty": "Zona guardada, pero no se leyó ningún número. Comprueba que cubre la firma del escaneo.",
+    "tooSmall": "Zona demasiado pequeña: trázala un poco más amplia alrededor del número.",
+    "unreadable": "Ninguna firma leída: no se escanea nada, o algo tapa la zona, incluida esta ventana.",
+    "failed": "La lectura de la pantalla falló: {message}",
+    "reading": "Firma leída en pantalla."
+  },
+  "context": {
+    "label": "¿Dónde escaneas?",
+    "hint": "Pone primero lo que puedes encontrar donde escaneas: 4000 es un asteroide desde una nave, un yacimiento desde un ROC.",
+    "all": "Todo",
+    "ship": "Nave",
+    "roc": "ROC",
+    "fps": "A pie"
+  },
+  "manual": "Escribir una firma",
+  "manualPlaceholder": "p. ej. 12 680",
+  "last": "Última firma leída",
+  "age": "hace {age}",
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "waiting": "Esperando una firma: activa la lectura en pantalla o escribe el valor.",
+  "matches": "Identificación probable",
+  "noMatch": "Ninguna firma conocida da exactamente {value}.",
+  "approximate": "Las más cercanas",
+  "count": "{count, plural, one {# elemento} other {# elementos}}",
+  "base": "base {value}",
+  "difference": "diferencia {value}",
+  "more": "Otras posibilidades",
+  "source": {
+    "network": "Firmas al día desde Nexus Tools.",
+    "cache": "Sin conexión: firmas guardadas de la última conexión.",
+    "builtin": "Sin conexión: firmas integradas en la app (parche 4.10.3)."
+  },
+  "categories": {
+    "ship": "Mineral (nave)",
+    "asteroid": "Asteroide",
+    "salvage": "Recuperación",
+    "roc": "Yacimiento ROC",
+    "fps": "Yacimiento a mano",
+    "other": "Otro"
+  },
+  "history": "Lecturas recientes"
+}
