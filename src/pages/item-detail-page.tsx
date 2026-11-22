@@ -24,6 +24,7 @@ import {
   type WeaponSpread,
 } from "@/types/nexus";
 import { ReportButton } from "@/components/report-button";
+import { ItemWikeloSection } from "@/components/wikelo-trades";
 import { PriceConfirmation } from "@/components/price-confirmation";
 import {
   Button,
@@ -157,6 +158,14 @@ export default function ItemDetailPage() {
               items={item.mountedOn}
               currentSlug={item.slug}
               hint={t("mountedOnHint")}
+            />
+          ) : null}
+
+          {item.wikelo ? (
+            <ItemWikeloSection
+              itemSlug={item.slug}
+              rewards={item.wikelo.rewards}
+              wanted={item.wikelo.wanted}
             />
           ) : null}
         </div>
