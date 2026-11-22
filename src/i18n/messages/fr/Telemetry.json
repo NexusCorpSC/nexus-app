@@ -14,7 +14,7 @@
   },
   "help": {
     "disabled": "La télémétrie est désactivée.",
-    "waiting": "Aucun service de télémétrie ne répond sur 127.0.0.1:{port}. Lancez le jeu après avoir activé GameTelemetryEnabled.",
+    "waiting": "Aucun service de télémétrie ne répond sur 127.0.0.1:{port}. Lancez le jeu après avoir activé GameTelemetryEnabled et la variable GRPC_CLIENT_SERVER_ENABLED (Paramètres › Jeu).",
     "settings": "Ouvrir les réglages"
   },
   "home": {

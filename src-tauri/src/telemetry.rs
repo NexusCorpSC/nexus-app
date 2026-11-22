@@ -83,6 +83,11 @@ const ATTRIBUTES_PATH: [&str; 6] = [
 ];
 #[cfg(windows)]
 const GAME_EXECUTABLE: &str = "StarCitizen.exe";
+/// The user environment variable the game also needs before it opens the
+/// service: without it, `GameTelemetryEnabled` alone does nothing and no
+/// `GameTelemetryService` line reaches `Game.log`. The game inherits it from
+/// the RSI Launcher, which reads the environment when it starts.
+const ENV_VAR: &str = "GRPC_CLIENT_SERVER_ENABLED";
 
 /// The port the game said it opened, read from `Game.log`.
 static PORT: AtomicU16 = AtomicU16::new(DEFAULT_PORT);
@@ -641,6 +646,8 @@ pub struct Build {
 #[serde(rename_all = "camelCase")]
 pub struct Activation {
     pub game_running: bool,
+    /// Whether [`ENV_VAR`] is `1` in the user's environment.
+    pub env_enabled: bool,
     pub builds: Vec<Build>,
 }
 
@@ -730,6 +737,68 @@ fn game_running() -> bool {
     false
 }
 
+/// The value of `name` in the user's environment as stored, not as this
+/// process inherited it: one set after the app started is seen too.
+#[cfg(windows)]
+fn user_env_value(name: &str) -> Option<String> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let output = std::process::Command::new("reg")
+        .args(["query", r"HKCU\Environment", "/v", name])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    reg_value(&String::from_utf8_lossy(&output.stdout), name)
+}
+
+#[cfg(not(windows))]
+fn user_env_value(name: &str) -> Option<String> {
+    std::env::var(name).ok()
+}
+
+/// The value on the line of `name` in what `reg query` printed:
+/// `    NAME    REG_SZ    1`.
+fn reg_value(output: &str, name: &str) -> Option<String> {
+    output.lines().find_map(|line| {
+        let mut parts = line.split_whitespace();
+        if !parts.next()?.eq_ignore_ascii_case(name) {
+            return None;
+        }
+        parts.next()?.starts_with("REG_").then_some(())?;
+        Some(parts.collect::<Vec<_>>().join(" "))
+    })
+}
+
+fn env_enabled() -> bool {
+    user_env_value(ENV_VAR).is_some_and(|value| value.trim() == "1")
+}
+
+/// Sets [`ENV_VAR`] to `1` for the user, with `setx`, which also tells the
+/// running programs that the environment changed.
+#[cfg(windows)]
+fn set_user_env() -> Result<(), String> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let output = std::process::Command::new("setx")
+        .args([ENV_VAR, "1"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map_err(|error| error.to_string())?;
+    if output.status.success() {
+        Ok(())
+    } else {
+        Err(String::from_utf8_lossy(&output.stderr).trim().to_string())
+    }
+}
+
+#[cfg(not(windows))]
+fn set_user_env() -> Result<(), String> {
+    Err("unsupported".to_string())
+}
+
 /// Off the main thread: `tasklist` takes a moment.
 #[tauri::command]
 pub async fn telemetry_activation(app: AppHandle) -> Result<Activation, String> {
@@ -742,6 +811,7 @@ fn activation(app: &AppHandle) -> Activation {
     let game_dir = crate::game_log::game_dir(app);
     Activation {
         game_running: game_running(),
+        env_enabled: env_enabled(),
         builds: builds(&game_dir)
             .into_iter()
             .map(|(name, path)| Build {
@@ -790,9 +860,32 @@ fn enable_in_game(app: &AppHandle, build: &str) -> Result<Activation, String> {
     Ok(activation(app))
 }
 
+/// Sets [`ENV_VAR`] for the user, on the player's click. The RSI Launcher
+/// must be restarted to pass it on to the game.
+#[tauri::command]
+pub async fn telemetry_enable_env(app: AppHandle) -> Result<Activation, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        if !env_enabled() {
+            set_user_env()?;
+            log(format!("telemetry: {ENV_VAR}=1 set for the user"));
+        }
+        Ok(activation(&app))
+    })
+    .await
+    .map_err(|error| error.to_string())?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reads_a_value_from_reg_query() {
+        let output = "\r\nHKEY_CURRENT_USER\\Environment\r\n    GRPC_CLIENT_SERVER_ENABLED    REG_SZ    1\r\n\r\n";
+        assert_eq!(reg_value(output, ENV_VAR).as_deref(), Some("1"));
+        assert_eq!(reg_value(output, "OTHER"), None);
+        assert_eq!(reg_value("HKEY_CURRENT_USER\\Environment", ENV_VAR), None);
+    }
 
     #[test]
     fn adds_the_attribute_before_the_end() {

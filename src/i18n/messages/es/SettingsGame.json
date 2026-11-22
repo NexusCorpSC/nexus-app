@@ -29,6 +29,11 @@
     "cancel": "Cancelar",
     "confirm": "Activar",
     "squadAutoDown": "Marcarme «abatido» en el escuadrón cuando caiga o muera",
-    "squadAutoDownHint": "Y «activo» al reaparecer. El juego no avisa cuando te reaniman: vuelve a activo desde el escuadrón o el menú radial."
+    "squadAutoDownHint": "Y «activo» al reaparecer. El juego no avisa cuando te reaniman: vuelve a activo desde el escuadrón o el menú radial.",
+    "envTitle": "Variable de entorno",
+    "envHint": "El juego solo abre el servicio si esta variable vale 1 para tu cuenta de Windows, además del ajuste de arriba.",
+    "envSet": "Poner a 1",
+    "envDone": "Variable definida. Cierra por completo el RSI Launcher (también desde el área de notificación) y vuelve a abrirlo, y el juego con él: solo ve la variable al arrancar.",
+    "envManual": "A mano, en PowerShell: {command}"
   }
 }

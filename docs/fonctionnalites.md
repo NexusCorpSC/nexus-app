@@ -49,6 +49,16 @@ journal ou, au démarrage, dans les premiers Mo du fichier. Seule l'adresse de
 bouclage est acceptée ; l'option du jeu qui l'ouvrirait sur le réseau
 (`LocalServicesExternal`) n'est jamais touchée.
 
+L'attribut ne suffit pas : le jeu n'ouvre le service que si la variable
+d'environnement utilisateur `GRPC_CLIENT_SERVER_ENABLED` vaut `1`. Sans elle,
+aucune ligne `GameTelemetryService` n'apparaît dans `Game.log` et rien
+n'écoute sur le port. La carte des réglages la lit dans `HKCU\Environment`
+(`reg query`, pour voir une valeur posée après le démarrage de l'app) et la
+pose au clic avec `setx` (`telemetry_enable_env`). Le jeu l'hérite du RSI
+Launcher, qui ne lit l'environnement qu'à son démarrage : il faut le quitter
+complètement puis le relancer. À la main, dans PowerShell :
+`[Environment]::SetEnvironmentVariable('GRPC_CLIENT_SERVER_ENABLED','1','User')`.
+
 Le schéma (`sc.game.telemetry.v1`) est dans `src-tauri/proto/`, reconstruit
 d'après les descripteurs intégrés à `StarCitizen.exe` (PTU 5.0, build
 13248297) ; les numéros de champs sont ceux du jeu. `build.rs` le compile avec
