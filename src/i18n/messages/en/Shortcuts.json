@@ -8,6 +8,7 @@
     "plan": "Flight plan",
     "map": "Map",
     "nps": "NPS",
+    "radar": "Radar scanner",
     "chat": "Nexus Chat",
     "talk": "Talk to Nexus Chat",
     "opacity": "Overlay opacity",

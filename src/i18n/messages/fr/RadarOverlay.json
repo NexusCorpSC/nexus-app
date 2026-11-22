@@ -1,0 +1,50 @@
+{
+  "title": "Scanner radar",
+  "close": "Fermer",
+  "screen": {
+    "on": "Lecture à l'écran active",
+    "off": "Lecture à l'écran",
+    "start": "Lire la signature à l'écran",
+    "stop": "Arrêter la lecture à l'écran",
+    "calibrate": "Calibrer",
+    "recalibrate": "Recalibrer",
+    "calibrateHint": "Tracer la zone où le scan affiche la signature radar",
+    "interval": "Intervalle de lecture",
+    "every": "{seconds} s",
+    "setup": "Scannez un rocher ou une épave, puis calibrez en traçant une zone autour du nombre de la signature affiché par le scan. Gardez la même position de caméra ensuite.",
+    "calibrationFound": "Zone enregistrée : {value} y a été lu.",
+    "calibrationEmpty": "Zone enregistrée, mais aucun nombre n'y a été lu. Vérifiez qu'elle couvre bien la signature du scan.",
+    "tooSmall": "Zone trop petite : tracez-la un peu plus large autour du nombre.",
+    "unreadable": "Aucune signature lue : rien n'est scanné, ou quelque chose couvre la zone, pas même cette fenêtre.",
+    "failed": "La lecture de l'écran a échoué : {message}",
+    "reading": "Signature lue à l'écran."
+  },
+  "manual": "Saisir une signature",
+  "manualPlaceholder": "ex. 12 680",
+  "last": "Dernière signature lue",
+  "age": "il y a {age}",
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "waiting": "En attente d'une signature : activez la lecture à l'écran, ou saisissez la valeur.",
+  "matches": "Identification probable",
+  "noMatch": "Aucune signature connue ne donne exactement {value}.",
+  "approximate": "Les plus proches",
+  "count": "{count, plural, one {# élément} other {# éléments}}",
+  "base": "base {value}",
+  "difference": "écart {value}",
+  "more": "Autres possibilités",
+  "source": {
+    "network": "Signatures à jour depuis Nexus Tools.",
+    "cache": "Hors ligne : signatures gardées de la dernière connexion.",
+    "builtin": "Hors ligne : signatures intégrées à l'app (patch 4.10.3)."
+  },
+  "categories": {
+    "ship": "Minerai (vaisseau)",
+    "asteroid": "Astéroïde",
+    "salvage": "Récupération",
+    "roc": "Gisement ROC",
+    "fps": "Gisement à la main",
+    "other": "Autre"
+  },
+  "history": "Lectures récentes"
+}

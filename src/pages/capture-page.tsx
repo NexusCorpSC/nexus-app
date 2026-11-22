@@ -21,7 +21,9 @@ export default function CapturePage() {
   const [cursor, setCursor] = useState<Point | null>(null);
   const [busy, setBusy] = useState(false);
   // The NPS borrows this window to have its box drawn: the hint says so.
-  const [purpose, setPurpose] = useState<"search" | "npsCalibration">("search");
+  const [purpose, setPurpose] = useState<
+    "search" | "npsCalibration" | "radarCalibration"
+  >("search");
   const surfaceRef = useRef<HTMLDivElement>(null);
 
   useTransparentWindow();
@@ -33,7 +35,9 @@ export default function CapturePage() {
       setCursor(null);
       setBusy(false);
       surfaceRef.current?.focus();
-      void invoke<"search" | "npsCalibration">("capture_purpose")
+      void invoke<"search" | "npsCalibration" | "radarCalibration">(
+        "capture_purpose",
+      )
         .then(setPurpose)
         .catch(() => setPurpose("search"));
     };
@@ -140,7 +144,11 @@ export default function CapturePage() {
 
       {!box && !busy && (
         <p className="pointer-events-none absolute inset-x-0 top-10 text-center text-sm text-white/80 drop-shadow">
-          {purpose === "npsCalibration" ? t("npsHint") : t("hint")}
+          {purpose === "npsCalibration"
+            ? t("npsHint")
+            : purpose === "radarCalibration"
+              ? t("radarHint")
+              : t("hint")}
         </p>
       )}
 

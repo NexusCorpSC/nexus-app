@@ -113,6 +113,7 @@
       "search_lore": "Búsqueda en la Galactapedia",
       "get_lore_article": "Lectura de un artículo de la Galactapedia",
       "get_star_system": "Lectura del mapa estelar",
+      "identify_radar_signature": "Identificación de una firma de radar",
       "search_official_events": "Búsqueda en los eventos oficiales",
       "get_official_event": "Lectura del evento oficial",
       "list_official_event_bugs": "Lectura de los bugs del evento",

@@ -6,6 +6,7 @@ import { useTranslations } from "use-intl";
 import {
   Bot,
   Compass,
+  Radar,
   Container,
   Map as MapIcon,
   NotebookPen,
@@ -45,7 +46,8 @@ const LAUNCHERS: {
     | "plan"
     | "notes"
     | "cargo"
-    | "chat";
+    | "chat"
+    | "radar";
   icon: LucideIcon;
   shortcut: keyof Shortcuts;
 }[] = [
@@ -53,6 +55,7 @@ const LAUNCHERS: {
   { label: "squad", title: "squad", icon: Users, shortcut: "squad" },
   { label: "map", title: "map", icon: MapIcon, shortcut: "map" },
   { label: "nps", title: "nps", icon: Compass, shortcut: "nps" },
+  { label: "radar", title: "radar", icon: Radar, shortcut: "radar" },
   { label: "plan", title: "plan", icon: RouteIcon, shortcut: "plan" },
   { label: "notes", title: "notes", icon: NotebookPen, shortcut: "notes" },
   { label: "cargo", title: "cargo", icon: Container, shortcut: "cargo" },

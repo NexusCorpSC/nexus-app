@@ -1,0 +1,50 @@
+{
+  "title": "Radar scanner",
+  "close": "Close",
+  "screen": {
+    "on": "Screen reading on",
+    "off": "Screen reading",
+    "start": "Read the signature on screen",
+    "stop": "Stop reading the screen",
+    "calibrate": "Calibrate",
+    "recalibrate": "Recalibrate",
+    "calibrateHint": "Draw the box where the scan shows the radar signature",
+    "interval": "Reading interval",
+    "every": "{seconds} s",
+    "setup": "Scan a rock or a wreck, then calibrate by drawing a box around the signature number the scan shows. Keep the same camera position afterwards.",
+    "calibrationFound": "Box saved: {value} was read in it.",
+    "calibrationEmpty": "Box saved, but no number was read in it. Check that it covers the scan's signature.",
+    "tooSmall": "Box too small: draw it a little wider around the number.",
+    "unreadable": "No signature read: nothing is scanned, or something covers the box, this window included.",
+    "failed": "Reading the screen failed: {message}",
+    "reading": "Signature read on screen."
+  },
+  "manual": "Type a signature",
+  "manualPlaceholder": "e.g. 12,680",
+  "last": "Last signature read",
+  "age": "{age} ago",
+  "seconds": "{count, plural, one {# s} other {# s}}",
+  "minutes": "{count, plural, one {# min} other {# min}}",
+  "waiting": "Waiting for a signature: turn screen reading on, or type the value.",
+  "matches": "Likely identification",
+  "noMatch": "No known signature gives exactly {value}.",
+  "approximate": "Closest",
+  "count": "{count, plural, one {# item} other {# items}}",
+  "base": "base {value}",
+  "difference": "off by {value}",
+  "more": "Other possibilities",
+  "source": {
+    "network": "Signatures up to date from Nexus Tools.",
+    "cache": "Offline: signatures kept from the last connection.",
+    "builtin": "Offline: signatures built into the app (patch 4.10.3)."
+  },
+  "categories": {
+    "ship": "Ore (ship)",
+    "asteroid": "Asteroid",
+    "salvage": "Salvage",
+    "roc": "ROC deposit",
+    "fps": "Hand-mining deposit",
+    "other": "Other"
+  },
+  "history": "Recent readings"
+}
