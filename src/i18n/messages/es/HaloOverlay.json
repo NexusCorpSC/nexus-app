@@ -1,6 +1,10 @@
 {
-  "title": "Aaron Halo",
+  "title": "Navegación cuántica",
   "close": "Cerrar",
+  "tabs": {
+    "band": "Aaron Halo",
+    "point": "Punto"
+  },
   "from": "Salida",
   "to": "Llegada",
   "band": "Banda",
@@ -36,5 +40,39 @@
     "network": "Bandas al día desde Nexus Tools.",
     "cache": "Sin conexión: bandas guardadas de la última conexión.",
     "builtin": "Sin conexión: bandas integradas en la app."
+  },
+  "point": {
+    "target": "Destino del NPS",
+    "noTarget": "Elige un destino en el NPS, «Ir» en un marcador, o pega coordenadas.",
+    "unknownBody": "El cuerpo de este punto aún no tiene registro: no se puede situar.",
+    "manualName": "Coordenadas introducidas",
+    "pastePlaceholder": "Pegar /showlocation",
+    "system": "Sistema",
+    "pasteUse": "Apuntar",
+    "pasteInvalid": "Pega la línea de /showlocation o la línea Zone: SolarSystem… Pos: de r_displayInfo.",
+    "from": "Salida",
+    "fromMe": "Mi posición (NPS)",
+    "fromMeNone": "Mi posición: abre el NPS",
+    "anyFrom": "Mejor pareja de balizas",
+    "routeLine": "{from} → {to}",
+    "routeFromHere": "Desde aquí → {to}",
+    "cutAt": "Corta el salto a",
+    "remaining": "restantes hasta {to}",
+    "goToEnd": "Salta hacia {to} y ve hasta el final.",
+    "expected": "Saldrás a unos {error} del objetivo (la línea pasa a {offset}).",
+    "goFirst": "Ve primero a {from} y luego prepara el salto.",
+    "noRoute": "Ningún trayecto despejado pasa cerca de este punto.",
+    "others": "Otros trayectos",
+    "end": "hasta el final",
+    "distanceNow": "Estás a {distance} del objetivo.",
+    "noPosition": "Abre el NPS: sus lecturas indican aquí a qué distancia estás.",
+    "openNps": "Terminar con el NPS",
+    "precision": "La desviación cuenta un corte a mano preciso al {share} % de la distancia restante, como mucho {max}. Se descartan los trayectos que atraviesan un planeta, una luna o la estrella.",
+    "surface": {
+      "intro": "Este punto está cerca del suelo de {body} (altitud {altitude}): no se corta el salto ahí.",
+      "jumpTo": "Salta hacia {place}, a {distance}, y termina volando.",
+      "other": "o {place}, a {distance}",
+      "jumpToBody": "Salta hacia {body}: quedarán al menos {distance} desde los marcadores orbitales."
+    }
   }
 }

@@ -48,8 +48,8 @@
       "hint": "Lit la signature radar du scan et dit ce qu'elle désigne."
     },
     "halo": {
-      "label": "Aaron Halo",
-      "hint": "Dit à quelle distance restante couper le saut quantique pour tomber dans une bande de l'Aaron Halo."
+      "label": "Navigation quantique",
+      "hint": "Dit à quelle distance restante couper un saut quantique pour tomber dans une bande de l'Aaron Halo ou s'approcher d'un point sans balise."
     },
     "chat": {
       "label": "Nexus Chat",

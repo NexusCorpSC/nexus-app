@@ -27,6 +27,8 @@
   },
   "otherSystem": "In another system ({system}): the NPS cannot guide there from here.",
   "guide": "Guide",
+  "quantum": "Go there",
+  "quantumHint": "The quantum jump to engage and where to cut it to get close to this marker",
   "edit": "Edit",
   "delete": "Delete",
   "form": {

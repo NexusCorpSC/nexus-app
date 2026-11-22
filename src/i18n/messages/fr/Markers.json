@@ -27,6 +27,8 @@
   },
   "otherSystem": "Dans un autre système ({system}) : le NPS ne peut pas y guider d'ici.",
   "guide": "Guider",
+  "quantum": "Y aller",
+  "quantumHint": "Le saut quantique à lancer et la distance où le couper pour s'approcher de ce marqueur",
   "edit": "Modifier",
   "delete": "Supprimer",
   "form": {
