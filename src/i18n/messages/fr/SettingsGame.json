@@ -29,6 +29,11 @@
     "cancel": "Annuler",
     "confirm": "Activer",
     "squadAutoDown": "Me passer « éliminé » dans l'escouade quand je suis à terre ou mort",
-    "squadAutoDownHint": "Et « actif » au respawn. Le jeu ne signale pas quand on est relevé : repassez actif depuis l'escouade ou le menu radial."
+    "squadAutoDownHint": "Et « actif » au respawn. Le jeu ne signale pas quand on est relevé : repassez actif depuis l'escouade ou le menu radial.",
+    "envTitle": "Variable d'environnement",
+    "envHint": "Le jeu n'ouvre le service que si cette variable vaut 1 pour votre compte Windows, en plus du réglage ci-dessus.",
+    "envSet": "Définir à 1",
+    "envDone": "Variable définie. Quittez complètement le RSI Launcher (y compris dans la zone de notification) puis relancez-le, et le jeu avec : il ne voit la variable qu'à son démarrage.",
+    "envManual": "À la main, dans PowerShell : {command}"
   }
 }

@@ -1723,6 +1723,7 @@ pub fn run() {
             telemetry::telemetry_trigger,
             telemetry::telemetry_activation,
             telemetry::telemetry_enable_in_game,
+            telemetry::telemetry_enable_env,
             screenshots::latest_screenshot,
             browser_auth::browser_sign_in,
             browser_auth::cancel_browser_sign_in,

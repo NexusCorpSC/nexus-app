@@ -12,6 +12,7 @@ import {
   setTelemetryEnabled,
 } from "@/lib/settings";
 import {
+  enableTelemetryEnv,
   enableTelemetryInGame,
   getTelemetryActivation,
   syncTelemetry,
@@ -21,10 +22,15 @@ import {
 import { useTelemetry } from "@/hooks/use-telemetry";
 import { TelemetryBadge } from "@/components/telemetry/telemetry-panel";
 
+const ENV_VAR = "GRPC_CLIENT_SERVER_ENABLED";
+/** The same, for a player who would rather do it themselves. */
+const ENV_COMMAND = `[Environment]::SetEnvironmentVariable('${ENV_VAR}','1','User')`;
+
 /**
  * The game's telemetry: whether the app listens to it, and the switch in the
  * game's `attributes.xml` that turns the service on — written only on a
- * click, with the game closed, after a copy of the file.
+ * click, with the game closed, after a copy of the file — and the user
+ * environment variable the game needs as well.
  */
 export function TelemetrySettingsCard() {
   const t = useTranslations("SettingsGame.telemetry");
@@ -37,6 +43,7 @@ export function TelemetrySettingsCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  const [envDone, setEnvDone] = useState(false);
 
   const refresh = useCallback(() => {
     void getTelemetryActivation()
@@ -75,6 +82,21 @@ export function TelemetrySettingsCard() {
     try {
       setActivation(await enableTelemetryInGame(build));
       setDone(build);
+    } catch (cause) {
+      setError(describe(cause));
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function enableEnv() {
+    setBusy(true);
+    setError(null);
+    setEnvDone(false);
+    try {
+      setActivation(await enableTelemetryEnv());
+      setEnvDone(true);
     } catch (cause) {
       setError(describe(cause));
       refresh();
@@ -125,6 +147,41 @@ export function TelemetrySettingsCard() {
           <div className="font-display text-[11px] font-semibold tracking-[0.12em] text-nexus-muted uppercase">
             {t("inGame")}
           </div>
+          {activation === null ? null : (
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2 text-[13px]">
+                <span className="text-nexus-muted">{t("envTitle")}</span>
+                <span className="font-mono text-nexus-bright">{ENV_VAR}</span>
+                {activation.envEnabled ? (
+                  <Badge tone="success">{t("enabled")}</Badge>
+                ) : (
+                  <>
+                    <Badge>{t("notEnabled")}</Badge>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={busy}
+                      onClick={() => void enableEnv()}
+                    >
+                      {t("envSet")}
+                    </Button>
+                  </>
+                )}
+              </div>
+              <p className="text-xs text-nexus-muted">{t("envHint")}</p>
+              {!activation.envEnabled ? (
+                <p className="break-all font-mono text-xs text-nexus-dim select-text">
+                  {t("envManual", { command: ENV_COMMAND })}
+                </p>
+              ) : null}
+              {envDone ? (
+                <p role="status" className="text-xs text-emerald-200">
+                  {t("envDone")}
+                </p>
+              ) : null}
+            </div>
+          )}
           {activation === null ? null : activation.builds.length === 0 ? (
             <p className="text-xs text-nexus-muted">{t("noBuild")}</p>
           ) : (

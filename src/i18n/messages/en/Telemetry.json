@@ -14,7 +14,7 @@
   },
   "help": {
     "disabled": "Telemetry is disabled.",
-    "waiting": "No telemetry service answers on 127.0.0.1:{port}. Start the game after enabling GameTelemetryEnabled.",
+    "waiting": "No telemetry service answers on 127.0.0.1:{port}. Start the game after enabling GameTelemetryEnabled and the GRPC_CLIENT_SERVER_ENABLED variable (Settings › Game).",
     "settings": "Open the settings"
   },
   "home": {

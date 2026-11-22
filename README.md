@@ -82,9 +82,13 @@ Dans une escouade, l'app vous passe aussi **éliminé** dès que vous êtes à
 terre ou mort, et **actif** à la réapparition (le jeu ne dit pas quand on vous
 relève : repassez actif vous-même). Réglage dans **Paramètres › Jeu**.
 
-Pour l'activer : **Paramètres › Jeu › Télémétrie du jeu › Activer**, jeu
-fermé. L'app ajoute `GameTelemetryEnabled` au fichier `attributes.xml` du jeu,
-après en avoir gardé une copie.
+Pour l'activer, dans **Paramètres › Jeu › Télémétrie du jeu**, jeu fermé :
+
+1. **Définir à 1** la variable `GRPC_CLIENT_SERVER_ENABLED` (ou, dans
+   PowerShell : `[Environment]::SetEnvironmentVariable('GRPC_CLIENT_SERVER_ENABLED','1','User')`),
+   puis quitter complètement le RSI Launcher et le relancer.
+2. **Activer** pour votre version du jeu : l'app ajoute `GameTelemetryEnabled`
+   au fichier `attributes.xml`, après en avoir gardé une copie.
 
 ### Nexus Chat, à la voix
 

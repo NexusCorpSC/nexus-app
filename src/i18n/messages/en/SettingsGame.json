@@ -29,6 +29,11 @@
     "cancel": "Cancel",
     "confirm": "Enable",
     "squadAutoDown": "Mark me \"down\" in my squad when I'm downed or dead",
-    "squadAutoDownHint": "And \"active\" on respawn. The game doesn't report being revived: switch back to active from the squad or the radial menu."
+    "squadAutoDownHint": "And \"active\" on respawn. The game doesn't report being revived: switch back to active from the squad or the radial menu.",
+    "envTitle": "Environment variable",
+    "envHint": "The game only opens the service if this variable is 1 for your Windows account, on top of the setting above.",
+    "envSet": "Set to 1",
+    "envDone": "Variable set. Fully quit the RSI Launcher (including from the notification area), then start it again, and the game with it: it only sees the variable when it starts.",
+    "envManual": "By hand, in PowerShell: {command}"
   }
 }

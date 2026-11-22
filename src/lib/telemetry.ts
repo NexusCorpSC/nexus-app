@@ -343,6 +343,8 @@ export function triggerGameAction(
 /** Mirrors `Activation` in `src-tauri/src/telemetry.rs`. */
 export type Activation = {
   gameRunning: boolean;
+  /** Whether `GRPC_CLIENT_SERVER_ENABLED` is `1` for the user. */
+  envEnabled: boolean;
   builds: { name: string; attributesPath: string; enabled: boolean }[];
 };
 
@@ -353,6 +355,14 @@ export function getTelemetryActivation(): Promise<Activation> {
 /** Sets `GameTelemetryEnabled` for `build` (`LIVE`, `PTU`…), game closed. */
 export function enableTelemetryInGame(build: string): Promise<Activation> {
   return invoke("telemetry_enable_in_game", { build });
+}
+
+/**
+ * Sets the user environment variable `GRPC_CLIENT_SERVER_ENABLED` to `1`,
+ * which the game needs as well. The RSI Launcher must be restarted after.
+ */
+export function enableTelemetryEnv(): Promise<Activation> {
+  return invoke("telemetry_enable_env");
 }
 
 /** The error codes Rust returns, as their key in `Telemetry.errors`. */
