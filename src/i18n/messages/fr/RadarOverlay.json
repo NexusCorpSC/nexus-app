@@ -19,6 +19,14 @@
     "failed": "La lecture de l'écran a échoué : {message}",
     "reading": "Signature lue à l'écran."
   },
+  "context": {
+    "label": "Où scannez-vous ?",
+    "hint": "Met en tête ce qu'on peut croiser là où vous scannez : 4000 est un astéroïde en vaisseau, un gisement en ROC.",
+    "all": "Partout",
+    "ship": "Vaisseau",
+    "roc": "ROC",
+    "fps": "À pied"
+  },
   "manual": "Saisir une signature",
   "manualPlaceholder": "ex. 12 680",
   "last": "Dernière signature lue",

@@ -13,15 +13,19 @@ import { overlaySkin } from "@/lib/overlay-opacity";
 import { listRadarSignatures } from "@/lib/api/radar-signatures";
 import {
   DEFAULT_RADAR_SCREEN,
+  getRadarContext,
   getRadarScreen,
+  setRadarContext,
   setRadarScreen,
   type NpsScreenRegion,
   type RadarScreenSettings,
 } from "@/lib/settings";
 import {
   DEFAULT_RADAR_SIGNATURES,
+  RADAR_CONTEXTS,
   identifyRadarSignature,
   parseRadarReading,
+  type RadarContext,
   type RadarMatch,
 } from "@/lib/radar";
 import { cn } from "@/lib/utils";
@@ -81,15 +85,15 @@ export default function RadarOverlayPage() {
   const mode = useOverlayMode("radar");
   const locked = useOverlayLocked("radar");
 
-  const [screen, setScreen] = useState<RadarScreenSettings>(
-    DEFAULT_RADAR_SCREEN,
-  );
+  const [screen, setScreen] =
+    useState<RadarScreenSettings>(DEFAULT_RADAR_SCREEN);
   const [screenLoaded, setScreenLoaded] = useState(false);
   const [status, setStatus] = useState<ScreenStatus>({ state: "idle" });
   const [calibration, setCalibration] = useState<Calibration | null>(null);
   const [current, setCurrent] = useState<Reading | null>(null);
   const [history, setHistory] = useState<number[]>([]);
   const [manual, setManual] = useState("");
+  const [context, setContext] = useState<RadarContext>("all");
   const [now, setNow] = useState(() => Date.now());
 
   const signatures = useQuery({
@@ -178,8 +182,8 @@ export default function RadarOverlayPage() {
   // Rust reads the screen; the settings live here, in the store.
   useEffect(() => {
     if (!screenLoaded) return;
-    void invoke("radar_screen_configure", { settings: screen }).catch(
-      (error) => console.error("cannot apply the radar settings", error),
+    void invoke("radar_screen_configure", { settings: screen }).catch((error) =>
+      console.error("cannot apply the radar settings", error),
     );
     void setRadarScreen(screen).catch((error) =>
       console.error("cannot save the radar settings", error),
@@ -187,13 +191,29 @@ export default function RadarOverlayPage() {
   }, [screen, screenLoaded]);
 
   useEffect(() => {
+    void getRadarContext()
+      .then(setContext)
+      .catch((error) => console.error("cannot read the radar context", error));
+  }, []);
+
+  function pickContext(next: RadarContext) {
+    setContext(next);
+    void setRadarContext(next).catch((error) =>
+      console.error("cannot save the radar context", error),
+    );
+  }
+
+  useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), TICK_MS);
     return () => window.clearInterval(timer);
   }, []);
 
   const identification = useMemo(
-    () => (current ? identifyRadarSignature(current.value, known) : null),
-    [current, known],
+    () =>
+      current
+        ? identifyRadarSignature(current.value, known, { context })
+        : null,
+    [current, known, context],
   );
 
   function close() {
@@ -256,6 +276,32 @@ export default function RadarOverlayPage() {
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-slate-100">
+        <div
+          role="radiogroup"
+          aria-label={t("context.label")}
+          title={t("context.hint")}
+          className="flex gap-1"
+        >
+          {RADAR_CONTEXTS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              role="radio"
+              aria-checked={context === option}
+              disabled={locked}
+              onClick={() => pickContext(option)}
+              className={cn(
+                "flex-1 rounded border px-1.5 py-0.5 text-[11px] transition disabled:opacity-40",
+                context === option
+                  ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
+                  : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+              )}
+            >
+              {t(`context.${option}`)}
+            </button>
+          ))}
+        </div>
+
         {current && identification ? (
           <section className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
@@ -398,7 +444,9 @@ function MatchCard({
         <p
           className={cn(
             "truncate font-medium",
-            highlight ? "text-[15px] text-sky-50" : "text-[13px] text-slate-200",
+            highlight
+              ? "text-[15px] text-sky-50"
+              : "text-[13px] text-slate-200",
           )}
         >
           {match.signature.name}
@@ -416,7 +464,9 @@ function MatchCard({
       <span
         className={cn(
           "shrink-0 rounded px-1.5 py-0.5 font-mono text-[12px]",
-          highlight ? "bg-sky-300/20 text-sky-50" : "bg-white/10 text-slate-200",
+          highlight
+            ? "bg-sky-300/20 text-sky-50"
+            : "bg-white/10 text-slate-200",
         )}
       >
         {t("count", { count: match.count })}

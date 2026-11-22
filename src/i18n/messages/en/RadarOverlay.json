@@ -19,6 +19,14 @@
     "failed": "Reading the screen failed: {message}",
     "reading": "Signature read on screen."
   },
+  "context": {
+    "label": "Where are you scanning?",
+    "hint": "Puts first what you can meet where you scan: 4000 is an asteroid from a ship, a deposit from a ROC.",
+    "all": "Anywhere",
+    "ship": "Ship",
+    "roc": "ROC",
+    "fps": "On foot"
+  },
   "manual": "Type a signature",
   "manualPlaceholder": "e.g. 12,680",
   "last": "Last signature read",

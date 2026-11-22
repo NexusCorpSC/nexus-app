@@ -19,6 +19,14 @@
     "failed": "La lectura de la pantalla falló: {message}",
     "reading": "Firma leída en pantalla."
   },
+  "context": {
+    "label": "¿Dónde escaneas?",
+    "hint": "Pone primero lo que puedes encontrar donde escaneas: 4000 es un asteroide desde una nave, un yacimiento desde un ROC.",
+    "all": "Todo",
+    "ship": "Nave",
+    "roc": "ROC",
+    "fps": "A pie"
+  },
   "manual": "Escribir una firma",
   "manualPlaceholder": "p. ej. 12 680",
   "last": "Última firma leída",

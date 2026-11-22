@@ -20,6 +20,7 @@ import { detectSystemLocale, isLocale, type Locale } from "@/i18n/locale";
 import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note, type PlacePosition } from "@/types/nexus";
 import { isMarkerKind, type MarkerKind } from "@/types/markers";
+import { isRadarContext, type RadarContext } from "@/lib/radar";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -57,6 +58,7 @@ const KEY_MARKER_DEFAULTS = "markerDefaults";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_RADAR_SCREEN = "radarScreen";
 const KEY_RADAR_SIGNATURES = "radarSignatures";
+const KEY_RADAR_CONTEXT = "radarContext";
 const KEY_OVERLAY_OPACITY = "overlayOpacity";
 const KEY_RAID_LAYOUT = "raidLayout";
 const KEY_GAME_LOG_DIR = "gameLogDir";
@@ -502,7 +504,9 @@ export async function getRefiningNotifications(): Promise<boolean> {
   return typeof value === "boolean" ? value : true;
 }
 
-export async function setRefiningNotifications(enabled: boolean): Promise<void> {
+export async function setRefiningNotifications(
+  enabled: boolean,
+): Promise<void> {
   const store = await getStore();
   await store.set(KEY_REFINING_NOTIFICATIONS, enabled);
 }
@@ -694,18 +698,14 @@ function isNpsDestination(value: unknown): value is NpsDestination {
       name?: unknown;
     };
     return (
-      typeof id === "string" &&
-      typeof name === "string" &&
-      isNpsPoint(rest)
+      typeof id === "string" && typeof name === "string" && isNpsPoint(rest)
     );
   }
   if (!("point" in value) || !value.point || typeof value.point !== "object") {
     return false;
   }
   const { name, ...rest } = value.point as { name?: unknown };
-  return (
-    (name === undefined || typeof name === "string") && isNpsPoint(rest)
-  );
+  return (name === undefined || typeof name === "string") && isNpsPoint(rest);
 }
 
 /** Un système facultatif et une position : le point et le marqueur en ont. */
@@ -875,9 +875,8 @@ export const DEFAULT_RADAR_SCREEN: RadarScreenSettings = {
 
 export async function getRadarScreen(): Promise<RadarScreenSettings> {
   const store = await getStore();
-  const stored = await store.get<Partial<RadarScreenSettings>>(
-    KEY_RADAR_SCREEN,
-  );
+  const stored =
+    await store.get<Partial<RadarScreenSettings>>(KEY_RADAR_SCREEN);
   return { ...DEFAULT_RADAR_SCREEN, ...stored };
 }
 
@@ -886,6 +885,18 @@ export async function setRadarScreen(
 ): Promise<void> {
   const store = await getStore();
   await store.set(KEY_RADAR_SCREEN, settings);
+}
+
+/** Where the player scans, so what they can meet there comes first. */
+export async function getRadarContext(): Promise<RadarContext> {
+  const store = await getStore();
+  const stored = await store.get<unknown>(KEY_RADAR_CONTEXT);
+  return isRadarContext(stored) ? stored : "all";
+}
+
+export async function setRadarContext(context: RadarContext): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_RADAR_CONTEXT, context);
 }
 
 /**

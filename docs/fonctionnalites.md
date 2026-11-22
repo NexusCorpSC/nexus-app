@@ -186,7 +186,11 @@ du jeu affiche (la signature radar) et le compare aux signatures connues.
 - L'identification (`src/lib/radar.ts`, copie de `lib/radar.ts` du site)
   cherche les signatures dont la valeur est un multiple, de 1 à 20 éléments,
   la grappe la plus petite d'abord ; sans multiple exact, les plus proches à
-  1 % près. La valeur peut aussi être saisie à la main.
+  1 % près. À écart égal, le contexte choisi (partout, vaisseau, ROC, à
+  pied ; store `radarContext`) met ses catégories en tête avant la taille de
+  la grappe : en vaisseau, minerais, astéroïdes et récupération ; en ROC, les
+  gisements ROC ; à pied, les gisements à la main. La valeur peut aussi être
+  saisie à la main.
 - Les signatures viennent de `GET /api/radar-signatures` (corrigées par les
   administrateurs du site), gardées dans le store `radarSignatures`, avec la
   liste du patch 4.10.3 intégrée en dernier recours.

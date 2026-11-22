@@ -72,8 +72,9 @@ Le scan du jeu affiche une signature radar au-dessus d'un rocher, d'un
 astéroïde ou d'une épave. Le scanner (`Ctrl+Maj+R`) la lit à l'écran, dans une
 zone que vous tracez une fois, et dit ce que c'est : quel minerai, quel type
 d'astéroïde, et combien de rochers forment la grappe. Vous pouvez aussi taper
-la valeur. Les signatures connues viennent du site et restent disponibles hors
-ligne.
+la valeur. Indiquez où vous scannez (vaisseau, ROC, à pied) pour que ce que
+vous pouvez y croiser passe en tête. Les signatures connues viennent du site et
+restent disponibles hors ligne.
 
 ### Télémétrie du jeu
 
