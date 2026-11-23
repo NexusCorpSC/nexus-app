@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @import "./themes.css";
+@import "./theme-variants.css";
 
 /*
  * Nexus palette. The values are derived from the seeds of the active theme

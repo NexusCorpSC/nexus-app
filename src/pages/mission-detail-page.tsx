@@ -120,7 +120,7 @@ export default function MissionDetailPage() {
                   <Link
                     key={blueprint._id}
                     to={`/blueprints/${blueprint.slug}`}
-                    className="flex items-start gap-2.5 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
+                    className="nexus-ticks flex items-start gap-2.5 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
                   >
                     <Box className="mt-0.5 size-4 shrink-0 text-violet-300" />
                     <div className="min-w-0 flex-1">

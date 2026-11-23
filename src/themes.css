@@ -13,6 +13,10 @@
  *   --seed-ticks     opacity of the HUD brackets on card corners
  *   --seed-glow      strength of the halos around the accent
  *   --seed-tracking  letter spacing of the uppercase labels
+ *   --seed-chamfer   size of the cut corners of cards (0: none)
+ *
+ * What colours cannot say (materials, cut corners, neon, typefaces) is
+ * drawn per manufacturer in theme-variants.css.
  *
  * Status colours (ready, danger, warning) are not seeds: an alert reads the
  * same whatever the ship.
@@ -28,6 +32,7 @@
   --seed-ticks: 0.55;
   --seed-glow: 0.5;
   --seed-tracking: 0.12em;
+  --seed-chamfer: 0px;
   --seed-pattern: var(--pattern-grid);
 }
 
@@ -42,6 +47,7 @@
   --seed-glow: 0.35;
   --seed-tracking: 0.16em;
   --seed-pattern: var(--pattern-stripes);
+  --seed-chamfer: 14px;
 }
 
 /* Argo: utility orange. */
@@ -57,17 +63,18 @@
   --seed-pattern: var(--pattern-stripes);
 }
 
-/* Gatac (Xi'an): violet, organic, glowing. */
+/* Gatac (Xi'an): violet, hard geometry, oblique cuts. */
 [data-theme="gatac"] {
-  --seed-accent: #b98cff;
-  --seed-accent-2: #ff7ad9;
-  --seed-tint: #241237;
-  --seed-ink: #f2eaff;
-  --seed-radius: 1rem;
+  --seed-accent: #a77bff;
+  --seed-accent-2: #5ee6d0;
+  --seed-tint: #1e1033;
+  --seed-ink: #f1eaff;
+  --seed-radius: 0px;
   --seed-ticks: 0;
-  --seed-glow: 0.85;
-  --seed-tracking: 0.08em;
-  --seed-pattern: var(--pattern-glow);
+  --seed-glow: 0.6;
+  --seed-tracking: 0.2em;
+  --seed-chamfer: 18px;
+  --seed-pattern: var(--pattern-oblique);
 }
 
 /* Aopoa (Xi'an): jade, organic. */
@@ -94,6 +101,7 @@
   --seed-glow: 0.45;
   --seed-tracking: 0.18em;
   --seed-pattern: var(--pattern-grid);
+  --seed-chamfer: 12px;
 }
 
 /* Anvil: military green. */
@@ -107,6 +115,7 @@
   --seed-glow: 0.4;
   --seed-tracking: 0.18em;
   --seed-pattern: var(--pattern-grid);
+  --seed-chamfer: 8px;
 }
 
 /* Roberts Space Industries: classic blue. */
@@ -122,16 +131,17 @@
   --seed-pattern: var(--pattern-grid);
 }
 
-/* Origin: champagne, rounded, no pattern. */
+/* Origin: navy, white and gold over the game; marble in the main window
+   (theme-variants.css). */
 [data-theme="origin"] {
-  --seed-accent: #e9d3a0;
-  --seed-accent-2: #ffffff;
-  --seed-tint: #1d1b18;
-  --seed-ink: #faf7f0;
-  --seed-radius: 0.875rem;
+  --seed-accent: #8fb8ff;
+  --seed-accent-2: #d9b76a;
+  --seed-tint: #0e1c34;
+  --seed-ink: #f7f3ea;
+  --seed-radius: 1rem;
   --seed-ticks: 0;
-  --seed-glow: 0.3;
-  --seed-tracking: 0.24em;
+  --seed-glow: 0.25;
+  --seed-tracking: 0.26em;
   --seed-pattern: none;
 }
 
@@ -161,17 +171,17 @@
   --seed-pattern: var(--pattern-dots);
 }
 
-/* Banu: brass and rose, bazaar. */
+/* Banu: gold and oxidised bronze, a warm bazaar. */
 [data-theme="banu"] {
-  --seed-accent: #e8a93a;
-  --seed-accent-2: #e85a8c;
-  --seed-tint: #2b1a22;
-  --seed-ink: #fbefe2;
-  --seed-radius: 0.75rem;
-  --seed-ticks: 0.3;
-  --seed-glow: 0.6;
-  --seed-tracking: 0.1em;
-  --seed-pattern: var(--pattern-dots);
+  --seed-accent: #e9b44c;
+  --seed-accent-2: #5fb39c;
+  --seed-tint: #2e1d12;
+  --seed-ink: #fbefdc;
+  --seed-radius: 1rem;
+  --seed-ticks: 0;
+  --seed-glow: 0.55;
+  --seed-tracking: 0.08em;
+  --seed-pattern: var(--pattern-kilim);
 }
 
 /* Vanduul: blood red, aggressive. */
@@ -185,6 +195,7 @@
   --seed-glow: 0.7;
   --seed-tracking: 0.2em;
   --seed-pattern: var(--pattern-stripes);
+  --seed-chamfer: 22px;
 }
 
 /* Esperia (Tevarin replicas): rose and bronze. */
@@ -200,17 +211,17 @@
   --seed-pattern: var(--pattern-glow);
 }
 
-/* Mirai: racing neon. */
+/* Mirai: cyberpunk neon, magenta and cyan on black. */
 [data-theme="mirai"] {
-  --seed-accent: #ff4fb0;
-  --seed-accent-2: #4ff0ff;
-  --seed-tint: #1d1230;
-  --seed-ink: #fff0f8;
-  --seed-radius: 0.5rem;
-  --seed-ticks: 0.4;
-  --seed-glow: 0.8;
-  --seed-tracking: 0.14em;
-  --seed-pattern: var(--pattern-grid);
+  --seed-accent: #ff2bd6;
+  --seed-accent-2: #00f0ff;
+  --seed-tint: #12061f;
+  --seed-ink: #fdf0ff;
+  --seed-radius: 2px;
+  --seed-ticks: 0;
+  --seed-glow: 0.95;
+  --seed-tracking: 0.18em;
+  --seed-pattern: var(--pattern-scanlines);
 }
 
 /* Consolidated Outland: lime. */
@@ -263,4 +274,5 @@
   --seed-glow: 0.3;
   --seed-tracking: 0.18em;
   --seed-pattern: var(--pattern-stripes);
+  --seed-chamfer: 8px;
 }

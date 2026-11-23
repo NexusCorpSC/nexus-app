@@ -107,7 +107,7 @@ export function readOverlayMode(label: OverlayLabel): Promise<OverlayMode> {
  * The panel: a window that stands on its own, over whatever is behind it.
  */
 const OVERLAY_PANEL =
-  "rounded-nexus border border-nexus-accent/18 bg-nexus-abyss/95 shadow-2xl backdrop-blur-xl";
+  "nexus-overlay rounded-nexus border border-nexus-accent/18 bg-nexus-abyss/95 shadow-2xl backdrop-blur-xl";
 
 /**
  * No panel at all — the game shows through the text.

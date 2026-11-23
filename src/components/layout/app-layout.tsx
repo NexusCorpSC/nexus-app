@@ -259,7 +259,7 @@ export default function AppLayout() {
   return (
     <div className="flex h-full">
       {/* Primary navigation rail: fixed width, never scrolls even at 600px height. */}
-      <aside className="relative z-20 flex w-[74px] shrink-0 flex-col items-center gap-1.5 border-r border-nexus-accent/9 bg-nexus-rail px-1.5 py-3">
+      <aside className="nexus-rail relative z-20 flex w-[74px] shrink-0 flex-col items-center gap-1.5 border-r border-nexus-accent/9 bg-nexus-rail px-1.5 py-3">
         <NavLink
           to="/home"
           title="NEXUS — Star Citizen Tools"
@@ -391,7 +391,7 @@ export default function AppLayout() {
       {showSubPanel && activeGroup ? (
         <aside
           aria-label={t(`groups.${activeGroup.id}`)}
-          className="flex w-[216px] shrink-0 flex-col border-r border-nexus-accent/9 bg-nexus-night px-3 py-4"
+          className="nexus-subpanel flex w-[216px] shrink-0 flex-col border-r border-nexus-accent/9 bg-nexus-night px-3 py-4"
         >
           <div className="mb-3 border-b border-nexus-accent/8 px-2 pb-3">
             <h2 className="nexus-label text-[13px] font-bold text-nexus-white">

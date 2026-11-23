@@ -30,7 +30,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 const BUTTON_VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
   // The one action a screen is for: solid, so it is found at a glance.
   primary:
-    "nexus-glow bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
+    "nexus-primary nexus-glow bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
   outline:
     "bg-transparent text-nexus-bright border-nexus-accent/25 hover:border-nexus-accent/45 hover:bg-nexus-accent/8",
   ghost:
@@ -374,7 +374,7 @@ export function PageHeader({
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="font-display text-[28px] leading-tight font-bold text-nexus-white">
+        <h1 className="nexus-title font-display text-[28px] leading-tight font-bold text-nexus-white">
           {title}
         </h1>
         {description ? (

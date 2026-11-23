@@ -299,7 +299,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
   const footer = renderFooter?.(group, active);
 
   return (
-    <article className="flex flex-col gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3.5 transition-colors hover:border-nexus-accent/35">
+    <article className="nexus-ticks flex flex-col gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3.5 transition-colors hover:border-nexus-accent/35">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="line-clamp-2 text-sm font-semibold break-words text-nexus-white">

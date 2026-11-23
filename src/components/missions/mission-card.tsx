@@ -27,7 +27,7 @@ export function MissionCard({ mission }: { mission: Mission }) {
   return (
     <Link
       to={`/missions/${mission._id}`}
-      className="flex flex-col gap-2 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-4 transition-colors hover:border-nexus-accent/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+      className="nexus-ticks flex flex-col gap-2 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-4 transition-colors hover:border-nexus-accent/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

@@ -338,7 +338,7 @@ export default function MarkersPage() {
           {shown.length === 0 ? (
             <EmptyState title={t("noResults")} />
           ) : (
-            <ul className="divide-y divide-nexus-accent/8 overflow-hidden rounded-nexus border border-nexus-accent/12 bg-nexus-card/60">
+            <ul className="nexus-ticks divide-y divide-nexus-accent/8 overflow-hidden rounded-nexus border border-nexus-accent/12 bg-nexus-card/60">
               {shown.map(({ marker, distance }) => (
                 <MarkerRow
                   key={marker.id}

@@ -229,7 +229,7 @@ export default function OrgEventPage() {
       </header>
 
       {view.guest ? (
-        <div className="mb-6 flex items-center gap-3 rounded-nexus border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-[13px]">
+        <div className="nexus-ticks mb-6 flex items-center gap-3 rounded-nexus border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-[13px]">
           {view.guest === "link" ? (
             <Link2 className="size-4.5 shrink-0 text-cyan-200" />
           ) : (
@@ -298,7 +298,7 @@ function DateBlock({ startsAt }: { startsAt: string }) {
   return (
     <div
       aria-hidden="true"
-      className="flex w-16 shrink-0 flex-col items-center rounded-nexus border border-nexus-accent/30 bg-nexus-panel py-1.5"
+      className="nexus-ticks flex w-16 shrink-0 flex-col items-center rounded-nexus border border-nexus-accent/30 bg-nexus-panel py-1.5"
     >
       <span className="text-[11px] font-semibold text-nexus-accent uppercase">
         {dateFormat({ month: "short" }).format(date)}

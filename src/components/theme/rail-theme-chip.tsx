@@ -35,7 +35,7 @@ export function RailThemeChip() {
       to="/settings?section=appearance"
       title={t("chip", { maker: name })}
       aria-label={t("chip", { maker: name })}
-      className="nexus-label w-[54px] truncate rounded-nexus-sm border border-nexus-accent/40 px-1 py-1 text-center text-[9px] font-semibold text-nexus-accent transition-colors hover:bg-nexus-accent/10"
+      className="nexus-label w-[54px] !tracking-[0.08em] truncate rounded-nexus-sm border border-nexus-accent/40 px-1 py-1 text-center text-[9px] font-semibold text-nexus-accent transition-colors hover:bg-nexus-accent/10"
     >
       {name.split(" ")[0]}
     </NavLink>

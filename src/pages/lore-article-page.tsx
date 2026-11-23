@@ -97,7 +97,7 @@ export default function LoreArticlePage() {
         <div className="space-y-4">
           <LoreThumbnail
             src={article.thumbnailUrl}
-            className="w-full rounded-nexus border border-nexus-accent/12 object-cover"
+            className="nexus-ticks w-full rounded-nexus border border-nexus-accent/12 object-cover"
           />
           {article.starmap.length > 0 ? (
             <Card className="p-5">

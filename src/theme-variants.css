@@ -1,0 +1,305 @@
+/*
+ * What a manufacturer's look needs beyond its colours (themes.css): cut
+ * corners, materials, neon, typefaces. Hooked on a few classes the shared
+ * components carry:
+ *
+ *   .nexus-ticks     cards and dialogs (src/components/ui)
+ *   .nexus-primary   the primary button
+ *   .nexus-title     page titles
+ *   .nexus-rail      the main window's rail, .nexus-subpanel its side panel
+ *   .nexus-backdrop  the page behind the main window's content
+ *   .nexus-overlay   an overlay drawn as a panel (src/lib/overlay-opacity.ts)
+ *
+ * `data-window` is "main" or "overlay" (src/components/theme/theme-root.tsx).
+ * Unlayered on purpose: these rules win over the Tailwind utilities.
+ */
+
+:root {
+  --pattern-oblique:
+    repeating-linear-gradient(118deg, color-mix(in oklab, var(--seed-accent) 7%, transparent) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(62deg, color-mix(in oklab, var(--seed-accent) 4%, transparent) 0 1px, transparent 1px 46px);
+  --pattern-scanlines:
+    repeating-linear-gradient(180deg, color-mix(in oklab, var(--seed-accent-2) 5%, transparent) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 60% 300px at 85% 0, color-mix(in oklab, var(--seed-accent) 22%, transparent), transparent),
+    radial-gradient(ellipse 50% 260px at 10% 100%, color-mix(in oklab, var(--seed-accent-2) 14%, transparent), transparent);
+  --pattern-kilim:
+    radial-gradient(ellipse 80% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 14%, transparent), transparent),
+    conic-gradient(from 45deg at 50% 50%, color-mix(in oklab, var(--seed-accent) 3.5%, transparent) 0 25%, transparent 0 50%, color-mix(in oklab, var(--seed-accent-2) 3%, transparent) 0 75%, transparent 0) 0 0 / 44px 44px;
+  --nexus-cut-bg: var(--color-nexus-abyss);
+  --nexus-cut-line: color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Cut corners, for the themes that set --seed-chamfer                 */
+/* ------------------------------------------------------------------ */
+
+/* Painted over two corners rather than clipped: a clip-path would also cut
+   whatever overflows the card (a menu, a focus ring). */
+.nexus-ticks::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(225deg, var(--nexus-cut-bg) calc(50% - 0.5px), var(--nexus-cut-line) calc(50% - 0.5px) calc(50% + 0.75px), transparent calc(50% + 0.75px))
+      top right / var(--seed-chamfer, 0px) var(--seed-chamfer, 0px) no-repeat,
+    linear-gradient(45deg, var(--nexus-cut-bg) calc(50% - 0.5px), var(--nexus-cut-line) calc(50% - 0.5px) calc(50% + 0.75px), transparent calc(50% + 0.75px))
+      bottom left / var(--seed-chamfer, 0px) var(--seed-chamfer, 0px) no-repeat;
+}
+
+/* ------------------------------------------------------------------ */
+/* Origin: white marble, blue, gold hairlines. Calm, luxurious.         */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="origin"] {
+  --font-display: "Cormorant Garamond", Georgia, serif;
+}
+
+/* The main window is light. Over the game, the overlays keep the navy of
+   themes.css: a white panel would blind a night cockpit. */
+:root[data-theme="origin"][data-window="main"] {
+  color-scheme: light;
+  --seed-accent: #1d4f9e;
+  --seed-accent-2: #b8913a;
+  --color-nexus-accent: #1d4f9e;
+  --color-nexus-accent-2: #b8913a;
+  --color-nexus-abyss: #f3efe7;
+  --color-nexus-deep: #faf8f3;
+  --color-nexus-night: #ede7db;
+  --color-nexus-rail: #e6dfd0;
+  --color-nexus-card: #fcfaf6;
+  --color-nexus-panel: #e4ddcd;
+  --color-nexus-white: #101c33;
+  --color-nexus-bright: #22304a;
+  --color-nexus-soft: #2f5797;
+  --color-nexus-muted: #5a6274;
+  --color-nexus-dim: #7c8191;
+  --nexus-gold: #b8913a;
+  --nexus-glow: transparent;
+  --nexus-cut-bg: var(--color-nexus-abyss);
+  /* Status colours, darkened to read on marble. */
+  --color-emerald-100: #0f6b45;
+  --color-emerald-200: #0f6b45;
+  --color-emerald-300: #138556;
+  --color-emerald-400: #15925f;
+  --color-amber-100: #8a5a00;
+  --color-amber-200: #8a5a00;
+  --color-amber-300: #9c6600;
+  --color-red-100: #a01d1d;
+  --color-red-200: #a01d1d;
+  --color-red-300: #b42323;
+  --color-red-400: #c62828;
+  --seed-pattern:
+    /* A stave across the top of the page: five fine lines, like a score. */
+    repeating-linear-gradient(180deg, color-mix(in oklab, #b8913a 22%, transparent) 0 1px, transparent 1px 9px) 0 46px / 100% 37px no-repeat,
+    /* Marble veins. */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='520' height='520'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.006 0.02' numOctaves='4' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.43 0 0 0 0 0.40 0 0 0 -2.2 1.25'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)' opacity='0.18'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="origin"][data-window="main"] body {
+  background-color: var(--color-nexus-abyss);
+}
+
+:root[data-theme="origin"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--nexus-gold, #d9b76a) 55%, transparent);
+  box-shadow: 0 1px 0 color-mix(in oklab, var(--nexus-gold, #d9b76a) 25%, transparent), 0 12px 32px -18px rgb(16 28 51 / 0.35);
+}
+
+/* A gold hairline under the top edge, fading out at both ends. */
+:root[data-theme="origin"] .nexus-ticks::after {
+  inset: 0 24px auto;
+  height: 1px;
+  opacity: 1;
+  background: linear-gradient(90deg, transparent, var(--nexus-gold, #d9b76a), transparent);
+}
+
+:root[data-theme="origin"] .nexus-primary {
+  border-radius: 9999px;
+  border-color: var(--nexus-gold, #d9b76a);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11.5px;
+  padding-inline: 1.4rem;
+}
+
+:root[data-theme="origin"] .nexus-title {
+  font-weight: 600;
+  font-size: 36px;
+  letter-spacing: 0.02em;
+}
+
+:root[data-theme="origin"] .font-display {
+  font-weight: 600;
+}
+
+:root[data-theme="origin"] .nexus-rail,
+:root[data-theme="origin"] .nexus-subpanel {
+  border-color: color-mix(in oklab, var(--nexus-gold, #d9b76a) 45%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-overlay {
+  border-color: color-mix(in oklab, #d9b76a 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Gatac (Xi'an): hard geometry, oblique cuts.                          */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="gatac"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 30%, transparent);
+}
+
+/* An oblique bar along the top edge, cut at a slant. */
+:root[data-theme="gatac"] .nexus-ticks::after {
+  inset: -1px auto auto 0;
+  width: 42%;
+  height: 3px;
+  opacity: 1;
+  background: var(--seed-accent);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  box-shadow: 0 0 10px var(--nexus-glow);
+}
+
+/* Parallelogram buttons. */
+:root[data-theme="gatac"] .nexus-primary {
+  border-radius: 0;
+  padding-inline: 1.5rem;
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 11.5px;
+}
+
+:root[data-theme="gatac"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* The rail's right edge, slanted. */
+:root[data-theme="gatac"] .nexus-rail {
+  border-right: 0;
+  background:
+    linear-gradient(100deg, transparent calc(100% - 2px), var(--seed-accent) calc(100% - 2px)) right / 6px 100% no-repeat,
+    var(--color-nexus-rail);
+}
+
+:root[data-theme="gatac"] .nexus-overlay {
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+/* ------------------------------------------------------------------ */
+/* Mirai: cyberpunk, neon, chromatic edges.                             */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="mirai"] {
+  --font-display: "Orbitron", "Chakra Petch", system-ui, sans-serif;
+}
+
+:root[data-theme="mirai"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 70%, transparent);
+  box-shadow:
+    3px 3px 0 -1px color-mix(in oklab, var(--seed-accent-2) 55%, transparent),
+    0 0 18px -4px color-mix(in oklab, var(--seed-accent) 55%, transparent),
+    inset 0 0 24px -12px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+/* A cyan tab on the top-right corner. */
+:root[data-theme="mirai"] .nexus-ticks::after {
+  inset: -1px -1px auto auto;
+  width: 46px;
+  height: 4px;
+  opacity: 1;
+  background: repeating-linear-gradient(90deg, var(--seed-accent-2) 0 8px, transparent 8px 11px);
+  box-shadow: 0 0 8px var(--seed-accent-2);
+}
+
+:root[data-theme="mirai"] .nexus-primary {
+  border-radius: 0;
+  background: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  color: #0a0312;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-family: var(--font-display);
+  font-size: 11px;
+  box-shadow:
+    -2px 0 0 var(--seed-accent),
+    2px 0 0 color-mix(in oklab, var(--seed-accent-2) 40%, white),
+    0 0 18px color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
+}
+
+:root[data-theme="mirai"] .nexus-title {
+  text-transform: uppercase;
+  font-size: 30px;
+  letter-spacing: 0.06em;
+  text-shadow:
+    -2px 0 0 color-mix(in oklab, var(--seed-accent) 70%, transparent),
+    2px 0 0 color-mix(in oklab, var(--seed-accent-2) 70%, transparent),
+    0 0 18px color-mix(in oklab, var(--seed-accent) 70%, transparent);
+}
+
+:root[data-theme="mirai"] .nexus-rail {
+  box-shadow: inset -1px 0 0 var(--seed-accent), 4px 0 18px -8px var(--seed-accent);
+}
+
+:root[data-theme="mirai"] .nexus-overlay {
+  border-radius: 0;
+  border-color: var(--seed-accent);
+  box-shadow: 3px 3px 0 -1px var(--seed-accent-2), 0 0 24px -6px var(--seed-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banu: gold, oxidised bronze, a warm bazaar.                          */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="banu"] {
+  --font-display: "Philosopher", "IBM Plex Sans", system-ui, sans-serif;
+}
+
+:root[data-theme="banu"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 45%, transparent);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--seed-accent) 9%, transparent),
+    transparent 70%
+  );
+  box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
+}
+
+/* An inner border of verdigris stitches, like a woven edge. */
+:root[data-theme="banu"] .nexus-ticks::after {
+  inset: 4px;
+  opacity: 0.7;
+  background: none;
+  border: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 70%, transparent);
+  border-radius: calc(var(--seed-radius) - 4px);
+}
+
+:root[data-theme="banu"] .nexus-primary {
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #f4cd76, #c4862f);
+  border-color: #8a5a1f;
+  color: #2a170a;
+  box-shadow: inset 0 1px 0 rgb(255 240 200 / 0.6), 0 0 16px color-mix(in oklab, var(--seed-accent) 40%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-title {
+  font-size: 32px;
+  color: var(--seed-accent);
+}
+
+/* A braided border down the rail, gold and bronze. */
+:root[data-theme="banu"] .nexus-rail {
+  border-right: 0;
+  background:
+    repeating-linear-gradient(180deg, var(--seed-accent) 0 6px, var(--seed-accent-2) 6px 9px, transparent 9px 12px) right / 2px 100% no-repeat,
+    var(--color-nexus-rail);
+}
+
+:root[data-theme="banu"] .nexus-overlay {
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
+  outline-offset: -5px;
+}

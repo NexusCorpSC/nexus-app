@@ -219,6 +219,13 @@ le préfixe de `class_name` de la télémétrie, `src/lib/themes.ts`), l'écrit
 dans le store (`activeTheme`) et le diffuse (`theme://active`) ; les
 superpositions le suivent (`useFollowTheme`).
 
+Ce que les couleurs ne disent pas (coins coupés, matières, néons, polices)
+est dans `src/theme-variants.css`, accroché à quelques classes des
+composants partagés : `nexus-ticks` (cartes, modales), `nexus-primary`,
+`nexus-title`, `nexus-rail`, `nexus-subpanel`, `nexus-overlay`. Une carte
+faite à la main prend `nexus-ticks` pour suivre le thème. Origin est clair
+dans la fenêtre principale seulement (`data-window="main"`).
+
 ## Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés

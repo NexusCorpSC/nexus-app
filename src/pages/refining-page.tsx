@@ -128,7 +128,7 @@ export default function RefiningPage() {
       />
 
       {capture && !collecting && ready.length > 0 ? (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-nexus border border-nexus-accent/25 bg-nexus-card px-4 py-3 text-[13px] text-nexus-bright">
+        <div className="nexus-ticks mb-4 flex flex-wrap items-center gap-2 rounded-nexus border border-nexus-accent/25 bg-nexus-card px-4 py-3 text-[13px] text-nexus-bright">
           <Camera className="size-4 text-nexus-accent" />
           <span className="mr-auto">{t("captureWhich")}</span>
           {ready.map((job) => (
@@ -174,7 +174,7 @@ export default function RefiningPage() {
           </dl>
 
           {list.length === 0 ? (
-            <div className="rounded-nexus border border-dashed border-nexus-accent/20 px-6 py-10 text-center">
+            <div className="nexus-ticks rounded-nexus border border-dashed border-nexus-accent/20 px-6 py-10 text-center">
               <FlaskConical className="mx-auto size-8 text-nexus-accent/60" />
               <p className="mt-3 font-medium text-nexus-white">
                 {t("emptyTitle")}
