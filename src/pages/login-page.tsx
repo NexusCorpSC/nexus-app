@@ -76,7 +76,7 @@ export default function LoginPage() {
         )}
 
         {signInError ? (
-          <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+          <p className="rounded-nexus-sm border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
             {signInError}
           </p>
         ) : null}

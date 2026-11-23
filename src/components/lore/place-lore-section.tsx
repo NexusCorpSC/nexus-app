@@ -24,7 +24,7 @@ export function PlaceLoreSection({ lore }: { lore: PlaceLore }) {
       <div className="space-y-3">
         {starmap ? (
           <div className="space-y-2">
-            <p className="text-xs text-sky-300/80">
+            <p className="text-xs text-nexus-accent/80">
               {[
                 starmap.designation,
                 starmap.subType,
@@ -44,7 +44,7 @@ export function PlaceLoreSection({ lore }: { lore: PlaceLore }) {
         {article ? (
           <Link
             to={lorePath(article.id)}
-            className="flex gap-3 rounded-lg border border-nexus-accent/12 bg-[#08243a] p-3 transition-colors hover:border-nexus-accent/35"
+            className="flex gap-3 rounded-nexus-sm border border-nexus-accent/12 bg-nexus-deep p-3 transition-colors hover:border-nexus-accent/35"
           >
             <LoreThumbnail
               src={article.thumbnailUrl}
@@ -57,14 +57,14 @@ export function PlaceLoreSection({ lore }: { lore: PlaceLore }) {
               <p lang="en" className="line-clamp-2 text-xs text-nexus-dim">
                 {article.excerpt}
               </p>
-              <p className="mt-1 text-xs text-sky-300">{t("readArticle")}</p>
+              <p className="mt-1 text-xs text-nexus-accent">{t("readArticle")}</p>
             </div>
           </Link>
         ) : null}
         {starmap ? (
           <Link
             to={systemPath(starmap.code.split(".")[0])}
-            className="inline-block text-xs text-sky-300 hover:underline"
+            className="inline-block text-xs text-nexus-accent hover:underline"
           >
             {t("seeSystem")}
           </Link>

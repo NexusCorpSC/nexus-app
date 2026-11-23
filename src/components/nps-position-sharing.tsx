@@ -40,14 +40,14 @@ export function ShareCard({
 
   if (share.unauthorized) {
     return (
-      <section className="rounded-lg border border-white/10 px-2.5 py-2 text-[11px] text-slate-400">
+      <section className="rounded-nexus-sm border border-nexus-accent/10 px-2.5 py-2 text-[11px] text-nexus-muted">
         {t("signIn")}
       </section>
     );
   }
   if (!sharing) {
     return query.isError ? (
-      <section className="rounded-lg border border-white/10 px-2.5 py-2 text-[11px] text-slate-400">
+      <section className="rounded-nexus-sm border border-nexus-accent/10 px-2.5 py-2 text-[11px] text-nexus-muted">
         {t("loadFailed")}
       </section>
     ) : null;
@@ -60,7 +60,7 @@ export function ShareCard({
 
   return (
     <section
-      className="space-y-1 rounded-lg border px-2.5 py-2 text-[12px]"
+      className="space-y-1 rounded-nexus-sm border px-2.5 py-2 text-[12px]"
       style={{
         borderColor: enabled ? `${PLAYER_COLOR}66` : "rgb(255 255 255 / 0.1)",
         backgroundColor: enabled ? `${PLAYER_COLOR}0f` : undefined,
@@ -89,7 +89,7 @@ export function ShareCard({
           title={enabled ? t("stop") : t("start")}
           className={cn(
             "relative h-4 w-7 shrink-0 rounded-full border transition disabled:opacity-40",
-            enabled ? "border-transparent" : "border-white/25 bg-white/10",
+            enabled ? "border-transparent" : "border-nexus-accent/25 bg-nexus-accent/10",
           )}
           style={enabled ? { backgroundColor: PLAYER_COLOR } : undefined}
         >
@@ -97,17 +97,17 @@ export function ShareCard({
           <span
             className={cn(
               "absolute top-0.5 size-2.5 rounded-full transition-all",
-              enabled ? "left-3.5 bg-slate-950" : "left-0.5 bg-slate-300",
+              enabled ? "left-3.5 bg-nexus-rail" : "left-0.5 bg-nexus-soft",
             )}
           />
         </button>
       </div>
 
       {!enabled ? (
-        <p className="text-[11px] text-slate-400">{t("off")}</p>
+        <p className="text-[11px] text-nexus-muted">{t("off")}</p>
       ) : (
         <>
-          <p className="text-slate-200">
+          <p className="text-nexus-bright">
             {who.length > 0
               ? t("audience", {
                   who: format.list(who, { type: "conjunction" }),
@@ -136,7 +136,7 @@ export function ShareCard({
                 : null}
             </p>
           ) : (
-            <p className="text-[11px] text-slate-400">{t("waitingFix")}</p>
+            <p className="text-[11px] text-nexus-muted">{t("waitingFix")}</p>
           )}
         </>
       )}
@@ -145,7 +145,7 @@ export function ShareCard({
         type="button"
         disabled={locked}
         onClick={onChoose}
-        className="rounded px-1 py-0.5 text-[11px] text-slate-300 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+        className="rounded px-1 py-0.5 text-[11px] text-nexus-soft transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
       >
         {t("choose")}
       </button>
@@ -215,12 +215,12 @@ export function SharePanel({
     <div className="flex min-h-0 flex-1 flex-col gap-2 px-3 pb-3">
       {header}
       {!sharing ? (
-        <p className="text-[12px] text-slate-400">
+        <p className="text-[12px] text-nexus-muted">
           {share.unauthorized ? t("signIn") : t("loadFailed")}
         </p>
       ) : (
         <div className="min-h-0 flex-1 space-y-2 overflow-y-auto text-[12px]">
-          <label className="flex items-center gap-2 rounded-lg px-1 py-1 hover:bg-white/5">
+          <label className="flex items-center gap-2 rounded-nexus-sm px-1 py-1 hover:bg-nexus-accent/5">
             <input
               type="checkbox"
               checked={friends}
@@ -228,19 +228,19 @@ export function SharePanel({
               style={{ accentColor: PLAYER_COLOR }}
             />
             <span className="flex-1">{t("myFriends")}</span>
-            <span className="text-[11px] tabular-nums text-slate-500">
+            <span className="text-[11px] tabular-nums text-nexus-dim">
               {sharing.friends}
             </span>
           </label>
           {sharing.orgs.length > 0 ? (
             <>
-              <p className="px-1 text-[11px] uppercase tracking-wide text-slate-500">
+              <p className="px-1 text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("myOrgs")}
               </p>
               {sharing.orgs.map((org) => (
                 <label
                   key={org.id}
-                  className="flex items-center gap-2 rounded-lg px-1 py-1 hover:bg-white/5"
+                  className="flex items-center gap-2 rounded-nexus-sm px-1 py-1 hover:bg-nexus-accent/5"
                 >
                   <input
                     type="checkbox"
@@ -252,14 +252,14 @@ export function SharePanel({
                     {org.name}
                     {org.tag ? <Tag>{org.tag}</Tag> : null}
                   </span>
-                  <span className="shrink-0 text-[11px] text-slate-500">
+                  <span className="shrink-0 text-[11px] text-nexus-dim">
                     {t("members", { count: org.members })}
                   </span>
                 </label>
               ))}
             </>
           ) : null}
-          <p className="text-[11px] text-slate-400">{t("explain")}</p>
+          <p className="text-[11px] text-nexus-muted">{t("explain")}</p>
           {!enabled && !sharing.playing ? (
             <p className="text-[11px] text-amber-200">{t("declares")}</p>
           ) : null}
@@ -272,7 +272,7 @@ export function SharePanel({
             <button
               type="button"
               onClick={onDone}
-              className="flex-1 rounded-lg px-3 py-1.5 text-[12px] text-slate-300 transition hover:bg-white/10"
+              className="flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-soft transition hover:bg-nexus-accent/10"
             >
               {t("cancel")}
             </button>
@@ -280,7 +280,7 @@ export function SharePanel({
               type="button"
               onClick={confirm}
               disabled={share.save.isPending}
-              className="flex-1 rounded-lg px-3 py-1.5 text-[12px] font-medium text-slate-950 transition hover:brightness-110 disabled:opacity-50"
+              className="flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] font-medium text-nexus-rail transition hover:brightness-110 disabled:opacity-50"
               style={{ backgroundColor: PLAYER_COLOR }}
             >
               {share.save.isPending
@@ -299,7 +299,7 @@ export function SharePanel({
 /** Le tag d'une organisation, à côté d'un nom. */
 export function Tag({ children }: { children: ReactNode }) {
   return (
-    <span className="ml-1.5 rounded border border-white/20 px-1 font-mono text-[10px] text-slate-300">
+    <span className="ml-1.5 rounded border border-nexus-accent/20 px-1 font-mono text-[10px] text-nexus-soft">
       {children}
     </span>
   );
@@ -321,7 +321,7 @@ export function PlayerAvatar({
       aria-hidden
       className={cn(
         "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold",
-        player.friend ? "text-slate-950" : "border border-dashed",
+        player.friend ? "text-nexus-rail" : "border border-dashed",
         className,
       )}
       style={

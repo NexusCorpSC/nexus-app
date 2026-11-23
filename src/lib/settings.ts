@@ -21,6 +21,13 @@ import { translator } from "@/i18n/translate";
 import { EMPTY_NOTE, type Note, type PlacePosition } from "@/types/nexus";
 import { isMarkerKind, type MarkerKind } from "@/types/markers";
 import { isRadarContext, type RadarContext } from "@/lib/radar";
+import {
+  DEFAULT_APPEARANCE,
+  DEFAULT_THEME,
+  isThemeId,
+  type ActiveTheme,
+  type Appearance,
+} from "@/lib/themes";
 
 /**
  * Persistent desktop settings, stored by the Tauri `store` plugin in the
@@ -68,6 +75,8 @@ const KEY_GAME_LOG_DIR = "gameLogDir";
 const KEY_GAME_LOG_ENABLED = "gameLogEnabled";
 const KEY_TELEMETRY_ENABLED = "telemetryEnabled";
 const KEY_SQUAD_AUTO_DOWN = "squadAutoDown";
+const KEY_APPEARANCE = "appearance";
+const KEY_ACTIVE_THEME = "activeTheme";
 const KEY_CONTRIB_NOTIFICATIONS = "contribNotifications";
 const KEY_CONTRIB_SINCE = "contribSince";
 const KEY_ORDER_NOTIFICATIONS = "orderNotifications";
@@ -420,6 +429,57 @@ export async function getTelemetryEnabled(): Promise<boolean> {
 export async function setTelemetryEnabled(enabled: boolean): Promise<void> {
   const store = await getStore();
   await store.set(KEY_TELEMETRY_ENABLED, enabled);
+}
+
+/**
+ * How the interface is themed (`src/lib/themes.ts`). Read field by field, so
+ * that a store written by an older version yields the defaults it lacks.
+ */
+export async function getAppearance(): Promise<Appearance> {
+  const store = await getStore();
+  const stored = await store.get<Partial<Record<keyof Appearance, unknown>>>(
+    KEY_APPEARANCE,
+  );
+  const flag = (key: "keepLastShip" | "anySeat" | "announce" | "effects") =>
+    typeof stored?.[key] === "boolean"
+      ? (stored[key] as boolean)
+      : DEFAULT_APPEARANCE[key];
+  return {
+    mode:
+      stored?.mode === "ship" || stored?.mode === "fixed"
+        ? stored.mode
+        : DEFAULT_APPEARANCE.mode,
+    theme: isThemeId(stored?.theme) ? stored.theme : DEFAULT_APPEARANCE.theme,
+    keepLastShip: flag("keepLastShip"),
+    anySeat: flag("anySeat"),
+    announce: flag("announce"),
+    effects: flag("effects"),
+  };
+}
+
+export async function setAppearance(appearance: Appearance): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_APPEARANCE, appearance);
+}
+
+/**
+ * The theme the main window last put in force, for an overlay that starts
+ * after the broadcast it would otherwise have missed.
+ */
+export async function getActiveTheme(): Promise<ActiveTheme> {
+  const store = await getStore();
+  const stored = await store.get<Partial<Record<keyof ActiveTheme, unknown>>>(
+    KEY_ACTIVE_THEME,
+  );
+  return {
+    theme: isThemeId(stored?.theme) ? stored.theme : DEFAULT_THEME,
+    effects: typeof stored?.effects === "boolean" ? stored.effects : true,
+  };
+}
+
+export async function setActiveTheme(active: ActiveTheme): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_ACTIVE_THEME, active);
 }
 
 /**

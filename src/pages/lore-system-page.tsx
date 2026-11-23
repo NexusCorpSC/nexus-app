@@ -70,7 +70,7 @@ export default function LoreSystemPage() {
           {system.placeSlug ? (
             <Link
               to={`/places/${system.placeSlug}`}
-              className="inline-block text-sm text-sky-300 hover:underline"
+              className="inline-block text-sm text-nexus-accent hover:underline"
             >
               {t("placeLink")}
             </Link>
@@ -92,7 +92,7 @@ export default function LoreSystemPage() {
                 <Link
                   key={jump.to}
                   to={systemPath(jump.to)}
-                  className="rounded-lg border border-nexus-accent/20 bg-nexus-card px-2.5 py-1 text-[13px] text-nexus-white hover:border-nexus-accent/40"
+                  className="rounded-nexus-sm border border-nexus-accent/20 bg-nexus-card px-2.5 py-1 text-[13px] text-nexus-white hover:border-nexus-accent/40"
                 >
                   {jump.toName ?? jump.to}
                   {jump.size ? (
@@ -124,7 +124,7 @@ export default function LoreSystemPage() {
                       </span>
                     ) : null}
                   </p>
-                  <p className="text-xs text-sky-300/80">
+                  <p className="text-xs text-nexus-accent/80">
                     {[
                       body.subType ?? body.type,
                       body.habitable ? t("habitable") : "",
@@ -146,7 +146,7 @@ export default function LoreSystemPage() {
                       {body.articleId ? (
                         <Link
                           to={lorePath(body.articleId)}
-                          className="text-sky-300 hover:underline"
+                          className="text-nexus-accent hover:underline"
                         >
                           {t("articleLink")}
                         </Link>
@@ -154,7 +154,7 @@ export default function LoreSystemPage() {
                       {body.placeSlug ? (
                         <Link
                           to={`/places/${body.placeSlug}`}
-                          className="text-sky-300 hover:underline"
+                          className="text-nexus-accent hover:underline"
                         >
                           {t("placeLink")}
                         </Link>

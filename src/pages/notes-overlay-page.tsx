@@ -88,15 +88,15 @@ export default function NotesOverlayPage() {
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
           // The rule separates the header from the body of a panel; with no
           // panel it is just a line drawn across the game.
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <NotebookPen className="pointer-events-none size-4 text-slate-400" />
-        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
+        <NotebookPen className="pointer-events-none size-4 text-nexus-muted" />
+        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
           {t("title")}
         </p>
         {!signedIn && !loading && (
-          <span className="pointer-events-none rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-300">
+          <span className="pointer-events-none rounded-full bg-nexus-accent/10 px-2 py-0.5 text-[10px] text-nexus-soft">
             {t("localBadge")}
           </span>
         )}
@@ -107,7 +107,7 @@ export default function NotesOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />

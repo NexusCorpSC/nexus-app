@@ -29,7 +29,7 @@ type Spot = LatLon & { alt: number | null };
 type Menu = Spot & { x: number; y: number };
 type Kinds = Record<PlanetMapPoint["kind"], boolean>;
 
-const PANEL = "rounded-lg border border-nexus-accent/12 bg-nexus-card/92";
+const PANEL = "rounded-nexus-sm border border-nexus-accent/12 bg-nexus-card/92";
 const PLAYER_COLOR = "#6ee7b7";
 
 /**
@@ -309,7 +309,7 @@ export function PlanetMap({
 
       <div
         className={cn(
-          "relative overflow-hidden rounded-lg border border-nexus-accent/8 bg-[#030912]",
+          "relative overflow-hidden rounded-nexus-sm border border-nexus-accent/8 bg-[#030912]",
           compact ? "min-h-0 flex-1" : "h-[420px]",
         )}
       >
@@ -370,7 +370,7 @@ export function PlanetMap({
                 <button
                   type="button"
                   onClick={() => navigate(selected.kind === "marker" ? "/markers" : `/places/${selected.id}`)}
-                  className="h-8 rounded-lg border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright hover:bg-nexus-accent/8"
+                  className="h-8 rounded-nexus-sm border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright hover:bg-nexus-accent/8"
                 >
                   {selected.kind === "marker" ? t("openMarkers") : t("openPlace")}
                 </button>
@@ -455,7 +455,7 @@ export function PlanetMap({
 
       {compact ? (
         toward ? (
-          <div className="flex justify-between px-1 font-mono text-xs text-slate-200">
+          <div className="flex justify-between px-1 font-mono text-xs text-nexus-bright">
             <span>{formatDistance(toward.metres, locale)}</span>
             <span>{t("heading", { heading: Math.round(toward.heading) % 360 })}</span>
           </div>
@@ -470,7 +470,7 @@ export function PlanetMap({
               setFollowing(!following);
               if (!following && live.player) instance.current?.panTo([live.player.lat, live.player.lon]);
             }}
-            className="inline-flex h-8 items-center rounded-lg border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright transition-colors hover:bg-nexus-accent/8 disabled:opacity-50 aria-pressed:border-nexus-accent aria-pressed:bg-nexus-accent aria-pressed:text-nexus-abyss"
+            className="inline-flex h-8 items-center rounded-nexus-sm border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright transition-colors hover:bg-nexus-accent/8 disabled:opacity-50 aria-pressed:border-nexus-accent aria-pressed:bg-nexus-accent aria-pressed:text-nexus-abyss"
           >
             {t("follow")}
           </button>
@@ -546,7 +546,7 @@ function AddMarkerForm({
           maxLength={80}
           value={name}
           onChange={(event) => setName(event.target.value)}
-          className="h-8 rounded-lg border border-nexus-accent/12 bg-nexus-abyss px-2.5 text-[13px] text-nexus-bright"
+          className="h-8 rounded-nexus-sm border border-nexus-accent/12 bg-nexus-abyss px-2.5 text-[13px] text-nexus-bright"
         />
       </label>
       <label className="grid gap-1 text-xs text-nexus-dim">
@@ -554,7 +554,7 @@ function AddMarkerForm({
         <select
           value={kind}
           onChange={(event) => setKind(event.target.value as MarkerKind)}
-          className="h-8 rounded-lg border border-nexus-accent/12 bg-nexus-abyss px-2 text-[13px] text-nexus-bright"
+          className="h-8 rounded-nexus-sm border border-nexus-accent/12 bg-nexus-abyss px-2 text-[13px] text-nexus-bright"
         >
           {MARKER_KINDS.map((one) => (
             <option key={one} value={one}>
@@ -568,7 +568,7 @@ function AddMarkerForm({
         <button type="button" onClick={onClose} className="h-8 px-2 text-xs text-nexus-dim hover:text-nexus-bright">
           {t("cancel")}
         </button>
-        <button type="submit" disabled={pending || !name.trim()} className="h-8 rounded-lg bg-nexus-accent px-3 text-xs font-semibold text-nexus-abyss disabled:opacity-50">
+        <button type="submit" disabled={pending || !name.trim()} className="h-8 rounded-nexus-sm bg-nexus-accent px-3 text-xs font-semibold text-nexus-abyss disabled:opacity-50">
           {t("save")}
         </button>
       </div>

@@ -198,7 +198,7 @@ export default function ChatOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-1.5 px-3 py-2",
-          mode === "opaque" ? "border-b border-[#8cbeff]/18" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/18" : null,
         )}
       >
         <img
@@ -228,7 +228,7 @@ export default function ChatOverlayPage() {
               setFocusSignal((value) => value + 1);
             }}
             title={t("newConversation")}
-            className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+            className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
           >
             <span className="sr-only">{t("newConversation")}</span>
             <MessageSquarePlus className="size-4" />
@@ -238,7 +238,7 @@ export default function ChatOverlayPage() {
           type="button"
           onClick={openInMain}
           title={t("openInMain")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("openInMain")}</span>
           <AppWindow className="size-4" />
@@ -249,7 +249,7 @@ export default function ChatOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />

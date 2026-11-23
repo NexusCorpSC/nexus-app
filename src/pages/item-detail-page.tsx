@@ -363,9 +363,9 @@ function SlotRow({
   );
 
   const className = cn(
-    "flex items-center gap-3 rounded-lg border px-3 py-2.5",
+    "flex items-center gap-3 rounded-nexus-sm border px-3 py-2.5",
     name
-      ? "border-nexus-accent/8 bg-[#08243a]"
+      ? "border-nexus-accent/8 bg-nexus-deep"
       : "border-dashed border-nexus-accent/20",
     slot.mounted && "transition-colors hover:border-nexus-accent/35",
   );
@@ -431,7 +431,7 @@ function BlueprintList({
           <Link
             key={blueprint.slug}
             to={`/blueprints/${blueprint.slug}`}
-            className="flex items-center justify-between gap-3 rounded-lg border border-nexus-accent/8 bg-[#08243a] px-3 py-2.5 transition-colors hover:border-nexus-accent/35"
+            className="flex items-center justify-between gap-3 rounded-nexus-sm border border-nexus-accent/8 bg-nexus-deep px-3 py-2.5 transition-colors hover:border-nexus-accent/35"
           >
             <span className="min-w-0">
               <span className="block truncate text-sm font-semibold text-nexus-white">
@@ -557,7 +557,7 @@ function VehiclePlanViews({
         ) : null}
       </div>
 
-      <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-lg border border-nexus-accent/8 bg-[#08243a]">
+      <div className="relative flex h-64 items-center justify-center overflow-hidden rounded-nexus-sm border border-nexus-accent/8 bg-nexus-deep">
         {failed.includes(url) ? (
           <p className="text-xs text-nexus-dim">
             {t("unavailable")}
@@ -683,7 +683,7 @@ function SpreadColumn({
 }) {
   const t = useTranslations("Items.detail.weapon");
   return (
-    <div className="rounded-lg border border-nexus-accent/8 bg-[#08243a] p-3">
+    <div className="rounded-nexus-sm border border-nexus-accent/8 bg-nexus-deep p-3">
       <p className="mb-2 text-[10.5px] font-semibold tracking-wider text-nexus-dim uppercase">
         {title}
       </p>
@@ -1000,7 +1000,7 @@ function ResourceSections({ item }: { item: ItemDetails }) {
           ]}
         />
         {resource.transportNote ? (
-          <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
+          <p className="mt-3 rounded-nexus-sm border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-100">
             {resource.transportNote}
           </p>
         ) : null}

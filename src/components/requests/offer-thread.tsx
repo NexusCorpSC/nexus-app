@@ -103,7 +103,7 @@ export function OfferThread({
     <section
       id={`offre-${offer.id}`}
       className={cn(
-        "rounded-xl border bg-nexus-card",
+        "rounded-nexus border bg-nexus-card",
         highlighted ? "border-[#FFB98A]/60" : "border-nexus-accent/15",
       )}
     >
@@ -320,7 +320,7 @@ function TimelineEntry({
     <li className={cn("flex", mine ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[80%] rounded-xl px-3 py-2 text-[13px]",
+          "max-w-[80%] rounded-nexus px-3 py-2 text-[13px]",
           mine
             ? "bg-[#FFB98A]/12 text-nexus-white"
             : "bg-nexus-accent/8 text-nexus-bright",

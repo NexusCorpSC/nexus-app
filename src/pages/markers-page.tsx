@@ -338,7 +338,7 @@ export default function MarkersPage() {
           {shown.length === 0 ? (
             <EmptyState title={t("noResults")} />
           ) : (
-            <ul className="divide-y divide-nexus-accent/8 overflow-hidden rounded-xl border border-nexus-accent/12 bg-nexus-card/60">
+            <ul className="divide-y divide-nexus-accent/8 overflow-hidden rounded-nexus border border-nexus-accent/12 bg-nexus-card/60">
               {shown.map(({ marker, distance }) => (
                 <MarkerRow
                   key={marker.id}
@@ -648,7 +648,7 @@ function EditMarkerModal({
             rows={3}
             maxLength={MAX_MARKER_NOTE_LENGTH}
             onChange={(event) => setNote(event.target.value)}
-            className="w-full resize-y rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+            className="w-full resize-y rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </Field>
       </form>

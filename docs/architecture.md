@@ -204,6 +204,21 @@ position du curseur tant qu'une superposition est verrouillée, et rend la souri
 redéclare sa zone quand la fenêtre est redimensionnée, puisque l'en-tête se
 réorganise sous lui.
 
+## Thèmes d'interface
+
+Toutes les couleurs passent par les jetons Tailwind `--color-nexus-*`
+(`src/styles.css`), dérivés de quelques graines par `color-mix` : accent,
+seconde couleur, teinte des surfaces, encre, arrondi, équerres, halo, motif.
+Chaque thème ne pose que ses graines sur `<html data-theme="…">`
+(`src/themes.css`). Les couleurs d'état (vert, rouge, ambre) restent fixes ;
+n'écrivez pas de `slate-*`, `sky-*` ni d'hexadécimal pour une couleur de
+marque, sinon elle ne suivra pas le thème.
+
+La fenêtre principale choisit le thème (`useShipTheme`, d'après le siège et
+le préfixe de `class_name` de la télémétrie, `src/lib/themes.ts`), l'écrit
+dans le store (`activeTheme`) et le diffuse (`theme://active`) ; les
+superpositions le suivent (`useFollowTheme`).
+
 ## Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés

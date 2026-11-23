@@ -55,7 +55,7 @@ export function ItemThumbnail({
   return (
     <div
       className={cn(
-        "flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-nexus-abyss/60",
+        "flex shrink-0 items-center justify-center overflow-hidden rounded-nexus-sm bg-nexus-abyss/60",
         className,
       )}
     >
@@ -136,7 +136,7 @@ export function ItemCard({
       >
         <ItemThumbnail
           item={item}
-          className="h-26 w-full rounded-none bg-[#08243a]"
+          className="h-26 w-full rounded-none bg-nexus-deep"
         />
         <div className="flex min-w-0 flex-1 flex-col p-3.5">
           <p
@@ -145,7 +145,7 @@ export function ItemCard({
           >
             {tKinds(item.kind)}
             {subtitle ? (
-              <span className="text-sky-300/60"> · {subtitle}</span>
+              <span className="text-nexus-accent/60"> · {subtitle}</span>
             ) : null}
           </p>
           <p
@@ -171,7 +171,7 @@ export function ItemCard({
             : "transition-colors hover:border-nexus-accent/35",
         )}
       >
-        <ItemThumbnail item={item} className="h-14 w-14 bg-[#08243a]" />
+        <ItemThumbnail item={item} className="h-14 w-14 bg-nexus-deep" />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <p className="truncate text-sm font-semibold text-nexus-white">

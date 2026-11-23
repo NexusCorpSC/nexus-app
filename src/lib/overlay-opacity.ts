@@ -107,7 +107,7 @@ export function readOverlayMode(label: OverlayLabel): Promise<OverlayMode> {
  * The panel: a window that stands on its own, over whatever is behind it.
  */
 const OVERLAY_PANEL =
-  "rounded-xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl";
+  "rounded-nexus border border-nexus-accent/18 bg-nexus-abyss/95 shadow-2xl backdrop-blur-xl";
 
 /**
  * No panel at all — the game shows through the text.
@@ -129,7 +129,7 @@ const OVERLAY_SEE_THROUGH =
  * a surface. For the cockpit that is too bright for the text alone and too
  * busy to hide behind a panel.
  */
-const OVERLAY_SHADED = `rounded-xl bg-black/35 ${OVERLAY_SEE_THROUGH}`;
+const OVERLAY_SHADED = `rounded-nexus bg-black/35 ${OVERLAY_SEE_THROUGH}`;
 
 /** The classes an overlay's root element takes for the current mode. */
 export function overlaySkin(mode: OverlayMode): string {

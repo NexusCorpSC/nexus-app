@@ -150,7 +150,7 @@ export function BlueprintQuickAdd({
       idle={<Plus className="size-4" />}
       className={cn(
         tone === "overlay"
-          ? "text-slate-400 hover:bg-white/10 hover:text-slate-100"
+          ? "text-nexus-muted hover:bg-nexus-accent/10 hover:text-nexus-white"
           : "text-nexus-accent/50 hover:bg-nexus-accent/10 hover:text-nexus-accent",
         className,
       )}
@@ -224,7 +224,7 @@ function QuickButton({
         onClick();
       }}
       className={cn(
-        "shrink-0 rounded-lg p-1.5 transition disabled:cursor-default",
+        "shrink-0 rounded-nexus-sm p-1.5 transition disabled:cursor-default",
         className,
         done ? "text-emerald-300 hover:bg-transparent" : null,
         mutation.isError ? "text-amber-300" : null,

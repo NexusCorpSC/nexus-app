@@ -529,7 +529,7 @@ export default function InventoryQuickAddPage() {
             preferred={held}
             placeholder={t("locationPlaceholder")}
             aria-label={t("defaults.locationLabel")}
-            className="h-8 w-60 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+            className="h-8 w-60 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </label>
         <label className="flex items-center gap-2 text-[13px] text-nexus-muted">

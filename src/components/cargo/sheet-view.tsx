@@ -400,7 +400,7 @@ export function MissionGroups({
       {groups.map((group) => (
         <div
           key={group.mission || "__unassigned__"}
-          className="overflow-hidden rounded-lg border border-nexus-accent/15 bg-nexus-abyss/40"
+          className="overflow-hidden rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss/40"
         >
           <div className="flex items-center justify-between gap-2 border-b border-nexus-accent/10 px-3 py-1.5">
             {onRenameMission && renaming === group.mission ? (
@@ -568,7 +568,7 @@ function IconButton({
       title={label}
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded p-1 text-nexus-accent/40 transition hover:bg-white/5",
+        "shrink-0 rounded p-1 text-nexus-accent/40 transition hover:bg-nexus-accent/5",
         danger ? "hover:text-red-300" : "hover:text-nexus-bright",
       )}
     >

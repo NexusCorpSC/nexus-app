@@ -335,7 +335,7 @@ export default function RadialOverlayPage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-abyss/85 px-3 py-1.5 text-xs text-nexus-accent/75">
+      <div className="flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss/85 px-3 py-1.5 text-xs text-nexus-accent/75">
         {accelerator
           ? formatShortcut(accelerator)
               .split(" + ")

@@ -27,7 +27,7 @@ function modeOf(presence: MyPresence | null): Mode {
 }
 
 const FIELD =
-  "h-9 w-full rounded-lg border border-nexus-accent/15 bg-nexus-abyss px-3 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none";
+  "h-9 w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss px-3 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none";
 
 /**
  * The reader's session: in game, a session planned, or off.
@@ -79,7 +79,7 @@ export function PresenceForm({
         role="radiogroup"
         aria-label={t("modeLabel")}
         className={cn(
-          "grid grid-cols-3 gap-0.5 rounded-lg border border-nexus-accent/15 bg-nexus-abyss p-[3px]",
+          "grid grid-cols-3 gap-0.5 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss p-[3px]",
           !compact && "max-w-md",
         )}
       >
@@ -361,7 +361,7 @@ function PlannedForm({
                   })
                 }
                 className={cn(
-                  "flex min-h-9 w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] transition-colors disabled:opacity-50",
+                  "flex min-h-9 w-full items-center gap-2 rounded-nexus-sm border px-2.5 py-1.5 text-left text-[12.5px] transition-colors disabled:opacity-50",
                   picked
                     ? "border-nexus-accent bg-nexus-accent/12 text-nexus-white"
                     : "border-nexus-accent/18 text-nexus-soft hover:border-nexus-accent/45",

@@ -111,7 +111,7 @@ const SURFACE =
 
 /** A sheet that takes the whole window: at 420px there is no room for two. */
 const SHEET =
-  "absolute inset-0 z-30 flex flex-col rounded-xl border border-white/10 bg-nexus-abyss/[0.98] backdrop-blur-xl";
+  "absolute inset-0 z-30 flex flex-col rounded-nexus border border-nexus-accent/10 bg-nexus-abyss/[0.98] backdrop-blur-xl";
 
 /** A sheet covers the roster whole; only one at a time. */
 type Sheet = { kind: "roles"; squadId: string } | { kind: "raid" } | null;
@@ -716,7 +716,7 @@ function MemberRow({
             </span>
           ) : member.lieutenant ? (
             <span title={t("lieutenant")}>
-              <Shield className="size-3 text-sky-300" />
+              <Shield className="size-3 text-nexus-accent" />
               <span className="sr-only">{t("lieutenant")}</span>
             </span>
           ) : null}
@@ -981,7 +981,7 @@ function RowMenu({
 
       {onRank ? (
         <MenuItem
-          icon={<Shield className="size-3 text-sky-300" />}
+          icon={<Shield className="size-3 text-nexus-accent" />}
           onClick={() => {
             onRank();
             onClose();
@@ -2741,7 +2741,7 @@ function Popover({
             : { top: 0, left: 0, visibility: "hidden" }
         }
         className={cn(
-          "fixed z-50 overflow-y-auto rounded-lg border border-nexus-accent/25 bg-nexus-deep p-1.5 text-nexus-accent shadow-xl shadow-black/50",
+          "fixed z-50 overflow-y-auto rounded-nexus-sm border border-nexus-accent/25 bg-nexus-deep p-1.5 text-nexus-accent shadow-xl shadow-black/50",
           className,
         )}
       >

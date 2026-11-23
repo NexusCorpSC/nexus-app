@@ -255,11 +255,11 @@ export default function RadarOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <Radar className="pointer-events-none size-4 text-slate-400" />
-        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
+        <Radar className="pointer-events-none size-4 text-nexus-muted" />
+        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
           {t("title")}
         </p>
         <OverlayOpacityButton label="radar" mode={mode} />
@@ -268,14 +268,14 @@ export default function RadarOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-slate-100">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-nexus-white">
         <div
           role="radiogroup"
           aria-label={t("context.label")}
@@ -293,8 +293,8 @@ export default function RadarOverlayPage() {
               className={cn(
                 "flex-1 rounded border px-1.5 py-0.5 text-[11px] transition disabled:opacity-40",
                 context === option
-                  ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
-                  : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+                  ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white"
+                  : "border-nexus-accent/15 bg-nexus-accent/5 text-nexus-soft hover:bg-nexus-accent/10",
               )}
             >
               {t(`context.${option}`)}
@@ -305,10 +305,10 @@ export default function RadarOverlayPage() {
         {current && identification ? (
           <section className="space-y-2">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="font-mono text-3xl font-semibold tracking-wide text-sky-100">
+              <p className="font-mono text-3xl font-semibold tracking-wide text-nexus-white">
                 {number(current.value)}
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-nexus-muted">
                 {t("age", { age: formatAge(now - current.at, t) })}
               </p>
             </div>
@@ -318,7 +318,7 @@ export default function RadarOverlayPage() {
                 <MatchCard match={best} number={number} t={t} highlight />
                 {others.length > 0 ? (
                   <div className="space-y-1">
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                    <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
                       {t("more")}
                     </p>
                     {others.map((match) => (
@@ -339,7 +339,7 @@ export default function RadarOverlayPage() {
                 </p>
                 {identification.approximate.length > 0 ? (
                   <>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                    <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
                       {t("approximate")}
                     </p>
                     {identification.approximate.map((match) => (
@@ -356,12 +356,12 @@ export default function RadarOverlayPage() {
             )}
           </section>
         ) : (
-          <p className="text-[12px] text-slate-400">{t("waiting")}</p>
+          <p className="text-[12px] text-nexus-muted">{t("waiting")}</p>
         )}
 
         {history.length > 1 ? (
           <div className="flex flex-wrap items-center gap-1">
-            <span className="text-[11px] text-slate-400">{t("history")}</span>
+            <span className="text-[11px] text-nexus-muted">{t("history")}</span>
             {history.map((value) => (
               <button
                 key={value}
@@ -371,8 +371,8 @@ export default function RadarOverlayPage() {
                 className={cn(
                   "rounded border px-1.5 py-0.5 font-mono text-[11px] transition disabled:opacity-40",
                   value === current?.value
-                    ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
-                    : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+                    ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white"
+                    : "border-nexus-accent/15 bg-nexus-accent/5 text-nexus-soft hover:bg-nexus-accent/10",
                 )}
               >
                 {number(value)}
@@ -389,12 +389,12 @@ export default function RadarOverlayPage() {
             inputMode="numeric"
             aria-label={t("manual")}
             placeholder={t("manualPlaceholder")}
-            className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-2 py-1 font-mono text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-sky-300/50 focus:outline-none disabled:opacity-40"
+            className="min-w-0 flex-1 rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-2 py-1 font-mono text-[13px] text-nexus-white placeholder:text-nexus-dim focus:border-nexus-accent/50 focus:outline-none disabled:opacity-40"
           />
           <button
             type="submit"
             disabled={locked || parseRadarReading(manual) === null}
-            className="shrink-0 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+            className="shrink-0 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
           >
             {t("manual")}
           </button>
@@ -411,7 +411,7 @@ export default function RadarOverlayPage() {
         />
 
         {signatures.data ? (
-          <p className="text-[10px] text-slate-500">
+          <p className="text-[10px] text-nexus-dim">
             {t(`source.${signatures.data.source}`)}
           </p>
         ) : null}
@@ -434,10 +434,10 @@ function MatchCard({
   return (
     <div
       className={cn(
-        "flex items-center justify-between gap-2 rounded-lg border px-2 py-1.5",
+        "flex items-center justify-between gap-2 rounded-nexus-sm border px-2 py-1.5",
         highlight
-          ? "border-sky-300/40 bg-sky-300/10"
-          : "border-white/10 bg-white/5",
+          ? "border-nexus-accent/40 bg-nexus-accent/10"
+          : "border-nexus-accent/10 bg-nexus-accent/5",
       )}
     >
       <div className="min-w-0">
@@ -445,13 +445,13 @@ function MatchCard({
           className={cn(
             "truncate font-medium",
             highlight
-              ? "text-[15px] text-sky-50"
-              : "text-[13px] text-slate-200",
+              ? "text-[15px] text-nexus-white"
+              : "text-[13px] text-nexus-bright",
           )}
         >
           {match.signature.name}
         </p>
-        <p className="truncate text-[11px] text-slate-400">
+        <p className="truncate text-[11px] text-nexus-muted">
           {t(`categories.${match.signature.category}`)} ·{" "}
           {t("base", { value: number(match.signature.value) })}
           {match.exact
@@ -465,8 +465,8 @@ function MatchCard({
         className={cn(
           "shrink-0 rounded px-1.5 py-0.5 font-mono text-[12px]",
           highlight
-            ? "bg-sky-300/20 text-sky-50"
-            : "bg-white/10 text-slate-200",
+            ? "bg-nexus-accent/20 text-nexus-white"
+            : "bg-nexus-accent/10 text-nexus-bright",
         )}
       >
         {t("count", { count: match.count })}
@@ -504,12 +504,12 @@ function ScreenReading({
     calibration?.state === "tooSmall"
       ? { tone: "text-amber-200", text: t("screen.tooSmall") }
       : !calibrated
-        ? { tone: "text-slate-400", text: t("screen.setup") }
+        ? { tone: "text-nexus-muted", text: t("screen.setup") }
         : calibration?.state === "empty"
           ? { tone: "text-amber-200", text: t("screen.calibrationEmpty") }
           : calibration?.state === "found"
             ? {
-                tone: "text-sky-200",
+                tone: "text-nexus-soft",
                 text: t("screen.calibrationFound", {
                   value: number(calibration.value),
                 }),
@@ -524,7 +524,7 @@ function ScreenReading({
                       text: t("screen.failed", { message: status.message }),
                     }
                   : status.state === "reading"
-                    ? { tone: "text-sky-200", text: t("screen.reading") }
+                    ? { tone: "text-nexus-soft", text: t("screen.reading") }
                     : null;
 
   return (
@@ -537,10 +537,10 @@ function ScreenReading({
           aria-pressed={settings.enabled}
           title={settings.enabled ? t("screen.stop") : t("screen.start")}
           className={cn(
-            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] transition disabled:opacity-40",
+            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-nexus-sm border px-2 py-1 text-[12px] transition disabled:opacity-40",
             settings.enabled && calibrated
-              ? "border-sky-300/40 bg-sky-300/10 text-sky-100 hover:bg-sky-300/20"
-              : "border-white/15 bg-white/5 hover:bg-white/10",
+              ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white hover:bg-nexus-accent/20"
+              : "border-nexus-accent/15 bg-nexus-accent/5 hover:bg-nexus-accent/10",
           )}
         >
           <Radar className="size-3.5 shrink-0" />
@@ -553,7 +553,7 @@ function ScreenReading({
           disabled={locked}
           onClick={onCalibrate}
           title={t("screen.calibrateHint")}
-          className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+          className="flex shrink-0 items-center gap-1 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
         >
           <ScanText className="size-3.5" />
           {calibrated ? t("screen.recalibrate") : t("screen.calibrate")}
@@ -566,7 +566,7 @@ function ScreenReading({
           }
           title={t("screen.interval")}
           aria-label={t("screen.interval")}
-          className="shrink-0 rounded-lg border border-white/15 bg-black/40 px-1 py-1 text-[12px] text-slate-200 focus:outline-none disabled:opacity-40"
+          className="shrink-0 rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-1 py-1 text-[12px] text-nexus-bright focus:outline-none disabled:opacity-40"
         >
           {SCREEN_INTERVALS.map((ms) => (
             <option key={ms} value={ms}>

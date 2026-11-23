@@ -26,7 +26,7 @@ import type { AppOrder, OrderStatus } from "@/types/nexus";
 
 const TONE_CLASSES: Record<StatusTone, string> = {
   warn: "bg-amber-400/12 text-amber-300",
-  info: "bg-sky-400/12 text-sky-300",
+  info: "bg-nexus-accent/12 text-nexus-accent",
   ok: "bg-emerald-400/12 text-emerald-300",
   bad: "bg-red-400/12 text-red-300",
   dim: "bg-nexus-accent/8 text-nexus-muted",
@@ -155,7 +155,7 @@ function OrderList({
       {orders.map((order) => (
         <li
           key={order.id}
-          className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 rounded-lg border border-nexus-accent/15 px-3 py-2.5 text-[13px]"
+          className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-4 rounded-nexus-sm border border-nexus-accent/15 px-3 py-2.5 text-[13px]"
         >
           <div className="min-w-0">
             <div className="truncate font-semibold text-nexus-bright">

@@ -193,7 +193,7 @@ export function ShortcutsSection() {
         {shortcutError ? <SettingsError>{shortcutError}</SettingsError> : null}
 
         {rejections.length > 0 ? (
-          <div className="space-y-1 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+          <div className="space-y-1 rounded-nexus-sm border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
             <p>{t("rejected")}</p>
             <ul className="list-disc space-y-0.5 pl-4">
               {rejections.map((rejection) => (

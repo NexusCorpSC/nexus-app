@@ -47,12 +47,12 @@ const OTHERS = 4;
 
 const WINDOW_TONE = {
   narrow: "border-amber-300/40 bg-amber-300/10 text-amber-100",
-  normal: "border-sky-300/30 bg-sky-300/10 text-sky-100",
+  normal: "border-nexus-accent/30 bg-nexus-accent/10 text-nexus-white",
   wide: "border-emerald-300/40 bg-emerald-300/10 text-emerald-100",
 } as const;
 
 const SELECT =
-  "min-w-0 w-full rounded-lg border border-white/15 bg-black/40 px-1.5 py-1 text-[12px] text-slate-100 focus:border-sky-300/50 focus:outline-none disabled:opacity-40";
+  "min-w-0 w-full rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-1.5 py-1 text-[12px] text-nexus-white focus:border-nexus-accent/50 focus:outline-none disabled:opacity-40";
 
 /**
  * Whether a reading can be in Stanton: coordinates alone do not tell one
@@ -257,11 +257,11 @@ export default function HaloOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <Orbit className="pointer-events-none size-4 text-slate-400" />
-        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
+        <Orbit className="pointer-events-none size-4 text-nexus-muted" />
+        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
           {t("title")}
         </p>
         <OverlayOpacityButton label="halo" mode={mode} />
@@ -270,14 +270,14 @@ export default function HaloOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-slate-100">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3 text-nexus-white">
         <div role="tablist" className="grid grid-cols-2 gap-1">
           {(["band", "point"] as const).map((one) => (
             <button
@@ -288,10 +288,10 @@ export default function HaloOverlayPage() {
               disabled={locked}
               onClick={() => setTab(one)}
               className={cn(
-                "rounded-lg border px-2 py-1 text-[12px] transition disabled:opacity-60",
+                "rounded-nexus-sm border px-2 py-1 text-[12px] transition disabled:opacity-60",
                 tab === one
-                  ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
-                  : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+                  ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white"
+                  : "border-nexus-accent/15 bg-nexus-accent/5 text-nexus-soft hover:bg-nexus-accent/10",
               )}
             >
               {t(`tabs.${one}`)}
@@ -310,7 +310,7 @@ export default function HaloOverlayPage() {
           <>
             <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-1.5">
               <label className="min-w-0 space-y-0.5">
-                <span className="text-[11px] text-slate-400">{t("from")}</span>
+                <span className="text-[11px] text-nexus-muted">{t("from")}</span>
                 <select
                   value={from.id}
                   disabled={locked}
@@ -328,13 +328,13 @@ export default function HaloOverlayPage() {
                 onClick={swap}
                 disabled={locked || !to}
                 title={t("swap")}
-                className="rounded-lg border border-white/15 bg-white/5 p-1.5 text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+                className="rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 p-1.5 text-nexus-soft transition hover:bg-nexus-accent/10 disabled:opacity-40"
               >
                 <span className="sr-only">{t("swap")}</span>
                 <ArrowLeftRight className="size-3.5" />
               </button>
               <label className="min-w-0 space-y-0.5">
-                <span className="text-[11px] text-slate-400">{t("to")}</span>
+                <span className="text-[11px] text-nexus-muted">{t("to")}</span>
                 <select
                   value={toId && toId !== from.id ? toId : ""}
                   disabled={locked}
@@ -366,14 +366,14 @@ export default function HaloOverlayPage() {
                   className={cn(
                     "flex flex-col items-center gap-0.5 rounded border px-0.5 pt-0.5 pb-1 font-mono text-[11px] transition disabled:opacity-40",
                     band.id === one.id
-                      ? "border-sky-300/40 bg-sky-300/10 text-sky-100"
-                      : "border-white/15 bg-white/5 text-slate-300 hover:bg-white/10",
+                      ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white"
+                      : "border-nexus-accent/15 bg-nexus-accent/5 text-nexus-soft hover:bg-nexus-accent/10",
                   )}
                 >
                   {one.id}
-                  <span className="h-0.5 w-full rounded-full bg-white/10">
+                  <span className="h-0.5 w-full rounded-full bg-nexus-accent/10">
                     <span
-                      className="block h-full rounded-full bg-sky-300"
+                      className="block h-full rounded-full bg-nexus-accent"
                       style={{ width: `${Math.max(6, one.density * 100)}%` }}
                     />
                   </span>
@@ -382,14 +382,14 @@ export default function HaloOverlayPage() {
             </div>
 
             {to && pass ? (
-              <section className="space-y-1.5 rounded-lg border border-sky-300/30 bg-sky-300/5 p-2.5">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+              <section className="space-y-1.5 rounded-nexus-sm border border-nexus-accent/30 bg-nexus-accent/5 p-2.5">
+                <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
                   {t("cutAt")}
                 </p>
-                <p className="font-mono text-4xl font-semibold tracking-wide text-sky-50">
+                <p className="font-mono text-4xl font-semibold tracking-wide text-nexus-white">
                   {gm(pass.targetRemaining)}
                 </p>
-                <p className="text-[12px] text-slate-300">
+                <p className="text-[12px] text-nexus-soft">
                   {t("remaining", { to: to.label })}
                 </p>
                 <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
@@ -403,7 +403,7 @@ export default function HaloOverlayPage() {
                       width: mm(pass.width),
                     })}
                   </span>
-                  <span className="text-slate-400">
+                  <span className="text-nexus-muted">
                     {t("between", {
                       enter: gm(pass.enterRemaining),
                       exit: gm(pass.exitRemaining),
@@ -411,14 +411,14 @@ export default function HaloOverlayPage() {
                   </span>
                 </div>
                 {passes.length > 1 ? (
-                  <p className="text-[11px] text-slate-400">{t("twice")}</p>
+                  <p className="text-[11px] text-nexus-muted">{t("twice")}</p>
                 ) : null}
                 <button
                   type="button"
                   onClick={guide}
                   disabled={locked}
                   title={t("guideHint")}
-                  className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-1.5 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
                 >
                   <Compass className="size-3.5" />
                   {guided ? t("guided") : t("guide")}
@@ -438,7 +438,7 @@ export default function HaloOverlayPage() {
 
             {others.length > 0 ? (
               <div className="space-y-1">
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
                   {t("others", { band: band.id })}
                 </p>
                 {others.map((candidate) => (
@@ -447,12 +447,12 @@ export default function HaloOverlayPage() {
                     type="button"
                     disabled={locked}
                     onClick={() => setToId(candidate.to.id)}
-                    className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-left text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+                    className="flex w-full items-center justify-between gap-2 rounded-nexus-sm border border-nexus-accent/10 bg-nexus-accent/5 px-2 py-1 text-left text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
                   >
-                    <span className="truncate text-slate-200">
+                    <span className="truncate text-nexus-bright">
                       {candidate.to.label}
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] text-slate-300">
+                    <span className="shrink-0 font-mono text-[11px] text-nexus-soft">
                       {gm(candidate.pass.targetRemaining)} ·{" "}
                       {mm(candidate.pass.width)}
                     </span>
@@ -461,12 +461,12 @@ export default function HaloOverlayPage() {
               </div>
             ) : null}
 
-            <div className="rounded-lg border border-white/10 px-2 py-1.5 text-[12px]">
+            <div className="rounded-nexus-sm border border-nexus-accent/10 px-2 py-1.5 text-[12px]">
               {placement && recent ? (
                 <>
                   <p
                     className={
-                      placement.inside ? "text-emerald-200" : "text-slate-200"
+                      placement.inside ? "text-emerald-200" : "text-nexus-bright"
                     }
                   >
                     {placement.inside
@@ -481,17 +481,17 @@ export default function HaloOverlayPage() {
                           },
                         )}
                   </p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-[10px] text-nexus-dim">
                     {t("position.age", { age: formatAge(now - recent.at, t) })}
                   </p>
                 </>
               ) : (
-                <p className="text-slate-400">{t("position.none")}</p>
+                <p className="text-nexus-muted">{t("position.none")}</p>
               )}
             </div>
 
             {data.data ? (
-              <p className="text-[10px] text-slate-500">
+              <p className="text-[10px] text-nexus-dim">
                 {t(`source.${data.data.source}`)}
               </p>
             ) : null}

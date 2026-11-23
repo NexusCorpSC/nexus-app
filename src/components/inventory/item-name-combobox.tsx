@@ -236,7 +236,7 @@ export function ItemNameCombobox({
                 top: rect.bottom + 4,
                 minWidth: Math.max(rect.width, 256),
               }}
-              className="z-50 max-h-72 overflow-auto rounded-lg border border-nexus-accent/25 bg-nexus-card py-1 text-[13.5px] text-nexus-white shadow-xl shadow-black/40"
+              className="z-50 max-h-72 overflow-auto rounded-nexus-sm border border-nexus-accent/25 bg-nexus-card py-1 text-[13.5px] text-nexus-white shadow-xl shadow-black/40"
             >
               {suggestions.map((suggestion, index) => (
                 <div

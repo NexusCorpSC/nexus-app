@@ -1,0 +1,35 @@
+{
+  "title": "Apariencia",
+  "description": "Los colores de la interfaz, y los del fabricante de la nave que pilotas.",
+  "nexus": "Nexus",
+  "mode": {
+    "title": "Tema",
+    "ship": "Según la nave pilotada",
+    "shipHint": "En el asiento del piloto, la interfaz toma los colores del fabricante de la nave, según la telemetría del juego. En otro lugar, el tema elegido abajo.",
+    "fixed": "Siempre el mismo tema",
+    "fixedHint": "Sin cambio automático.",
+    "telemetryHint": "El cambio automático necesita la telemetría del juego (Ajustes › Juego). Sin ella, el tema elegido se aplica en todas partes."
+  },
+  "theme": {
+    "titleShip": "Tema fuera de la cabina",
+    "titleFixed": "Tema de la interfaz"
+  },
+  "options": {
+    "title": "Opciones",
+    "keepLastShip": "Mantener el tema de la última nave al salir de ella",
+    "keepLastShipHint": "Si no, la interfaz vuelve al tema elegido diez segundos después de dejar el asiento.",
+    "anySeat": "Cambiar también en torretas y puestos de tripulación",
+    "anySeatHint": "Por defecto, solo el asiento del piloto cambia el tema.",
+    "announce": "Anunciar el cambio",
+    "announceHint": "Una notificación indica el fabricante, con un botón para mantener el tema habitual en esta nave.",
+    "effects": "Motivos y halos",
+    "effectsHint": "El motivo de fondo, los halos y las escuadras en las esquinas de las tarjetas. Los colores se mantienen."
+  },
+  "saveError": "No se pudo guardar la apariencia.",
+  "switched": {
+    "title": "Tema {maker}",
+    "body": "A los mandos: {ship}.",
+    "undo": "Mantener el tema habitual"
+  },
+  "chip": "Colores de {maker}: cambiar la apariencia"
+}

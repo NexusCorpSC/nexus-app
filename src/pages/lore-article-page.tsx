@@ -74,7 +74,7 @@ export default function LoreArticlePage() {
         <Card className="space-y-3 p-5 lg:col-span-2">
           <p className="text-xs text-nexus-dim">{t("englishNote")}</p>
           {article.removedAt ? (
-            <p className="rounded-lg border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+            <p className="rounded-nexus-sm border border-amber-300/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
               {t("removed")}
             </p>
           ) : null}
@@ -97,7 +97,7 @@ export default function LoreArticlePage() {
         <div className="space-y-4">
           <LoreThumbnail
             src={article.thumbnailUrl}
-            className="w-full rounded-xl border border-nexus-accent/12 object-cover"
+            className="w-full rounded-nexus border border-nexus-accent/12 object-cover"
           />
           {article.starmap.length > 0 ? (
             <Card className="p-5">
@@ -114,7 +114,7 @@ export default function LoreArticlePage() {
                     {entry.placeSlug ? (
                       <Link
                         to={`/places/${entry.placeSlug}`}
-                        className="text-xs text-sky-300 hover:underline"
+                        className="text-xs text-nexus-accent hover:underline"
                       >
                         {t("placeLink")}
                       </Link>
@@ -132,7 +132,7 @@ export default function LoreArticlePage() {
                   <li key={entry.id}>
                     <Link
                       to={lorePath(entry.id)}
-                      className="block rounded-lg border border-nexus-accent/15 bg-[#08243a] px-2.5 py-1 text-nexus-white hover:border-nexus-accent/40"
+                      className="block rounded-nexus-sm border border-nexus-accent/15 bg-nexus-deep px-2.5 py-1 text-nexus-white hover:border-nexus-accent/40"
                     >
                       {entry.title}
                     </Link>

@@ -289,7 +289,7 @@ function PublishForm({
             rows={2}
             placeholder={t("form.notePlaceholder")}
             onChange={(event) => setNote(event.target.value)}
-            className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+            className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </Field>
       </div>

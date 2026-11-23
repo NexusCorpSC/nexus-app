@@ -135,7 +135,7 @@ export function ShareModal({
               className="min-w-0"
             />
             {(candidates.data ?? []).length > 0 ? (
-              <ul className="divide-y divide-nexus-accent/10 rounded-lg border border-nexus-accent/15">
+              <ul className="divide-y divide-nexus-accent/10 rounded-nexus-sm border border-nexus-accent/15">
                 {candidates.data!.map((candidate) => (
                   <li
                     key={candidate.userId}
@@ -182,7 +182,7 @@ export function ShareModal({
 
           <section className="flex flex-col gap-2">
             <h3 className={label}>{t("haveAccess")}</h3>
-            <ul className="divide-y divide-nexus-accent/10 rounded-lg border border-nexus-accent/15">
+            <ul className="divide-y divide-nexus-accent/10 rounded-nexus-sm border border-nexus-accent/15">
               {data?.org ? (
                 <li className="flex items-center gap-2.5 px-3 py-2 text-[13px]">
                   <span className="flex size-7 items-center justify-center rounded-full border border-violet-300/40 text-violet-200">
@@ -226,7 +226,7 @@ export function ShareModal({
                       readOnly
                       value={data.link.url}
                       onFocus={(event) => event.currentTarget.select()}
-                      className="h-9.5 min-w-0 flex-1 rounded-lg border border-cyan-300/30 bg-nexus-card px-3 font-mono text-xs text-cyan-200"
+                      className="h-9.5 min-w-0 flex-1 rounded-nexus-sm border border-cyan-300/30 bg-nexus-card px-3 font-mono text-xs text-cyan-200"
                     />
                     <Button variant="outline" onClick={() => copy(data.link!.url)}>
                       <Link2 className="size-4" />

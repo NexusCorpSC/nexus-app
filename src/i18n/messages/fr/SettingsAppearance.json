@@ -1,0 +1,35 @@
+{
+  "title": "Apparence",
+  "description": "Les couleurs de l'interface, et celles du constructeur du vaisseau que vous pilotez.",
+  "nexus": "Nexus",
+  "mode": {
+    "title": "Thème",
+    "ship": "Selon le vaisseau piloté",
+    "shipHint": "Au siège pilote, l'interface prend les couleurs du constructeur du vaisseau, d'après la télémétrie du jeu. Ailleurs, le thème choisi ci-dessous.",
+    "fixed": "Toujours le même thème",
+    "fixedHint": "Aucune bascule automatique.",
+    "telemetryHint": "La bascule automatique a besoin de la télémétrie du jeu (Paramètres › Jeu). Sans elle, le thème choisi s'applique partout."
+  },
+  "theme": {
+    "titleShip": "Thème hors du cockpit",
+    "titleFixed": "Thème de l'interface"
+  },
+  "options": {
+    "title": "Options",
+    "keepLastShip": "Garder le thème du dernier vaisseau en le quittant",
+    "keepLastShipHint": "Sinon, l'interface revient au thème choisi dix secondes après avoir quitté le siège.",
+    "anySeat": "Basculer aussi en tourelle et aux postes d'équipage",
+    "anySeatHint": "Par défaut, seul le siège pilote change le thème.",
+    "announce": "Annoncer la bascule",
+    "announceHint": "Une notification indique le constructeur, avec un bouton pour garder le thème habituel dans ce vaisseau.",
+    "effects": "Motifs et halos",
+    "effectsHint": "Le motif de fond, les halos lumineux et les équerres aux coins des cartes. Les couleurs restent."
+  },
+  "saveError": "Impossible d'enregistrer l'apparence.",
+  "switched": {
+    "title": "Thème {maker}",
+    "body": "Aux commandes : {ship}.",
+    "undo": "Garder le thème habituel"
+  },
+  "chip": "Couleurs de {maker} : modifier l'apparence"
+}

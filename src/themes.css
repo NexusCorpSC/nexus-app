@@ -1,0 +1,266 @@
+/*
+ * Interface themes, one per ship manufacturer (src/lib/themes.ts).
+ *
+ * A theme only sets a handful of seeds on <html data-theme="…">; every
+ * `--color-nexus-*` token the app is drawn with is derived from them in
+ * styles.css, so the 1 700 Tailwind classes follow without being touched.
+ *
+ *   --seed-accent    the signature colour: primary buttons, gauges, selection
+ *   --seed-accent-2  the second colour: secondary gauges and charts
+ *   --seed-tint      what the dark surfaces lean towards
+ *   --seed-ink       the brightest text
+ *   --seed-radius    corners of cards and controls (0 for the angular makers)
+ *   --seed-ticks     opacity of the HUD brackets on card corners
+ *   --seed-glow      strength of the halos around the accent
+ *   --seed-tracking  letter spacing of the uppercase labels
+ *
+ * Status colours (ready, danger, warning) are not seeds: an alert reads the
+ * same whatever the ship.
+ */
+
+:root,
+[data-theme="nexus"] {
+  --seed-accent: #62d4ff;
+  --seed-accent-2: #a594ff;
+  --seed-tint: #0b3a5a;
+  --seed-ink: #e6f4ff;
+  --seed-radius: 0.5rem;
+  --seed-ticks: 0.55;
+  --seed-glow: 0.5;
+  --seed-tracking: 0.12em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Drake: hazard yellow on gunmetal, hard corners. */
+[data-theme="drake"] {
+  --seed-accent: #ffc400;
+  --seed-accent-2: #ff6a2b;
+  --seed-tint: #2a2414;
+  --seed-ink: #f6f0de;
+  --seed-radius: 0px;
+  --seed-ticks: 0.8;
+  --seed-glow: 0.35;
+  --seed-tracking: 0.16em;
+  --seed-pattern: var(--pattern-stripes);
+}
+
+/* Argo: utility orange. */
+[data-theme="argo"] {
+  --seed-accent: #ff7a1a;
+  --seed-accent-2: #ffd166;
+  --seed-tint: #262019;
+  --seed-ink: #f3ece4;
+  --seed-radius: 0.125rem;
+  --seed-ticks: 0.7;
+  --seed-glow: 0.4;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-stripes);
+}
+
+/* Gatac (Xi'an): violet, organic, glowing. */
+[data-theme="gatac"] {
+  --seed-accent: #b98cff;
+  --seed-accent-2: #ff7ad9;
+  --seed-tint: #241237;
+  --seed-ink: #f2eaff;
+  --seed-radius: 1rem;
+  --seed-ticks: 0;
+  --seed-glow: 0.85;
+  --seed-tracking: 0.08em;
+  --seed-pattern: var(--pattern-glow);
+}
+
+/* Aopoa (Xi'an): jade, organic. */
+[data-theme="aopoa"] {
+  --seed-accent: #46e8b0;
+  --seed-accent-2: #c9ff6b;
+  --seed-tint: #0c2b26;
+  --seed-ink: #e6fff6;
+  --seed-radius: 1rem;
+  --seed-ticks: 0;
+  --seed-glow: 0.8;
+  --seed-tracking: 0.08em;
+  --seed-pattern: var(--pattern-glow);
+}
+
+/* Aegis: red on steel, military. */
+[data-theme="aegis"] {
+  --seed-accent: #ff5252;
+  --seed-accent-2: #c8d2dc;
+  --seed-tint: #1b2129;
+  --seed-ink: #eef2f6;
+  --seed-radius: 0px;
+  --seed-ticks: 0.8;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.18em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Anvil: military green. */
+[data-theme="anvil"] {
+  --seed-accent: #a6d24a;
+  --seed-accent-2: #e8c25a;
+  --seed-tint: #1b2316;
+  --seed-ink: #eef3e2;
+  --seed-radius: 0px;
+  --seed-ticks: 0.7;
+  --seed-glow: 0.4;
+  --seed-tracking: 0.18em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Roberts Space Industries: classic blue. */
+[data-theme="rsi"] {
+  --seed-accent: #4ea8ff;
+  --seed-accent-2: #e9eef5;
+  --seed-tint: #0e2340;
+  --seed-ink: #f2f6fb;
+  --seed-radius: 0.25rem;
+  --seed-ticks: 0.6;
+  --seed-glow: 0.5;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Origin: champagne, rounded, no pattern. */
+[data-theme="origin"] {
+  --seed-accent: #e9d3a0;
+  --seed-accent-2: #ffffff;
+  --seed-tint: #1d1b18;
+  --seed-ink: #faf7f0;
+  --seed-radius: 0.875rem;
+  --seed-ticks: 0;
+  --seed-glow: 0.3;
+  --seed-tracking: 0.24em;
+  --seed-pattern: none;
+}
+
+/* Crusader: sky blue, airline. */
+[data-theme="crusader"] {
+  --seed-accent: #5cc8ff;
+  --seed-accent-2: #ffe7a8;
+  --seed-tint: #122b3d;
+  --seed-ink: #f4fbff;
+  --seed-radius: 0.625rem;
+  --seed-ticks: 0;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.12em;
+  --seed-pattern: var(--pattern-dots);
+}
+
+/* MISC: industrial teal. */
+[data-theme="misc"] {
+  --seed-accent: #2fd0c4;
+  --seed-accent-2: #f2b53a;
+  --seed-tint: #0f2a2c;
+  --seed-ink: #e8fbf9;
+  --seed-radius: 0.25rem;
+  --seed-ticks: 0.5;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-dots);
+}
+
+/* Banu: brass and rose, bazaar. */
+[data-theme="banu"] {
+  --seed-accent: #e8a93a;
+  --seed-accent-2: #e85a8c;
+  --seed-tint: #2b1a22;
+  --seed-ink: #fbefe2;
+  --seed-radius: 0.75rem;
+  --seed-ticks: 0.3;
+  --seed-glow: 0.6;
+  --seed-tracking: 0.1em;
+  --seed-pattern: var(--pattern-dots);
+}
+
+/* Vanduul: blood red, aggressive. */
+[data-theme="vanduul"] {
+  --seed-accent: #ff3b46;
+  --seed-accent-2: #8a9097;
+  --seed-tint: #1a0c0e;
+  --seed-ink: #f5e9ea;
+  --seed-radius: 0px;
+  --seed-ticks: 0.9;
+  --seed-glow: 0.7;
+  --seed-tracking: 0.2em;
+  --seed-pattern: var(--pattern-stripes);
+}
+
+/* Esperia (Tevarin replicas): rose and bronze. */
+[data-theme="esperia"] {
+  --seed-accent: #ff6f91;
+  --seed-accent-2: #c9a77a;
+  --seed-tint: #2a1420;
+  --seed-ink: #fdeef2;
+  --seed-radius: 0.875rem;
+  --seed-ticks: 0.2;
+  --seed-glow: 0.6;
+  --seed-tracking: 0.12em;
+  --seed-pattern: var(--pattern-glow);
+}
+
+/* Mirai: racing neon. */
+[data-theme="mirai"] {
+  --seed-accent: #ff4fb0;
+  --seed-accent-2: #4ff0ff;
+  --seed-tint: #1d1230;
+  --seed-ink: #fff0f8;
+  --seed-radius: 0.5rem;
+  --seed-ticks: 0.4;
+  --seed-glow: 0.8;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Consolidated Outland: lime. */
+[data-theme="cnou"] {
+  --seed-accent: #9dff3c;
+  --seed-accent-2: #3ce8ff;
+  --seed-tint: #142414;
+  --seed-ink: #f1ffe6;
+  --seed-radius: 0.375rem;
+  --seed-ticks: 0.5;
+  --seed-glow: 0.6;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-dots);
+}
+
+/* Greycat: worksite yellow on blue-grey. */
+[data-theme="greycat"] {
+  --seed-accent: #f2d43a;
+  --seed-accent-2: #5b8cff;
+  --seed-tint: #1d222b;
+  --seed-ink: #f4f4ee;
+  --seed-radius: 0.25rem;
+  --seed-ticks: 0.5;
+  --seed-glow: 0.3;
+  --seed-tracking: 0.14em;
+  --seed-pattern: var(--pattern-stripes);
+}
+
+/* Kruger: copper. */
+[data-theme="kruger"] {
+  --seed-accent: #e8894a;
+  --seed-accent-2: #7fd1ff;
+  --seed-tint: #221a16;
+  --seed-ink: #fbf0e8;
+  --seed-radius: 0.25rem;
+  --seed-ticks: 0.6;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.16em;
+  --seed-pattern: var(--pattern-grid);
+}
+
+/* Tumbril: desert, military. */
+[data-theme="tumbril"] {
+  --seed-accent: #d4b06a;
+  --seed-accent-2: #8fb36a;
+  --seed-tint: #221f17;
+  --seed-ink: #f6f1e4;
+  --seed-radius: 0px;
+  --seed-ticks: 0.7;
+  --seed-glow: 0.3;
+  --seed-tracking: 0.18em;
+  --seed-pattern: var(--pattern-stripes);
+}

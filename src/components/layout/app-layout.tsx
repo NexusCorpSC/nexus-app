@@ -28,6 +28,7 @@ import {
 } from "@/lib/overlay-opacity";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
+import { RailThemeChip } from "@/components/theme/rail-theme-chip";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
 import { useContribWatcher } from "@/hooks/use-contrib-watcher";
 import { useInvitationsWatcher } from "@/hooks/use-invitations-watcher";
@@ -69,7 +70,7 @@ const NAVIGATE_EVENT = "main://navigate";
 
 function railButtonClass(isActive: boolean) {
   return cn(
-    "relative flex w-[60px] flex-col items-center gap-1 rounded-[10px] border px-1 py-2 transition-colors",
+    "relative flex w-[60px] flex-col items-center gap-1 rounded-nexus-sm border px-1 py-2 transition-colors",
     isActive
       ? "border-nexus-accent/22 bg-nexus-accent/14 text-nexus-white"
       : "border-transparent text-nexus-accent/65 hover:bg-nexus-accent/8 hover:text-nexus-bright",
@@ -263,7 +264,7 @@ export default function AppLayout() {
           to="/home"
           title="NEXUS — Star Citizen Tools"
           aria-label={t("nav.home")}
-          className="mb-1 flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform hover:scale-105"
+          className="mb-1 flex size-9 shrink-0 items-center justify-center rounded-nexus transition-transform hover:scale-105"
         >
           <img src={nexusLogo} alt="" className="size-8 shrink-0" />
         </NavLink>
@@ -272,7 +273,7 @@ export default function AppLayout() {
           type="button"
           onClick={() => open("overlay")}
           title={t("searchWithShortcut", { shortcut: searchShortcut })}
-          className="mb-0.5 flex w-[60px] flex-col items-center gap-1 rounded-[10px] border border-nexus-accent/14 bg-nexus-accent/6 px-1 py-2 text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:bg-nexus-accent/12 hover:text-nexus-white"
+          className="mb-0.5 flex w-[60px] flex-col items-center gap-1 rounded-nexus-sm border border-nexus-accent/14 bg-nexus-accent/6 px-1 py-2 text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:bg-nexus-accent/12 hover:text-nexus-white"
         >
           <Search className="size-[16px]" />
           <span className="text-center text-[10.5px] leading-[1.1] font-medium">
@@ -342,6 +343,7 @@ export default function AppLayout() {
         <div className="flex-1" />
 
         <div className="flex flex-col items-center gap-1.5">
+          <RailThemeChip />
           {loading ? (
             <div
               title={t("sessionLoading")}
@@ -373,7 +375,7 @@ export default function AppLayout() {
             title={t("settings")}
             className={({ isActive }) =>
               cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                "flex size-8 shrink-0 items-center justify-center rounded-nexus-sm border transition-colors",
                 isActive
                   ? "border-nexus-accent/24 bg-nexus-accent/15 text-nexus-white"
                   : "border-transparent text-nexus-accent/65 hover:bg-nexus-accent/8 hover:text-nexus-bright",
@@ -392,7 +394,7 @@ export default function AppLayout() {
           className="flex w-[216px] shrink-0 flex-col border-r border-nexus-accent/9 bg-nexus-night px-3 py-4"
         >
           <div className="mb-3 border-b border-nexus-accent/8 px-2 pb-3">
-            <h2 className="font-display text-[13px] font-bold tracking-[0.06em] text-nexus-white uppercase">
+            <h2 className="nexus-label text-[13px] font-bold text-nexus-white">
               {t(`groups.${activeGroup.id}`)}
             </h2>
             <p className="mt-1 text-[11.5px] leading-snug text-nexus-dim">
@@ -445,7 +447,7 @@ export default function AppLayout() {
           </div>
 
           <div className="mt-3 flex flex-col gap-1.5 border-t border-nexus-accent/8 pt-3">
-            <p className="px-1 font-display text-[10px] font-semibold tracking-[0.12em] text-nexus-dim uppercase">
+            <p className="nexus-label px-1 text-[10px] font-semibold text-nexus-dim">
               {t("overlaysDrawer.quickAccess")}
             </p>
             <div className="grid grid-cols-2 gap-1.5">
@@ -457,7 +459,7 @@ export default function AppLayout() {
                     type="button"
                     onClick={() => open(label)}
                     title={t("showOverlay", { name })}
-                    className="flex h-8.5 items-center justify-center gap-1.5 rounded-lg border border-nexus-accent/15 bg-nexus-accent/7 px-1.5 text-[11.5px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/14 hover:text-nexus-white"
+                    className="flex h-8.5 items-center justify-center gap-1.5 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/7 px-1.5 text-[11.5px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/14 hover:text-nexus-white"
                   >
                     <Icon className="size-3.5 shrink-0 text-nexus-accent" />
                     <span className="truncate">{name}</span>
@@ -469,7 +471,7 @@ export default function AppLayout() {
         </aside>
       ) : null}
 
-      <main ref={mainRef} className="flex-1 overflow-y-auto">
+      <main ref={mainRef} className="nexus-backdrop flex-1 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-6 py-6 xl:px-10 xl:py-8">
           <Outlet />
         </div>
@@ -483,7 +485,7 @@ function ActiveRailBar() {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute top-2.5 bottom-2.5 -left-[7px] w-[3px] rounded-r-full bg-nexus-accent shadow-[0_0_10px_rgba(158,208,255,0.65)]"
+      className="pointer-events-none absolute top-2.5 bottom-2.5 -left-[7px] w-[3px] rounded-r-full nexus-glow bg-nexus-accent"
     />
   );
 }

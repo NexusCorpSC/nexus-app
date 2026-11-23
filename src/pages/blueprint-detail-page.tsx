@@ -115,7 +115,7 @@ export default function BlueprintDetailPage() {
           {blueprint.imageUrl || blueprint.description ? (
             <Card className="overflow-hidden">
               {blueprint.imageUrl ? (
-                <div className="h-48 bg-[#08243a]">
+                <div className="h-48 bg-nexus-deep">
                   <img
                     src={blueprint.imageUrl}
                     alt=""

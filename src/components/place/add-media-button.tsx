@@ -217,7 +217,7 @@ function AddMediaModal({
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            className="block w-full text-[13px] text-nexus-muted file:mr-3 file:rounded-lg file:border file:border-nexus-accent/25 file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-nexus-bright hover:file:bg-nexus-accent/8"
+            className="block w-full text-[13px] text-nexus-muted file:mr-3 file:rounded-nexus-sm file:border file:border-nexus-accent/25 file:bg-transparent file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-nexus-bright hover:file:bg-nexus-accent/8"
           />
         )}
 
@@ -225,7 +225,7 @@ function AddMediaModal({
           <img
             src={preview}
             alt={t("previewAlt")}
-            className="max-h-64 w-full rounded-lg border border-nexus-accent/12 bg-nexus-abyss object-contain"
+            className="max-h-64 w-full rounded-nexus-sm border border-nexus-accent/12 bg-nexus-abyss object-contain"
           />
         ) : null}
 

@@ -39,7 +39,7 @@ export function SettingsCardTitle({ children }: { children: ReactNode }) {
 /** A failure the user has to read: shown in place, never only logged. */
 export function SettingsError({ children }: { children: ReactNode }) {
   return (
-    <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
+    <p className="rounded-nexus-sm border border-red-400/30 bg-red-500/10 p-3 text-xs text-red-200">
       {children}
     </p>
   );

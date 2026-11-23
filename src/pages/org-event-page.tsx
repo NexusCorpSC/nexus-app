@@ -229,7 +229,7 @@ export default function OrgEventPage() {
       </header>
 
       {view.guest ? (
-        <div className="mb-6 flex items-center gap-3 rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-[13px]">
+        <div className="mb-6 flex items-center gap-3 rounded-nexus border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-[13px]">
           {view.guest === "link" ? (
             <Link2 className="size-4.5 shrink-0 text-cyan-200" />
           ) : (
@@ -298,7 +298,7 @@ function DateBlock({ startsAt }: { startsAt: string }) {
   return (
     <div
       aria-hidden="true"
-      className="flex w-16 shrink-0 flex-col items-center rounded-xl border border-nexus-accent/30 bg-nexus-panel py-1.5"
+      className="flex w-16 shrink-0 flex-col items-center rounded-nexus border border-nexus-accent/30 bg-nexus-panel py-1.5"
     >
       <span className="text-[11px] font-semibold text-nexus-accent uppercase">
         {dateFormat({ month: "short" }).format(date)}
@@ -633,7 +633,7 @@ function RegistrationPanel({
           <button
             type="button"
             onClick={() => void showOverlay("squad")}
-            className="flex items-center gap-2 rounded-lg bg-emerald-400/10 px-3 py-2.5 text-left text-[13px] text-emerald-100 transition-colors hover:bg-emerald-400/18"
+            className="flex items-center gap-2 rounded-nexus-sm bg-emerald-400/10 px-3 py-2.5 text-left text-[13px] text-emerald-100 transition-colors hover:bg-emerald-400/18"
           >
             <Users className="size-4 shrink-0" />
             {t("squadReady")}
@@ -641,7 +641,7 @@ function RegistrationPanel({
         ) : null}
 
         {shownAsPlanned ? (
-          <p className="rounded-lg bg-nexus-abyss/70 px-3 py-2.5 text-[13px] text-amber-200">
+          <p className="rounded-nexus-sm bg-nexus-abyss/70 px-3 py-2.5 text-[13px] text-amber-200">
             {t("shownAsPlanned")}
           </p>
         ) : (
@@ -651,7 +651,7 @@ function RegistrationPanel({
             onClick={() =>
               plan.mutate({ event: { orgId: event.orgId, eventId: event.id } })
             }
-            className="flex w-full items-center gap-2 rounded-lg border border-dashed border-amber-300/45 px-3 py-2.5 text-left text-[13px] text-amber-200 transition-colors hover:border-amber-300 disabled:opacity-50"
+            className="flex w-full items-center gap-2 rounded-nexus-sm border border-dashed border-amber-300/45 px-3 py-2.5 text-left text-[13px] text-amber-200 transition-colors hover:border-amber-300 disabled:opacity-50"
           >
             <CalendarClock className="size-4 shrink-0" />
             {t("showAsPlanned")}
@@ -708,7 +708,7 @@ function RegistrationPanel({
                   <label
                     key={candidate.id}
                     className={cn(
-                      "flex min-h-14 cursor-pointer flex-col items-start gap-1 rounded-lg border px-2.5 py-2 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-nexus-accent",
+                      "flex min-h-14 cursor-pointer flex-col items-start gap-1 rounded-nexus-sm border px-2.5 py-2 transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-nexus-accent",
                       checked
                         ? "border-nexus-accent bg-nexus-accent/14"
                         : "border-nexus-accent/18 hover:border-nexus-accent/45",
@@ -768,7 +768,7 @@ function RegistrationPanel({
                   [question.id]: changed.target.value,
                 }))
               }
-              className="w-full resize-y rounded-lg border border-nexus-accent/15 bg-nexus-abyss px-3 py-2 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+              className="w-full resize-y rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss px-3 py-2 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </label>
         ))}

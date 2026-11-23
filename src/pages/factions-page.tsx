@@ -130,7 +130,7 @@ function FactionCard({
             <li key={blueprint._id}>
               <Link
                 to={`/blueprints/${blueprint.slug}`}
-                className="group flex items-center gap-2 rounded-lg border border-nexus-accent/8 bg-[#08243a] px-3 py-2 transition-colors hover:border-nexus-accent/35"
+                className="group flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/8 bg-nexus-deep px-3 py-2 transition-colors hover:border-nexus-accent/35"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-nexus-white">

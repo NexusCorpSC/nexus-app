@@ -227,14 +227,14 @@ export function NoteEditor({
         autoFocus={autoFocus}
         spellCheck={false}
         className={cn(
-          "min-h-0 flex-1 resize-none rounded-lg border border-nexus-accent/20 bg-nexus-deep/40 p-3 font-mono text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-nexus-accent/50",
+          "min-h-0 flex-1 resize-none rounded-nexus-sm border border-nexus-accent/20 bg-nexus-deep/40 p-3 font-mono text-sm text-nexus-white outline-none placeholder:text-nexus-dim focus:border-nexus-accent/50",
           textareaClassName,
         )}
       />
 
       {error && <p className="text-xs text-rose-300">{error}</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-nexus-dim">
         <span aria-live="polite">{statusLabel}</span>
 
         <div className="flex items-center gap-3">

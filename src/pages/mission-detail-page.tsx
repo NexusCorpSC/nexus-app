@@ -65,7 +65,7 @@ export default function MissionDetailPage() {
       <BackLink to="/missions">{t("detail.back")}</BackLink>
 
       {mission.missionType ? (
-        <p className="mb-1 text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+        <p className="mb-1 text-[10.5px] font-semibold tracking-wider text-nexus-accent/80 uppercase">
           {mission.missionType}
         </p>
       ) : null}
@@ -120,7 +120,7 @@ export default function MissionDetailPage() {
                   <Link
                     key={blueprint._id}
                     to={`/blueprints/${blueprint.slug}`}
-                    className="flex items-start gap-2.5 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
+                    className="flex items-start gap-2.5 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
                   >
                     <Box className="mt-0.5 size-4 shrink-0 text-violet-300" />
                     <div className="min-w-0 flex-1">
@@ -181,7 +181,7 @@ function OwnershipPill({ owned }: { owned: boolean }) {
       {t("owned")}
     </span>
   ) : (
-    <span className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-medium text-nexus-dim">
+    <span className="shrink-0 rounded-full border border-nexus-accent/10 bg-nexus-accent/5 px-2 py-0.5 text-[11px] font-medium text-nexus-dim">
       {t("notOwned")}
     </span>
   );

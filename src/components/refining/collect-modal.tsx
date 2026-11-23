@@ -185,7 +185,7 @@ export function CollectModal({
       }
     >
       <div className="space-y-4">
-        <p className="flex items-start gap-2.5 rounded-lg border border-dashed border-nexus-accent/25 px-3 py-2.5 text-[13px] text-nexus-soft/85">
+        <p className="flex items-start gap-2.5 rounded-nexus-sm border border-dashed border-nexus-accent/25 px-3 py-2.5 text-[13px] text-nexus-soft/85">
           <Camera className="mt-0.5 size-4 shrink-0 text-nexus-accent" />
           {captured && captured.length > 0
             ? t("collectFromCapture")
@@ -193,7 +193,7 @@ export function CollectModal({
         </p>
 
         {job.content ? (
-          <p className="rounded-lg border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
+          <p className="rounded-nexus-sm border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
             {t("legacyContent", { content: job.content })}
           </p>
         ) : null}
@@ -215,7 +215,7 @@ export function CollectModal({
               onChange={setLocation}
               placeholder={job.location || t("refineryPlaceholder")}
               aria-label={t("collectLocation")}
-              className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+              className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
             <p className="text-xs text-nexus-dim">{t("collectLocationHint")}</p>
           </div>
@@ -246,7 +246,7 @@ export function CollectModal({
         </label>
 
         {collect.error ? (
-          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
+          <p className="rounded-nexus-sm bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
             {refiningErrorMessage(collect.error, "errorCollect")}
           </p>
         ) : null}

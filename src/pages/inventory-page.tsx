@@ -220,7 +220,7 @@ export default function InventoryPage() {
               to="/inventory/parcels"
               title={t("parcelsLink")}
               aria-label={t("parcelsLink")}
-              className="inline-flex h-9.5 w-9.5 items-center justify-center rounded-lg text-nexus-accent/80 transition-colors hover:bg-nexus-accent/10 hover:text-nexus-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+              className="inline-flex h-9.5 w-9.5 items-center justify-center rounded-nexus-sm text-nexus-accent/80 transition-colors hover:bg-nexus-accent/10 hover:text-nexus-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
             >
               <Inbox className="size-4.5" />
             </Link>
@@ -233,7 +233,7 @@ export default function InventoryPage() {
             </Button>
             <Link
               to="/inventory/quick-add"
-              className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent bg-nexus-accent px-4 text-[13px] font-semibold text-nexus-abyss transition-colors hover:bg-nexus-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+              className="inline-flex h-9.5 items-center gap-2 rounded-nexus-sm border border-nexus-accent bg-nexus-accent px-4 text-[13px] font-semibold text-nexus-abyss transition-colors hover:bg-nexus-bright focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
             >
               <Table2 className="size-4" />
               {t("quickAdd")}
@@ -542,7 +542,7 @@ function NewItemForm({
               held={heldNames}
               placeholder={t("form.namePlaceholder")}
               onChange={setName}
-              className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+              className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </Field>
           <Field label={t("form.quantity")}>
@@ -582,7 +582,7 @@ function NewItemForm({
               placeholder={t("form.locationPlaceholder")}
               invalid={locationMissing}
               className={cn(
-                "w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none",
+                "w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none",
                 locationMissing && "border-red-400/60",
               )}
             />

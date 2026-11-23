@@ -27,7 +27,7 @@ import type { NpsBody, NpsPlace, PlacePosition } from "@/types/nexus";
 import type { Marker } from "@/types/markers";
 
 const SELECT =
-  "min-w-0 w-full rounded-lg border border-white/15 bg-black/40 px-1.5 py-1 text-[12px] text-slate-100 focus:border-sky-300/50 focus:outline-none disabled:opacity-40";
+  "min-w-0 w-full rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-1.5 py-1 text-[12px] text-nexus-white focus:border-nexus-accent/50 focus:outline-none disabled:opacity-40";
 
 /** The orbital stations turn with their body: recomputed now and then. */
 const REFRESH_MS = 60 * 1000;
@@ -238,14 +238,14 @@ export function QuantumRoutePanel({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-lg border border-white/10 px-2 py-1.5 text-[12px]">
-        <p className="text-[11px] uppercase tracking-wide text-slate-400">
+      <div className="rounded-nexus-sm border border-nexus-accent/10 px-2 py-1.5 text-[12px]">
+        <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
           {t("target")}
         </p>
         {aim ? (
-          <p className="truncate text-slate-100">{aim.name}</p>
+          <p className="truncate text-nexus-white">{aim.name}</p>
         ) : (
-          <p className="text-slate-400">{t("noTarget")}</p>
+          <p className="text-nexus-muted">{t("noTarget")}</p>
         )}
         {aim && !target && data.data ? (
           <p className="text-[11px] text-amber-200">{t("unknownBody")}</p>
@@ -281,7 +281,7 @@ export function QuantumRoutePanel({
             type="button"
             onClick={applyPasted}
             disabled={locked || !pastedPoint}
-            className="rounded-lg border border-white/15 bg-white/5 px-2 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+            className="rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
           >
             {t("pasteUse")}
           </button>
@@ -293,7 +293,7 @@ export function QuantumRoutePanel({
 
       {target && qtSystem && plan?.kind !== "surface" ? (
         <label className="min-w-0 space-y-0.5">
-          <span className="text-[11px] text-slate-400">{t("from")}</span>
+          <span className="text-[11px] text-nexus-muted">{t("from")}</span>
           <select
             value={fromBeacon ? fromBeacon.id : useHere ? ME : ""}
             disabled={locked}
@@ -317,8 +317,8 @@ export function QuantumRoutePanel({
       ) : null}
 
       {plan?.kind === "surface" ? (
-        <section className="space-y-1.5 rounded-lg border border-sky-300/30 bg-sky-300/5 p-2.5 text-[12px]">
-          <p className="text-slate-300">
+        <section className="space-y-1.5 rounded-nexus-sm border border-nexus-accent/30 bg-nexus-accent/5 p-2.5 text-[12px]">
+          <p className="text-nexus-soft">
             {t("surface.intro", {
               body: plan.surface.body.name,
               altitude: distance(Math.max(0, plan.surface.altitude)),
@@ -326,14 +326,14 @@ export function QuantumRoutePanel({
           </p>
           {plan.surface.places.length > 0 ? (
             <>
-              <p className="text-slate-100">
+              <p className="text-nexus-white">
                 {t("surface.jumpTo", {
                   place: plan.surface.places[0].place.name,
                   distance: distance(plan.surface.places[0].distance),
                 })}
               </p>
               {plan.surface.places.slice(1, 3).map(({ place, distance: d }) => (
-                <p key={place.slug} className="text-[11px] text-slate-400">
+                <p key={place.slug} className="text-[11px] text-nexus-muted">
                   {t("surface.other", {
                     place: place.name,
                     distance: distance(d),
@@ -342,7 +342,7 @@ export function QuantumRoutePanel({
               ))}
             </>
           ) : (
-            <p className="text-slate-100">
+            <p className="text-nexus-white">
               {t("surface.jumpToBody", {
                 body: plan.surface.body.name,
                 distance: distance(plan.surface.fromOrbit),
@@ -354,8 +354,8 @@ export function QuantumRoutePanel({
 
       {plan?.kind === "space" ? (
         selected ? (
-          <section className="space-y-1.5 rounded-lg border border-sky-300/30 bg-sky-300/5 p-2.5">
-            <p className="text-[12px] text-slate-300">
+          <section className="space-y-1.5 rounded-nexus-sm border border-nexus-accent/30 bg-nexus-accent/5 p-2.5">
+            <p className="text-[12px] text-nexus-soft">
               {selected.from
                 ? t("routeLine", {
                     from: selected.from.name,
@@ -365,29 +365,29 @@ export function QuantumRoutePanel({
             </p>
             {selected.cut ? (
               <>
-                <p className="text-[11px] uppercase tracking-wide text-slate-400">
+                <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
                   {t("cutAt")}
                 </p>
-                <p className="font-mono text-4xl font-semibold tracking-wide text-sky-50">
+                <p className="font-mono text-4xl font-semibold tracking-wide text-nexus-white">
                   {distance(selected.remaining)}
                 </p>
-                <p className="text-[12px] text-slate-300">
+                <p className="text-[12px] text-nexus-soft">
                   {t("remaining", { to: selected.to.name })}
                 </p>
               </>
             ) : (
-              <p className="text-[13px] font-medium text-sky-50">
+              <p className="text-[13px] font-medium text-nexus-white">
                 {t("goToEnd", { to: selected.to.name })}
               </p>
             )}
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-nexus-muted">
               {t("expected", {
                 error: distance(selected.error),
                 offset: distance(selected.offset),
               })}
             </p>
             {selected.from && !fromBeacon && selected.cut ? (
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-nexus-muted">
                 {t("goFirst", { from: selected.from.name })}
               </p>
             ) : null}
@@ -399,7 +399,7 @@ export function QuantumRoutePanel({
 
       {others.length > 0 ? (
         <div className="space-y-1">
-          <p className="text-[11px] uppercase tracking-wide text-slate-400">
+          <p className="text-[11px] uppercase tracking-wide text-nexus-muted">
             {t("others")}
           </p>
           {others.map((candidate) => (
@@ -408,14 +408,14 @@ export function QuantumRoutePanel({
               type="button"
               disabled={locked}
               onClick={() => setChosen(candidateKey(candidate))}
-              className="flex w-full items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-2 py-1 text-left text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+              className="flex w-full items-center justify-between gap-2 rounded-nexus-sm border border-nexus-accent/10 bg-nexus-accent/5 px-2 py-1 text-left text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
             >
-              <span className="truncate text-slate-200">
+              <span className="truncate text-nexus-bright">
                 {candidate.cut && candidate.from
                   ? `${candidate.from.name} → ${candidate.to.name}`
                   : candidate.to.name}
               </span>
-              <span className="shrink-0 font-mono text-[11px] text-slate-300">
+              <span className="shrink-0 font-mono text-[11px] text-nexus-soft">
                 {candidate.cut ? distance(candidate.remaining) : t("end")} · ±
                 {distance(candidate.error)}
               </span>
@@ -425,8 +425,8 @@ export function QuantumRoutePanel({
       ) : null}
 
       {target ? (
-        <div className="space-y-1 rounded-lg border border-white/10 px-2 py-1.5 text-[12px]">
-          <p className="text-slate-200">
+        <div className="space-y-1 rounded-nexus-sm border border-nexus-accent/10 px-2 py-1.5 text-[12px]">
+          <p className="text-nexus-bright">
             {distanceNow !== null
               ? t("distanceNow", { distance: distance(distanceNow) })
               : t("noPosition")}
@@ -438,7 +438,7 @@ export function QuantumRoutePanel({
                 console.error("cannot open the NPS", error),
               )
             }
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10"
+            className="flex w-full items-center justify-center gap-1.5 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10"
           >
             <Compass className="size-3.5" />
             {t("openNps")}
@@ -446,7 +446,7 @@ export function QuantumRoutePanel({
         </div>
       ) : null}
 
-      <p className="text-[10px] text-slate-500">
+      <p className="text-[10px] text-nexus-dim">
         {t("precision", {
           share: Math.round(CUT_ERROR_SHARE * 100),
           max: distance(CUT_ERROR_MAX),

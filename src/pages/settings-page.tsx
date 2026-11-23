@@ -8,6 +8,7 @@ import { ShortcutsSection } from "@/components/settings/shortcuts-section";
 import { NotificationsSection } from "@/components/settings/notifications-section";
 import { UpdatesSection } from "@/components/settings/updates-section";
 import { GameSection } from "@/components/settings/game-section";
+import { AppearanceSection } from "@/components/settings/appearance-section";
 
 /**
  * The rubriques, in the order of the sub-navigation. The key is what goes in
@@ -19,6 +20,7 @@ import { GameSection } from "@/components/settings/game-section";
  */
 const SECTIONS = [
   { key: "general", Component: GeneralSection },
+  { key: "appearance", Component: AppearanceSection },
   { key: "account", Component: AccountSection },
   { key: "shortcuts", Component: ShortcutsSection },
   { key: "notifications", Component: NotificationsSection },
@@ -73,7 +75,7 @@ export default function SettingsPage() {
                 aria-current={isActive ? "page" : undefined}
                 onClick={() => select(section.key)}
                 className={cn(
-                  "rounded-lg px-3 py-2 text-left text-[13.5px] transition-colors",
+                  "rounded-nexus-sm px-3 py-2 text-left text-[13.5px] transition-colors",
                   isActive
                     ? "bg-nexus-accent/13 font-medium text-nexus-white"
                     : "text-nexus-accent/70 hover:bg-nexus-accent/6 hover:text-nexus-accent",

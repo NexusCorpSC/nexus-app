@@ -27,12 +27,12 @@ export function MissionCard({ mission }: { mission: Mission }) {
   return (
     <Link
       to={`/missions/${mission._id}`}
-      className="flex flex-col gap-2 rounded-xl border border-nexus-accent/12 bg-nexus-card p-4 transition-colors hover:border-nexus-accent/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+      className="flex flex-col gap-2 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-4 transition-colors hover:border-nexus-accent/35 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {mission.missionType ? (
-            <p className="text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+            <p className="text-[10.5px] font-semibold tracking-wider text-nexus-accent/80 uppercase">
               {mission.missionType}
             </p>
           ) : null}
@@ -49,9 +49,9 @@ export function MissionCard({ mission }: { mission: Mission }) {
         </p>
       ) : null}
 
-      <div className="mt-auto flex flex-wrap gap-3 border-t border-white/5 pt-2 text-xs">
+      <div className="mt-auto flex flex-wrap gap-3 border-t border-nexus-accent/5 pt-2 text-xs">
         {mission.faction?.name ? (
-          <span className="inline-flex items-center gap-1 text-sky-300">
+          <span className="inline-flex items-center gap-1 text-nexus-accent">
             <Flag className="size-3.5" />
             {mission.faction.name}
           </span>

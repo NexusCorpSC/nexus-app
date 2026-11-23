@@ -4,6 +4,7 @@
   "sectionsLabel": "Settings sections",
   "sections": {
     "general": "General",
+    "appearance": "Appearance",
     "account": "Account",
     "shortcuts": "Keyboard shortcuts",
     "notifications": "Notifications",

@@ -11,7 +11,7 @@ type Tone = "warn" | "info" | "ok" | "bad" | "dim";
 
 const TONE_CLASSES: Record<Tone, string> = {
   warn: "bg-amber-400/12 text-amber-300",
-  info: "bg-sky-400/12 text-sky-300",
+  info: "bg-nexus-accent/12 text-nexus-accent",
   ok: "bg-emerald-400/12 text-emerald-300",
   bad: "bg-red-400/12 text-red-300",
   dim: "bg-nexus-accent/8 text-nexus-muted",

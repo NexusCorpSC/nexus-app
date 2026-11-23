@@ -165,7 +165,7 @@ export function JobModal({
                 job && !job.locationId ? job.location : t("refineryPlaceholder")
               }
               aria-label={t("refinery")}
-              className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+              className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
             />
           </div>
           <Field label={`${t("method")} ${t("optional")}`}>
@@ -228,7 +228,7 @@ export function JobModal({
             {t("expectedMaterials")}
           </span>
           {job?.content ? (
-            <p className="rounded-lg border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
+            <p className="rounded-nexus-sm border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
               {t("legacyContent", { content: job.content })}
             </p>
           ) : null}
@@ -246,7 +246,7 @@ export function JobModal({
         </Field>
 
         {save.error ? (
-          <p className="rounded-lg bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
+          <p className="rounded-nexus-sm bg-red-500/10 px-3 py-2 text-[13px] text-red-300">
             {refiningErrorMessage(save.error, "errorSave")}
           </p>
         ) : null}
