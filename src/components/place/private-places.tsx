@@ -87,7 +87,7 @@ export function PrivatePlacesSection({
         {t("private.section", { count: places.length })}
       </p>
       <ul
-        className="divide-y overflow-hidden rounded-nexus border bg-nexus-card/60"
+        className="nexus-ticks divide-y overflow-hidden rounded-nexus border bg-nexus-card/60"
         style={{ borderColor: `${PRIVATE_ACCENT}40` }}
       >
         {places.map((place) => (

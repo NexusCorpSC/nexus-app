@@ -172,7 +172,7 @@ export function PackagePanel({
   ];
 
   return (
-    <aside className="sticky top-4 w-72 shrink-0 space-y-3 self-start rounded-nexus border border-nexus-accent/25 bg-nexus-card p-4 shadow-lg shadow-black/20">
+    <aside className="nexus-ticks sticky top-4 w-72 shrink-0 space-y-3 self-start rounded-nexus border border-nexus-accent/25 bg-nexus-card p-4 shadow-lg shadow-black/20">
       <div className="flex items-center gap-2">
         <Package className="size-4.5 text-nexus-accent" />
         <h2 className="font-display text-sm font-semibold text-nexus-white">
@@ -353,7 +353,7 @@ function SentParcelBody({ parcel }: { parcel: Parcel }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-4 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-5">
+      <div className="nexus-ticks flex flex-col items-center gap-4 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-5">
         <p
           aria-label={t("sent.codeLabel", { code: parcel.code })}
           className="flex items-center gap-1.5"
@@ -482,7 +482,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
     const { parcel: received, created, merged } = accept.data;
     return (
       <div className="space-y-4">
-        <div className="flex items-start gap-3 rounded-nexus border border-emerald-400/30 bg-emerald-500/10 p-4">
+        <div className="nexus-ticks flex items-start gap-3 rounded-nexus border border-emerald-400/30 bg-emerald-500/10 p-4">
           <Check className="mt-0.5 size-5 shrink-0 text-emerald-300" />
           <div>
             <p className="text-sm font-semibold text-nexus-white">
@@ -549,7 +549,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
 
       {parcel ? (
         <>
-          <div className="space-y-3 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-4">
+          <div className="nexus-ticks space-y-3 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-4">
             <p className="text-[13px] text-nexus-bright">
               {t("receive.from", {
                 sender: parcel.senderName ?? t("receive.someoneStart"),

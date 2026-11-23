@@ -72,7 +72,7 @@ export function LoreArticleCard({ article }: { article: LoreArticleSummary }) {
   return (
     <Link
       to={lorePath(article.id)}
-      className="group flex gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
+      className="nexus-ticks group flex gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
     >
       <LoreThumbnail
         src={article.thumbnailUrl}

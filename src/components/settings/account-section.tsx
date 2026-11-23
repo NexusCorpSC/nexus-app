@@ -132,7 +132,7 @@ function ContribCard() {
         ) : data ? (
           <>
             <div className="flex items-center gap-4">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-nexus border-2 border-nexus-accent/60 font-mono text-lg font-bold text-nexus-bright">
+              <span className="nexus-ticks flex size-14 shrink-0 items-center justify-center rounded-nexus border-2 border-nexus-accent/60 font-mono text-lg font-bold text-nexus-bright">
                 {t("levelBadge", { level: data.level })}
               </span>
               <div className="min-w-0 flex-1 space-y-1.5">

@@ -124,6 +124,11 @@ toutes les fenêtres changent ensemble. Réglages dans **Paramètres › Apparen
 : garder le thème du dernier vaisseau, basculer aussi en tourelle, ou choisir
 un thème fixe.
 
+Certains constructeurs changent aussi de forme et de matière : Origin passe
+en marbre clair, bleu et filets d'or ; Gatac en géométrie à coins coupés et
+boutons obliques ; Mirai en néons cyberpunk ; Banu en or, bronze oxydé et
+motifs de tapis.
+
 ### Nexus Chat, à la voix
 
 <img src="docs/images/nexus-chat-superposition.png" alt="Nexus Chat en superposition" width="300" align="right" />
