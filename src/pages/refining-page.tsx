@@ -128,7 +128,7 @@ export default function RefiningPage() {
       />
 
       {capture && !collecting && ready.length > 0 ? (
-        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-nexus-accent/25 bg-nexus-card px-4 py-3 text-[13px] text-nexus-bright">
+        <div className="mb-4 flex flex-wrap items-center gap-2 rounded-nexus border border-nexus-accent/25 bg-nexus-card px-4 py-3 text-[13px] text-nexus-bright">
           <Camera className="size-4 text-nexus-accent" />
           <span className="mr-auto">{t("captureWhich")}</span>
           {ready.map((job) => (
@@ -174,7 +174,7 @@ export default function RefiningPage() {
           </dl>
 
           {list.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-nexus-accent/20 px-6 py-10 text-center">
+            <div className="rounded-nexus border border-dashed border-nexus-accent/20 px-6 py-10 text-center">
               <FlaskConical className="mx-auto size-8 text-nexus-accent/60" />
               <p className="mt-3 font-medium text-nexus-white">
                 {t("emptyTitle")}
@@ -239,7 +239,7 @@ function Stat({
   ready?: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-nexus-accent/12 bg-nexus-card px-3 py-2.5">
+    <div className="rounded-nexus-sm border border-nexus-accent/12 bg-nexus-card px-3 py-2.5">
       <dt className="font-mono text-[10.5px] tracking-[0.12em] text-nexus-muted uppercase">
         {label}
       </dt>
@@ -295,7 +295,7 @@ function JobCard({
   return (
     <article
       className={cn(
-        "flex min-w-0 flex-col gap-3 rounded-xl border bg-nexus-card p-4",
+        "flex min-w-0 flex-col gap-3 rounded-nexus border bg-nexus-card p-4",
         finished
           ? "border-emerald-300/45 shadow-[inset_0_0_0_1px_rgba(110,231,183,0.12)]"
           : "border-nexus-accent/12",
@@ -396,7 +396,7 @@ function JobCard({
           </tfoot>
         </table>
       ) : (
-        <p className="rounded-lg border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
+        <p className="rounded-nexus-sm border border-dashed border-nexus-accent/25 px-3 py-2 text-[13px] text-nexus-soft">
           {t("legacyContent", { content: job.content ?? "" })}
           <span className="mt-0.5 block text-xs text-nexus-dim">
             {t("legacyHint")}

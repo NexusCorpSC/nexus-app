@@ -126,7 +126,7 @@ export function PrivatePlaceDetail({ place }: { place: PrivatePlace }) {
 
       {place.proposal?.status === "pending" ? (
         <p
-          className="mb-4 rounded-lg border px-3 py-2 text-xs"
+          className="mb-4 rounded-nexus-sm border px-3 py-2 text-xs"
           style={{
             color: PRIVATE_ACCENT,
             borderColor: `${PRIVATE_ACCENT}40`,

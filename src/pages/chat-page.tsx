@@ -156,8 +156,8 @@ export default function ChatPage() {
       ) : !granted ? (
         <ChatAccessPanel status={status} onStatus={setStatus} />
       ) : (
-        <div className="flex h-[calc(100vh-12rem)] min-h-[26rem] overflow-hidden rounded-2xl border border-[#8cbeff]/18 bg-[#0a2340]/92 shadow-[0_24px_80px_rgb(0_0_0/0.45),0_0_60px_rgb(58_160_220/0.1)]">
-          <aside className="flex w-60 shrink-0 flex-col border-r border-[#8cbeff]/18 bg-[#061427]/50">
+        <div className="flex h-[calc(100vh-12rem)] min-h-[26rem] overflow-hidden rounded-2xl border border-nexus-accent/18 bg-nexus-night/92 shadow-[0_24px_80px_rgb(0_0_0/0.45),0_0_60px_rgb(58_160_220/0.1)]">
+          <aside className="flex w-60 shrink-0 flex-col border-r border-nexus-accent/18 bg-nexus-abyss/50">
             <nav
               aria-label={t("conversations")}
               className="min-h-0 flex-1 overflow-y-auto p-2"
@@ -170,7 +170,7 @@ export default function ChatPage() {
                 onDelete={(id) => void remove(id)}
               />
             </nav>
-            <div className="border-t border-[#8cbeff]/18 p-3">
+            <div className="border-t border-nexus-accent/18 p-3">
               <ChatBudget status={status} showReset />
             </div>
           </aside>

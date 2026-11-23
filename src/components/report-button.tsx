@@ -123,7 +123,7 @@ function ReportModal({
           <label
             key={entry}
             className={cn(
-              "flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2 text-[13px] text-nexus-white transition-colors",
+              "flex cursor-pointer items-start gap-3 rounded-nexus-sm border px-3 py-2 text-[13px] text-nexus-white transition-colors",
               reason === entry
                 ? "border-nexus-accent bg-nexus-accent/8"
                 : "border-nexus-accent/15 hover:bg-nexus-accent/5",
@@ -155,7 +155,7 @@ function ReportModal({
           value={comment}
           maxLength={MAX_REPORT_COMMENT_LENGTH}
           onChange={(event) => setComment(event.target.value)}
-          className="w-full resize-y rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+          className="w-full resize-y rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
         />
       </label>
 

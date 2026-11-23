@@ -106,7 +106,7 @@ export function MapView({
       role={interactive ? "group" : undefined}
       aria-label={interactive ? t("label", { name: plan.name }) : undefined}
       className={cn(
-        "relative overflow-hidden rounded-lg bg-nexus-abyss/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-nexus-accent/40",
+        "relative overflow-hidden rounded-nexus-sm bg-nexus-abyss/60 focus:outline-none focus-visible:ring-1 focus-visible:ring-nexus-accent/40",
         interactive && (isPanning ? "cursor-grabbing" : "cursor-grab"),
         className,
       )}
@@ -151,7 +151,7 @@ export function MapView({
                   // La cible de touche fait 44 px à l'écran quel que soit le
                   // zoom, sans que la pastille elle-même grossisse.
                   "absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 before:absolute before:-inset-[var(--hit)] before:content-['']",
-                  marker.id === selected && "ring-2 ring-white/70",
+                  marker.id === selected && "ring-2 ring-nexus-accent/70",
                 )}
                 style={{
                   left: `${marker.x * 100}%`,
@@ -266,7 +266,7 @@ export function MapLegend({
               className={cn(
                 "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left text-xs",
                 opens
-                  ? "text-nexus-accent/80 transition-colors hover:bg-white/5 hover:text-nexus-bright"
+                  ? "text-nexus-accent/80 transition-colors hover:bg-nexus-accent/5 hover:text-nexus-bright"
                   : "text-nexus-accent/60",
               )}
             >

@@ -120,7 +120,7 @@ export function NpsCompass({ guidance }: { guidance: Guidance }) {
                   }}
                   className={cn(
                     "text-[10px] font-semibold",
-                    key === "n" ? "fill-red-300" : "fill-slate-400",
+                    key === "n" ? "fill-red-300" : "fill-nexus-muted",
                   )}
                 >
                   {t(`compass.${key}`)}
@@ -132,7 +132,7 @@ export function NpsCompass({ guidance }: { guidance: Guidance }) {
 
         {/* Le repère du haut : la direction où l'on va, ou le nord. */}
         {travelUp || cone !== null ? (
-          <path d="M0 -58 L-4 -51 L4 -51 Z" className="fill-slate-200" />
+          <path d="M0 -58 L-4 -51 L4 -51 Z" className="fill-nexus-bright" />
         ) : null}
 
         <g
@@ -143,13 +143,13 @@ export function NpsCompass({ guidance }: { guidance: Guidance }) {
         >
           <path
             d="M0 -44 L9 6 L0 0 L-9 6 Z"
-            className={onCourse ? "fill-emerald-300" : "fill-sky-300"}
+            className={onCourse ? "fill-emerald-300" : "fill-nexus-accent"}
           />
           <path d="M0 0 L9 6 L0 14 L-9 6 Z" className="fill-white/20" />
         </g>
-        <circle r={2.5} className="fill-slate-200" />
+        <circle r={2.5} className="fill-nexus-bright" />
       </svg>
-      <figcaption className="text-[11px] text-slate-500">
+      <figcaption className="text-[11px] text-nexus-dim">
         {travelUp
           ? t("dial.travelUp")
           : surface

@@ -67,7 +67,7 @@ export function PriceConfirmation({
   }
 
   return (
-    <div className="mt-4 rounded-lg border border-nexus-accent/12 bg-nexus-abyss/40 px-3 py-3">
+    <div className="mt-4 rounded-nexus-sm border border-nexus-accent/12 bg-nexus-abyss/40 px-3 py-3">
       <div className="flex flex-wrap items-center gap-2">
         <p className="mr-auto text-xs text-nexus-muted">
           {updatedAt
@@ -111,7 +111,7 @@ export function PriceConfirmation({
             maxLength={MAX_CONFIRMATION_COMMENT_LENGTH}
             onChange={(event) => setComment(event.target.value)}
             placeholder={t("commentPlaceholder")}
-            className="w-full resize-y rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+            className="w-full resize-y rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
           <div className="flex flex-wrap items-center justify-between gap-2">
             <Button

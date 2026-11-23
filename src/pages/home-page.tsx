@@ -143,7 +143,7 @@ export default function HomePage() {
               key={label}
               type="button"
               onClick={() => open(label)}
-              className="flex h-26 flex-col items-start justify-between rounded-xl border border-nexus-accent/12 bg-nexus-card p-3.5 text-left transition-colors hover:border-nexus-accent/35"
+              className="flex h-26 flex-col items-start justify-between rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3.5 text-left transition-colors hover:border-nexus-accent/35"
             >
               <Icon className="size-5 text-nexus-accent" />
               <span className="flex flex-col gap-0.5">
@@ -171,7 +171,7 @@ export default function HomePage() {
             <Link
               key={to}
               to={to}
-              className="flex flex-col gap-1 rounded-xl border border-nexus-accent/10 bg-nexus-accent/5 px-4 py-3.5 transition-colors hover:border-nexus-accent/30"
+              className="flex flex-col gap-1 rounded-nexus border border-nexus-accent/10 bg-nexus-accent/5 px-4 py-3.5 transition-colors hover:border-nexus-accent/30"
             >
               <span className="text-sm font-semibold text-nexus-white">
                 {t(`database.${key}.title`)}
@@ -399,7 +399,7 @@ function NotesCard({
       <div className="mt-auto flex gap-2 pt-1">
         <Link
           to="/notes"
-          className="inline-flex h-8 items-center rounded-lg border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
+          className="inline-flex h-8 items-center rounded-nexus-sm border border-nexus-accent/25 px-3 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
         >
           {t("open")}
         </Link>

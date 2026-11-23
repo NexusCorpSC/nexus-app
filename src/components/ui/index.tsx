@@ -30,7 +30,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 const BUTTON_VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
   // The one action a screen is for: solid, so it is found at a glance.
   primary:
-    "bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
+    "nexus-glow bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
   outline:
     "bg-transparent text-nexus-bright border-nexus-accent/25 hover:border-nexus-accent/45 hover:bg-nexus-accent/8",
   ghost:
@@ -48,7 +48,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border font-medium transition-colors",
+        "inline-flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border font-medium transition-colors",
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent",
         "disabled:cursor-not-allowed disabled:opacity-50",
         size === "sm" ? "h-8 px-3 text-xs" : "h-9.5 px-4 text-[13px]",
@@ -65,7 +65,7 @@ export function Button({
 /* ------------------------------------------------------------------ */
 
 const FIELD_CLASSES =
-  "w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white " +
+  "w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white " +
   "placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none";
 
 export function Input({
@@ -98,7 +98,7 @@ export function Field({
 }) {
   return (
     <label className={cn("block space-y-1.5", className)}>
-      <span className="font-display text-[11px] font-semibold uppercase tracking-[0.12em] text-nexus-muted">
+      <span className="nexus-label text-[11px] font-semibold text-nexus-muted">
         {label}
       </span>
       {children}
@@ -120,7 +120,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-xl border border-nexus-accent/12 bg-nexus-card",
+        "nexus-ticks rounded-nexus border border-nexus-accent/12 bg-nexus-card",
         className,
       )}
     >
@@ -181,13 +181,13 @@ export function Modal({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         className={cn(
-          "flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50",
+          "nexus-ticks flex max-h-[90vh] w-full flex-col overflow-hidden rounded-nexus border border-nexus-accent/25 bg-nexus-deep shadow-2xl shadow-black/50",
           wide ? "max-w-3xl" : "max-w-xl",
         )}
       >
         <header className="flex items-start gap-3 px-5 pt-5">
           {icon ? (
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-nexus-panel text-nexus-accent">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-nexus bg-nexus-panel text-nexus-accent">
               {icon}
             </span>
           ) : null}
@@ -211,7 +211,7 @@ export function Modal({
             type="button"
             aria-label={t("close")}
             onClick={onClose}
-            className="inline-flex size-9 items-center justify-center rounded-lg text-nexus-muted hover:bg-nexus-panel hover:text-nexus-soft"
+            className="inline-flex size-9 items-center justify-center rounded-nexus-sm text-nexus-muted hover:bg-nexus-panel hover:text-nexus-soft"
           >
             <X className="size-4" />
           </button>
@@ -440,7 +440,7 @@ export function SearchField({
   return (
     <label
       className={cn(
-        "flex h-9.5 min-w-56 flex-1 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3",
+        "flex h-9.5 min-w-56 flex-1 items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3",
         "focus-within:border-nexus-accent/50",
         className,
       )}
@@ -466,7 +466,7 @@ export function ToolbarSelect({
   return (
     <label
       className={cn(
-        "flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card pl-3 pr-2 text-[13px] text-nexus-muted",
+        "flex h-9.5 items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card pl-3 pr-2 text-[13px] text-nexus-muted",
         className,
       )}
     >
@@ -492,7 +492,7 @@ export function ToolbarToggle({
   onChange: (checked: boolean) => void;
 }) {
   return (
-    <label className="flex h-9.5 cursor-pointer items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 text-[13px] text-nexus-bright">
+    <label className="flex h-9.5 cursor-pointer items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 text-[13px] text-nexus-bright">
       <input
         type="checkbox"
         checked={checked}
@@ -548,7 +548,7 @@ export function Segmented<T extends string>({
       role="group"
       aria-label={label}
       className={cn(
-        "flex h-9.5 shrink-0 items-stretch rounded-lg border border-nexus-accent/15 bg-nexus-card p-[3px]",
+        "flex h-9.5 shrink-0 items-stretch rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card p-[3px]",
         className,
       )}
     >

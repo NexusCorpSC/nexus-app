@@ -87,7 +87,7 @@ export function PrivatePlacesSection({
         {t("private.section", { count: places.length })}
       </p>
       <ul
-        className="divide-y overflow-hidden rounded-xl border bg-nexus-card/60"
+        className="divide-y overflow-hidden rounded-nexus border bg-nexus-card/60"
         style={{ borderColor: `${PRIVATE_ACCENT}40` }}
       >
         {places.map((place) => (
@@ -99,7 +99,7 @@ export function PrivatePlacesSection({
           >
             <Link
               to={`/places/${place.slug}`}
-              className="flex min-w-0 flex-1 items-center gap-3 rounded-lg transition-colors hover:text-nexus-accent"
+              className="flex min-w-0 flex-1 items-center gap-3 rounded-nexus-sm transition-colors hover:text-nexus-accent"
             >
               <PlaceThumbnail
                 place={place}

@@ -683,7 +683,7 @@ export default function NpsOverlayPage() {
   return (
     <div
       className={cn(
-        "flex h-screen w-screen flex-col overflow-hidden text-slate-200",
+        "flex h-screen w-screen flex-col overflow-hidden text-nexus-bright",
         overlaySkin(mode),
       )}
       onKeyDown={(event) => {
@@ -698,10 +698,10 @@ export default function NpsOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <Compass className="pointer-events-none size-4 shrink-0 text-slate-400" />
+        <Compass className="pointer-events-none size-4 shrink-0 text-nexus-muted" />
         <p className="pointer-events-none min-w-0 flex-1 truncate text-sm font-medium">
           {t("title")}
         </p>
@@ -711,7 +711,7 @@ export default function NpsOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="shrink-0 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
@@ -805,7 +805,7 @@ export default function NpsOverlayPage() {
             <button
               type="button"
               onClick={() => void refreshPosition()}
-              className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-white/10"
+              className="flex w-full items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-nexus-accent/10"
             >
               <Crosshair className="size-4" />
               {t("refresh")}
@@ -821,9 +821,9 @@ export default function NpsOverlayPage() {
             {copyError ? (
               <p className="text-[11px] text-red-300">{t("copyFailed")}</p>
             ) : waiting ? (
-              <p className="text-[11px] text-sky-200">{t("waiting")}</p>
+              <p className="text-[11px] text-nexus-soft">{t("waiting")}</p>
             ) : !fix && !live ? (
-              <p className="text-[11px] text-slate-400">{t("hint")}</p>
+              <p className="text-[11px] text-nexus-muted">{t("hint")}</p>
             ) : null}
             <SystemPicker
               systems={systems}
@@ -837,23 +837,23 @@ export default function NpsOverlayPage() {
 
           {fix ? (
             <section className="space-y-0.5 text-[12px]">
-              <p className="text-[11px] uppercase tracking-wide text-slate-500">
+              <p className="text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("here")}
               </p>
               <p className="font-medium">
                 {body ? body.name : t("space")}
                 {systemName ? (
-                  <span className="font-normal text-slate-400">
+                  <span className="font-normal text-nexus-muted">
                     {" · "}
                     {systemName}
                   </span>
                 ) : null}
-                <span className="ml-2 font-normal text-slate-400">
+                <span className="ml-2 font-normal text-nexus-muted">
                   {t("age", { age: formatAge(now - fix.at, t) })}
                 </span>
               </p>
               {geo ? (
-                <p className="text-slate-400">
+                <p className="text-nexus-muted">
                   {t("geo", {
                     altitude: formatDistance(geo.altitude, format),
                     latitude: format.number(geo.latitude, {
@@ -868,7 +868,7 @@ export default function NpsOverlayPage() {
               {bodyFrame ? (
                 // As r_displayInfo writes them on the body's line: to check
                 // against the game, and to share.
-                <p className="text-slate-400 tabular-nums">
+                <p className="text-nexus-muted tabular-nums">
                   {t("local", {
                     x: kilometres(bodyFrame.x, format),
                     y: kilometres(bodyFrame.y, format),
@@ -877,7 +877,7 @@ export default function NpsOverlayPage() {
                 </p>
               ) : null}
               {nearest ? (
-                <p className="text-slate-400">
+                <p className="text-nexus-muted">
                   {t("nearest", {
                     name: nearest.place.name,
                     distance: formatDistance(nearest.distance, format),
@@ -892,7 +892,7 @@ export default function NpsOverlayPage() {
             type="button"
             onClick={() => setPanel("mark")}
             disabled={locked}
-            className="flex items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40"
+            className="flex items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40"
             style={{
               color: DEFAULT_MARKER_COLOR,
               borderColor: `${DEFAULT_MARKER_COLOR}55`,
@@ -914,14 +914,14 @@ export default function NpsOverlayPage() {
 
           <section className="space-y-1">
             <div className="flex items-center gap-2">
-              <p className="flex-1 text-[11px] uppercase tracking-wide text-slate-500">
+              <p className="flex-1 text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("destination")}
               </p>
               <button
                 type="button"
                 onClick={() => setPanel("destination")}
                 disabled={locked}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
               >
                 <Search className="size-3" />
                 {t("choose")}
@@ -931,7 +931,7 @@ export default function NpsOverlayPage() {
                 onClick={() => setPanel("coordinates")}
                 disabled={locked}
                 title={t("coordinatesHint")}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
               >
                 <Keyboard className="size-3" />
                 {t("coordinates")}
@@ -942,7 +942,7 @@ export default function NpsOverlayPage() {
                   onClick={() => void setDestination(null)}
                   disabled={locked}
                   title={t("clearDestination")}
-                  className="rounded p-0.5 text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+                  className="rounded p-0.5 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
                 >
                   <span className="sr-only">{t("clearDestination")}</span>
                   <X className="size-3" />
@@ -951,20 +951,20 @@ export default function NpsOverlayPage() {
             </div>
 
             {data.isPending ? (
-              <p className="text-[12px] text-slate-500">…</p>
+              <p className="text-[12px] text-nexus-dim">…</p>
             ) : data.isError ? (
-              <p className="text-[12px] text-slate-400">
+              <p className="text-[12px] text-nexus-muted">
                 {t("loadFailed")}
                 <button
                   type="button"
                   onClick={() => void data.refetch()}
-                  className="ml-1 underline underline-offset-2 hover:text-slate-200"
+                  className="ml-1 underline underline-offset-2 hover:text-nexus-bright"
                 >
                   {t("retry")}
                 </button>
               </p>
             ) : !target ? (
-              <p className="text-[12px] text-slate-400">
+              <p className="text-[12px] text-nexus-muted">
                 {places.length === 0 && markers.length === 0
                   ? t("noPlaces")
                   : t("noDestination")}
@@ -998,7 +998,7 @@ export default function NpsOverlayPage() {
                   <span className="truncate">{target.name}</span>
                 </p>
                 {target.marker?.detail ? (
-                  <p className="truncate text-[11px] text-slate-400">
+                  <p className="truncate text-[11px] text-nexus-muted">
                     {target.marker.detail}
                   </p>
                 ) : null}
@@ -1010,22 +1010,22 @@ export default function NpsOverlayPage() {
                   />
                 ) : null}
                 {target.manual ? (
-                  <p className="truncate text-[11px] text-slate-500">
+                  <p className="truncate text-[11px] text-nexus-dim">
                     {t("manualWhere", {
                       where: target.bodyName ?? target.systemName ?? t("space"),
                     })}
                   </p>
                 ) : null}
                 {elsewhere ? (
-                  <p className="text-[12px] text-slate-400">
+                  <p className="text-[12px] text-nexus-muted">
                     {t("otherSystem", {
                       system: target.systemName ?? "?",
                     })}
                   </p>
                 ) : !fix ? (
-                  <p className="text-[12px] text-slate-400">{t("needFix")}</p>
+                  <p className="text-[12px] text-nexus-muted">{t("needFix")}</p>
                 ) : !guidance ? (
-                  <p className="text-[12px] text-slate-400">
+                  <p className="text-[12px] text-nexus-muted">
                     {t("unknownBody")}
                   </p>
                 ) : (
@@ -1056,7 +1056,7 @@ export default function NpsOverlayPage() {
               type="button"
               onClick={() => setPanel("record")}
               disabled={locked}
-              className="mt-auto flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-[12px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100 disabled:opacity-40"
+              className="mt-auto flex items-center justify-center gap-2 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
             >
               <MapPinPlus className="size-4" />
               {t("record")}
@@ -1209,7 +1209,7 @@ function PlayerReading({
   const age = player.at !== null ? Math.max(0, now - player.at) : null;
   return (
     <>
-      <p className="truncate text-[11px] text-slate-400">
+      <p className="truncate text-[11px] text-nexus-muted">
         {[
           player.activity,
           target.bodyName ?? target.systemName,
@@ -1262,14 +1262,14 @@ function Guidance({
       {surface ? (
         <p className="flex items-center gap-1.5 text-[13px]">
           <Navigation
-            className="size-3.5 text-sky-300"
+            className="size-3.5 text-nexus-accent"
             style={{ transform: `rotate(${surface.heading - 45}deg)` }}
           />
           {t("heading", {
             degrees: Math.round(surface.heading),
             point: t(`compass.${compassPoint(surface.heading)}`),
           })}
-          <span className="text-slate-400">
+          <span className="text-nexus-muted">
             ·{" "}
             {t("straight", {
               distance: formatDistance(guidance.distance, format),
@@ -1280,7 +1280,7 @@ function Guidance({
 
       {turn && TurnIcon ? (
         <p className="flex items-center gap-1.5 text-[13px]">
-          <TurnIcon className="size-4 text-sky-300" />
+          <TurnIcon className="size-4 text-nexus-accent" />
           {!turn.signed
             ? t("offCourse", { degrees: Math.round(turn.degrees) })
             : Math.abs(turn.degrees) < AHEAD_DEGREES
@@ -1290,7 +1290,7 @@ function Guidance({
                 : t("turnRight", { degrees: Math.round(turn.degrees) })}
         </p>
       ) : (
-        <p className="text-[11px] text-slate-400">
+        <p className="text-[11px] text-nexus-muted">
           {live
             ? t("moveLive")
             : hasPrevious
@@ -1300,7 +1300,7 @@ function Guidance({
       )}
 
       {guidance.closingSpeed !== undefined ? (
-        <p className="text-[12px] text-slate-400">
+        <p className="text-[12px] text-nexus-muted">
           {guidance.closingSpeed > MIN_CLOSING_SPEED
             ? t("closing", {
                 speed: format.number(guidance.closingSpeed, {
@@ -1343,7 +1343,7 @@ function SystemPicker({
     names.find((one) => one.systemSlug === slug)?.systemName ?? slug;
   return (
     <div className="space-y-1">
-      <label className="flex items-center gap-2 text-[12px] text-slate-300">
+      <label className="flex items-center gap-2 text-[12px] text-nexus-soft">
         <span className="shrink-0">{t("label")}</span>
         <select
           value={chosen ?? AUTO_SYSTEM}
@@ -1353,7 +1353,7 @@ function SystemPicker({
               event.target.value === AUTO_SYSTEM ? null : event.target.value,
             )
           }
-          className="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/40 px-1 py-1 text-[12px] text-slate-200 focus:outline-none disabled:opacity-40"
+          className="min-w-0 flex-1 rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-1 py-1 text-[12px] text-nexus-bright focus:outline-none disabled:opacity-40"
         >
           <option value={AUTO_SYSTEM}>{t("auto")}</option>
           {options
@@ -1408,7 +1408,7 @@ function ScreenTracking({
     calibration === "tooSmall"
       ? { tone: "text-amber-200", text: t("screen.tooSmall") }
       : !calibrated
-        ? { tone: "text-slate-400", text: t("screen.setup") }
+        ? { tone: "text-nexus-muted", text: t("screen.setup") }
         : calibration === "empty"
           ? { tone: "text-amber-200", text: t("screen.calibrationEmpty") }
           : !settings.enabled
@@ -1421,7 +1421,7 @@ function ScreenTracking({
                     text: t("screen.failed", { message: status.message }),
                   }
                 : status.state === "reading"
-                  ? { tone: "text-sky-200", text: t("screen.reading") }
+                  ? { tone: "text-nexus-soft", text: t("screen.reading") }
                   : null;
 
   return (
@@ -1434,10 +1434,10 @@ function ScreenTracking({
           aria-pressed={settings.enabled}
           title={settings.enabled ? t("screen.stop") : t("screen.start")}
           className={cn(
-            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border px-2 py-1 text-[12px] transition disabled:opacity-40",
+            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-nexus-sm border px-2 py-1 text-[12px] transition disabled:opacity-40",
             settings.enabled && calibrated
-              ? "border-sky-300/40 bg-sky-300/10 text-sky-100 hover:bg-sky-300/20"
-              : "border-white/15 bg-white/5 hover:bg-white/10",
+              ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white hover:bg-nexus-accent/20"
+              : "border-nexus-accent/15 bg-nexus-accent/5 hover:bg-nexus-accent/10",
           )}
         >
           <Radar className="size-3.5 shrink-0" />
@@ -1450,7 +1450,7 @@ function ScreenTracking({
           disabled={locked}
           onClick={onCalibrate}
           title={t("screen.calibrateHint")}
-          className="flex shrink-0 items-center gap-1 rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-[12px] transition hover:bg-white/10 disabled:opacity-40"
+          className="flex shrink-0 items-center gap-1 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
         >
           <ScanText className="size-3.5" />
           {calibrated ? t("screen.recalibrate") : t("screen.calibrate")}
@@ -1463,7 +1463,7 @@ function ScreenTracking({
           }
           title={t("screen.interval")}
           aria-label={t("screen.interval")}
-          className="shrink-0 rounded-lg border border-white/15 bg-black/40 px-1 py-1 text-[12px] text-slate-200 focus:outline-none disabled:opacity-40"
+          className="shrink-0 rounded-nexus-sm border border-nexus-accent/15 bg-black/40 px-1 py-1 text-[12px] text-nexus-bright focus:outline-none disabled:opacity-40"
         >
           {SCREEN_INTERVALS.map((ms) => (
             <option key={ms} value={ms}>
@@ -1571,7 +1571,7 @@ function DestinationPicker({
               ? t("mark.searchPlaceholder")
               : t("searchPlaceholder")
         }
-        className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
+        className="shrink-0 rounded-nexus-sm border border-nexus-accent/10 bg-black/40 px-3 py-1.5 text-[13px] text-nexus-white placeholder:text-nexus-dim focus:border-nexus-accent/25 focus:outline-none"
       />
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {shownPlayers.length > 0 ? (
@@ -1587,17 +1587,17 @@ function DestinationPicker({
                 key={player.userId}
                 type="button"
                 onClick={() => onPickPlayer(player)}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+                className="flex w-full items-center gap-2 rounded-nexus-sm px-2 py-1.5 text-left transition hover:bg-nexus-accent/10"
               >
                 <PlayerAvatar player={player} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] text-slate-100">
+                  <span className="block truncate text-[13px] text-nexus-white">
                     {player.name}
                     {player.orgs.map((org) =>
                       org.tag ? <Tag key={org.id}>{org.tag}</Tag> : null,
                     )}
                   </span>
-                  <span className="block truncate text-[11px] text-slate-400">
+                  <span className="block truncate text-[11px] text-nexus-muted">
                     {[
                       player.bodyName ?? player.systemName,
                       distance !== null
@@ -1612,7 +1612,7 @@ function DestinationPicker({
               </button>
             ))}
             {shownMarkers.length === 0 ? (
-              <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-slate-500">
+              <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("mark.placesSection")}
               </p>
             ) : null}
@@ -1631,16 +1631,16 @@ function DestinationPicker({
                 key={marker.id}
                 type="button"
                 onClick={() => onPickMarker(marker)}
-                className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+                className="block w-full rounded-nexus-sm px-2 py-1.5 text-left transition hover:bg-nexus-accent/10"
               >
-                <span className="flex items-center gap-1.5 truncate text-[13px] text-slate-100">
+                <span className="flex items-center gap-1.5 truncate text-[13px] text-nexus-white">
                   <MapPinned
                     className="size-3 shrink-0"
                     style={{ color: marker.color }}
                   />
                   <span className="truncate">{marker.name}</span>
                 </span>
-                <span className="block truncate text-[11px] text-slate-400">
+                <span className="block truncate text-[11px] text-nexus-muted">
                   {[
                     distance !== null
                       ? formatDistance(distance, format)
@@ -1653,17 +1653,17 @@ function DestinationPicker({
                 </span>
               </button>
             ))}
-            <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-slate-500">
+            <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
               {t("mark.placesSection")}
             </p>
           </>
         ) : null}
         {places.length === 0 ? (
-          <p className="px-1 py-2 text-[12px] text-slate-400">
+          <p className="px-1 py-2 text-[12px] text-nexus-muted">
             {t("noPlaces")}
           </p>
         ) : shown.length === 0 ? (
-          <p className="px-1 py-2 text-[12px] text-slate-500">
+          <p className="px-1 py-2 text-[12px] text-nexus-dim">
             {t("noResults")}
           </p>
         ) : (
@@ -1672,9 +1672,9 @@ function DestinationPicker({
               key={place.slug}
               type="button"
               onClick={() => onPick(place.slug)}
-              className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+              className="block w-full rounded-nexus-sm px-2 py-1.5 text-left transition hover:bg-nexus-accent/10"
             >
-              <span className="flex items-center gap-1.5 truncate text-[13px] text-slate-100">
+              <span className="flex items-center gap-1.5 truncate text-[13px] text-nexus-white">
                 {/* Un lieu privé, à soi ou à son organisation. */}
                 {place.private ? (
                   <Lock
@@ -1688,7 +1688,7 @@ function DestinationPicker({
                 ) : null}
                 <span className="truncate">{place.name}</span>
               </span>
-              <span className="block truncate text-[11px] text-slate-400">
+              <span className="block truncate text-[11px] text-nexus-muted">
                 {[place.systemName, place.bodyName, place.parentName]
                   .filter(
                     (name, index, all) => !!name && all.indexOf(name) === index,
@@ -1803,7 +1803,7 @@ function RecordPanel({
           <button
             type="button"
             onClick={onDone}
-            className="rounded-lg border border-white/15 px-3 py-1 text-[12px] transition hover:bg-white/10"
+            className="rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
           >
             {t("back")}
           </button>
@@ -1811,7 +1811,7 @@ function RecordPanel({
       ) : picked ? (
         <div className="space-y-2 text-[13px]">
           <p>{t("recordConfirm", { name: picked.name })}</p>
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-nexus-muted">
             {t("recordHint", { age: Math.round((Date.now() - fix.at) / 1000) })}
           </p>
           {elsewhere ? (
@@ -1827,7 +1827,7 @@ function RecordPanel({
               type="button"
               disabled={sending || elsewhere}
               onClick={() => void send()}
-              className="rounded-lg border border-sky-300/40 bg-sky-300/10 px-3 py-1 text-[12px] font-medium transition hover:bg-sky-300/20 disabled:opacity-50"
+              className="rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1 text-[12px] font-medium transition hover:bg-nexus-accent/20 disabled:opacity-50"
             >
               {sending ? "…" : t("recordSend")}
             </button>
@@ -1837,7 +1837,7 @@ function RecordPanel({
                 setPicked(null);
                 setResult(null);
               }}
-              className="rounded-lg px-3 py-1 text-[12px] text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+              className="rounded-nexus-sm px-3 py-1 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
             >
               {t("recordOther")}
             </button>
@@ -1850,17 +1850,17 @@ function RecordPanel({
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
+            className="shrink-0 rounded-nexus-sm border border-nexus-accent/10 bg-black/40 px-3 py-1.5 text-[13px] text-nexus-white placeholder:text-nexus-dim focus:border-nexus-accent/25 focus:outline-none"
           />
           <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
             {results.isPending ? (
-              <p className="px-1 py-2 text-[12px] text-slate-500">…</p>
+              <p className="px-1 py-2 text-[12px] text-nexus-dim">…</p>
             ) : results.isError ? (
-              <p className="px-1 py-2 text-[12px] text-slate-500">
+              <p className="px-1 py-2 text-[12px] text-nexus-dim">
                 {t("searchFailed")}
               </p>
             ) : results.data.places.length === 0 ? (
-              <p className="px-1 py-2 text-[12px] text-slate-500">
+              <p className="px-1 py-2 text-[12px] text-nexus-dim">
                 {t("noResults")}
               </p>
             ) : (
@@ -1876,12 +1876,12 @@ function RecordPanel({
                       systemName: place.systemName,
                     })
                   }
-                  className="block w-full rounded-lg px-2 py-1.5 text-left transition hover:bg-white/10"
+                  className="block w-full rounded-nexus-sm px-2 py-1.5 text-left transition hover:bg-nexus-accent/10"
                 >
-                  <span className="block truncate text-[13px] text-slate-100">
+                  <span className="block truncate text-[13px] text-nexus-white">
                     {place.name}
                   </span>
-                  <span className="block truncate text-[11px] text-slate-400">
+                  <span className="block truncate text-[11px] text-nexus-muted">
                     {[place.systemName, place.bodyName, place.parentName]
                       .filter(
                         (name, index, all) =>
@@ -1920,7 +1920,7 @@ function ArrivedAtMarker({
   const t = useTranslations("NpsOverlay.mark");
   return (
     <div
-      className="space-y-1.5 rounded-lg border px-2.5 py-2 text-[12px]"
+      className="space-y-1.5 rounded-nexus-sm border px-2.5 py-2 text-[12px]"
       style={{
         borderColor: `${DEFAULT_MARKER_COLOR}55`,
         backgroundColor: `${DEFAULT_MARKER_COLOR}14`,
@@ -1934,7 +1934,7 @@ function ArrivedAtMarker({
             type="button"
             disabled={disabled}
             onClick={onDelete}
-            className="rounded-lg border border-red-300/40 bg-red-300/10 px-2.5 py-1 text-red-200 transition hover:bg-red-300/20 disabled:opacity-40"
+            className="rounded-nexus-sm border border-red-300/40 bg-red-300/10 px-2.5 py-1 text-red-200 transition hover:bg-red-300/20 disabled:opacity-40"
           >
             {t("delete")}
           </button>
@@ -1943,7 +1943,7 @@ function ArrivedAtMarker({
           type="button"
           disabled={disabled}
           onClick={onKeep}
-          className="rounded-lg px-2.5 py-1 text-slate-300 transition hover:bg-white/10 disabled:opacity-40"
+          className="rounded-nexus-sm px-2.5 py-1 text-nexus-soft transition hover:bg-nexus-accent/10 disabled:opacity-40"
         >
           {t("keep")}
         </button>
@@ -2110,7 +2110,7 @@ function MarkPanel({
           type="button"
           autoFocus
           onClick={onDone}
-          className="self-start rounded-lg border border-white/15 px-3 py-1 text-[12px] transition hover:bg-white/10"
+          className="self-start rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
         >
           {translator("NpsOverlay")("back")}
         </button>
@@ -2127,7 +2127,7 @@ function MarkPanel({
 
       {!frozen ? (
         <div className="space-y-2 text-[12px]">
-          <p className="text-slate-300">
+          <p className="text-nexus-soft">
             {live
               ? t("waitingScreen")
               : fix || waiting
@@ -2138,7 +2138,7 @@ function MarkPanel({
             <button
               type="button"
               onClick={onRefresh}
-              className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-1 text-[12px] transition hover:bg-white/10"
+              className="flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
             >
               <Crosshair className="size-3.5" />
               {translator("NpsOverlay")("refresh")}
@@ -2147,7 +2147,7 @@ function MarkPanel({
         </div>
       ) : (
         <>
-          <label className="space-y-0.5 text-[11px] text-slate-400">
+          <label className="space-y-0.5 text-[11px] text-nexus-muted">
             <span>{t("name")}</span>
             <input
               autoFocus
@@ -2158,7 +2158,7 @@ function MarkPanel({
             />
           </label>
 
-          <div className="space-y-0.5 text-[11px] text-slate-400">
+          <div className="space-y-0.5 text-[11px] text-nexus-muted">
             <span>{t("kind")}</span>
             <div className="flex flex-wrap gap-1">
               {MARKER_KINDS.map((one) => (
@@ -2171,7 +2171,7 @@ function MarkPanel({
                     "rounded-full border px-2 py-0.5 text-[11px] transition",
                     chosenKind === one
                       ? "font-medium"
-                      : "border-white/15 text-slate-300 hover:bg-white/10",
+                      : "border-nexus-accent/15 text-nexus-soft hover:bg-nexus-accent/10",
                   )}
                   style={
                     chosenKind === one
@@ -2189,7 +2189,7 @@ function MarkPanel({
             </div>
           </div>
 
-          <label className="space-y-0.5 text-[11px] text-slate-400">
+          <label className="space-y-0.5 text-[11px] text-nexus-muted">
             <span>{t("collection")}</span>
             <select
               value={chosenCollection}
@@ -2220,7 +2220,7 @@ function MarkPanel({
             </p>
           ) : null}
 
-          <label className="space-y-0.5 text-[11px] text-slate-400">
+          <label className="space-y-0.5 text-[11px] text-nexus-muted">
             <span>{t("note")}</span>
             <textarea
               value={note}
@@ -2239,7 +2239,7 @@ function MarkPanel({
             />
           </label>
 
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-nexus-dim">
             {t("reading", {
               age: Math.max(0, Math.round((Date.now() - frozen.at) / 1000)),
               where: where?.body
@@ -2256,7 +2256,7 @@ function MarkPanel({
         <button
           type="submit"
           disabled={sending || !bodiesReady}
-          className="flex shrink-0 items-center justify-center gap-2 rounded-lg border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-50"
+          className="flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-50"
           style={{
             color: DEFAULT_MARKER_COLOR,
             borderColor: `${DEFAULT_MARKER_COLOR}66`,
@@ -2285,7 +2285,7 @@ function PickerHeader({
         type="button"
         onClick={onCancel}
         title={t("back")}
-        className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+        className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
       >
         <span className="sr-only">{t("back")}</span>
         <ArrowLeft className="size-4" />
@@ -2521,7 +2521,7 @@ function CoordinatesPanel({
     >
       <PickerHeader title={t("coordinatesTitle")} onCancel={onCancel} />
 
-      <div className="flex shrink-0 gap-1 rounded-lg border border-white/10 p-0.5 text-[12px]">
+      <div className="flex shrink-0 gap-1 rounded-nexus-sm border border-nexus-accent/10 p-0.5 text-[12px]">
         {(["body", "space"] as const).map((one) => (
           <button
             key={one}
@@ -2537,8 +2537,8 @@ function CoordinatesPanel({
             className={cn(
               "flex-1 rounded-md px-2 py-1 transition disabled:opacity-40",
               mode === one
-                ? "bg-white/15 text-slate-100"
-                : "text-slate-400 hover:bg-white/10",
+                ? "bg-nexus-accent/15 text-nexus-white"
+                : "text-nexus-muted hover:bg-nexus-accent/10",
             )}
           >
             {one === "body" ? t("manual.onBody") : t("manual.inSpace")}
@@ -2564,7 +2564,7 @@ function CoordinatesPanel({
 
       {mode === "body" ? (
         <>
-          <label className="space-y-0.5 text-[11px] text-slate-400">
+          <label className="space-y-0.5 text-[11px] text-nexus-muted">
             <span>{t("manual.body")}</span>
             <select
               value={bodySlug}
@@ -2585,7 +2585,7 @@ function CoordinatesPanel({
               ))}
             </select>
           </label>
-          <div className="flex shrink-0 gap-3 text-[11px] text-slate-400">
+          <div className="flex shrink-0 gap-3 text-[11px] text-nexus-muted">
             {(["local", "geo"] as const).map((one) => (
               <label key={one} className="flex items-center gap-1">
                 <input
@@ -2613,7 +2613,7 @@ function CoordinatesPanel({
                 onUnit={setLocalUnit}
                 onPaste={pastedLocal}
               />
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-nexus-dim">
                 {t("manual.localHint")}
               </p>
             </>
@@ -2623,7 +2623,7 @@ function CoordinatesPanel({
                 {(["latitude", "longitude", "altitude"] as const).map((key) => (
                   <label
                     key={key}
-                    className="space-y-0.5 text-[11px] text-slate-400"
+                    className="space-y-0.5 text-[11px] text-nexus-muted"
                   >
                     <span>{t(`manual.${key}`)}</span>
                     <input
@@ -2640,7 +2640,7 @@ function CoordinatesPanel({
                   </label>
                 ))}
               </div>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-nexus-dim">
                 {t("manual.bodyHint")}
               </p>
             </>
@@ -2662,11 +2662,11 @@ function CoordinatesPanel({
             }}
             onPaste={pasted}
           />
-          <p className="text-[11px] text-slate-500">{t("manual.spaceHint")}</p>
+          <p className="text-[11px] text-nexus-dim">{t("manual.spaceHint")}</p>
         </>
       )}
 
-      <label className="space-y-0.5 text-[11px] text-slate-400">
+      <label className="space-y-0.5 text-[11px] text-nexus-muted">
         <span>{t("manual.name")}</span>
         <input
           value={name}
@@ -2681,7 +2681,7 @@ function CoordinatesPanel({
 
       <button
         type="submit"
-        className="flex shrink-0 items-center justify-center gap-2 rounded-lg border border-sky-300/40 bg-sky-300/10 px-3 py-1.5 text-[12px] font-medium transition hover:bg-sky-300/20"
+        className="flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1.5 text-[12px] font-medium transition hover:bg-nexus-accent/20"
       >
         <Navigation className="size-3.5" />
         {t("manual.go")}
@@ -2691,7 +2691,7 @@ function CoordinatesPanel({
 }
 
 const FIELD =
-  "min-w-0 rounded-lg border border-white/10 bg-black/40 px-2 py-1 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none";
+  "min-w-0 rounded-nexus-sm border border-nexus-accent/10 bg-black/40 px-2 py-1 text-[13px] text-nexus-white placeholder:text-nexus-dim focus:border-nexus-accent/25 focus:outline-none";
 
 function asFields(point: { x: number; y: number; z: number }): Xyz {
   return { x: String(point.x), y: String(point.y), z: String(point.z) };
@@ -2726,7 +2726,7 @@ function XyzFields({
   return (
     <div className="grid grid-cols-[1fr_1fr_1fr_auto] items-end gap-1.5">
       {(["x", "y", "z"] as const).map((key) => (
-        <label key={key} className="space-y-0.5 text-[11px] text-slate-400">
+        <label key={key} className="space-y-0.5 text-[11px] text-nexus-muted">
           <span>{key.toUpperCase()}</span>
           <input
             value={value[key]}

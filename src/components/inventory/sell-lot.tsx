@@ -154,7 +154,7 @@ export function SellLotButton({
       </button>
 
       {panelOpen ? (
-        <div className="absolute right-0 bottom-full z-20 mb-1 w-72 space-y-3 rounded-lg border border-nexus-accent/25 bg-nexus-deep p-3 shadow-xl shadow-black/40">
+        <div className="absolute right-0 bottom-full z-20 mb-1 w-72 space-y-3 rounded-nexus-sm border border-nexus-accent/25 bg-nexus-deep p-3 shadow-xl shadow-black/40">
           {sales.length > 0 ? (
             <SalesPanel
               sales={sales}
@@ -451,7 +451,7 @@ function SellLotDialog({
       }
     >
       <form id="sell-lot-form" onSubmit={handleSubmit} className="space-y-4">
-        <div className="rounded-lg border border-nexus-accent/15 bg-nexus-abyss/60 px-3 py-2">
+        <div className="rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss/60 px-3 py-2">
           <p className="text-[13.5px] font-semibold text-nexus-bright">
             {lot.name}
             {lot.quality != null ? (
@@ -535,7 +535,7 @@ function SellLotDialog({
           </legend>
           <label
             className={cn(
-              "flex cursor-pointer gap-2.5 rounded-lg border p-2.5",
+              "flex cursor-pointer gap-2.5 rounded-nexus-sm border p-2.5",
               !capped
                 ? "border-nexus-accent/60 bg-nexus-accent/5"
                 : "border-nexus-accent/15",
@@ -559,7 +559,7 @@ function SellLotDialog({
           </label>
           <label
             className={cn(
-              "flex cursor-pointer gap-2.5 rounded-lg border p-2.5",
+              "flex cursor-pointer gap-2.5 rounded-nexus-sm border p-2.5",
               capped
                 ? "border-nexus-accent/60 bg-nexus-accent/5"
                 : "border-nexus-accent/15",

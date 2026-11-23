@@ -116,7 +116,7 @@ export function WikeloTradeCard({
 }) {
   const t = useTranslations("Wikelo");
   return (
-    <div className="space-y-3 rounded-lg border border-nexus-accent/12 p-3">
+    <div className="space-y-3 rounded-nexus-sm border border-nexus-accent/12 p-3">
       <div className="flex flex-wrap items-baseline gap-2">
         <p className="text-sm font-semibold text-nexus-white">{trade.title}</p>
         {trade.onceOnly ? (

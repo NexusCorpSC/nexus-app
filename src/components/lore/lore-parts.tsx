@@ -72,18 +72,18 @@ export function LoreArticleCard({ article }: { article: LoreArticleSummary }) {
   return (
     <Link
       to={lorePath(article.id)}
-      className="group flex gap-3 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
+      className="group flex gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3 transition-colors hover:border-nexus-accent/35"
     >
       <LoreThumbnail
         src={article.thumbnailUrl}
-        className="size-14 shrink-0 rounded-lg border border-nexus-accent/12 object-cover"
+        className="size-14 shrink-0 rounded-nexus-sm border border-nexus-accent/12 object-cover"
       />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-nexus-white">
           {article.title}
         </p>
         {article.categories.length > 0 ? (
-          <p className="truncate text-xs text-sky-300/80">
+          <p className="truncate text-xs text-nexus-accent/80">
             {article.categories.join(" · ")}
           </p>
         ) : null}
@@ -109,7 +109,7 @@ export function SensorRatings({ sensor }: { sensor?: StarmapSensor }) {
       {entries.map(([key, value]) => (
         <div
           key={key}
-          className="rounded-lg border border-nexus-accent/15 bg-[#08243a] px-2.5 py-1"
+          className="rounded-nexus-sm border border-nexus-accent/15 bg-nexus-deep px-2.5 py-1"
         >
           <dt className="inline text-nexus-dim">{t(key)} </dt>
           <dd className="inline font-semibold text-nexus-white">

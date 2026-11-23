@@ -98,7 +98,7 @@ function useCopy() {
 
 function ParcelItems({ items }: { items: ParcelItem[] }) {
   return (
-    <ul className="divide-y divide-nexus-accent/10 rounded-lg border border-nexus-accent/15">
+    <ul className="divide-y divide-nexus-accent/10 rounded-nexus-sm border border-nexus-accent/15">
       {items.map((item, index) => (
         <li
           key={`${index}-${item.name}`}
@@ -126,7 +126,7 @@ function ParcelItems({ items }: { items: ParcelItem[] }) {
 
 function ErrorLine({ children }: { children: string | null }) {
   return children ? (
-    <p className="rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-200">
+    <p className="rounded-nexus-sm bg-red-500/10 px-3 py-2 text-xs text-red-200">
       {children}
     </p>
   ) : null;
@@ -172,7 +172,7 @@ export function PackagePanel({
   ];
 
   return (
-    <aside className="sticky top-4 w-72 shrink-0 space-y-3 self-start rounded-xl border border-nexus-accent/25 bg-nexus-card p-4 shadow-lg shadow-black/20">
+    <aside className="sticky top-4 w-72 shrink-0 space-y-3 self-start rounded-nexus border border-nexus-accent/25 bg-nexus-card p-4 shadow-lg shadow-black/20">
       <div className="flex items-center gap-2">
         <Package className="size-4.5 text-nexus-accent" />
         <h2 className="font-display text-sm font-semibold text-nexus-white">
@@ -353,7 +353,7 @@ function SentParcelBody({ parcel }: { parcel: Parcel }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-nexus-accent/15 bg-nexus-abyss p-5">
+      <div className="flex flex-col items-center gap-4 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-5">
         <p
           aria-label={t("sent.codeLabel", { code: parcel.code })}
           className="flex items-center gap-1.5"
@@ -365,7 +365,7 @@ function SentParcelBody({ parcel }: { parcel: Parcel }) {
               ) : null}
               <span
                 aria-hidden
-                className="flex h-14 w-11 items-center justify-center rounded-lg bg-nexus-panel font-mono text-3xl font-bold text-nexus-white"
+                className="flex h-14 w-11 items-center justify-center rounded-nexus-sm bg-nexus-panel font-mono text-3xl font-bold text-nexus-white"
               >
                 {char}
               </span>
@@ -482,7 +482,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
     const { parcel: received, created, merged } = accept.data;
     return (
       <div className="space-y-4">
-        <div className="flex items-start gap-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+        <div className="flex items-start gap-3 rounded-nexus border border-emerald-400/30 bg-emerald-500/10 p-4">
           <Check className="mt-0.5 size-5 shrink-0 text-emerald-300" />
           <div>
             <p className="text-sm font-semibold text-nexus-white">
@@ -549,7 +549,7 @@ function ReceiveParcelForm({ onClose }: { onClose: () => void }) {
 
       {parcel ? (
         <>
-          <div className="space-y-3 rounded-xl border border-nexus-accent/15 bg-nexus-abyss p-4">
+          <div className="space-y-3 rounded-nexus border border-nexus-accent/15 bg-nexus-abyss p-4">
             <p className="text-[13px] text-nexus-bright">
               {t("receive.from", {
                 sender: parcel.senderName ?? t("receive.someoneStart"),
@@ -685,7 +685,7 @@ export function ParcelList() {
     <div className="space-y-4">
       <div
         role="tablist"
-        className="inline-flex rounded-lg border border-nexus-accent/15 bg-nexus-card p-1"
+        className="inline-flex rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card p-1"
       >
         {(["sent", "received"] as const).map((tab) => (
           <button
@@ -715,7 +715,7 @@ export function ParcelList() {
       </ErrorLine>
 
       {parcelsQuery.isPending ? (
-        <div className="h-40 animate-pulse rounded-xl bg-nexus-card" />
+        <div className="h-40 animate-pulse rounded-nexus bg-nexus-card" />
       ) : shown.length === 0 ? (
         <Card className="py-12 text-center text-[13px] text-nexus-muted">
           {direction === "sent"

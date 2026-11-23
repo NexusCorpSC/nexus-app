@@ -342,7 +342,7 @@ export default function PlanOverlayPage() {
               type="button"
               title={t("previousPhase")}
               onClick={() => step(-1)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
+              className="flex size-8 shrink-0 items-center justify-center rounded-nexus-sm border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
             >
               <ChevronLeft className="size-4" />
             </button>
@@ -371,7 +371,7 @@ export default function PlanOverlayPage() {
               type="button"
               title={t("nextPhase")}
               onClick={() => step(1)}
-              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
+              className="flex size-8 shrink-0 items-center justify-center rounded-nexus-sm border border-nexus-accent/25 text-nexus-accent/75 hover:text-nexus-soft"
             >
               <ChevronRight className="size-4" />
             </button>

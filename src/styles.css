@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
+@import "./themes.css";
+
 /*
- * Nexus palette, mirrored from the Nexus Tools web app so the desktop client
- * feels like the same product.
+ * Nexus palette. The values are derived from the seeds of the active theme
+ * (themes.css, picked by src/lib/themes.ts), so that every class written
+ * against these tokens follows the ship the player flies. The default seeds
+ * keep the Nexus Tools colours, so the desktop client still feels like the
+ * same product as the website.
  */
 @theme {
-  --color-nexus-abyss: #061e30;
-  --color-nexus-deep: #092f49;
-  --color-nexus-panel: #0b3a5a;
-  --color-nexus-accent: #9ed0ff;
-  --color-nexus-bright: #c9e4ff;
-  --color-nexus-soft: #cce7ff;
+  --color-nexus-accent: var(--seed-accent);
+  --color-nexus-accent-2: var(--seed-accent-2);
+  --color-nexus-abyss: color-mix(in oklab, var(--seed-tint) 45%, #03060a);
+  --color-nexus-deep: color-mix(in oklab, var(--seed-tint) 62%, #04070b);
+  --color-nexus-panel: color-mix(in oklab, var(--seed-tint) 85%, var(--seed-accent));
+  --color-nexus-bright: color-mix(in oklab, var(--seed-ink) 84%, var(--seed-accent));
+  --color-nexus-soft: color-mix(in oklab, var(--seed-ink) 62%, var(--seed-accent));
 
   /*
    * The main window's surfaces and text, from darkest to brightest: the rail
@@ -18,17 +24,100 @@
    * `white` for titles, `muted` for descriptions, `dim` for what only needs
    * to be findable.
    */
-  --color-nexus-rail: #03121e;
-  --color-nexus-night: #041827;
-  --color-nexus-card: #0a2a42;
-  --color-nexus-white: #e6f2ff;
-  --color-nexus-muted: #7e9fb7;
-  --color-nexus-dim: #6f90a8;
+  --color-nexus-rail: color-mix(in oklab, var(--seed-tint) 28%, #020407);
+  --color-nexus-night: color-mix(in oklab, var(--seed-tint) 40%, #04070b);
+  --color-nexus-card: color-mix(in oklab, var(--seed-tint) 75%, #060a10);
+  --color-nexus-white: var(--seed-ink);
+  --color-nexus-muted: color-mix(in oklab, var(--seed-ink) 55%, var(--seed-tint));
+  --color-nexus-dim: color-mix(in oklab, var(--seed-ink) 45%, var(--seed-tint));
+
+  /* Corners of cards and controls: rounded or angular, by manufacturer. */
+  --radius-nexus: var(--seed-radius);
+  --radius-nexus-sm: calc(var(--seed-radius) * 0.6);
 
   /* Plex for reading, Chakra Petch for titles and labels, JetBrains Mono for keys. */
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: "Chakra Petch", "IBM Plex Sans", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+
+/*
+ * The backdrop patterns a theme picks from (`--seed-pattern`): a HUD grid,
+ * hazard stripes, a dot matrix, or a glow from the top for the alien makers.
+ */
+:root {
+  --nexus-glow: color-mix(in oklab, var(--seed-accent) calc(var(--seed-glow) * 100%), transparent);
+  --pattern-grid:
+    linear-gradient(color-mix(in oklab, var(--seed-accent) 5%, transparent) 1px, transparent 1px) 0 0 / 32px 32px,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 1px, transparent 1px) 0 0 / 32px 32px;
+  --pattern-stripes:
+    repeating-linear-gradient(-45deg, color-mix(in oklab, var(--seed-accent) 6%, transparent) 0 14px, transparent 14px 28px) 0 0 / 100% 180px no-repeat;
+  --pattern-dots:
+    radial-gradient(color-mix(in oklab, var(--seed-accent) 12%, transparent) 1px, transparent 1.5px) 0 0 / 18px 18px;
+  --pattern-glow:
+    radial-gradient(ellipse 70% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 16%, transparent), transparent);
+}
+
+/* Effects off (Settings › Appearance): no pattern, no halo, no brackets. */
+:root[data-effects="off"] {
+  --seed-pattern: none !important;
+  --seed-ticks: 0 !important;
+  --nexus-glow: transparent;
+}
+
+/* The page behind the main window's content. */
+@utility nexus-backdrop {
+  background: var(--seed-pattern);
+}
+
+/*
+ * HUD brackets on two corners of a surface. Drawn by a pseudo-element, not a
+ * clip-path, so that nothing inside the surface (a menu, a focus ring) is cut.
+ */
+@layer base {
+  /* Zero specificity: a surface placed `absolute` or `sticky` keeps it. */
+  :where(.nexus-ticks) {
+    position: relative;
+  }
+}
+
+@utility nexus-ticks {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: var(--seed-ticks);
+    background:
+      linear-gradient(var(--seed-accent), var(--seed-accent)) top left / 12px 1px no-repeat,
+      linear-gradient(var(--seed-accent), var(--seed-accent)) top left / 1px 12px no-repeat,
+      linear-gradient(var(--seed-accent), var(--seed-accent)) bottom right / 12px 1px no-repeat,
+      linear-gradient(var(--seed-accent), var(--seed-accent)) bottom right / 1px 12px no-repeat;
+  }
+}
+
+/* A halo in the accent, for what is lit: the primary button, a gauge. */
+@utility nexus-glow {
+  box-shadow: 0 0 16px var(--nexus-glow);
+}
+
+/* Uppercase labels: their spacing is part of a manufacturer's look. */
+@utility nexus-label {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: var(--seed-tracking);
+}
+
+/* The colours ease into a new theme rather than snapping (not with reduced
+   motion: src/lib/themes.ts does not add the class then). */
+html.nexus-theme-shift,
+html.nexus-theme-shift * {
+  transition:
+    background-color 500ms ease,
+    border-color 500ms ease,
+    color 500ms ease,
+    fill 500ms ease !important;
 }
 
 :root {
@@ -153,7 +242,7 @@ label {
   outline: none;
   font-size: 15px;
   line-height: 1.65;
-  color: #d7e9fb;
+  color: var(--color-nexus-bright);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
@@ -301,13 +390,13 @@ label {
   font-family: var(--font-mono);
   font-size: 0.9em;
   border-radius: 0.25rem;
-  background: rgb(158 208 255 / 0.1);
+  background: color-mix(in oklab, var(--color-nexus-accent) 10%, transparent);
   padding: 0.05em 0.3em;
 }
 .chat-markdown pre {
   overflow-x: auto;
   border-radius: 0.5rem;
-  background: rgb(4 24 39 / 0.8);
+  background: color-mix(in oklab, var(--color-nexus-night) 80%, transparent);
   padding: 0.5em 0.75em;
 }
 .chat-markdown pre code {
@@ -320,7 +409,7 @@ label {
 }
 .chat-markdown th,
 .chat-markdown td {
-  border: 1px solid rgb(158 208 255 / 0.15);
+  border: 1px solid color-mix(in oklab, var(--color-nexus-accent) 15%, transparent);
   padding: 0.2em 0.5em;
   text-align: left;
 }
@@ -334,28 +423,32 @@ label {
    confirmation card and the orb (microphone). The same on the site
    (`app/globals.css` in nexus-tools). */
 @utility chat-bubble {
-  background-image: linear-gradient(135deg, #1e6aa8, #2386c8);
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in oklab, var(--seed-accent) 42%, #0b2540),
+    color-mix(in oklab, var(--seed-accent) 55%, #0b2540)
+  );
 }
 
 @utility chat-confirm {
   background-image: linear-gradient(
     180deg,
-    rgb(30 90 150 / 0.35),
-    rgb(10 32 60 / 0.6)
+    color-mix(in oklab, var(--seed-accent) 22%, transparent),
+    color-mix(in oklab, var(--color-nexus-abyss) 60%, transparent)
   );
-  box-shadow: 0 0 40px rgb(58 160 220 / 0.18);
+  box-shadow: 0 0 40px color-mix(in oklab, var(--seed-accent) 18%, transparent);
 }
 
 @utility chat-orb {
   background-image: radial-gradient(
     circle at 40% 35%,
-    #8fd0ff,
-    #2386c8 60%,
-    #0d3a66
+    color-mix(in oklab, var(--seed-accent) 70%, white),
+    color-mix(in oklab, var(--seed-accent) 70%, #0b2540) 60%,
+    color-mix(in oklab, var(--seed-accent) 25%, #0b2540)
   );
   /* The glow as a `filter`: a `ring-*` or `shadow-*` on the same element
      (the microphone while recording) does not wipe it out. */
-  filter: drop-shadow(0 0 12px rgb(58 160 220 / 0.55));
+  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--seed-accent) 55%, transparent));
 }
 
 /* Les cartes de surface (`components/planet-map`) : Leaflet sur le fond de la

@@ -250,7 +250,7 @@ export default function OverlayPage() {
           }
         }}
       >
-        <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl">
+        <div className="w-full overflow-hidden rounded-2xl border border-nexus-accent/10 bg-nexus-abyss/95 shadow-2xl backdrop-blur-xl">
           <CargoCaptureImport
             key={cargo.id}
             lines={cargo.lines}
@@ -270,21 +270,21 @@ export default function OverlayPage() {
       className="flex h-screen w-screen items-start justify-center p-3"
       onKeyDown={onKeyDown}
     >
-      <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#061E30]/95 shadow-2xl backdrop-blur-xl">
-        <div className="flex items-center gap-3 border-b border-white/10 px-4">
-          <Search className="size-5 shrink-0 text-slate-400" />
+      <div className="w-full overflow-hidden rounded-2xl border border-nexus-accent/10 bg-nexus-abyss/95 shadow-2xl backdrop-blur-xl">
+        <div className="flex items-center gap-3 border-b border-nexus-accent/10 px-4">
+          <Search className="size-5 shrink-0 text-nexus-muted" />
           <input
             ref={inputRef}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t("placeholder")}
-            className="w-full bg-transparent py-4 text-lg text-slate-100 outline-none placeholder:text-slate-500"
+            className="w-full bg-transparent py-4 text-lg text-nexus-white outline-none placeholder:text-nexus-dim"
             /* The palette owns keyboard navigation. */
             autoComplete="off"
             spellCheck={false}
           />
           {isFetching && (
-            <Loader2 className="size-4 shrink-0 animate-spin text-slate-400" />
+            <Loader2 className="size-4 shrink-0 animate-spin text-nexus-muted" />
           )}
         </div>
 
@@ -296,13 +296,13 @@ export default function OverlayPage() {
           )}
 
           {!error && searchable && results.length === 0 && !isFetching && (
-            <p className="px-4 py-6 text-sm text-slate-400">
+            <p className="px-4 py-6 text-sm text-nexus-muted">
               {t("noResults")}
             </p>
           )}
 
           {!error && !searchable && (
-            <p className="px-4 py-6 text-sm text-slate-400">
+            <p className="px-4 py-6 text-sm text-nexus-muted">
               {trimmedQuery
                 ? t("minLength", { count: MIN_SEARCH_QUERY_LENGTH })
                 : null}
@@ -310,7 +310,7 @@ export default function OverlayPage() {
                 t.rich("idleHint", {
                   shortcut: formatShortcut(shortcuts.capture),
                   kbd: (chunks) => (
-                    <kbd className="mx-1 rounded border border-white/15 px-1.5 py-0.5 text-xs">
+                    <kbd className="mx-1 rounded border border-nexus-accent/15 px-1.5 py-0.5 text-xs">
                       {chunks}
                     </kbd>
                   ),
@@ -327,7 +327,7 @@ export default function OverlayPage() {
               onMouseEnter={() => setHighlighted(index)}
               className={cn(
                 "flex w-full items-center gap-1 pr-3 transition",
-                index === highlighted ? "bg-white/10" : "hover:bg-white/5",
+                index === highlighted ? "bg-nexus-accent/10" : "hover:bg-nexus-accent/5",
               )}
             >
               <button
@@ -336,11 +336,11 @@ export default function OverlayPage() {
                 className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3 text-left"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-100">
+                  <p className="truncate text-sm font-medium text-nexus-white">
                     {result.title}
                   </p>
                   {result.subtitle && (
-                    <p className="truncate text-xs text-slate-400">
+                    <p className="truncate text-xs text-nexus-muted">
                       {result.subtitle}
                     </p>
                   )}
@@ -349,10 +349,10 @@ export default function OverlayPage() {
                 {/* Says where it will open, since half the results have no
                     screen here and land in the browser. */}
                 {opensInBrowser(result) && (
-                  <ExternalLink className="size-3.5 shrink-0 text-slate-500" />
+                  <ExternalLink className="size-3.5 shrink-0 text-nexus-dim" />
                 )}
 
-                <span className="shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs text-slate-300">
+                <span className="shrink-0 rounded-full bg-nexus-accent/10 px-2 py-0.5 text-xs text-nexus-soft">
                   {searchResultLabel(result)}
                 </span>
               </button>
@@ -367,7 +367,7 @@ export default function OverlayPage() {
           ))}
         </div>
 
-        <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-xs text-slate-500">
+        <div className="flex items-center justify-between border-t border-nexus-accent/10 px-4 py-2 text-xs text-nexus-dim">
           <span>{t("footer")}</span>
           <span>{formatShortcut(shortcuts.search)}</span>
         </div>

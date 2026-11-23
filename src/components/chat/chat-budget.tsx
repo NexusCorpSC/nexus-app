@@ -45,9 +45,9 @@ export function ChatBudget({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-baseline justify-between gap-2 text-xs text-[#8fb1d6]">
+      <div className="flex items-baseline justify-between gap-2 text-xs text-nexus-muted">
         <span>{t("label")}</span>
-        <span className="font-mono whitespace-nowrap text-[#cfe2f7]">
+        <span className="font-mono whitespace-nowrap text-nexus-bright">
           {t("spent", {
             spent: formatUsd(status.spentMicros, locale),
             budget: formatUsd(status.monthlyBudgetMicros, locale),
@@ -55,7 +55,7 @@ export function ChatBudget({
         </span>
       </div>
       <div
-        className="h-0.5 overflow-hidden rounded-full bg-[#8fd0ff]/12"
+        className="h-0.5 overflow-hidden rounded-full bg-nexus-accent/12"
         role="progressbar"
         aria-label={t("label")}
         aria-valuemin={0}
@@ -65,12 +65,12 @@ export function ChatBudget({
         <div
           className={cn(
             "h-full rounded-full",
-            ratio >= 0.9 ? "bg-amber-300" : "bg-[#8fd0ff]",
+            ratio >= 0.9 ? "bg-amber-300" : "bg-nexus-accent",
           )}
           style={{ width: `${ratio * 100}%` }}
         />
       </div>
-      <p className={showReset ? "text-[11px] text-[#8fb1d6]" : "sr-only"}>
+      <p className={showReset ? "text-[11px] text-nexus-muted" : "sr-only"}>
         {resets}
       </p>
     </div>

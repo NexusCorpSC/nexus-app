@@ -85,7 +85,7 @@ export function OverlayLockButton({
         // find.
         locked
           ? "bg-amber-300/20 text-amber-200 hover:bg-amber-300/30"
-          : ["text-slate-400 hover:bg-white/10 hover:text-slate-100", className],
+          : ["text-nexus-muted hover:bg-nexus-accent/10 hover:text-nexus-white", className],
       )}
     >
       <span className="sr-only">{action}</span>

@@ -4,6 +4,7 @@
   "sectionsLabel": "Secciones de ajustes",
   "sections": {
     "general": "General",
+    "appearance": "Apariencia",
     "account": "Cuenta",
     "shortcuts": "Atajos de teclado",
     "notifications": "Notificaciones",

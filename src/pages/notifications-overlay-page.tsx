@@ -42,9 +42,9 @@ type Tone = { border: string; icon: string; bar: string };
 
 const TONES: Record<NotificationKind, Tone> = {
   info: {
-    border: "border-sky-400/30",
-    icon: "text-sky-300",
-    bar: "bg-sky-400/70",
+    border: "border-nexus-accent/30",
+    icon: "text-nexus-accent",
+    bar: "bg-nexus-accent/70",
   },
   success: {
     border: "border-emerald-400/30",
@@ -302,8 +302,8 @@ function Toast({
         { "--toast-from-x": from.x, "--toast-from-y": from.y } as CSSProperties
       }
       className={cn(
-        "nexus-toast pointer-events-auto overflow-hidden rounded-xl border",
-        "bg-[#061E30]/95 shadow-2xl shadow-black/40 backdrop-blur-xl",
+        "nexus-toast pointer-events-auto overflow-hidden rounded-nexus border",
+        "bg-nexus-abyss/95 shadow-2xl shadow-black/40 backdrop-blur-xl",
         tone.border,
       )}
     >
@@ -342,7 +342,7 @@ function Toast({
               onClick={perform}
               className={cn(
                 "inline-flex items-center rounded-md border font-medium transition",
-                "border-white/15 bg-white/10 text-slate-100 hover:bg-white/20",
+                "border-nexus-accent/15 bg-nexus-accent/10 text-nexus-white hover:bg-nexus-accent/20",
                 large ? "mt-3 px-4 py-1.5 text-sm" : "mt-2 px-2.5 py-1 text-xs",
               )}
             >
@@ -355,7 +355,7 @@ function Toast({
           type="button"
           onClick={() => onDismiss(id)}
           title={t("close")}
-          className="rounded p-1 text-slate-500 transition hover:bg-white/10 hover:text-slate-200"
+          className="rounded p-1 text-nexus-dim transition hover:bg-nexus-accent/10 hover:text-nexus-bright"
         >
           <span className="sr-only">{t("close")}</span>
           <X className={large ? "size-4" : "size-3.5"} />
@@ -363,7 +363,7 @@ function Toast({
       </div>
 
       {timeout > 0 ? (
-        <div className="nexus-toast-timer h-0.5 bg-white/5" aria-hidden>
+        <div className="nexus-toast-timer h-0.5 bg-nexus-accent/5" aria-hidden>
           <div
             className={cn("nexus-toast-countdown h-full origin-left", tone.bar)}
             style={{
@@ -390,7 +390,7 @@ function Message({
     <>
       <p
         className={cn(
-          "text-slate-100",
+          "text-nexus-white",
           large ? "text-lg font-semibold" : "text-sm font-medium",
         )}
       >
@@ -401,8 +401,8 @@ function Message({
           className={cn(
             "whitespace-pre-line break-words",
             large
-              ? "mt-1 text-base text-slate-300"
-              : "mt-0.5 text-xs text-slate-400",
+              ? "mt-1 text-base text-nexus-soft"
+              : "mt-0.5 text-xs text-nexus-muted",
           )}
         >
           {body}

@@ -85,7 +85,7 @@ export function LinesTable({
     "h-9 w-full bg-transparent px-2.5 text-[13px] text-nexus-white placeholder:text-nexus-dim/70 focus:bg-nexus-panel focus:outline-none";
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-nexus-accent/15 bg-nexus-card">
+    <div className="overflow-x-auto rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card">
       <table className="w-full min-w-[24rem] border-collapse text-[13px]">
         <thead>
           <tr className="border-b border-nexus-accent/15 bg-nexus-panel/60 text-left font-display text-[10.5px] font-semibold tracking-[0.12em] text-nexus-muted uppercase">

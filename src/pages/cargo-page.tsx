@@ -123,7 +123,7 @@ export default function CargoPage() {
       />
 
       {sourceWarning ? (
-        <p className="mb-3 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+        <p className="mb-3 rounded-nexus-sm border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
           {sourceWarning}
         </p>
       ) : null}
@@ -268,7 +268,7 @@ function AddLineCard({ currentMission }: { currentMission: string }) {
             rows={4}
             spellCheck={false}
             placeholder={"Deliver 0/32 SCU of Titanium to Port Olisar above Crusader.\nCollect Titanium from Area18."}
-            className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-abyss/40 px-3 py-2 font-mono text-xs text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+            className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss/40 px-3 py-2 font-mono text-xs text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
           />
         </Field>
 

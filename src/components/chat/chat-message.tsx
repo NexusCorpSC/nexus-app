@@ -166,11 +166,11 @@ function ApprovalCard({
   if (part.state !== "approval-requested") return null;
 
   return (
-    <div className="chat-confirm space-y-2.5 rounded-2xl border border-[#8fd0ff]/45 p-3.5">
-      <p className="text-[10.5px] font-bold tracking-[0.18em] text-[#8fd0ff] uppercase">
+    <div className="chat-confirm space-y-2.5 rounded-2xl border border-nexus-accent/45 p-3.5">
+      <p className="text-[10.5px] font-bold tracking-[0.18em] text-nexus-accent uppercase">
         {t("approvalTitle")}
       </p>
-      <p className="text-[13px] whitespace-pre-wrap text-[#cfe2f7]">
+      <p className="text-[13px] whitespace-pre-wrap text-nexus-bright">
         {part.approval.requestReason || toolName(part.toolName)}
       </p>
       <div className="flex flex-wrap justify-end gap-2">
@@ -215,7 +215,7 @@ function GameConfirmCard({
 
   if (!onAnswer) {
     return (
-      <p className="text-xs text-[#8fb1d6]">
+      <p className="text-xs text-nexus-muted">
         {t("gameConfirmExpired", { action: action ?? "" })}
       </p>
     );
@@ -229,13 +229,13 @@ function GameConfirmCard({
     <div
       className={cn(
         "chat-confirm space-y-2.5 rounded-2xl border p-3.5",
-        dangerous ? "border-amber-300/50" : "border-[#8fd0ff]/45",
+        dangerous ? "border-amber-300/50" : "border-nexus-accent/45",
       )}
     >
       <p className="text-[10.5px] font-bold tracking-[0.18em] text-amber-200 uppercase">
         {t("gameConfirmTitle")}
       </p>
-      <p className="text-[13px] text-[#cfe2f7]">
+      <p className="text-[13px] text-nexus-bright">
         {t("gameConfirmBody", { action: action ?? "" })}
         {dangerous ? ` ${t("gameConfirmDanger")}` : ""}
       </p>
@@ -273,7 +273,7 @@ function ToolChips({ parts }: { parts: DynamicToolUIPart[] }) {
     const name = toolName(part.toolName);
     let icon = <Loader2 className="size-3.5 animate-spin" aria-hidden />;
     let label = t("running", { name });
-    let tone = "border-[#3aa0dc]/35 bg-[#3aa0dc]/12 text-[#8fd0ff]";
+    let tone = "border-[#3aa0dc]/35 bg-[#3aa0dc]/12 text-nexus-accent";
     let detail: string | undefined;
     switch (part.state) {
       case "approval-responded":
@@ -290,7 +290,7 @@ function ToolChips({ parts }: { parts: DynamicToolUIPart[] }) {
         break;
       case "output-denied":
         icon = <X className="size-3.5" aria-hidden />;
-        tone = "border-nexus-accent/20 bg-transparent text-[#8fb1d6]";
+        tone = "border-nexus-accent/20 bg-transparent text-nexus-muted";
         // Declined by the player, or refused by the server (a bad argument…).
         label = part.approval.isAutomatic
           ? t("refused", { name })
@@ -331,7 +331,7 @@ function ToolChips({ parts }: { parts: DynamicToolUIPart[] }) {
           chip.detail && (
             <p
               key={chip.id}
-              className="border-l-2 border-[#8fd0ff]/25 pl-3 text-xs whitespace-pre-wrap text-[#8fb1d6]"
+              className="border-l-2 border-nexus-accent/25 pl-3 text-xs whitespace-pre-wrap text-nexus-muted"
             >
               {chip.detail}
             </p>

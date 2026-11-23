@@ -84,13 +84,13 @@ export function CargoCaptureImport({
   return (
     <div className="space-y-3 p-4">
       <div className="flex items-center gap-2">
-        <Boxes className="size-4 shrink-0 text-sky-300" />
-        <p className="text-sm font-medium text-slate-100">
+        <Boxes className="size-4 shrink-0 text-nexus-accent" />
+        <p className="text-sm font-medium text-nexus-white">
           {t("summary", { count: lines.length, volume })}
         </p>
       </div>
 
-      <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-slate-300">
+      <ul className="max-h-40 space-y-1 overflow-y-auto text-xs text-nexus-soft">
         {lines.map((line, index) => (
           <li key={`${line.destination}-${index}`} className="truncate">
             {t.rich("line", {
@@ -101,7 +101,7 @@ export function CargoCaptureImport({
               location: line.location,
               hasLocation: line.location ? "yes" : "no",
               amount: (chunks) => (
-                <span className="text-slate-100">{chunks}</span>
+                <span className="text-nexus-white">{chunks}</span>
               ),
             })}
           </li>
@@ -115,7 +115,7 @@ export function CargoCaptureImport({
       ) : null}
 
       {state === "reading" ? (
-        <p className="text-xs text-slate-400">{t("reading")}</p>
+        <p className="text-xs text-nexus-muted">{t("reading")}</p>
       ) : null}
 
       {/* Rendered only when a ship is actually needed: loading it is what
@@ -146,7 +146,7 @@ export function CargoCaptureImport({
       ) : null}
 
       {state === "failed" ? (
-        <p className="rounded-lg border border-red-400/30 bg-red-500/10 p-2 text-xs text-red-200">
+        <p className="rounded-nexus-sm border border-red-400/30 bg-red-500/10 p-2 text-xs text-red-200">
           {error ? t("failedWith", { error }) : t("failed")}
         </p>
       ) : null}
@@ -160,8 +160,8 @@ function ShipPrompt({ onSubmit }: { onSubmit: (ship: SheetShip) => void }) {
   const sourceWarning = transportSourceLabel(source);
 
   return (
-    <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3">
-      <p className="text-xs text-slate-300">
+    <div className="space-y-2 rounded-nexus-sm border border-nexus-accent/10 bg-nexus-accent/5 p-3">
+      <p className="text-xs text-nexus-soft">
         {t("askShip")}
       </p>
 

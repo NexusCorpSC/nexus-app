@@ -323,7 +323,7 @@ export function ChatView({
         aria-live="polite"
       >
         {messages.length === 0 && (
-          <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-8 text-center text-[13px] text-[#8fb1d6]">
+          <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-8 text-center text-[13px] text-nexus-muted">
             <img
               src={nexusLogo}
               alt=""
@@ -343,7 +343,7 @@ export function ChatView({
                     <button
                       type="button"
                       onClick={() => send(t(`suggestions.${key}`))}
-                      className="rounded-lg bg-[#1e6aa8] px-3 py-1.5 text-left text-[13px] text-white transition hover:bg-[#2386c8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
+                      className="rounded-nexus-sm bg-[#1e6aa8] px-3 py-1.5 text-left text-[13px] text-white transition hover:bg-[#2386c8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexus-accent"
                     >
                       {t(`suggestions.${key}`)}
                     </button>
@@ -370,7 +370,7 @@ export function ChatView({
           />
         ))}
         {chatStatus === "submitted" && (
-          <p className="flex items-center gap-2 text-xs text-[#8fb1d6]">
+          <p className="flex items-center gap-2 text-xs text-nexus-muted">
             <Loader2 className="size-3.5 animate-spin" aria-hidden />
             {t("thinking")}
           </p>
@@ -384,7 +384,7 @@ export function ChatView({
           </p>
         )}
         {errorCode && (
-          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-red-400/30 bg-red-950/30 px-3 py-2 text-[13px] text-red-200">
+          <div className="flex flex-wrap items-center gap-2 rounded-nexus-sm border border-red-400/30 bg-red-950/30 px-3 py-2 text-[13px] text-red-200">
             <span>{t(`errors.${errorCode}`)}</span>
             {canRetry && (
               <Button
@@ -416,11 +416,11 @@ export function ChatView({
           <div className="space-y-2">
             {voiceOpen && voice && voice.state !== "idle" && (
               <p
-                className="flex items-center gap-2 px-1 text-xs text-[#8fd0ff]"
+                className="flex items-center gap-2 px-1 text-xs text-nexus-accent"
                 role="status"
               >
                 {voice.state === "recording" ? (
-                  <span className="size-2 animate-pulse rounded-full bg-[#8fd0ff] shadow-[0_0_8px_#8fd0ff]" />
+                  <span className="size-2 animate-pulse rounded-full bg-nexus-accent shadow-[0_0_8px_#8fd0ff]" />
                 ) : (
                   <Loader2 className="size-3.5 animate-spin" aria-hidden />
                 )}
@@ -473,7 +473,7 @@ export function ChatView({
                   pendingApproval ? t("placeholderApproval") : t("placeholder")
                 }
                 aria-label={t("placeholder")}
-                className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-2xl border border-[#8fd0ff]/35 bg-transparent px-3.5 py-2 text-[13.5px] text-nexus-white placeholder:text-[#6e93bc] focus:border-[#8fd0ff]/70 focus:outline-none"
+                className="field-sizing-content max-h-40 min-h-9.5 flex-1 resize-none rounded-2xl border border-nexus-accent/35 bg-transparent px-3.5 py-2 text-[13.5px] text-nexus-white placeholder:text-[#6e93bc] focus:border-nexus-accent/70 focus:outline-none"
               />
               {voiceOpen &&
                 voice &&

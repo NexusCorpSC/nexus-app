@@ -139,17 +139,17 @@ export default function MapOverlayPage() {
         data-tauri-drag-region
         className={cn(
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <MapIcon className="pointer-events-none size-4 shrink-0 text-slate-400" />
+        <MapIcon className="pointer-events-none size-4 shrink-0 text-nexus-muted" />
 
         <div className="pointer-events-none min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-slate-200">
+          <p className="truncate text-sm font-medium text-nexus-bright">
             {query.data?.name ?? t("title")}
           </p>
           {query.data && query.data.ancestors.length > 0 ? (
-            <p className="truncate text-[11px] text-slate-400">
+            <p className="truncate text-[11px] text-nexus-muted">
               {query.data.ancestors.map((one) => one.name).join(" › ")}
             </p>
           ) : null}
@@ -161,10 +161,10 @@ export default function MapOverlayPage() {
           title={t("pick")}
           aria-pressed={open}
           className={cn(
-            "shrink-0 rounded p-1 transition hover:bg-white/10",
+            "shrink-0 rounded p-1 transition hover:bg-nexus-accent/10",
             open
-              ? "bg-white/10 text-slate-100"
-              : "text-slate-400 hover:text-slate-100",
+              ? "bg-nexus-accent/10 text-nexus-white"
+              : "text-nexus-muted hover:text-nexus-white",
           )}
         >
           <span className="sr-only">{t("pick")}</span>
@@ -178,7 +178,7 @@ export default function MapOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="shrink-0 rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
@@ -194,8 +194,8 @@ export default function MapOverlayPage() {
               className={cn(
                 "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
                 showPlanet
-                  ? "bg-white/10 text-slate-100"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
+                  ? "bg-nexus-accent/10 text-nexus-white"
+                  : "text-nexus-muted hover:bg-nexus-accent/5 hover:text-nexus-bright",
               )}
             >
               {t("planet")}
@@ -212,8 +212,8 @@ export default function MapOverlayPage() {
               className={cn(
                 "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
                 !showPlanet && plan.id === active?.id
-                  ? "bg-white/10 text-slate-100"
-                  : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
+                  ? "bg-nexus-accent/10 text-nexus-white"
+                  : "text-nexus-muted hover:bg-nexus-accent/5 hover:text-nexus-bright",
               )}
             >
               {plan.name}
@@ -239,7 +239,7 @@ export default function MapOverlayPage() {
           <button
             type="button"
             onClick={() => void query.refetch()}
-            className="ml-1 underline underline-offset-2 hover:text-slate-200"
+            className="ml-1 underline underline-offset-2 hover:text-nexus-bright"
           >
             {t("retry")}
           </button>
@@ -284,7 +284,7 @@ function OverlayPlanet({
 
 function Note({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-slate-400">
+    <div className="flex flex-1 items-center justify-center px-6 text-center text-[13px] text-nexus-muted">
       <p>{children}</p>
     </div>
   );
@@ -314,18 +314,18 @@ function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
         value={search}
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t("searchPlaceholder")}
-        className="shrink-0 rounded-lg border border-white/10 bg-black/40 px-3 py-1.5 text-[13px] text-slate-100 placeholder:text-slate-500 focus:border-white/25 focus:outline-none"
+        className="shrink-0 rounded-nexus-sm border border-nexus-accent/10 bg-black/40 px-3 py-1.5 text-[13px] text-nexus-white placeholder:text-nexus-dim focus:border-nexus-accent/25 focus:outline-none"
       />
 
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
         {results.isPending ? (
-          <p className="px-1 py-2 text-[12px] text-slate-500">…</p>
+          <p className="px-1 py-2 text-[12px] text-nexus-dim">…</p>
         ) : results.isError ? (
-          <p className="px-1 py-2 text-[12px] text-slate-500">
+          <p className="px-1 py-2 text-[12px] text-nexus-dim">
             {t("searchFailed")}
           </p>
         ) : results.data.places.length === 0 ? (
-          <p className="px-1 py-2 text-[12px] text-slate-500">
+          <p className="px-1 py-2 text-[12px] text-nexus-dim">
             {t("noResults")}
           </p>
         ) : (
@@ -339,18 +339,18 @@ function PlacePicker({ onPick }: { onPick: (slug: string) => void }) {
                 disabled={!surveyed}
                 onClick={() => onPick(place.slug)}
                 className={cn(
-                  "flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition",
+                  "flex w-full items-center gap-2 rounded-nexus-sm px-2 py-1.5 text-left transition",
                   surveyed
-                    ? "hover:bg-white/10"
+                    ? "hover:bg-nexus-accent/10"
                     : "cursor-default opacity-40",
                 )}
               >
                 <PlaceThumbnail place={place} className="size-8" />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] text-slate-100">
+                  <span className="block truncate text-[13px] text-nexus-white">
                     {place.name}
                   </span>
-                  <span className="block truncate text-[11px] text-slate-400">
+                  <span className="block truncate text-[11px] text-nexus-muted">
                     {surveyed
                       ? [place.systemName, place.bodyName, place.parentName]
                           .filter(

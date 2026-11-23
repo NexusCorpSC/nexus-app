@@ -204,7 +204,7 @@ function CareerLadder({
             >
               <span
                 className={cn(
-                  "block h-2.5 w-full rounded-full bg-white/8 group-hover:outline group-hover:outline-2 group-hover:outline-offset-2 group-hover:outline-nexus-accent/55 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-nexus-accent",
+                  "block h-2.5 w-full rounded-full bg-nexus-accent/8 group-hover:outline group-hover:outline-2 group-hover:outline-offset-2 group-hover:outline-nexus-accent/55 group-focus-visible:outline group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-nexus-accent",
                   position === defaultIndex &&
                     "ring-1 ring-inset ring-nexus-accent/35",
                   filled && TONE_FILL[tone],
@@ -281,7 +281,7 @@ export function FactionRepModal({
                   disabled={disabled}
                   onClick={() => onStanding(option)}
                   className={cn(
-                    "h-10 flex-1 rounded-lg border border-nexus-accent/20 text-[13px] font-medium text-nexus-muted",
+                    "h-10 flex-1 rounded-nexus-sm border border-nexus-accent/20 text-[13px] font-medium text-nexus-muted",
                     standing === option &&
                       (option === "Hostile"
                         ? "border-orange-300 bg-orange-300/10 text-orange-200"
@@ -322,7 +322,7 @@ export function FactionRepModal({
                   <label
                     key={option.name}
                     className={cn(
-                      "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-transparent px-3 text-sm text-nexus-white hover:bg-nexus-accent/5 has-[:focus-visible]:border-nexus-accent",
+                      "flex min-h-11 cursor-pointer items-center gap-3 rounded-nexus-sm border border-transparent px-3 text-sm text-nexus-white hover:bg-nexus-accent/5 has-[:focus-visible]:border-nexus-accent",
                       checked &&
                         "border-nexus-accent bg-nexus-accent/10 font-semibold",
                       checked && tone === "top" && "border-amber-300",

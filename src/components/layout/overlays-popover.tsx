@@ -98,7 +98,7 @@ export function OverlaysPopover({
                     setOpen(false);
                   }}
                   title={t("showOverlay", { name })}
-                  className="flex items-center gap-2 rounded-lg border border-nexus-accent/12 bg-nexus-night/80 px-2.5 py-2 text-left transition-colors hover:border-nexus-accent/30 hover:bg-nexus-deep/90"
+                  className="flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/12 bg-nexus-night/80 px-2.5 py-2 text-left transition-colors hover:border-nexus-accent/30 hover:bg-nexus-deep/90"
                 >
                   <Icon className="size-4 shrink-0 text-nexus-accent" />
                   <span className="min-w-0 flex-1">

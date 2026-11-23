@@ -97,11 +97,11 @@ export default function CargoOverlayPage() {
           "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
           // The rule separates the header from the body of a panel; with no
           // panel it is just a line drawn across the game.
-          mode === "opaque" ? "border-b border-white/10" : null,
+          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
         )}
       >
-        <Boxes className="pointer-events-none size-4 text-slate-400" />
-        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-slate-200">
+        <Boxes className="pointer-events-none size-4 text-nexus-muted" />
+        <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
           {t("page.title")}
         </p>
 
@@ -112,10 +112,10 @@ export default function CargoOverlayPage() {
             title={editing ? t("overlay.doneEditing") : t("overlay.edit")}
             aria-pressed={editing}
             className={cn(
-              "rounded p-1 transition hover:bg-white/10",
+              "rounded p-1 transition hover:bg-nexus-accent/10",
               editing
-                ? "bg-white/10 text-slate-100"
-                : "text-slate-400 hover:text-slate-100",
+                ? "bg-nexus-accent/10 text-nexus-white"
+                : "text-nexus-muted hover:text-nexus-white",
             )}
           >
             <span className="sr-only">
@@ -132,7 +132,7 @@ export default function CargoOverlayPage() {
           type="button"
           onClick={close}
           title={t("overlay.close")}
-          className="rounded p-1 text-slate-400 transition hover:bg-white/10 hover:text-slate-100"
+          className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("overlay.close")}</span>
           <X className="size-4" />
@@ -141,9 +141,9 @@ export default function CargoOverlayPage() {
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 p-3">
         {loading ? (
-          <p className="text-xs text-slate-400">{t("overlay.loading")}</p>
+          <p className="text-xs text-nexus-muted">{t("overlay.loading")}</p>
         ) : !sheet ? (
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-nexus-muted">
             {t("overlay.noSheet")}
           </p>
         ) : (
@@ -156,7 +156,7 @@ export default function CargoOverlayPage() {
             />
 
             {editing ? (
-              <div className="shrink-0 space-y-2 rounded-lg border border-nexus-accent/15 bg-nexus-abyss/40 p-2">
+              <div className="shrink-0 space-y-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-abyss/40 p-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Button
                     type="button"
@@ -224,7 +224,7 @@ export default function CargoOverlayPage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto">
               {sheet.lines.length === 0 ? (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-nexus-muted">
                   {t("overlay.empty")}
                 </p>
               ) : (

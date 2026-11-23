@@ -144,7 +144,7 @@ export default function LorePage() {
                   .filter(Boolean)
                   .join(" · ")}
                 className={cn(
-                  "rounded-lg border px-2.5 py-1 text-[13px] transition-colors hover:border-nexus-accent/40",
+                  "rounded-nexus-sm border px-2.5 py-1 text-[13px] transition-colors hover:border-nexus-accent/40",
                   system.status === "P"
                     ? "border-nexus-accent/20 bg-nexus-card text-nexus-white"
                     : "border-dashed border-nexus-accent/15 text-nexus-dim",

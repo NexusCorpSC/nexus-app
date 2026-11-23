@@ -1,0 +1,35 @@
+{
+  "title": "Appearance",
+  "description": "The interface colours, and those of the manufacturer of the ship you fly.",
+  "nexus": "Nexus",
+  "mode": {
+    "title": "Theme",
+    "ship": "Follow the ship flown",
+    "shipHint": "In the pilot seat, the interface takes the colours of the ship's manufacturer, from the game's telemetry. Elsewhere, the theme chosen below.",
+    "fixed": "Always the same theme",
+    "fixedHint": "No automatic switch.",
+    "telemetryHint": "The automatic switch needs the game's telemetry (Settings › Game). Without it, the chosen theme applies everywhere."
+  },
+  "theme": {
+    "titleShip": "Theme outside the cockpit",
+    "titleFixed": "Interface theme"
+  },
+  "options": {
+    "title": "Options",
+    "keepLastShip": "Keep the last ship's theme after leaving it",
+    "keepLastShipHint": "Otherwise, the interface goes back to the chosen theme ten seconds after leaving the seat.",
+    "anySeat": "Switch at turrets and crew stations too",
+    "anySeatHint": "By default, only the pilot seat changes the theme.",
+    "announce": "Announce the switch",
+    "announceHint": "A notification names the manufacturer, with a button to keep the usual theme in this ship.",
+    "effects": "Patterns and glows",
+    "effectsHint": "The backdrop pattern, the glows and the brackets on card corners. The colours stay."
+  },
+  "saveError": "Could not save the appearance.",
+  "switched": {
+    "title": "{maker} theme",
+    "body": "At the controls: {ship}.",
+    "undo": "Keep the usual theme"
+  },
+  "chip": "{maker} colours: change the appearance"
+}

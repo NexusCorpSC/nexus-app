@@ -4,6 +4,7 @@
   "sectionsLabel": "Rubriques des paramètres",
   "sections": {
     "general": "Général",
+    "appearance": "Apparence",
     "account": "Compte",
     "shortcuts": "Raccourcis clavier",
     "notifications": "Notifications",

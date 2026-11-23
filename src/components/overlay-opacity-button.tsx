@@ -52,7 +52,7 @@ export function OverlayOpacityButton({
       title={action}
       className={cn(
         "shrink-0 rounded p-1 transition",
-        "text-slate-400 hover:bg-white/10 hover:text-slate-100",
+        "text-nexus-muted hover:bg-nexus-accent/10 hover:text-nexus-white",
         className,
       )}
     >

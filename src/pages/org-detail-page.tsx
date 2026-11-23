@@ -142,7 +142,7 @@ export default function OrgDetailPage() {
             </Button>
             <Link
               to={`/orgs/${orgId}/inventory`}
-              className="inline-flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/25 px-4 text-[13px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
+              className="inline-flex h-9.5 items-center gap-2 rounded-nexus-sm border border-nexus-accent/25 px-4 text-[13px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/45"
             >
               <Boxes className="size-4" />
               {t("sharedInventory")}
@@ -285,7 +285,7 @@ function MemberCard({ member, now }: { member: MemberPresence; now: number }) {
   const [failed, setFailed] = useState(false);
 
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3.5">
+    <li className="flex items-center gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3.5">
       <div className="relative shrink-0">
         {member.avatar && !failed ? (
           <img
@@ -304,7 +304,7 @@ function MemberCard({ member, now }: { member: MemberPresence; now: number }) {
 
       <div className="min-w-0 flex-1">
         {member.rank ? (
-          <p className="truncate text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+          <p className="truncate text-[10.5px] font-semibold tracking-wider text-nexus-accent/80 uppercase">
             {member.rank}
           </p>
         ) : null}
@@ -341,7 +341,7 @@ function PlannedRow({
   const { planned } = members[0];
 
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-amber-300/15 bg-nexus-card px-3.5 py-2.5">
+    <li className="flex items-center gap-3 rounded-nexus border border-amber-300/15 bg-nexus-card px-3.5 py-2.5">
       <span className="shrink-0 rounded-md bg-amber-300/12 px-2 py-0.5 font-mono text-[13px] text-amber-200">
         {formatPlannedTime(at, now)}
       </span>
@@ -379,7 +379,7 @@ function EventRow({ event, now }: { event: OrgEventView; now: number }) {
     <li>
       <Link
         to={eventRoute(event.orgId, event.id)}
-        className="flex items-center gap-4 rounded-xl border border-nexus-accent/12 bg-nexus-card px-4 py-3 transition-colors hover:border-nexus-accent/35"
+        className="flex items-center gap-4 rounded-nexus border border-nexus-accent/12 bg-nexus-card px-4 py-3 transition-colors hover:border-nexus-accent/35"
       >
         <div className="flex w-28 shrink-0 flex-col">
           <span className="text-[11px] font-semibold tracking-wider text-nexus-muted uppercase">

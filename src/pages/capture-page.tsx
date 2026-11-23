@@ -130,7 +130,7 @@ export default function CapturePage() {
 
       {box && (
         <div
-          className="absolute border-2 border-sky-400"
+          className="absolute border-2 border-nexus-accent"
           style={{
             left: box.left,
             top: box.top,

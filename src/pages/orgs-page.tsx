@@ -160,7 +160,7 @@ function OrgCard({
 
   return (
     <Card className="flex h-full flex-col overflow-hidden">
-      <div className="flex h-26 items-center justify-center bg-[#08243a]">
+      <div className="flex h-26 items-center justify-center bg-nexus-deep">
         {org.image && !failed ? (
           <img
             src={org.image}
@@ -174,7 +174,7 @@ function OrgCard({
         )}
       </div>
       <div className="flex min-w-0 flex-1 flex-col p-3.5">
-        <p className="truncate text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+        <p className="truncate text-[10.5px] font-semibold tracking-wider text-nexus-accent/80 uppercase">
           {eyebrow}
         </p>
         {to ? (

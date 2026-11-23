@@ -162,7 +162,7 @@ function OfferForm({
             <label
               key={entry.id}
               className={cn(
-                "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-[13px]",
+                "flex cursor-pointer items-center gap-2.5 rounded-nexus-sm border px-3 py-2 text-[13px]",
                 lotId === entry.id
                   ? "border-[#FFB98A]/60 bg-[#FFB98A]/8"
                   : "border-nexus-accent/15",
@@ -197,7 +197,7 @@ function OfferForm({
           ))}
           <label
             className={cn(
-              "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 text-[13px]",
+              "flex cursor-pointer items-center gap-2.5 rounded-nexus-sm border px-3 py-2 text-[13px]",
               lotId === null
                 ? "border-[#FFB98A]/60 bg-[#FFB98A]/8"
                 : "border-nexus-accent/15",
@@ -254,7 +254,7 @@ function OfferForm({
           rows={3}
           placeholder={t("offer.messagePlaceholder")}
           onChange={(event) => setMessage(event.target.value)}
-          className="w-full rounded-lg border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
+          className="w-full rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card px-3 py-2 text-[13.5px] text-nexus-white placeholder:text-nexus-dim/80 focus:border-nexus-accent/50 focus:outline-none"
         />
       </Field>
 

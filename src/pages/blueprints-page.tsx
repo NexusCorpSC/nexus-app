@@ -213,7 +213,7 @@ export default function BlueprintsPage() {
                   className="block h-full"
                 >
                   <Card className="h-full overflow-hidden transition-colors hover:border-nexus-accent/35">
-                    <div className="flex h-26 items-center justify-center bg-[#08243a]">
+                    <div className="flex h-26 items-center justify-center bg-nexus-deep">
                       {blueprint.imageUrl ? (
                         <img
                           src={blueprint.imageUrl}
@@ -227,7 +227,7 @@ export default function BlueprintsPage() {
                     </div>
 
                     <div className="p-3.5">
-                      <p className="truncate text-[10.5px] font-semibold tracking-wider text-sky-300/80 uppercase">
+                      <p className="truncate text-[10.5px] font-semibold tracking-wider text-nexus-accent/80 uppercase">
                         {blueprint.category}
                         {blueprint.subcategory
                           ? ` · ${blueprint.subcategory}`

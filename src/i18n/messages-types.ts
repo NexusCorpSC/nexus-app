@@ -48,6 +48,7 @@ import type Search from "./messages/fr/Search.json";
 import type SellLot from "./messages/fr/SellLot.json";
 import type Settings from "./messages/fr/Settings.json";
 import type SettingsAccount from "./messages/fr/SettingsAccount.json";
+import type SettingsAppearance from "./messages/fr/SettingsAppearance.json";
 import type SettingsGame from "./messages/fr/SettingsGame.json";
 import type SettingsNotifications from "./messages/fr/SettingsNotifications.json";
 import type SettingsShortcuts from "./messages/fr/SettingsShortcuts.json";
@@ -109,6 +110,7 @@ export type Messages = {
   SellLot: typeof SellLot;
   Settings: typeof Settings;
   SettingsAccount: typeof SettingsAccount;
+  SettingsAppearance: typeof SettingsAppearance;
   SettingsGame: typeof SettingsGame;
   SettingsNotifications: typeof SettingsNotifications;
   SettingsShortcuts: typeof SettingsShortcuts;

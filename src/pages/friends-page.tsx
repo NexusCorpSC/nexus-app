@@ -186,7 +186,7 @@ function FriendCodeCard() {
       {shown ? (
         <>
           <div className="flex items-center gap-2">
-            <span className="flex h-10 flex-1 items-center rounded-lg border border-dashed border-nexus-accent/40 bg-nexus-abyss px-3.5 font-mono text-lg font-medium tracking-[0.12em] text-nexus-white select-all">
+            <span className="flex h-10 flex-1 items-center rounded-nexus-sm border border-dashed border-nexus-accent/40 bg-nexus-abyss px-3.5 font-mono text-lg font-medium tracking-[0.12em] text-nexus-white select-all">
               {shown}
             </span>
             <Button variant="outline" onClick={copy} className="h-10">
@@ -341,7 +341,7 @@ function FriendCard({
       className={cn(
         "group flex items-center gap-3",
         playing
-          ? "rounded-xl border border-emerald-300/20 bg-nexus-card p-3.5"
+          ? "rounded-nexus border border-emerald-300/20 bg-nexus-card p-3.5"
           : "px-3.5 py-2",
       )}
     >
@@ -395,7 +395,7 @@ function FriendCard({
         onClick={onRemove}
         aria-label={t("removeLabel", { name: friend.name })}
         title={t("removeTitle")}
-        className="inline-flex size-8 shrink-0 items-center justify-center rounded-lg text-nexus-dim opacity-0 transition-opacity group-hover:opacity-100 hover:bg-nexus-accent/10 hover:text-red-300 focus-visible:opacity-100"
+        className="inline-flex size-8 shrink-0 items-center justify-center rounded-nexus-sm text-nexus-dim opacity-0 transition-opacity group-hover:opacity-100 hover:bg-nexus-accent/10 hover:text-red-300 focus-visible:opacity-100"
       >
         <UserMinus className="size-4" />
       </button>

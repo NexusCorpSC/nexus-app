@@ -171,7 +171,7 @@ function qualityTier(quality: number) {
   if (quality >= 500) {
     return { pill: "bg-nexus-accent/12 text-nexus-accent", bar: "bg-nexus-accent" };
   }
-  return { pill: "bg-nexus-muted/15 text-[#A9BFD0]", bar: "bg-[#A9BFD0]" };
+  return { pill: "bg-nexus-muted/15 text-nexus-muted", bar: "bg-nexus-muted" };
 }
 
 export function QualityBadge({ quality }: { quality: number }) {
@@ -299,7 +299,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
   const footer = renderFooter?.(group, active);
 
   return (
-    <article className="flex flex-col gap-3 rounded-xl border border-nexus-accent/12 bg-nexus-card p-3.5 transition-colors hover:border-nexus-accent/35">
+    <article className="flex flex-col gap-3 rounded-nexus border border-nexus-accent/12 bg-nexus-card p-3.5 transition-colors hover:border-nexus-accent/35">
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="line-clamp-2 text-sm font-semibold break-words text-nexus-white">
@@ -323,7 +323,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
       </header>
 
       {!multi && active.description ? (
-        <p className="line-clamp-2 text-xs text-[#A9BFD0]">
+        <p className="line-clamp-2 text-xs text-nexus-muted">
           {active.description}
         </p>
       ) : null}
@@ -352,7 +352,7 @@ function InventoryGroupCard<T extends InventoryDisplayItem>({
             <li
               key={lot.id}
               className={cn(
-                "-mx-1.5 flex min-h-8 items-center gap-1 rounded-lg px-1.5",
+                "-mx-1.5 flex min-h-8 items-center gap-1 rounded-nexus-sm px-1.5",
                 selectable && lot.id === active.id && "bg-nexus-accent/8",
               )}
             >
@@ -449,7 +449,7 @@ export function QualityFilter({
 }) {
   const t = useTranslations("Inventory");
   return (
-    <label className="flex h-9.5 items-center gap-2 rounded-lg border border-nexus-accent/15 bg-nexus-card pr-1.5 pl-3 text-[13px] text-nexus-muted focus-within:border-nexus-accent/50">
+    <label className="flex h-9.5 items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-card pr-1.5 pl-3 text-[13px] text-nexus-muted focus-within:border-nexus-accent/50">
       {t("filterQualityLabel")}
       <input
         type="number"
@@ -559,7 +559,7 @@ export function AdjustQuantityButton({
       {open ? (
         <form
           onSubmit={handleSubmit}
-          className="absolute top-full right-0 z-20 mt-1 w-48 space-y-2 rounded-lg border border-nexus-accent/25 bg-nexus-deep p-3 shadow-xl shadow-black/40"
+          className="absolute top-full right-0 z-20 mt-1 w-48 space-y-2 rounded-nexus-sm border border-nexus-accent/25 bg-nexus-deep p-3 shadow-xl shadow-black/40"
         >
           <p className="text-xs font-medium text-nexus-bright">{label}</p>
           <input

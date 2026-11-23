@@ -115,6 +115,15 @@ Pour l'activer, dans **Paramètres › Jeu › Télémétrie du jeu**, jeu ferm�
 2. **Activer** pour votre version du jeu : l'app ajoute `GameTelemetryEnabled`
    au fichier `attributes.xml`, après en avoir gardé une copie.
 
+### Couleurs du constructeur
+
+Au siège pilote, l'interface prend les couleurs du constructeur du vaisseau,
+d'après la télémétrie : jaune et angles vifs pour Drake, orange pour Argo,
+violet pour Gatac, champagne pour Origin… dix-huit constructeurs en tout, et
+toutes les fenêtres changent ensemble. Réglages dans **Paramètres › Apparence**
+: garder le thème du dernier vaisseau, basculer aussi en tourelle, ou choisir
+un thème fixe.
+
 ### Nexus Chat, à la voix
 
 <img src="docs/images/nexus-chat-superposition.png" alt="Nexus Chat en superposition" width="300" align="right" />
