@@ -18,6 +18,7 @@
    * `white` for titles, `muted` for descriptions, `dim` for what only needs
    * to be findable.
    */
+  --color-nexus-rail: #03121e;
   --color-nexus-night: #041827;
   --color-nexus-card: #0a2a42;
   --color-nexus-white: #e6f2ff;

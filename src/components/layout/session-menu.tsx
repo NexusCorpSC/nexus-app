@@ -7,13 +7,12 @@ import { plannedLabel, plannedOf } from "@/lib/presence";
 import { cn } from "@/lib/utils";
 
 /**
- * The signed-in reader at the foot of the menu: who, whether they are
- * playing, and — behind a click — the declaration and the way out.
+ * The signed-in reader at the foot of the primary rail: their initial and a
+ * status dot for whether they are playing, opening the presence declaration
+ * and sign-out popover to the right of the rail.
  *
- * The status line is the button, since it is what one comes to change: «En
- * jeu · Minage» in green, «Session prévue · 21:00 · Minage» in amber, or
- * «Hors jeu». The popover opens upwards, wider than the menu so the three
- * modes fit, and closes on a click outside or Escape.
+ * The popover is wide enough (`w-[344px]`) for the three presence modes to fit
+ * without truncation, and closes on a click outside or Escape.
  */
 export function SessionMenu({
   name,
@@ -57,58 +56,58 @@ export function SessionMenu({
       : t("off");
 
   return (
-    <div ref={root} className="flex min-w-0 flex-1 items-center gap-2.5">
-      <div className="relative shrink-0">
-        <div className="flex size-7.5 items-center justify-center rounded-full bg-nexus-panel text-xs font-semibold text-nexus-accent">
-          {name.slice(0, 1).toUpperCase()}
-        </div>
+    <div ref={root} className="relative flex justify-center">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={`${name} — ${status}`}
+        onClick={() => setOpen((value) => !value)}
+        title={`${name} · ${status}`}
+        className={cn(
+          "relative flex size-9 items-center justify-center rounded-full border bg-nexus-panel text-[13px] font-semibold text-nexus-accent transition-colors",
+          open
+            ? "border-nexus-accent/45 bg-nexus-panel text-nexus-white"
+            : "border-nexus-accent/18 hover:border-nexus-accent/40 hover:text-nexus-white",
+        )}
+      >
+        {name.slice(0, 1).toUpperCase()}
         {playing ? (
-          <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-nexus-night bg-emerald-300" />
+          <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-nexus-rail bg-emerald-300" />
         ) : planned ? (
-          <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-amber-300 bg-nexus-night" />
+          <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-full border-2 border-amber-300 bg-nexus-rail" />
         ) : null}
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span
-          className="truncate text-[13px] font-medium text-nexus-white"
-          title={name}
-        >
-          {name}
-        </span>
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-haspopup="dialog"
-          onClick={() => setOpen((value) => !value)}
-          title={planned ? status : t("declare")}
-          className={cn(
-            "truncate text-left text-[11px] transition-colors hover:text-nexus-accent",
-            playing
-              ? "text-emerald-300"
-              : planned
-                ? "text-amber-200"
-                : "text-nexus-dim",
-          )}
-        >
-          {status}
-        </button>
-      </div>
+      </button>
 
       {open ? (
         <div
           role="dialog"
           aria-label={t("title")}
-          className="absolute bottom-full left-2 z-20 mb-2 flex w-72 flex-col gap-3 rounded-xl border border-nexus-accent/18 bg-nexus-card p-3.5 shadow-xl shadow-black/40"
+          className="absolute bottom-0 left-full z-30 ml-2.5 flex w-[344px] flex-col gap-3 rounded-2xl border border-nexus-accent/22 bg-nexus-card p-3.5 shadow-2xl shadow-black/50"
         >
-          <div>
-            <p className="font-display text-sm font-semibold text-nexus-white">
-              {t("title")}
-            </p>
-            <p className="mt-0.5 text-[11.5px] leading-snug text-nexus-muted">
-              {t("hint")}
-            </p>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate font-display text-sm font-semibold text-nexus-white">
+                {name}
+              </p>
+              <p
+                className={cn(
+                  "mt-0.5 truncate text-[11.5px]",
+                  playing
+                    ? "text-emerald-300"
+                    : planned
+                      ? "text-amber-200"
+                      : "text-nexus-muted",
+                )}
+              >
+                {status}
+              </p>
+            </div>
           </div>
+
+          <p className="text-[11.5px] leading-snug text-nexus-muted">
+            {t("hint")}
+          </p>
 
           <PresenceForm compact onDone={() => setOpen(false)} />
 

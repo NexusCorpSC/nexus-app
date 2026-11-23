@@ -1,10 +1,28 @@
 {
   "search": "Search…",
+  "searchWithShortcut": "Search… ({shortcut})",
   "mainNav": "Main navigation",
+  "rail": {
+    "search": "Search",
+    "home": "Home",
+    "database": "Data",
+    "economy": "Econ",
+    "mySpace": "Space",
+    "community": "Social",
+    "inGame": "In game"
+  },
   "groups": {
     "database": "Database",
+    "economy": "Economy",
     "mySpace": "My space",
+    "community": "Community",
     "inGame": "In game"
+  },
+  "groupBlurb": {
+    "database": "The game's reference: what exists, where, and how to get it.",
+    "economy": "Buy, sell and produce: inventory, refining, orders and cargo.",
+    "mySpace": "Your session tools: markers, reputations, notes, chat and telemetry.",
+    "community": "Play together: friends online and organizations."
   },
   "nav": {
     "home": "Home",
@@ -29,8 +47,22 @@
   },
   "friendsPlaying": "{count} playing",
   "overlays": {
+    "search": "Search",
     "squad": "Squad",
-    "map": "Map"
+    "map": "Map",
+    "nps": "NPS",
+    "radar": "Radar scanner",
+    "halo": "Quantum nav.",
+    "plan": "Flight plan",
+    "notes": "Scratch pad",
+    "cargo": "Cargo",
+    "chat": "Nexus Chat"
+  },
+  "overlaysDrawer": {
+    "title": "In-game overlays",
+    "subtitle": "Windows over Star Citizen",
+    "radial": "{shortcut} radial",
+    "quickAccess": "Session quick access"
   },
   "showOverlay": "Show the {name} overlay",
   "sessionLoading": "Session…",
