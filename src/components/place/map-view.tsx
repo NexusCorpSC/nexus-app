@@ -193,7 +193,7 @@ export function MapView({
       ) : null}
 
       {active ? (
-        <div className="absolute inset-x-2 bottom-2 rounded-md bg-nexus-abyss/85 px-3 py-2 text-xs text-nexus-accent/80 backdrop-blur-sm">
+        <div className="nexus-ov-caption absolute inset-x-2 bottom-2 rounded-md bg-nexus-abyss/85 px-3 py-2 text-xs text-nexus-accent/80 backdrop-blur-sm">
           <p className="font-medium text-nexus-bright">
             {markerLabel(active, targets)}
           </p>
@@ -220,7 +220,7 @@ function ViewportButton({
       title={label}
       onClick={onClick}
       onPointerDown={(event) => event.stopPropagation()}
-      className="rounded-md border border-nexus-accent/20 bg-nexus-abyss/80 p-1.5 text-nexus-accent/70 transition-colors hover:border-nexus-accent/40 hover:text-nexus-bright"
+      className="nexus-ov-ctl nexus-ov-icon rounded-md border border-nexus-accent/20 bg-nexus-abyss/80 p-1.5 text-nexus-accent/70 transition-colors hover:border-nexus-accent/40 hover:text-nexus-bright"
     >
       {children}
     </button>

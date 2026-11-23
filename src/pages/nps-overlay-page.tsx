@@ -696,13 +696,10 @@ export default function NpsOverlayPage() {
       {/* Sans décorations, l'en-tête tient lieu de barre de titre. */}
       <div
         data-tauri-drag-region
-        className={cn(
-          "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
-        )}
+        className="nexus-ov-header flex shrink-0 cursor-grab items-center gap-2 px-3 py-2"
       >
         <Compass className="pointer-events-none size-4 shrink-0 text-nexus-muted" />
-        <p className="pointer-events-none min-w-0 flex-1 truncate text-sm font-medium">
+        <p className="nexus-ov-title pointer-events-none min-w-0 flex-1 truncate text-sm font-medium">
           {t("title")}
         </p>
         <OverlayOpacityButton label="nps" mode={mode} />
@@ -801,11 +798,11 @@ export default function NpsOverlayPage() {
         />
       ) : (
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 pb-3">
-          <section className="space-y-1.5">
+          <section className="nexus-ov-section space-y-1.5">
             <button
               type="button"
               onClick={() => void refreshPosition()}
-              className="flex w-full items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-nexus-accent/10"
+              className="nexus-ov-btn flex w-full items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-nexus-accent/10"
             >
               <Crosshair className="size-4" />
               {t("refresh")}
@@ -836,8 +833,8 @@ export default function NpsOverlayPage() {
           </section>
 
           {fix ? (
-            <section className="space-y-0.5 text-[12px]">
-              <p className="text-[11px] uppercase tracking-wide text-nexus-dim">
+            <section className="nexus-ov-section space-y-0.5 text-[12px]">
+              <p className="nexus-ov-label text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("here")}
               </p>
               <p className="font-medium">
@@ -912,9 +909,9 @@ export default function NpsOverlayPage() {
             onChoose={() => setPanel("share")}
           />
 
-          <section className="space-y-1">
+          <section className="nexus-ov-section space-y-1">
             <div className="flex items-center gap-2">
-              <p className="flex-1 text-[11px] uppercase tracking-wide text-nexus-dim">
+              <p className="nexus-ov-label flex-1 text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("destination")}
               </p>
               <button
@@ -1577,7 +1574,7 @@ function DestinationPicker({
         {shownPlayers.length > 0 ? (
           <>
             <p
-              className="px-1 pt-1 text-[11px] uppercase tracking-wide"
+              className="nexus-ov-label px-1 pt-1 text-[11px] uppercase tracking-wide"
               style={{ color: PLAYER_COLOR }}
             >
               {t("players.section")}
@@ -1612,7 +1609,7 @@ function DestinationPicker({
               </button>
             ))}
             {shownMarkers.length === 0 ? (
-              <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
+              <p className="nexus-ov-label px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
                 {t("mark.placesSection")}
               </p>
             ) : null}
@@ -1621,7 +1618,7 @@ function DestinationPicker({
         {shownMarkers.length > 0 ? (
           <>
             <p
-              className="px-1 pt-1 text-[11px] uppercase tracking-wide"
+              className="nexus-ov-label px-1 pt-1 text-[11px] uppercase tracking-wide"
               style={{ color: DEFAULT_MARKER_COLOR }}
             >
               {t("mark.section")}
@@ -1653,7 +1650,7 @@ function DestinationPicker({
                 </span>
               </button>
             ))}
-            <p className="px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
+            <p className="nexus-ov-label px-1 pt-2 text-[11px] uppercase tracking-wide text-nexus-dim">
               {t("mark.placesSection")}
             </p>
           </>

@@ -107,7 +107,7 @@ const COMMIT_DELAY = 600;
  * but a field or a button with nothing behind it is unusable over a game.
  */
 const SURFACE =
-  "border border-nexus-accent/20 bg-nexus-abyss/50 backdrop-blur-sm focus:border-nexus-accent/50 focus:outline-none";
+  "nexus-ov-ctl border border-nexus-accent/20 bg-nexus-abyss/50 backdrop-blur-sm focus:border-nexus-accent/50 focus:outline-none";
 
 /** A sheet that takes the whole window: at 420px there is no room for two. */
 const SHEET =
@@ -228,7 +228,7 @@ export default function SquadOverlayPage() {
       {/* No decorations, so the header doubles as the title bar. */}
       <div
         data-tauri-drag-region
-        className="flex shrink-0 cursor-grab items-center gap-1.5 px-3 py-2"
+        className="nexus-ov-header flex shrink-0 cursor-grab items-center gap-1.5 px-3 py-2"
       >
         {/*
          * Where the header's icon stood, the switch between the two rosters —
@@ -702,8 +702,9 @@ function MemberRow({
 
   return (
     <li
+      data-status={down ? "down" : ready ? "ready" : "idle"}
       className={cn(
-        "group relative rounded px-1 py-px hover:bg-nexus-accent/5",
+        "nexus-ov-row group relative rounded px-1 py-px hover:bg-nexus-accent/5",
         indent && "pl-4",
       )}
     >
@@ -2143,7 +2144,7 @@ function Title({
 
   if (!squad) {
     return (
-      <p className="pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
+      <p className="nexus-ov-title pointer-events-none flex-1 truncate text-sm font-medium text-nexus-bright">
         {t("title")}
       </p>
     );
@@ -2172,7 +2173,7 @@ function Title({
    */
   return (
     <>
-      <p className="pointer-events-none min-w-0 flex-1 truncate text-sm font-medium text-nexus-bright">
+      <p className="nexus-ov-title pointer-events-none min-w-0 flex-1 truncate text-sm font-medium text-nexus-bright">
         {name}
       </p>
 
@@ -2393,7 +2394,7 @@ function Announcement({
     return (
       <div
         title={compact ? value : undefined}
-        className="flex shrink-0 items-start gap-1.5 px-1 py-0.5"
+        className="nexus-ov-banner flex shrink-0 items-start gap-1.5 px-1 py-0.5"
       >
         {body}
       </div>
@@ -2401,7 +2402,7 @@ function Announcement({
   }
 
   return (
-    <div className="flex shrink-0 items-start gap-0.5">
+    <div className="nexus-ov-banner flex shrink-0 items-start gap-0.5">
       <button
         type="button"
         title={
@@ -2591,7 +2592,7 @@ function Footer({
   const t = useTranslations("Squad.footer");
 
   return (
-    <div className="flex shrink-0 items-center justify-between gap-2">
+    <div className="nexus-ov-footer flex shrink-0 items-center justify-between gap-2">
       {/* Not dimmed like a caption would be on a panel: over a bright scene
           there is nothing to be quiet against. */}
       <p className="text-[11px] text-nexus-accent/80">
@@ -2861,7 +2862,7 @@ function CodeButton({ code, tone }: { code: string; tone?: "raid" }) {
           .catch(() => undefined);
       }}
       className={cn(
-        "flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px] tracking-widest",
+        "nexus-ov-chip flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px] tracking-widest",
         SURFACE,
         tone === "raid" && "border-amber-300/35",
         "text-nexus-bright hover:bg-nexus-abyss/80",
@@ -2951,8 +2952,9 @@ function OverlayButton({
     <button
       {...props}
       className={cn(
-        "inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs transition",
+        "nexus-ov-btn inline-flex items-center gap-1.5 rounded px-2 py-1 text-xs transition",
         SURFACE,
+        tone === "danger" && "nexus-ov-btn-danger",
         tone === "danger"
           ? "text-red-300 hover:bg-red-500/20"
           : "text-nexus-bright hover:bg-nexus-abyss/80",
