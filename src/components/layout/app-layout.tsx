@@ -1,14 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { listen } from "@tauri-apps/api/event";
 import { useTranslations } from "use-intl";
 import {
+  House,
+  LogIn,
+  Search,
+  Settings as SettingsIcon,
+} from "lucide-react";
+import {
+  DEFAULT_SHORTCUTS,
   formatShortcut,
   getMicrophone,
   getNotificationCorner,
   getOverlayOpacity,
   getShortcuts,
   setOverlayOpacity,
+  type Shortcuts,
 } from "@/lib/settings";
 import { applyNotificationCorner } from "@/lib/notifications";
 import { applyMicrophone } from "@/lib/chat-voice";
@@ -18,31 +26,6 @@ import {
   OVERLAY_OPACITY_EVENT,
   type OverlayOpacity,
 } from "@/lib/overlay-opacity";
-import {
-  Archive,
-  Bot,
-  Container,
-  Gauge,
-  FlaskConical,
-  Flag,
-  Hammer,
-  House,
-  LogIn,
-  Map as MapIcon,
-  MapPin,
-  MapPinned,
-  NotebookPen,
-  Package,
-  Rocket,
-  Search,
-  Settings as SettingsIcon,
-  ShoppingBag,
-  ClipboardList,
-  Star,
-  UserRound,
-  Users,
-  BookOpen,
-} from "lucide-react";
 import { useAuth } from "@/auth/auth-context";
 import { Spinner } from "@/components/ui";
 import { useUpdateWatcher } from "@/hooks/use-update-watcher";
@@ -56,6 +39,15 @@ import {
 } from "@/hooks/use-refining-watcher";
 import { usePresenceRenewal } from "@/hooks/use-presence";
 import { useFriends } from "@/hooks/use-friends";
+import {
+  activeGroupForPath,
+  isNavItemActive,
+  NAV_GROUPS,
+  QUICK_OVERLAYS,
+  type NavGroup,
+  type NavGroupId,
+} from "@/components/layout/navigation";
+import { OverlaysPopover } from "@/components/layout/overlays-popover";
 import { SessionMenu } from "@/components/layout/session-menu";
 import { useBlueprintOwnershipSync } from "@/hooks/use-blueprint-ownership";
 import { useGameLog } from "@/hooks/use-game-log";
@@ -66,140 +58,55 @@ import { cn } from "@/lib/utils";
 import { showOverlay, type OverlayLabel } from "@/lib/windows";
 import nexusLogo from "@/assets/nexus-logo.png";
 
-type NavKey =
-  | "home"
-  | "blueprints"
-  | "items"
-  | "places"
-  | "markers"
-  | "missions"
-  | "factions"
-  | "lore"
-  | "inventory"
-  | "orders"
-  | "requests"
-  | "refining"
-  | "reputations"
-  | "friends"
-  | "notes"
-  | "chat"
-  | "cargo"
-  | "telemetry"
-  | "orgs";
-
-type NavItem = {
-  to: string;
-  label: NavKey;
-  icon: typeof Hammer;
-  /** Hidden while signed out. */
-  requiresAuth?: boolean;
-};
-
-type NavGroup = { title: "database" | "mySpace" | null; items: NavItem[] };
-
-/**
- * The menu, in the order a session goes: the home page, then what the game
- * is made of, then what is the reader's own.
- */
-const NAV_GROUPS: NavGroup[] = [
-  { title: null, items: [{ to: "/home", label: "home", icon: House }] },
-  {
-    title: "database",
-    items: [
-      { to: "/blueprints", label: "blueprints", icon: Hammer },
-      { to: "/items", label: "items", icon: Package },
-      { to: "/places", label: "places", icon: MapPin },
-      // Les points relevés par le joueur, à côté des lieux où le NPS guide.
-      {
-        to: "/markers",
-        label: "markers",
-        icon: MapPinned,
-        requiresAuth: true,
-      },
-      { to: "/missions", label: "missions", icon: Rocket },
-      { to: "/factions", label: "factions", icon: Flag },
-      { to: "/lore", label: "lore", icon: BookOpen },
-    ],
-  },
-  {
-    title: "mySpace",
-    items: [
-      {
-        to: "/inventory",
-        label: "inventory",
-        icon: Archive,
-        requiresAuth: true,
-      },
-      {
-        to: "/refining",
-        label: "refining",
-        icon: FlaskConical,
-        requiresAuth: true,
-      },
-      {
-        to: "/orders",
-        label: "orders",
-        icon: ShoppingBag,
-        requiresAuth: true,
-      },
-      // Ce que les amis et les orgas cherchent, à côté des commandes.
-      {
-        to: "/requests",
-        label: "requests",
-        icon: ClipboardList,
-        requiresAuth: true,
-      },
-      {
-        to: "/reputations",
-        label: "reputations",
-        icon: Star,
-        requiresAuth: true,
-      },
-      { to: "/friends", label: "friends", icon: UserRound, requiresAuth: true },
-      { to: "/notes", label: "notes", icon: NotebookPen },
-      { to: "/chat", label: "chat", icon: Bot, requiresAuth: true },
-      { to: "/cargo", label: "cargo", icon: Container },
-      // Ce que le jeu dit du joueur et de son vaisseau, et ses actions.
-      { to: "/telemetry", label: "telemetry", icon: Gauge },
-      { to: "/orgs", label: "orgs", icon: Users },
-    ],
-  },
-];
-
-/** The two overlays the menu opens directly: the ones used in every session. */
-const MENU_OVERLAYS: {
-  label: OverlayLabel & ("squad" | "map");
-  icon: typeof Hammer;
-}[] = [
-  { label: "squad", icon: Users },
-  { label: "map", icon: MapIcon },
-];
-
 function open(label: OverlayLabel) {
   void showOverlay(label).catch((error) =>
     console.error(`cannot open the ${label} overlay`, error),
   );
 }
 
-function navClass({ isActive }: { isActive: boolean }) {
-  return cn(
-    "flex h-8 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] transition-colors",
-    isActive
-      ? "bg-nexus-accent/13 font-medium text-nexus-white"
-      : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
-  );
-}
-
 /** Route requests sent by the overlay when a search result is picked. */
 const NAVIGATE_EVENT = "main://navigate";
+
+function railButtonClass(isActive: boolean) {
+  return cn(
+    "relative flex w-[60px] flex-col items-center gap-1 rounded-[10px] border px-1 py-2 transition-colors",
+    isActive
+      ? "border-nexus-accent/22 bg-nexus-accent/14 text-nexus-white"
+      : "border-transparent text-nexus-accent/65 hover:bg-nexus-accent/8 hover:text-nexus-bright",
+  );
+}
 
 export default function AppLayout() {
   const t = useTranslations("Layout");
   const { user, loading, signOut, signIn } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   useNavigationTracker();
   const mainRef = useRef<HTMLElement>(null);
   useScrollRestoration(mainRef);
+
+  const activeGroup = activeGroupForPath(pathname);
+  const activeGroupId = activeGroup?.id ?? null;
+
+  // Remembers the last page visited in each pole during this session so
+  // switching back to a pole returns the reader right where they left off.
+  const lastRouteByGroup = useRef<Partial<Record<NavGroupId, string>>>({});
+  useEffect(() => {
+    if (activeGroupId) {
+      lastRouteByGroup.current[activeGroupId] = pathname;
+    }
+  }, [activeGroupId, pathname]);
+
+  // Re-clicking the active pole collapses its contextual panel to give more
+  // room on narrow screens; switching to another pole opens it again.
+  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const prevGroupId = useRef<NavGroupId | null>(activeGroupId);
+  useEffect(() => {
+    if (activeGroupId !== prevGroupId.current) {
+      setPanelCollapsed(false);
+      prevGroupId.current = activeGroupId;
+    }
+  }, [activeGroupId]);
 
   // Only the main window looks: the check is per application, not per window,
   // and this is the one that can show what to do about it.
@@ -208,7 +115,7 @@ export default function AppLayout() {
   // A declaration of playing stays alive while this window does.
   usePresenceRenewal(Boolean(user));
 
-  // How many friends are playing, beside «Amis» in the menu.
+  // How many friends are playing, beside «Amis» and on the Social rail pole.
   const friends = useFriends(Boolean(user));
   const friendsPlaying =
     friends.data?.filter((friend) => friend.playing).length ?? 0;
@@ -251,16 +158,13 @@ export default function AppLayout() {
   // Rust binds the defaults at startup; the stored combinations replace them as
   // soon as the main window can read the settings store. Rejections are not
   // raised here — Settings lists them, where they can be acted on.
-  const [searchShortcut, setSearchShortcut] = useState<string | null>(null);
+  const [shortcuts, setShortcuts] = useState<Shortcuts>(DEFAULT_SHORTCUTS);
 
   useEffect(() => {
     void getShortcuts()
-      .then((shortcuts) => {
-        // Tight, to fit beside the label in the menu's width.
-        setSearchShortcut(
-          formatShortcut(shortcuts.search).replace(/ \+ /g, "+"),
-        );
-        return applyShortcuts(shortcuts);
+      .then((loaded) => {
+        setShortcuts(loaded);
+        return applyShortcuts(loaded);
       })
       .catch((error) => console.error("cannot apply shortcuts", error));
   }, []);
@@ -325,116 +229,141 @@ export default function AppLayout() {
     };
   }, []);
 
+  function visibleItemsOf(group: NavGroup) {
+    return group.items.filter((item) => !item.requiresAuth || user);
+  }
+
+  function handlePoleClick(group: NavGroup) {
+    const visible = visibleItemsOf(group);
+    if (visible.length === 0) return;
+
+    if (activeGroupId === group.id) {
+      setPanelCollapsed((collapsed) => !collapsed);
+      return;
+    }
+
+    const remembered = lastRouteByGroup.current[group.id];
+    const canReuseRemembered =
+      remembered && visible.some((item) => isNavItemActive(item, remembered));
+    setPanelCollapsed(false);
+    navigate(canReuseRemembered ? remembered : visible[0].to);
+  }
+
+  const searchShortcut = formatShortcut(shortcuts.search).replace(/ \+ /g, "+");
+  const isHome = pathname === "/home";
+  const subPanelItems = activeGroup ? visibleItemsOf(activeGroup) : [];
+  const showSubPanel =
+    Boolean(activeGroup) && !panelCollapsed && subPanelItems.length > 0;
+
   return (
     <div className="flex h-full">
-      <aside className="flex w-58 shrink-0 flex-col border-r border-nexus-accent/8 bg-nexus-night">
-        <div className="flex items-center gap-2.5 px-4.5 pt-4.5 pb-3.5">
+      {/* Primary navigation rail: fixed width, never scrolls even at 600px height. */}
+      <aside className="relative z-20 flex w-[74px] shrink-0 flex-col items-center gap-1.5 border-r border-nexus-accent/9 bg-nexus-rail px-1.5 py-3">
+        <NavLink
+          to="/home"
+          title="NEXUS — Star Citizen Tools"
+          aria-label={t("nav.home")}
+          className="mb-1 flex size-9 shrink-0 items-center justify-center rounded-xl transition-transform hover:scale-105"
+        >
           <img src={nexusLogo} alt="" className="size-8 shrink-0" />
-          <div className="flex flex-col">
-            <span className="font-display text-[17px] leading-tight font-bold tracking-[0.06em] text-nexus-white">
-              NEXUS
-            </span>
-            <span className="text-[10px] tracking-[0.14em] text-nexus-dim uppercase">
-              Star Citizen Tools
-            </span>
-          </div>
-        </div>
+        </NavLink>
 
-        <div className="px-3 pb-2.5">
-          <button
-            type="button"
-            onClick={() => open("overlay")}
-            className="flex h-9 w-full items-center gap-2 rounded-lg border border-nexus-accent/12 bg-nexus-accent/6 px-2.5 text-[13px] text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:text-nexus-bright"
-          >
-            <Search className="size-4" />
-            <span className="flex-1 text-left">{t("search")}</span>
-            {searchShortcut ? (
-              <span className="shrink-0 font-mono text-[10px] whitespace-nowrap text-nexus-dim">
-                {searchShortcut}
-              </span>
-            ) : null}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={() => open("overlay")}
+          title={t("searchWithShortcut", { shortcut: searchShortcut })}
+          className="mb-0.5 flex w-[60px] flex-col items-center gap-1 rounded-[10px] border border-nexus-accent/14 bg-nexus-accent/6 px-1 py-2 text-nexus-accent/70 transition-colors hover:border-nexus-accent/30 hover:bg-nexus-accent/12 hover:text-nexus-white"
+        >
+          <Search className="size-[16px]" />
+          <span className="text-center text-[10.5px] leading-[1.1] font-medium">
+            {t("rail.search")}
+          </span>
+        </button>
 
         <nav
           aria-label={t("mainNav")}
-          className="flex flex-1 flex-col gap-3.5 overflow-y-auto px-3 py-1"
+          className="flex flex-col items-center gap-1.5"
         >
+          <NavLink
+            to="/home"
+            title={t("nav.home")}
+            className={railButtonClass(isHome)}
+          >
+            {isHome ? <ActiveRailBar /> : null}
+            <House className="size-[17px]" />
+            <span className="text-center text-[10.5px] leading-[1.1] font-medium">
+              {t("rail.home")}
+            </span>
+          </NavLink>
+
           {NAV_GROUPS.map((group) => {
-            const items = group.items.filter(
-              (item) => !item.requiresAuth || user,
-            );
-            if (items.length === 0) return null;
+            const visible = visibleItemsOf(group);
+            if (visible.length === 0) return null;
+
+            const Icon = group.icon;
+            const isActive = activeGroupId === group.id;
 
             return (
-              <div key={group.title ?? "top"} className="flex flex-col gap-0.5">
-                {group.title ? (
-                  <p className="px-2.5 pb-1 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
-                    {t(`groups.${group.title}`)}
-                  </p>
+              <button
+                key={group.id}
+                type="button"
+                aria-current={isActive ? "true" : undefined}
+                title={t(`groups.${group.id}`)}
+                onClick={() => handlePoleClick(group)}
+                className={railButtonClass(isActive)}
+              >
+                {isActive ? <ActiveRailBar /> : null}
+                <Icon className="size-[17px]" />
+                <span className="text-center text-[10.5px] leading-[1.1] font-medium">
+                  {t(`rail.${group.id}`)}
+                </span>
+
+                {group.id === "economy" ? (
+                  <RefiningReadyBadge userId={user?.id} variant="mini" />
                 ) : null}
-                {items.map(({ to, label, icon: Icon }) => (
-                  <NavLink key={to} to={to} className={navClass}>
-                    <Icon className="size-4" />
-                    <span className="flex-1">{t(`nav.${label}`)}</span>
-                    {to === "/friends" && friendsPlaying > 0 ? (
-                      <span
-                        title={t("friendsPlaying", { count: friendsPlaying })}
-                        className="flex items-center gap-1 rounded-full bg-emerald-300/12 px-1.5 text-[11px] font-medium text-emerald-300"
-                      >
-                        <span className="size-1.5 rounded-full bg-emerald-300" />
-                        {friendsPlaying}
-                      </span>
-                    ) : null}
-                    {to === "/refining" ? (
-                      <RefiningReadyBadge userId={user?.id} />
-                    ) : null}
-                  </NavLink>
-                ))}
-              </div>
+
+                {group.id === "community" && friendsPlaying > 0 ? (
+                  <span
+                    title={t("friendsPlaying", { count: friendsPlaying })}
+                    className="absolute top-1 right-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-300 px-1 font-mono text-[10px] font-bold text-[#053527] ring-2 ring-nexus-rail"
+                  >
+                    {friendsPlaying}
+                  </span>
+                ) : null}
+              </button>
             );
           })}
-
-          <div className="flex flex-col gap-1.5">
-            <p className="px-2.5 font-display text-[10.5px] font-semibold tracking-[0.14em] text-nexus-dim/90 uppercase">
-              {t("groups.inGame")}
-            </p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {MENU_OVERLAYS.map(({ label, icon: Icon }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => open(label)}
-                  title={t("showOverlay", { name: t(`overlays.${label}`) })}
-                  className="flex h-13 flex-col items-center justify-center gap-1 rounded-lg border border-nexus-accent/14 bg-nexus-accent/7 text-xs font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/12"
-                >
-                  <Icon className="size-4 text-nexus-accent" />
-                  {t(`overlays.${label}`)}
-                </button>
-              ))}
-            </div>
-          </div>
         </nav>
 
-        <div className="relative flex items-center gap-2.5 border-t border-nexus-accent/8 px-3.5 py-3">
+        <div className="my-1 h-px w-9 bg-nexus-accent/12" />
+
+        <OverlaysPopover shortcuts={shortcuts} onOpenOverlay={open} />
+
+        <div className="flex-1" />
+
+        <div className="flex flex-col items-center gap-1.5">
           {loading ? (
-            <div className="flex flex-1 items-center gap-2 text-sm text-nexus-dim">
+            <div
+              title={t("sessionLoading")}
+              aria-label={t("sessionLoading")}
+              className="flex size-9 items-center justify-center text-nexus-dim"
+            >
               <Spinner />
-              {t("sessionLoading")}
             </div>
           ) : user ? (
             <SessionMenu name={user.name} onSignOut={() => void signOut()} />
           ) : (
             <button
               type="button"
+              title={t("signIn")}
+              aria-label={t("signIn")}
               onClick={() => {
                 navigate("/login");
                 void signIn();
               }}
-              className="flex h-8 flex-1 items-center gap-2 rounded-lg px-2 text-[13px] text-nexus-accent/70 transition-colors hover:bg-nexus-accent/8 hover:text-nexus-bright"
+              className="flex size-9 items-center justify-center rounded-full border border-nexus-accent/18 bg-nexus-accent/6 text-nexus-accent/75 transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/12 hover:text-nexus-white"
             >
               <LogIn className="size-4" />
-              {t("signIn")}
             </button>
           )}
 
@@ -444,10 +373,10 @@ export default function AppLayout() {
             title={t("settings")}
             className={({ isActive }) =>
               cn(
-                "flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+                "flex size-8 shrink-0 items-center justify-center rounded-lg border transition-colors",
                 isActive
-                  ? "bg-nexus-accent/13 text-nexus-white"
-                  : "text-nexus-accent/70 hover:bg-nexus-accent/8 hover:text-nexus-bright",
+                  ? "border-nexus-accent/24 bg-nexus-accent/15 text-nexus-white"
+                  : "border-transparent text-nexus-accent/65 hover:bg-nexus-accent/8 hover:text-nexus-bright",
               )
             }
           >
@@ -456,8 +385,92 @@ export default function AppLayout() {
         </div>
       </aside>
 
+      {/* Contextual sub-panel for the active pole (hidden on Home/Settings). */}
+      {showSubPanel && activeGroup ? (
+        <aside
+          aria-label={t(`groups.${activeGroup.id}`)}
+          className="flex w-[216px] shrink-0 flex-col border-r border-nexus-accent/9 bg-nexus-night px-3 py-4"
+        >
+          <div className="mb-3 border-b border-nexus-accent/8 px-2 pb-3">
+            <h2 className="font-display text-[13px] font-bold tracking-[0.06em] text-nexus-white uppercase">
+              {t(`groups.${activeGroup.id}`)}
+            </h2>
+            <p className="mt-1 text-[11.5px] leading-snug text-nexus-dim">
+              {t(`groupBlurb.${activeGroup.id}`)}
+            </p>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto">
+            {subPanelItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isNavItemActive(item, pathname);
+
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center gap-2.5 rounded-[9px] border px-2.5 py-2 text-[13px] transition-colors",
+                    isActive
+                      ? "border-nexus-accent/20 bg-nexus-accent/14 font-medium text-nexus-white"
+                      : "border-transparent text-nexus-accent/72 hover:bg-nexus-accent/8 hover:text-nexus-bright",
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "size-4 shrink-0",
+                      isActive ? "text-nexus-accent" : "text-current",
+                    )}
+                  />
+                  <span className="flex-1 truncate">
+                    {t(`nav.${item.label}`)}
+                  </span>
+
+                  {item.to === "/friends" && friendsPlaying > 0 ? (
+                    <span
+                      title={t("friendsPlaying", { count: friendsPlaying })}
+                      className="flex items-center gap-1 rounded-full bg-emerald-300/14 px-1.5 text-[11px] font-medium text-emerald-300"
+                    >
+                      <span className="size-1.5 rounded-full bg-emerald-300" />
+                      {friendsPlaying}
+                    </span>
+                  ) : null}
+
+                  {item.to === "/refining" ? (
+                    <RefiningReadyBadge userId={user?.id} variant="pill" />
+                  ) : null}
+                </NavLink>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-col gap-1.5 border-t border-nexus-accent/8 pt-3">
+            <p className="px-1 font-display text-[10px] font-semibold tracking-[0.12em] text-nexus-dim uppercase">
+              {t("overlaysDrawer.quickAccess")}
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              {QUICK_OVERLAYS.map(({ label, icon: Icon }) => {
+                const name = t(`overlays.${label}`);
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => open(label)}
+                    title={t("showOverlay", { name })}
+                    className="flex h-8.5 items-center justify-center gap-1.5 rounded-lg border border-nexus-accent/15 bg-nexus-accent/7 px-1.5 text-[11.5px] font-medium text-nexus-bright transition-colors hover:border-nexus-accent/35 hover:bg-nexus-accent/14 hover:text-nexus-white"
+                  >
+                    <Icon className="size-3.5 shrink-0 text-nexus-accent" />
+                    <span className="truncate">{name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </aside>
+      ) : null}
+
       <main ref={mainRef} className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-10 py-8">
+        <div className="mx-auto max-w-6xl px-6 py-6 xl:px-10 xl:py-8">
           <Outlet />
         </div>
       </main>
@@ -465,14 +478,43 @@ export default function AppLayout() {
   );
 }
 
+/** Luminous vertical accent bar anchored to the left edge of the active rail item. */
+function ActiveRailBar() {
+  return (
+    <span
+      aria-hidden="true"
+      className="pointer-events-none absolute top-2.5 bottom-2.5 -left-[7px] w-[3px] rounded-r-full bg-nexus-accent shadow-[0_0_10px_rgba(158,208,255,0.65)]"
+    />
+  );
+}
+
 /**
- * How many refining orders are ready to collect, beside «Raffinage». Its own
- * component: the clock it reads would otherwise redraw the whole layout.
+ * How many refining orders are ready to collect, beside «Raffinage» and on the
+ * «Économie» rail pole. Its own component: the clock it reads would otherwise
+ * redraw the whole layout.
  */
-function RefiningReadyBadge({ userId }: { userId?: string }) {
+function RefiningReadyBadge({
+  userId,
+  variant,
+}: {
+  userId?: string;
+  variant: "pill" | "mini";
+}) {
   const t = useTranslations("Layout");
   const ready = useReadyRefiningCount(userId);
   if (ready === 0) return null;
+
+  if (variant === "mini") {
+    return (
+      <span
+        title={t("refiningReady", { count: ready })}
+        className="absolute top-1 right-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-300 px-1 font-mono text-[10px] font-bold text-[#053527] ring-2 ring-nexus-rail"
+      >
+        {ready}
+      </span>
+    );
+  }
+
   return (
     <span
       title={t("refiningReady", { count: ready })}

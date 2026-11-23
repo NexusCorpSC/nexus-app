@@ -1,10 +1,28 @@
 {
   "search": "Rechercher…",
+  "searchWithShortcut": "Rechercher… ({shortcut})",
   "mainNav": "Navigation principale",
+  "rail": {
+    "search": "Chercher",
+    "home": "Accueil",
+    "database": "Base",
+    "economy": "Éco",
+    "mySpace": "Espace",
+    "community": "Social",
+    "inGame": "En jeu"
+  },
   "groups": {
     "database": "Base de données",
+    "economy": "Économie",
     "mySpace": "Mon espace",
+    "community": "Communauté",
     "inGame": "En jeu"
+  },
+  "groupBlurb": {
+    "database": "Les références du jeu : ce qui existe, où, et comment l'obtenir.",
+    "economy": "Acheter, vendre et produire : inventaire, raffinage, commandes et cargo.",
+    "mySpace": "Vos outils de session : marqueurs, réputations, notes, assistant et télémétrie.",
+    "community": "Jouer ensemble : amis en ligne et organisations."
   },
   "nav": {
     "home": "Accueil",
@@ -29,8 +47,22 @@
   },
   "friendsPlaying": "{count} en jeu",
   "overlays": {
+    "search": "Recherche",
     "squad": "Escouade",
-    "map": "Carte"
+    "map": "Carte",
+    "nps": "NPS",
+    "radar": "Scanner radar",
+    "halo": "Nav. quantique",
+    "plan": "Plan de vol",
+    "notes": "Bloc-notes",
+    "cargo": "Cargo",
+    "chat": "Nexus Chat"
+  },
+  "overlaysDrawer": {
+    "title": "Superpositions en jeu",
+    "subtitle": "Fenêtres par-dessus Star Citizen",
+    "radial": "{shortcut} radial",
+    "quickAccess": "Accès rapides session"
   },
   "showOverlay": "Afficher la superposition {name}",
   "sessionLoading": "Session…",

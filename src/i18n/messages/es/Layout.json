@@ -1,10 +1,28 @@
 {
   "search": "Buscar…",
+  "searchWithShortcut": "Buscar… ({shortcut})",
   "mainNav": "Navegación principal",
+  "rail": {
+    "search": "Buscar",
+    "home": "Inicio",
+    "database": "Datos",
+    "economy": "Econ.",
+    "mySpace": "Espacio",
+    "community": "Social",
+    "inGame": "En juego"
+  },
   "groups": {
     "database": "Base de datos",
+    "economy": "Economía",
     "mySpace": "Mi espacio",
+    "community": "Comunidad",
     "inGame": "En el juego"
+  },
+  "groupBlurb": {
+    "database": "Las referencias del juego: qué existe, dónde y cómo conseguirlo.",
+    "economy": "Comprar, vender y producir: inventario, refinado, pedidos y cargo.",
+    "mySpace": "Tus herramientas de sesión: marcadores, reputaciones, notas, chat y telemetría.",
+    "community": "Jugar juntos: amigos conectados y organizaciones."
   },
   "nav": {
     "home": "Inicio",
@@ -29,8 +47,22 @@
   },
   "friendsPlaying": "{count} jugando",
   "overlays": {
+    "search": "Búsqueda",
     "squad": "Escuadra",
-    "map": "Mapa"
+    "map": "Mapa",
+    "nps": "NPS",
+    "radar": "Escáner radar",
+    "halo": "Nav. cuántica",
+    "plan": "Plan de vuelo",
+    "notes": "Bloc de notas",
+    "cargo": "Cargo",
+    "chat": "Nexus Chat"
+  },
+  "overlaysDrawer": {
+    "title": "Superposiciones en juego",
+    "subtitle": "Ventanas sobre Star Citizen",
+    "radial": "{shortcut} radial",
+    "quickAccess": "Accesos rápidos de sesión"
   },
   "showOverlay": "Mostrar la superposición {name}",
   "sessionLoading": "Sesión…",
