@@ -226,6 +226,18 @@ composants partagés : `nexus-ticks` (cartes, modales), `nexus-primary`,
 faite à la main prend `nexus-ticks` pour suivre le thème. Origin est clair
 dans la fenêtre principale seulement (`data-window="main"`).
 
+Les superpositions ont leur propre cadre de HUD, dans `src/overlay-hud.css` :
+coins coupés, surface holographique, crochets, selon le mode d'opacité
+(`nexus-ov` et `nexus-ov-opaque|shaded|clear`, posés par `overlaySkin`). Les
+parties d'une superposition prennent des classes `nexus-ov-*` (en-tête,
+titre, libellé, bouton, onglet, ligne avec `data-status`, bandeau, pied,
+dessin) ; l'escouade, la carte et le NPS les portent. Un thème règle le cadre
+par quelques variables (`--ov-cut`, `--ov-radius`, `--ov-line`, `--ov-scan`)
+et ajoute sa touche en dessous. Les boutons (`nexus-ov-btn`, `-primary`,
+`-danger`, `nexus-ov-icon`) prennent la forme du constructeur dans
+`src/overlay-buttons.css` : seul le bouton principal est repeint, les autres
+gardent leurs couleurs d'état.
+
 ## Instance ciblée
 
 L'URL de l'API se règle dans **Paramètres**. Les hôtes autorisés sont déclarés

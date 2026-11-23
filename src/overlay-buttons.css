@@ -1,0 +1,349 @@
+/*
+ * The buttons of the overlays, cut to each manufacturer's pattern.
+ *
+ *   .nexus-ov-btn          a button with a label
+ *   .nexus-ov-btn-primary  the one action that matters on screen
+ *   .nexus-ov-btn-danger   leaving, deleting
+ *   .nexus-ov-icon         a button that is only an icon
+ *   .nexus-ov-tab, .nexus-ov-chip
+ *
+ * A plain button keeps the colours its page gives it (a toggle turns green
+ * when on, a warning amber): only its shape, its type and what is drawn on
+ * top of it change here. The primary button is painted whole.
+ *
+ * A clip-path also clips the outer shadow: the shapes that are cut glow
+ * inwards, and only the uncut ones (Mirai, Banu, Origin) glow outwards.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Nexus, and every maker without a pattern of its own                 */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --ovb-cut: 6px;
+  --ovb-shape: polygon(var(--ovb-cut) 0, 100% 0, 100% calc(100% - var(--ovb-cut)), calc(100% - var(--ovb-cut)) 100%, 0 100%, 0 var(--ovb-cut));
+}
+
+.nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  border-radius: 0;
+  clip-path: var(--ovb-shape);
+}
+
+/* A lit notch on the left, a light along the top. */
+.nexus-ov .nexus-ov-btn {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-size: 11px;
+  font-weight: 600;
+  background-image:
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 0 50% / 2px 55% no-repeat,
+    linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 14%, transparent), transparent 70%);
+}
+
+.nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  box-shadow: inset 0 0 14px -4px color-mix(in oklab, var(--seed-accent) 75%, transparent);
+  text-shadow: 0 0 8px var(--nexus-glow);
+}
+
+.nexus-ov .nexus-ov-btn-primary {
+  border-color: var(--seed-accent);
+  color: var(--seed-ink);
+  background-color: color-mix(in oklab, var(--seed-accent) 22%, transparent);
+  background-image:
+    linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 35%, transparent), transparent),
+    repeating-linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 14%, transparent) 0 1px, transparent 1px 3px);
+  box-shadow: inset 0 0 12px -2px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+.nexus-ov .nexus-ov-btn-danger {
+  background-image: linear-gradient(rgb(248 113 113), rgb(248 113 113)) 0 50% / 2px 55% no-repeat;
+}
+
+.nexus-ov .nexus-ov-btn-danger:not(:disabled):hover {
+  box-shadow: inset 0 0 14px -4px rgb(248 113 113 / 0.75);
+  text-shadow: none;
+}
+
+.nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--seed-accent) 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Drake: stencilled plates, a yellow lip, hazard stripes on the go.   */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="drake"] {
+  --ovb-shape: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+}
+
+:root[data-theme="drake"] .nexus-ov .nexus-ov-btn {
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  background-image:
+    linear-gradient(var(--seed-accent), var(--seed-accent)) bottom / 100% 2px no-repeat,
+    linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 10%, transparent), transparent);
+}
+
+:root[data-theme="drake"] .nexus-ov .nexus-ov-btn-primary {
+  color: #141006;
+  background-color: var(--seed-accent);
+  background-image: repeating-linear-gradient(-45deg, #141006 0 4px, transparent 4px 8px);
+  background-size: 18px 100%;
+  background-position: right;
+  background-repeat: no-repeat;
+  box-shadow: none;
+  text-shadow: none;
+}
+
+:root[data-theme="drake"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  filter: brightness(1.1);
+  text-shadow: none;
+}
+
+:root[data-theme="drake"] .nexus-ov .nexus-ov-btn-danger {
+  background-image: linear-gradient(rgb(248 113 113), rgb(248 113 113)) bottom / 100% 2px no-repeat;
+}
+
+/* Argo: the same work plates, the stripes along the bottom. */
+:root[data-theme="argo"] {
+  --ovb-shape: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn {
+  background-image:
+    repeating-linear-gradient(-45deg, var(--seed-accent) 0 3px, transparent 3px 6px) bottom / 100% 3px no-repeat,
+    linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 10%, transparent), transparent);
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn-primary {
+  color: #1a0f05;
+  background-color: var(--seed-accent);
+  background-image: repeating-linear-gradient(-45deg, #1a0f05 0 3px, transparent 3px 6px);
+  background-size: 100% 3px;
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
+
+/* ------------------------------------------------------------------ */
+/* Gatac: parallelograms, an underline in the second colour.            */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="gatac"] {
+  --ovb-shape: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+
+:root[data-theme="gatac"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab) {
+  padding-inline: max(0.75rem, 1em);
+}
+
+:root[data-theme="gatac"] .nexus-ov .nexus-ov-btn {
+  letter-spacing: 0.16em;
+  background-image:
+    linear-gradient(90deg, var(--seed-accent-2), transparent 70%) 8px 100% / calc(100% - 16px) 2px no-repeat,
+    linear-gradient(105deg, color-mix(in oklab, var(--seed-accent) 18%, transparent), transparent 60%);
+}
+
+:root[data-theme="gatac"] .nexus-ov .nexus-ov-btn-primary {
+  color: #fff;
+  background-color: transparent;
+  background-image: linear-gradient(105deg, var(--seed-accent), color-mix(in oklab, var(--seed-accent) 55%, var(--seed-accent-2)));
+  box-shadow: none;
+}
+
+/* The icon buttons stand on their point. */
+:root[data-theme="gatac"] .nexus-ov .nexus-ov-icon {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+:root[data-theme="gatac"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 30%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Mirai: neon tubes, a chromatic offset, the cyan fill.                */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="mirai"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-btn {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  border-color: color-mix(in oklab, var(--seed-accent) 80%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 16%, transparent), transparent);
+  box-shadow:
+    2px 2px 0 -1px color-mix(in oklab, var(--seed-accent-2) 70%, transparent),
+    0 0 10px -3px var(--seed-accent);
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  color: #fff;
+  background-color: color-mix(in oklab, var(--seed-accent) 30%, transparent);
+  box-shadow:
+    -2px 0 0 var(--seed-accent),
+    2px 0 0 var(--seed-accent-2),
+    0 0 16px var(--seed-accent);
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-btn-primary {
+  color: #08020f;
+  background-color: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  background-image: none;
+  box-shadow:
+    -2px 0 0 var(--seed-accent),
+    0 0 16px color-mix(in oklab, var(--seed-accent-2) 70%, transparent);
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  color: #08020f;
+  background-color: color-mix(in oklab, var(--seed-accent-2) 80%, white);
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-btn-danger {
+  border-color: rgb(248 113 113 / 0.8);
+  box-shadow: 2px 2px 0 -1px rgb(248 113 113 / 0.5), 0 0 10px -3px rgb(248 113 113);
+}
+
+:root[data-theme="mirai"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1px var(--seed-accent-2), 0 0 10px var(--seed-accent-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banu: rounded tokens of gold and bronze, a stitched edge.            */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 9999px;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 22%, transparent), color-mix(in oklab, #8a5a1f 18%, transparent));
+  outline: 1px dotted color-mix(in oklab, var(--seed-accent-2) 65%, transparent);
+  outline-offset: -4px;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  box-shadow: 0 0 14px -2px color-mix(in oklab, var(--seed-accent) 55%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary {
+  color: #2a170a;
+  border-color: #8a5a1f;
+  background-color: transparent;
+  background-image: linear-gradient(180deg, #f4cd76, #c4862f);
+  box-shadow: inset 0 1px 0 rgb(255 240 200 / 0.6), 0 0 14px color-mix(in oklab, var(--seed-accent) 40%, transparent);
+  outline-color: rgb(42 23 10 / 0.4);
+  text-shadow: none;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  text-shadow: none;
+  filter: brightness(1.08);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-danger {
+  background-image: none;
+  outline-color: rgb(248 113 113 / 0.45);
+}
+
+/* ------------------------------------------------------------------ */
+/* Origin: ivory pills, a gold hairline, a serif voice.                 */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="origin"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 9999px;
+}
+
+:root[data-theme="origin"] .nexus-ov .nexus-ov-btn {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.05em;
+  border-color: color-mix(in oklab, #d9b76a 55%, transparent);
+  background-image: none;
+}
+
+:root[data-theme="origin"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  border-color: #d9b76a;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #d9b76a 14%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="origin"] .nexus-ov .nexus-ov-btn-primary {
+  color: #12294f;
+  border-color: #d9b76a;
+  background-color: #f3efe7;
+  background-image: linear-gradient(180deg, #ffffff, #e9e2d4);
+  box-shadow: inset 0 0 0 2px #f3efe7, inset 0 0 0 3px color-mix(in oklab, #d9b76a 70%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  box-shadow: inset 0 0 0 2px #f3efe7, inset 0 0 0 3px #d9b76a, 0 0 14px color-mix(in oklab, #d9b76a 40%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-ov .nexus-ov-btn-danger {
+  border-color: rgb(248 113 113 / 0.5);
+}
+
+/* ------------------------------------------------------------------ */
+/* Aopoa: soft pebbles. Vanduul: blades pointed at both ends.           */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="aopoa"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 9999px;
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-size: 12px;
+  background-image: radial-gradient(ellipse at 50% 0, color-mix(in oklab, var(--seed-accent) 25%, transparent), transparent 70%);
+}
+
+:root[data-theme="vanduul"] {
+  --ovb-shape: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
+}
+
+:root[data-theme="vanduul"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab) {
+  padding-inline: max(0.85rem, 1.1em);
+}
+
+/* ------------------------------------------------------------------ */
+/* Effects off: the shapes stay, the glows go.                          */
+/* ------------------------------------------------------------------ */
+
+:root[data-effects="off"] .nexus-ov .nexus-ov-btn:not(.nexus-ov-btn-primary) {
+  box-shadow: none;
+  text-shadow: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* The squad's footer: three buttons and a count on one line            */
+/* ------------------------------------------------------------------ */
+
+/* Same specificity as a maker's rule, and later: the footer stays compact
+   whatever the letter spacing of the theme. */
+:root .nexus-ov .nexus-ov-footer :is(.nexus-ov-btn) {
+  letter-spacing: 0.04em;
+  padding-inline: 0.5rem;
+}
+
+:root .nexus-ov .nexus-ov-footer {
+  flex-wrap: wrap;
+  row-gap: 0.35rem;
+}
+
+:root .nexus-ov .nexus-ov-footer > p {
+  white-space: nowrap;
+}

@@ -133,12 +133,13 @@ const OVERLAY_SHADED = `rounded-nexus bg-black/35 ${OVERLAY_SEE_THROUGH}`;
 
 /** The classes an overlay's root element takes for the current mode. */
 export function overlaySkin(mode: OverlayMode): string {
+  // `nexus-ov` and its mode carry the HUD frame of src/overlay-hud.css.
   switch (mode) {
     case "opaque":
-      return OVERLAY_PANEL;
+      return `nexus-ov nexus-ov-opaque ${OVERLAY_PANEL}`;
     case "shaded":
-      return OVERLAY_SHADED;
+      return `nexus-ov nexus-ov-shaded ${OVERLAY_SHADED}`;
     default:
-      return OVERLAY_SEE_THROUGH;
+      return `nexus-ov nexus-ov-clear ${OVERLAY_SEE_THROUGH}`;
   }
 }

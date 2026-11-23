@@ -2,6 +2,8 @@
 
 @import "./themes.css";
 @import "./theme-variants.css";
+@import "./overlay-hud.css";
+@import "./overlay-buttons.css";
 
 /*
  * Nexus palette. The values are derived from the seeds of the active theme

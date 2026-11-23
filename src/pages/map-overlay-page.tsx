@@ -137,19 +137,16 @@ export default function MapOverlayPage() {
       {/* Sans décorations, l'en-tête tient lieu de barre de titre. */}
       <div
         data-tauri-drag-region
-        className={cn(
-          "flex shrink-0 cursor-grab items-center gap-2 px-3 py-2",
-          mode === "opaque" ? "border-b border-nexus-accent/10" : null,
-        )}
+        className="nexus-ov-header flex shrink-0 cursor-grab items-center gap-2 px-3 py-2"
       >
         <MapIcon className="pointer-events-none size-4 shrink-0 text-nexus-muted" />
 
         <div className="pointer-events-none min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-nexus-bright">
+          <p className="nexus-ov-title truncate text-sm font-medium text-nexus-bright">
             {query.data?.name ?? t("title")}
           </p>
           {query.data && query.data.ancestors.length > 0 ? (
-            <p className="truncate text-[11px] text-nexus-muted">
+            <p className="nexus-ov-subtitle truncate text-[11px] text-nexus-muted">
               {query.data.ancestors.map((one) => one.name).join(" › ")}
             </p>
           ) : null}
@@ -161,7 +158,7 @@ export default function MapOverlayPage() {
           title={t("pick")}
           aria-pressed={open}
           className={cn(
-            "shrink-0 rounded p-1 transition hover:bg-nexus-accent/10",
+            "nexus-ov-icon shrink-0 rounded p-1 transition hover:bg-nexus-accent/10",
             open
               ? "bg-nexus-accent/10 text-nexus-white"
               : "text-nexus-muted hover:text-nexus-white",
@@ -178,7 +175,7 @@ export default function MapOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
+          className="nexus-ov-icon shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
@@ -192,7 +189,7 @@ export default function MapOverlayPage() {
               type="button"
               onClick={() => setView("planet")}
               className={cn(
-                "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
+                "nexus-ov-tab shrink-0 rounded px-2 py-0.5 text-[11px] transition",
                 showPlanet
                   ? "bg-nexus-accent/10 text-nexus-white"
                   : "text-nexus-muted hover:bg-nexus-accent/5 hover:text-nexus-bright",
@@ -210,7 +207,7 @@ export default function MapOverlayPage() {
                 setView("plan");
               }}
               className={cn(
-                "shrink-0 rounded px-2 py-0.5 text-[11px] transition",
+                "nexus-ov-tab shrink-0 rounded px-2 py-0.5 text-[11px] transition",
                 !showPlanet && plan.id === active?.id
                   ? "bg-nexus-accent/10 text-nexus-white"
                   : "text-nexus-muted hover:bg-nexus-accent/5 hover:text-nexus-bright",
@@ -253,7 +250,7 @@ export default function MapOverlayPage() {
           plan={active}
           targets={query.data?.targets ?? []}
           interactive={!locked}
-          className="min-h-0 flex-1"
+          className="nexus-ov-viewport mx-3 mb-3 min-h-0 flex-1"
         />
       )}
     </div>

@@ -145,7 +145,7 @@ export function ShareCard({
         type="button"
         disabled={locked}
         onClick={onChoose}
-        className="rounded px-1 py-0.5 text-[11px] text-nexus-soft transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
+        className="nexus-ov-btn rounded px-1 py-0.5 text-[11px] text-nexus-soft transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
       >
         {t("choose")}
       </button>
@@ -272,7 +272,7 @@ export function SharePanel({
             <button
               type="button"
               onClick={onDone}
-              className="flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-soft transition hover:bg-nexus-accent/10"
+              className="nexus-ov-btn flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-soft transition hover:bg-nexus-accent/10"
             >
               {t("cancel")}
             </button>
@@ -280,7 +280,7 @@ export function SharePanel({
               type="button"
               onClick={confirm}
               disabled={share.save.isPending}
-              className="flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] font-medium text-nexus-rail transition hover:brightness-110 disabled:opacity-50"
+              className="nexus-ov-btn nexus-ov-btn-primary flex-1 rounded-nexus-sm px-3 py-1.5 text-[12px] font-medium text-nexus-rail transition hover:brightness-110 disabled:opacity-50"
               style={{ backgroundColor: PLAYER_COLOR }}
             >
               {share.save.isPending

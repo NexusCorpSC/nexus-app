@@ -1,0 +1,549 @@
+/*
+ * The overlays as a cockpit HUD: cut corners, a holographic surface, corner
+ * brackets, and each manufacturer's own touch on top.
+ *
+ * Every overlay's root carries `.nexus-ov` and its mode (`overlaySkin` in
+ * src/lib/overlay-opacity.ts), so all of them get the frame. The squad, map
+ * and NPS overlays go further and tag their parts:
+ *
+ *   .nexus-ov-header    the drag bar          .nexus-ov-title     its title
+ *   .nexus-ov-subtitle  a line under it       .nexus-ov-label     a section label
+ *   .nexus-ov-btn       a button              .nexus-ov-btn-danger
+ *   .nexus-ov-tab       a tab                 .nexus-ov-chip      a code, a tag
+ *   .nexus-ov-ctl       a field               .nexus-ov-icon      an icon button
+ *   .nexus-ov-row       a list row, with data-status="ready|down|idle"
+ *   .nexus-ov-banner    an announcement       .nexus-ov-footer    the bottom bar
+ *   .nexus-ov-section   a block of the NPS    .nexus-ov-viewport  a drawing
+ *   .nexus-ov-caption   a caption over the drawing
+ *
+ * A theme tunes the frame through a few variables rather than by rewriting
+ * it: --ov-cut (the cut corners, 0 for none), --ov-radius (the corners left
+ * round), --ov-line (the frame), --ov-scan (the scanlines' strength).
+ *
+ * The buttons have their own file, src/overlay-buttons.css.
+ *
+ * Unlayered on purpose: these rules win over the Tailwind utilities. Only
+ * in the overlay windows: nothing here reaches the main window.
+ */
+
+:root {
+  --ov-cut: max(10px, var(--seed-chamfer, 0px));
+  --ov-radius: 0px;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 42%, transparent);
+  --ov-bracket: var(--seed-accent);
+  --ov-scan: 6%;
+  --ov-holo: color-mix(in oklab, var(--seed-tint) 55%, transparent);
+}
+
+:where(.nexus-ov) {
+  position: relative;
+}
+
+/* ------------------------------------------------------------------ */
+/* The frame                                                           */
+/* ------------------------------------------------------------------ */
+
+/* Two corners cut, like the cards of the main window (top right, bottom
+   left). The border would stop at the cut: ::before draws the diagonal. */
+.nexus-ov-opaque,
+.nexus-ov-shaded {
+  border-radius: var(--ov-radius);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--ov-cut)) 0,
+    100% var(--ov-cut),
+    100% 100%,
+    var(--ov-cut) 100%,
+    0 calc(100% - var(--ov-cut))
+  );
+}
+
+.nexus-ov-opaque {
+  border-color: var(--ov-line);
+  /* A light from above, the tint of the maker, and fine scanlines: a
+     projected surface rather than a painted one. */
+  background-image:
+    repeating-linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) var(--ov-scan), transparent) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 90% 140px at 50% 0, color-mix(in oklab, var(--seed-accent) 13%, transparent), transparent),
+    linear-gradient(180deg, var(--ov-holo), transparent 55%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--seed-accent) 6%, transparent),
+    inset 0 0 40px -18px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+.nexus-ov-shaded {
+  background-image: repeating-linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) calc(var(--ov-scan) * 0.6), transparent) 0 1px, transparent 1px 3px);
+}
+
+/* The diagonals of the cut corners, and a light along the top edge. */
+.nexus-ov::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 30;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, var(--seed-accent), transparent) top center / 55% 1px no-repeat,
+    linear-gradient(225deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px))
+      top right / calc(var(--ov-cut) + 1px) calc(var(--ov-cut) + 1px) no-repeat,
+    linear-gradient(45deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px))
+      bottom left / calc(var(--ov-cut) + 1px) calc(var(--ov-cut) + 1px) no-repeat;
+}
+
+.nexus-ov-clear::before {
+  background: none;
+}
+
+/* Brackets on the two corners left square. Over the game, in the clear mode,
+   they are all there is of the window: enough to see where it stands. */
+.nexus-ov::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  z-index: 30;
+  pointer-events: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 0 3px var(--nexus-glow));
+  background:
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) top left / 14px 1.5px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) top left / 1.5px 14px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) bottom right / 14px 1.5px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) bottom right / 1.5px 14px no-repeat;
+}
+
+.nexus-ov-clear::after {
+  opacity: 0.55;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header, title, labels                                               */
+/* ------------------------------------------------------------------ */
+
+/* A hairline under the bar, lit under the title. */
+.nexus-ov-header {
+  position: relative;
+  background-image:
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 45%, transparent), color-mix(in oklab, var(--seed-accent) 10%, transparent) 70%, transparent) bottom / 100% 1px no-repeat;
+}
+
+.nexus-ov-clear .nexus-ov-header {
+  background-image: linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat;
+}
+
+/* Never squeezed out by the buttons of the bar: a few letters always show. */
+.nexus-ov-title {
+  min-width: 5.5em;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: min(var(--seed-tracking), 0.1em);
+  color: var(--seed-ink);
+  text-shadow: 0 0 10px var(--nexus-glow);
+}
+
+/* A small lit diamond before the title. */
+.nexus-ov-title::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  vertical-align: 0.1em;
+  rotate: 45deg;
+  background: var(--seed-accent);
+  box-shadow: 0 0 6px var(--seed-accent);
+}
+
+.nexus-ov-subtitle {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+
+.nexus-ov-label {
+  font-family: var(--font-display);
+  letter-spacing: var(--seed-tracking);
+  color: color-mix(in oklab, var(--seed-accent) 75%, var(--seed-ink));
+}
+
+.nexus-ov-label::before {
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 1px;
+  margin-right: 6px;
+  vertical-align: 0.3em;
+  background: var(--seed-accent);
+}
+
+.nexus-ov-section + .nexus-ov-section {
+  padding-top: 0.5rem;
+  background: linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 22%, transparent), transparent 80%) top / 100% 1px no-repeat;
+}
+
+/* ------------------------------------------------------------------ */
+/* Controls                                                            */
+/* ------------------------------------------------------------------ */
+
+.nexus-ov-tab {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nexus-ov :is(.nexus-ov-ctl, input.rounded-nexus-sm, select.rounded-nexus-sm, input.rounded, select.rounded, textarea.rounded-nexus-sm) {
+  border-radius: 0;
+  border-bottom-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Lists, announcements, drawings                                      */
+/* ------------------------------------------------------------------ */
+
+/* A status bar on the left of each squad member. */
+.nexus-ov-row {
+  border-radius: 0;
+  box-shadow: inset 2px 0 0 color-mix(in oklab, var(--seed-accent) 30%, transparent);
+}
+
+.nexus-ov-row[data-status="ready"] {
+  box-shadow: inset 2px 0 0 rgb(52 211 153 / 0.9);
+}
+
+.nexus-ov-row[data-status="down"] {
+  box-shadow: inset 2px 0 0 rgb(248 113 113 / 0.95);
+}
+
+.nexus-ov-row:hover {
+  background-image: linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 12%, transparent), transparent 70%);
+}
+
+.nexus-ov-banner {
+  border-radius: 0;
+  background-image: linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 14%, transparent), transparent 85%);
+  box-shadow: inset 2px 0 0 var(--seed-accent);
+  padding-left: 0.4rem;
+}
+
+.nexus-ov-footer {
+  padding-top: 0.35rem;
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--seed-accent) 35%, transparent), transparent) top / 100% 1px no-repeat;
+}
+
+/* The drawing sits in a sight: brackets on its four corners. */
+:where(.nexus-ov-viewport) {
+  position: relative;
+}
+
+.nexus-ov-viewport {
+  border-radius: 0;
+  outline: 1px solid color-mix(in oklab, var(--seed-accent) 14%, transparent);
+  outline-offset: -1px;
+}
+
+.nexus-ov-viewport::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  --b: color-mix(in oklab, var(--seed-accent) 80%, transparent);
+  background:
+    linear-gradient(var(--b), var(--b)) top left / 10px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) top left / 1px 10px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 10px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) top right / 1px 10px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 10px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom left / 1px 10px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 10px 1px no-repeat,
+    linear-gradient(var(--b), var(--b)) bottom right / 1px 10px no-repeat;
+}
+
+.nexus-ov-caption {
+  border-radius: 0;
+  box-shadow: inset 2px 0 0 var(--seed-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* The manufacturers                                                    */
+/* ------------------------------------------------------------------ */
+
+/* Drake: raw, industrial. Deep cuts, hazard stripes at the end of the bar. */
+:root[data-theme="drake"] {
+  --ov-cut: 14px;
+  --ov-scan: 4%;
+}
+
+:root[data-theme="drake"] .nexus-ov-header {
+  background-image:
+    repeating-linear-gradient(-45deg, var(--seed-accent) 0 5px, transparent 5px 10px) calc(100% - 4px) 100% / 56px 4px no-repeat,
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 45%, transparent), transparent 80%) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="drake"] .nexus-ov-title {
+  font-weight: 700;
+}
+
+:root[data-theme="drake"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 4px;
+  height: 11px;
+  vertical-align: -0.05em;
+  box-shadow: none;
+}
+
+/* Argo: workhorse orange, the same stripes, finer. */
+:root[data-theme="argo"] .nexus-ov-header {
+  background-image:
+    repeating-linear-gradient(-45deg, var(--seed-accent) 0 3px, transparent 3px 7px) calc(100% - 4px) 100% / 36px 3px no-repeat,
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 45%, transparent), transparent 80%) bottom / 100% 1px no-repeat;
+}
+
+/* Gatac: hard geometry. Parallelograms, a slanted bar, // before labels. */
+:root[data-theme="gatac"] {
+  --ov-cut: 18px;
+}
+
+:root[data-theme="gatac"] .nexus-ov-header {
+  background-image:
+    linear-gradient(115deg, var(--seed-accent) calc(100% - 6px), transparent calc(100% - 6px)) 0 100% / 42% 3px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 40%, transparent), transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="gatac"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 9px;
+  height: 9px;
+  clip-path: polygon(40% 0, 100% 0, 60% 100%, 0 100%);
+}
+
+:root[data-theme="gatac"] .nexus-ov-label::before {
+  content: "//";
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--seed-accent-2);
+  vertical-align: baseline;
+  font-weight: 700;
+}
+
+/* Mirai: cyberpunk. Neon frame, chromatic title, a dashed cyan tab. */
+:root[data-theme="mirai"] {
+  --ov-line: var(--seed-accent);
+  --ov-bracket: var(--seed-accent-2);
+  --ov-scan: 11%;
+  --ov-holo: color-mix(in oklab, var(--seed-accent) 10%, transparent);
+}
+
+:root[data-theme="mirai"] .nexus-ov-opaque {
+  box-shadow:
+    inset 0 0 0 1px var(--seed-accent),
+    inset 3px 3px 0 0 color-mix(in oklab, var(--seed-accent-2) 45%, transparent),
+    inset 0 0 36px -12px var(--seed-accent);
+}
+
+:root[data-theme="mirai"] .nexus-ov-header {
+  background-image:
+    repeating-linear-gradient(90deg, var(--seed-accent-2) 0 8px, transparent 8px 11px) calc(100% - 6px) 100% / 52px 3px no-repeat,
+    linear-gradient(90deg, var(--seed-accent), color-mix(in oklab, var(--seed-accent-2) 60%, transparent) 60%, transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="mirai"] .nexus-ov-title {
+  font-size: 12px;
+  text-shadow:
+    -1.5px 0 0 color-mix(in oklab, var(--seed-accent) 80%, transparent),
+    1.5px 0 0 color-mix(in oklab, var(--seed-accent-2) 80%, transparent),
+    0 0 12px var(--seed-accent);
+}
+
+:root[data-theme="mirai"] .nexus-ov-title::before {
+  background: var(--seed-accent-2);
+  box-shadow: 0 0 8px var(--seed-accent-2);
+}
+
+:root[data-theme="mirai"] .nexus-ov-label {
+  color: var(--seed-accent-2);
+  text-shadow: 0 0 6px color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
+}
+
+:root[data-theme="mirai"] .nexus-ov-label::before {
+  background: var(--seed-accent);
+  box-shadow: 0 0 6px var(--seed-accent);
+}
+
+/* Banu: warm and round. Gold, verdigris stitches, diamonds of the bazaar. */
+:root[data-theme="banu"] {
+  --ov-cut: 0px;
+  --ov-radius: 16px;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  --ov-scan: 0%;
+  --ov-holo: color-mix(in oklab, var(--seed-accent) 14%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov::after {
+  background: none;
+}
+
+:root[data-theme="banu"] .nexus-ov-header {
+  background-image:
+    repeating-linear-gradient(90deg, var(--seed-accent) 0 6px, var(--seed-accent-2) 6px 9px, transparent 9px 12px) bottom / 100% 2px no-repeat;
+}
+
+:root[data-theme="banu"] .nexus-ov-title {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  color: var(--seed-accent);
+}
+
+:root[data-theme="banu"] .nexus-ov-label::before {
+  width: 5px;
+  height: 5px;
+  rotate: 45deg;
+  vertical-align: 0.15em;
+  background: var(--seed-accent-2);
+}
+
+:root[data-theme="banu"] .nexus-ov-row,
+:root[data-theme="banu"] .nexus-ov-banner,
+:root[data-theme="banu"] .nexus-ov-caption {
+  border-radius: 8px;
+}
+
+:root[data-theme="banu"] .nexus-ov-viewport {
+  border-radius: 12px;
+  outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov-viewport::after {
+  background: none;
+}
+
+/* Origin: luxury and harmony. No cuts: a double gold hairline, a serif
+   title, pill buttons, and the five lines of a stave behind the bar. */
+:root[data-theme="origin"] {
+  --ov-cut: 0px;
+  --ov-radius: 10px;
+  --ov-line: color-mix(in oklab, #d9b76a 60%, transparent);
+  --ov-bracket: #d9b76a;
+  --ov-scan: 0%;
+}
+
+:root[data-theme="origin"] .nexus-ov-opaque {
+  box-shadow:
+    inset 0 0 0 4px color-mix(in oklab, var(--color-nexus-abyss) 95%, transparent),
+    inset 0 0 0 5px color-mix(in oklab, #d9b76a 30%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-ov::before {
+  background: linear-gradient(90deg, transparent, #d9b76a, transparent) top center / 40% 1px no-repeat;
+}
+
+:root[data-theme="origin"] .nexus-ov::after {
+  inset: 9px;
+  opacity: 0.6;
+  filter: none;
+  background:
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) top left / 8px 1px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) top left / 1px 8px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) bottom right / 8px 1px no-repeat,
+    linear-gradient(var(--ov-bracket), var(--ov-bracket)) bottom right / 1px 8px no-repeat;
+}
+
+:root[data-theme="origin"] .nexus-ov-header {
+  background-image:
+    repeating-linear-gradient(180deg, color-mix(in oklab, #d9b76a 14%, transparent) 0 1px, transparent 1px 5px) right 12px center / 38% 21px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in oklab, #d9b76a 65%, transparent) 30%, color-mix(in oklab, #d9b76a 65%, transparent) 70%, transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="origin"] .nexus-ov-title {
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: #f6f1e6;
+  text-shadow: none;
+}
+
+:root[data-theme="origin"] .nexus-ov-title::before {
+  width: 5px;
+  height: 5px;
+  background: #d9b76a;
+  box-shadow: none;
+}
+
+:root[data-theme="origin"] .nexus-ov-label {
+  color: #d9b76a;
+}
+
+:root[data-theme="origin"] .nexus-ov-label::before {
+  background: linear-gradient(90deg, transparent, #d9b76a);
+}
+
+:root[data-theme="origin"] .nexus-ov-row {
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in oklab, #d9b76a 12%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-ov-row[data-status="ready"]::before,
+:root[data-theme="origin"] .nexus-ov-row[data-status="down"]::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  translate: 0 -50%;
+  border-radius: 9999px;
+  background: rgb(52 211 153);
+}
+
+:root[data-theme="origin"] .nexus-ov-row[data-status="down"]::before {
+  background: rgb(248 113 113);
+}
+
+:root[data-theme="origin"] .nexus-ov-viewport {
+  border-radius: 8px;
+  outline-color: color-mix(in oklab, #d9b76a 35%, transparent);
+}
+
+:root[data-theme="origin"] .nexus-ov-viewport::after {
+  background: none;
+}
+
+/* Aopoa: Xi'an organic curves, nothing cut. */
+:root[data-theme="aopoa"] {
+  --ov-cut: 0px;
+  --ov-radius: 18px;
+}
+
+:root[data-theme="aopoa"] .nexus-ov::after {
+  background: none;
+}
+
+/* Vanduul: blades. The deepest cuts, the brackets in red. */
+:root[data-theme="vanduul"] {
+  --ov-cut: 22px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Effects off: no scanlines, glows or brackets; the cuts stay.         */
+/* ------------------------------------------------------------------ */
+
+:root[data-effects="off"] .nexus-ov::after,
+:root[data-effects="off"] .nexus-ov-viewport::after {
+  background: none;
+}
+
+:root[data-effects="off"] {
+  --ov-scan: 0%;
+}
+
+:root[data-effects="off"] .nexus-ov-title {
+  text-shadow: none;
+}
