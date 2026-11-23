@@ -730,7 +730,7 @@ function MemberRow({
           disabled={!editable}
           onClick={() => setPicking((open) => !open)}
           className={cn(
-            "flex size-5 shrink-0 items-center justify-center rounded transition",
+            "nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded transition",
             role ? "text-nexus-accent/90" : "text-nexus-accent/35",
             editable ? "hover:bg-nexus-accent/15" : "cursor-default",
             picking && "bg-nexus-accent/15",
@@ -936,7 +936,7 @@ function RoleChip({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex items-center gap-1.5 rounded px-1.5 py-1 text-[11px] transition",
+        "nexus-ov-btn flex items-center gap-1.5 rounded px-1.5 py-1 text-[11px] transition",
         selected
           ? "bg-nexus-accent/20 text-nexus-bright"
           : "text-nexus-accent/75 hover:bg-nexus-accent/10",
@@ -1574,7 +1574,7 @@ function RolesSheet({
                         group: groupOf(role.icon),
                       })
                     }
-                    className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 opacity-0 transition hover:bg-nexus-accent/15 group-hover:opacity-100"
+                    className="nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 opacity-0 transition hover:bg-nexus-accent/15 group-hover:opacity-100"
                   >
                     <span className="sr-only">
                       {t("edit", { label: role.label })}
@@ -1594,7 +1594,7 @@ function RolesSheet({
                           roleId: role.id,
                         })
                       }
-                      className="flex size-5 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
+                      className="nexus-ov-icon flex size-5 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
                     >
                       <span className="sr-only">
                         {t("delete", { label: role.label })}
@@ -1705,7 +1705,7 @@ function RoleEditor({
               type="button"
               onClick={() => onChange({ ...draft, group: candidate.id })}
               className={cn(
-                "rounded-full px-2 py-0.5 text-[11px] transition",
+                "nexus-ov-btn rounded-full px-2 py-0.5 text-[11px] transition",
                 candidate.id === group.id
                   ? "bg-nexus-accent/20 text-nexus-bright"
                   : "bg-nexus-abyss/50 text-nexus-accent/65 hover:text-nexus-bright",
@@ -1758,7 +1758,7 @@ function RoleEditor({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded px-2.5 py-1 text-xs text-nexus-accent/70 transition hover:text-nexus-bright"
+          className="nexus-ov-btn rounded px-2.5 py-1 text-xs text-nexus-accent/70 transition hover:text-nexus-bright"
         >
           {t("editor.cancel")}
         </button>
@@ -1897,7 +1897,7 @@ function RaidSheet({
                           type="button"
                           title={t("sheet.switchTo", { name: sub.name })}
                           onClick={() => onSwitch(sub.id)}
-                          className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
+                          className="nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/70 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
                         >
                           <span className="sr-only">
                             {t("sheet.switchTo", { name: sub.name })}
@@ -1916,7 +1916,7 @@ function RaidSheet({
                               targetSquadId: sub.id,
                             })
                           }
-                          className="flex size-5 shrink-0 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
+                          className="nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded text-red-300 opacity-0 transition hover:bg-red-500/20 group-hover:opacity-100"
                         >
                           <span className="sr-only">
                             {t("sheet.unlink", { name: sub.name })}
@@ -2423,7 +2423,7 @@ function Announcement({
             onCommit(value);
             setResent(true);
           }}
-          className="flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/60 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
+          className="nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded text-nexus-accent/60 transition hover:bg-nexus-accent/15 hover:text-nexus-bright"
         >
           <span className="sr-only">{t("announcement.resend")}</span>
           {resent ? (
@@ -2501,7 +2501,7 @@ function Segment({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "flex h-5 items-center gap-1 rounded px-1.5 text-[10.5px] font-medium transition",
+        "nexus-ov-btn flex h-5 items-center gap-1 rounded px-1.5 text-[10.5px] font-medium transition",
         active
           ? "bg-nexus-accent/25 text-nexus-bright"
           : "text-nexus-accent/55 hover:text-nexus-bright",
@@ -2800,7 +2800,7 @@ function RowToggle({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded transition",
+        "nexus-ov-icon flex size-5 shrink-0 items-center justify-center rounded transition",
         disabled ? "cursor-default" : "hover:bg-nexus-accent/15",
         dimmed && "opacity-30",
       )}
@@ -2892,7 +2892,7 @@ function IconButton({
       type="button"
       title={label}
       onClick={onClick}
-      className="shrink-0 rounded p-1 text-nexus-accent/70 transition hover:bg-nexus-abyss/60 hover:text-nexus-bright"
+      className="nexus-ov-icon shrink-0 rounded p-1 text-nexus-accent/70 transition hover:bg-nexus-abyss/60 hover:text-nexus-bright"
     >
       <span className="sr-only">{label}</span>
       {children}

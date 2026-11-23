@@ -708,7 +708,7 @@ export default function NpsOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
+          className="nexus-ov-icon shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
@@ -802,7 +802,7 @@ export default function NpsOverlayPage() {
             <button
               type="button"
               onClick={() => void refreshPosition()}
-              className="nexus-ov-btn flex w-full items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-nexus-accent/10"
+              className="nexus-ov-btn nexus-ov-btn-primary flex w-full items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1.5 text-[13px] font-medium transition hover:bg-nexus-accent/10"
             >
               <Crosshair className="size-4" />
               {t("refresh")}
@@ -889,7 +889,7 @@ export default function NpsOverlayPage() {
             type="button"
             onClick={() => setPanel("mark")}
             disabled={locked}
-            className="flex items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40"
+            className="nexus-ov-btn flex items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-40"
             style={{
               color: DEFAULT_MARKER_COLOR,
               borderColor: `${DEFAULT_MARKER_COLOR}55`,
@@ -918,7 +918,7 @@ export default function NpsOverlayPage() {
                 type="button"
                 onClick={() => setPanel("destination")}
                 disabled={locked}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
+                className="nexus-ov-btn flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
               >
                 <Search className="size-3" />
                 {t("choose")}
@@ -928,7 +928,7 @@ export default function NpsOverlayPage() {
                 onClick={() => setPanel("coordinates")}
                 disabled={locked}
                 title={t("coordinatesHint")}
-                className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
+                className="nexus-ov-btn flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
               >
                 <Keyboard className="size-3" />
                 {t("coordinates")}
@@ -1053,7 +1053,7 @@ export default function NpsOverlayPage() {
               type="button"
               onClick={() => setPanel("record")}
               disabled={locked}
-              className="mt-auto flex items-center justify-center gap-2 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
+              className="nexus-ov-btn mt-auto flex items-center justify-center gap-2 rounded-nexus-sm px-3 py-1.5 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white disabled:opacity-40"
             >
               <MapPinPlus className="size-4" />
               {t("record")}
@@ -1431,7 +1431,7 @@ function ScreenTracking({
           aria-pressed={settings.enabled}
           title={settings.enabled ? t("screen.stop") : t("screen.start")}
           className={cn(
-            "flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-nexus-sm border px-2 py-1 text-[12px] transition disabled:opacity-40",
+            "nexus-ov-btn flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-nexus-sm border px-2 py-1 text-[12px] transition disabled:opacity-40",
             settings.enabled && calibrated
               ? "border-nexus-accent/40 bg-nexus-accent/10 text-nexus-white hover:bg-nexus-accent/20"
               : "border-nexus-accent/15 bg-nexus-accent/5 hover:bg-nexus-accent/10",
@@ -1447,7 +1447,7 @@ function ScreenTracking({
           disabled={locked}
           onClick={onCalibrate}
           title={t("screen.calibrateHint")}
-          className="flex shrink-0 items-center gap-1 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
+          className="nexus-ov-btn flex shrink-0 items-center gap-1 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-2 py-1 text-[12px] transition hover:bg-nexus-accent/10 disabled:opacity-40"
         >
           <ScanText className="size-3.5" />
           {calibrated ? t("screen.recalibrate") : t("screen.calibrate")}
@@ -1800,7 +1800,7 @@ function RecordPanel({
           <button
             type="button"
             onClick={onDone}
-            className="rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
+            className="nexus-ov-btn rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
           >
             {t("back")}
           </button>
@@ -1824,7 +1824,7 @@ function RecordPanel({
               type="button"
               disabled={sending || elsewhere}
               onClick={() => void send()}
-              className="rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1 text-[12px] font-medium transition hover:bg-nexus-accent/20 disabled:opacity-50"
+              className="nexus-ov-btn nexus-ov-btn-primary rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1 text-[12px] font-medium transition hover:bg-nexus-accent/20 disabled:opacity-50"
             >
               {sending ? "…" : t("recordSend")}
             </button>
@@ -1834,7 +1834,7 @@ function RecordPanel({
                 setPicked(null);
                 setResult(null);
               }}
-              className="rounded-nexus-sm px-3 py-1 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
+              className="nexus-ov-btn rounded-nexus-sm px-3 py-1 text-[12px] text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
             >
               {t("recordOther")}
             </button>
@@ -1931,7 +1931,7 @@ function ArrivedAtMarker({
             type="button"
             disabled={disabled}
             onClick={onDelete}
-            className="rounded-nexus-sm border border-red-300/40 bg-red-300/10 px-2.5 py-1 text-red-200 transition hover:bg-red-300/20 disabled:opacity-40"
+            className="nexus-ov-btn nexus-ov-btn-danger rounded-nexus-sm border border-red-300/40 bg-red-300/10 px-2.5 py-1 text-red-200 transition hover:bg-red-300/20 disabled:opacity-40"
           >
             {t("delete")}
           </button>
@@ -1940,7 +1940,7 @@ function ArrivedAtMarker({
           type="button"
           disabled={disabled}
           onClick={onKeep}
-          className="rounded-nexus-sm px-2.5 py-1 text-nexus-soft transition hover:bg-nexus-accent/10 disabled:opacity-40"
+          className="nexus-ov-btn rounded-nexus-sm px-2.5 py-1 text-nexus-soft transition hover:bg-nexus-accent/10 disabled:opacity-40"
         >
           {t("keep")}
         </button>
@@ -2107,7 +2107,7 @@ function MarkPanel({
           type="button"
           autoFocus
           onClick={onDone}
-          className="self-start rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
+          className="nexus-ov-btn self-start rounded-nexus-sm border border-nexus-accent/15 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
         >
           {translator("NpsOverlay")("back")}
         </button>
@@ -2135,7 +2135,7 @@ function MarkPanel({
             <button
               type="button"
               onClick={onRefresh}
-              className="flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
+              className="nexus-ov-btn flex items-center gap-2 rounded-nexus-sm border border-nexus-accent/15 bg-nexus-accent/5 px-3 py-1 text-[12px] transition hover:bg-nexus-accent/10"
             >
               <Crosshair className="size-3.5" />
               {translator("NpsOverlay")("refresh")}
@@ -2165,7 +2165,7 @@ function MarkPanel({
                   aria-pressed={chosenKind === one}
                   onClick={() => setKind(one)}
                   className={cn(
-                    "rounded-full border px-2 py-0.5 text-[11px] transition",
+                    "nexus-ov-btn rounded-full border px-2 py-0.5 text-[11px] transition",
                     chosenKind === one
                       ? "font-medium"
                       : "border-nexus-accent/15 text-nexus-soft hover:bg-nexus-accent/10",
@@ -2253,7 +2253,7 @@ function MarkPanel({
         <button
           type="submit"
           disabled={sending || !bodiesReady}
-          className="flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-50"
+          className="nexus-ov-btn flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border px-3 py-1.5 text-[12px] font-medium transition disabled:opacity-50"
           style={{
             color: DEFAULT_MARKER_COLOR,
             borderColor: `${DEFAULT_MARKER_COLOR}66`,
@@ -2282,7 +2282,7 @@ function PickerHeader({
         type="button"
         onClick={onCancel}
         title={t("back")}
-        className="rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
+        className="nexus-ov-icon rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
       >
         <span className="sr-only">{t("back")}</span>
         <ArrowLeft className="size-4" />
@@ -2532,7 +2532,7 @@ function CoordinatesPanel({
               setError(null);
             }}
             className={cn(
-              "flex-1 rounded-md px-2 py-1 transition disabled:opacity-40",
+              "nexus-ov-btn flex-1 rounded-md px-2 py-1 transition disabled:opacity-40",
               mode === one
                 ? "bg-nexus-accent/15 text-nexus-white"
                 : "text-nexus-muted hover:bg-nexus-accent/10",
@@ -2678,7 +2678,7 @@ function CoordinatesPanel({
 
       <button
         type="submit"
-        className="flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1.5 text-[12px] font-medium transition hover:bg-nexus-accent/20"
+        className="nexus-ov-btn nexus-ov-btn-primary flex shrink-0 items-center justify-center gap-2 rounded-nexus-sm border border-nexus-accent/40 bg-nexus-accent/10 px-3 py-1.5 text-[12px] font-medium transition hover:bg-nexus-accent/20"
       >
         <Navigation className="size-3.5" />
         {t("manual.go")}

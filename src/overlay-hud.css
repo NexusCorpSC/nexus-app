@@ -20,6 +20,8 @@
  * it: --ov-cut (the cut corners, 0 for none), --ov-radius (the corners left
  * round), --ov-line (the frame), --ov-scan (the scanlines' strength).
  *
+ * The buttons have their own file, src/overlay-buttons.css.
+ *
  * Unlayered on purpose: these rules win over the Tailwind utilities. Only
  * in the overlay windows: nothing here reaches the main window.
  */
@@ -27,7 +29,6 @@
 :root {
   --ov-cut: max(10px, var(--seed-chamfer, 0px));
   --ov-radius: 0px;
-  --ov-btn-cut: 5px;
   --ov-line: color-mix(in oklab, var(--seed-accent) 42%, transparent);
   --ov-bracket: var(--seed-accent);
   --ov-scan: 6%;
@@ -186,21 +187,6 @@
 /* Controls                                                            */
 /* ------------------------------------------------------------------ */
 
-/* Every button of the overlay, tagged or not: cut corners, no rounding. */
-.nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon, button.rounded-nexus-sm, button.rounded, button.rounded-md) {
-  border-radius: 0;
-  clip-path: polygon(var(--ov-btn-cut) 0, 100% 0, 100% calc(100% - var(--ov-btn-cut)), calc(100% - var(--ov-btn-cut)) 100%, 0 100%, 0 var(--ov-btn-cut));
-}
-
-.nexus-ov :is(.nexus-ov-btn, .nexus-ov-icon, button.rounded-nexus-sm):not(:disabled):hover {
-  box-shadow: inset 0 0 12px -4px color-mix(in oklab, var(--seed-accent) 70%, transparent);
-  text-shadow: 0 0 8px var(--nexus-glow);
-}
-
-.nexus-ov-btn-danger:not(:disabled):hover {
-  box-shadow: inset 0 0 12px -4px rgb(248 113 113 / 0.7);
-}
-
 .nexus-ov-tab {
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -287,7 +273,6 @@
 /* Drake: raw, industrial. Deep cuts, hazard stripes at the end of the bar. */
 :root[data-theme="drake"] {
   --ov-cut: 14px;
-  --ov-btn-cut: 7px;
   --ov-scan: 4%;
 }
 
@@ -321,10 +306,6 @@
 /* Gatac: hard geometry. Parallelograms, a slanted bar, // before labels. */
 :root[data-theme="gatac"] {
   --ov-cut: 18px;
-}
-
-:root[data-theme="gatac"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, button.rounded-nexus-sm, button.rounded) {
-  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
 }
 
 :root[data-theme="gatac"] .nexus-ov-header {
@@ -384,12 +365,6 @@
   box-shadow: 0 0 8px var(--seed-accent-2);
 }
 
-:root[data-theme="mirai"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, button.rounded-nexus-sm):not(:disabled):hover {
-  background-color: color-mix(in oklab, var(--seed-accent-2) 22%, transparent);
-  color: #fff;
-  box-shadow: inset 0 0 0 1px var(--seed-accent-2), 0 0 14px var(--seed-accent-2);
-}
-
 :root[data-theme="mirai"] .nexus-ov-label {
   color: var(--seed-accent-2);
   text-shadow: 0 0 6px color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
@@ -404,7 +379,6 @@
 :root[data-theme="banu"] {
   --ov-cut: 0px;
   --ov-radius: 16px;
-  --ov-btn-cut: 0px;
   --ov-line: color-mix(in oklab, var(--seed-accent) 60%, transparent);
   --ov-scan: 0%;
   --ov-holo: color-mix(in oklab, var(--seed-accent) 14%, transparent);
@@ -425,16 +399,6 @@
   text-transform: none;
   letter-spacing: 0.02em;
   color: var(--seed-accent);
-}
-
-:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon, button.rounded-nexus-sm, button.rounded, button.rounded-md) {
-  border-radius: 9999px;
-  clip-path: none;
-}
-
-:root[data-theme="banu"] .nexus-ov-btn:not(.nexus-ov-btn-danger) {
-  border-color: color-mix(in oklab, var(--seed-accent) 50%, transparent);
-  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 18%, transparent), transparent);
 }
 
 :root[data-theme="banu"] .nexus-ov-label::before {
@@ -465,7 +429,6 @@
 :root[data-theme="origin"] {
   --ov-cut: 0px;
   --ov-radius: 10px;
-  --ov-btn-cut: 0px;
   --ov-line: color-mix(in oklab, #d9b76a 60%, transparent);
   --ov-bracket: #d9b76a;
   --ov-scan: 0%;
@@ -514,15 +477,6 @@
   box-shadow: none;
 }
 
-:root[data-theme="origin"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon, button.rounded-nexus-sm, button.rounded, button.rounded-md) {
-  border-radius: 9999px;
-  clip-path: none;
-}
-
-:root[data-theme="origin"] .nexus-ov-btn:not(.nexus-ov-btn-danger) {
-  border-color: color-mix(in oklab, #d9b76a 45%, transparent);
-}
-
 :root[data-theme="origin"] .nexus-ov-label {
   color: #d9b76a;
 }
@@ -566,12 +520,6 @@
 :root[data-theme="aopoa"] {
   --ov-cut: 0px;
   --ov-radius: 18px;
-  --ov-btn-cut: 0px;
-}
-
-:root[data-theme="aopoa"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon, button.rounded-nexus-sm, button.rounded, button.rounded-md) {
-  border-radius: 9999px;
-  clip-path: none;
 }
 
 :root[data-theme="aopoa"] .nexus-ov::after {
@@ -581,7 +529,6 @@
 /* Vanduul: blades. The deepest cuts, the brackets in red. */
 :root[data-theme="vanduul"] {
   --ov-cut: 22px;
-  --ov-btn-cut: 8px;
 }
 
 /* ------------------------------------------------------------------ */

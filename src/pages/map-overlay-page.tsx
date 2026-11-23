@@ -158,7 +158,7 @@ export default function MapOverlayPage() {
           title={t("pick")}
           aria-pressed={open}
           className={cn(
-            "shrink-0 rounded p-1 transition hover:bg-nexus-accent/10",
+            "nexus-ov-icon shrink-0 rounded p-1 transition hover:bg-nexus-accent/10",
             open
               ? "bg-nexus-accent/10 text-nexus-white"
               : "text-nexus-muted hover:text-nexus-white",
@@ -175,7 +175,7 @@ export default function MapOverlayPage() {
           type="button"
           onClick={close}
           title={t("close")}
-          className="shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
+          className="nexus-ov-icon shrink-0 rounded p-1 text-nexus-muted transition hover:bg-nexus-accent/10 hover:text-nexus-white"
         >
           <span className="sr-only">{t("close")}</span>
           <X className="size-4" />
