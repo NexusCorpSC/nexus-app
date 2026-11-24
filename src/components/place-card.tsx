@@ -6,6 +6,7 @@ import {
   Building2,
   Globe,
   LayoutGrid,
+  Map as MapIcon,
   Moon,
   Orbit,
   Rocket,
@@ -33,6 +34,7 @@ export const PLACE_ACCENT: Record<PlaceType, string> = {
   outpost: "#8FB8A8",
   spaceport: "#7FA9FF",
   district: "#B4A7E8",
+  region: "#C7B98A",
   building: "#A9C4D9",
   shop: "#D9A441",
 };
@@ -46,6 +48,7 @@ const PLACE_ICONS: Record<PlaceType, typeof Globe> = {
   outpost: Warehouse,
   spaceport: Rocket,
   district: LayoutGrid,
+  region: MapIcon,
   building: Building,
   shop: ShoppingBag,
 };

@@ -8,6 +8,7 @@
     "outpost": "Outpost",
     "spaceport": "Spaceport",
     "district": "District",
+    "region": "Region",
     "building": "Building",
     "shop": "Shop"
   },

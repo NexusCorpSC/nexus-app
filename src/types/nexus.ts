@@ -1218,6 +1218,7 @@ export const PLACE_TYPES = [
   "outpost",
   "spaceport",
   "district",
+  "region",
   "building",
   "shop",
 ] as const;
