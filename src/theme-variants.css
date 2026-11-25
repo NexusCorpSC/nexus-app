@@ -446,28 +446,22 @@
 /* ------------------------------------------------------------------ */
 
 :root {
-  /* A lattice of triangles, and the light of the glass. */
+  /* A mosaic of triangles in uneven shades, darker downwards, and the
+     light of the glass. */
   --pattern-mosaic:
-    repeating-linear-gradient(0deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
-    repeating-linear-gradient(60deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
-    repeating-linear-gradient(120deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
-    radial-gradient(ellipse 70% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 16%, transparent), transparent);
-  /* A row of small upright triangles, for a band along an edge. */
-  --aopoa-triangles: conic-gradient(from 150deg at 50% 0, color-mix(in oklab, var(--seed-accent) 70%, transparent) 0 60deg, transparent 0);
+    linear-gradient(180deg, transparent 0, color-mix(in oklab, var(--color-nexus-abyss) 55%, transparent) 70%),
+    radial-gradient(ellipse 70% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 14%, transparent), transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104.0' height='90.1' fill='%232fe4ee'%3E%3Cpolygon points='-11.2,21.5 0.0,2.1 11.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='1.8,1.1 24.2,1.1 13.0,20.4' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,21.5 26.0,2.1 37.2,21.5' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,1.1 50.2,1.1 39.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='40.8,21.5 52.0,2.1 63.2,21.5' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,1.1 76.2,1.1 65.0,20.4' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,21.5 78.0,2.1 89.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='79.8,1.1 102.2,1.1 91.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='92.8,21.5 104.0,2.1 115.2,21.5' fill-opacity='0.09'/%3E%3Cpolygon points='-11.2,23.6 11.2,23.6 0.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='1.8,44.0 13.0,24.6 24.2,44.0' fill-opacity='0.05'/%3E%3Cpolygon points='14.8,23.6 37.2,23.6 26.0,42.9' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,44.0 39.0,24.6 50.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,23.6 63.2,23.6 52.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,44.0 65.0,24.6 76.2,44.0' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,23.6 89.2,23.6 78.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='79.8,44.0 91.0,24.6 102.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='92.8,23.6 115.2,23.6 104.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='-11.2,66.5 0.0,47.1 11.2,66.5' fill-opacity='0.05'/%3E%3Cpolygon points='1.8,46.1 24.2,46.1 13.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='14.8,66.5 26.0,47.1 37.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='27.8,46.1 50.2,46.1 39.0,65.4' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,66.5 52.0,47.1 63.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='53.8,46.1 76.2,46.1 65.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,66.5 78.0,47.1 89.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='79.8,46.1 102.2,46.1 91.0,65.4' fill-opacity='0.07'/%3E%3Cpolygon points='92.8,66.5 104.0,47.1 115.2,66.5' fill-opacity='0.12'/%3E%3Cpolygon points='-11.2,68.6 11.2,68.6 0.0,88.0' fill-opacity='0.22'/%3E%3Cpolygon points='1.8,89.0 13.0,69.7 24.2,89.0' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,68.6 37.2,68.6 26.0,88.0' fill-opacity='0.05'/%3E%3Cpolygon points='27.8,89.0 39.0,69.7 50.2,89.0' fill-opacity='0.12'/%3E%3Cpolygon points='40.8,68.6 63.2,68.6 52.0,88.0' fill-opacity='0.07'/%3E%3Cpolygon points='53.8,89.0 65.0,69.7 76.2,89.0' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,68.6 89.2,68.6 78.0,88.0' fill-opacity='0.09'/%3E%3Cpolygon points='79.8,89.0 91.0,69.7 102.2,89.0' fill-opacity='0.16'/%3E%3Cpolygon points='92.8,68.6 115.2,68.6 104.0,88.0' fill-opacity='0.05'/%3E%3C/svg%3E") 0 0 / 104px 90px;
   --aopoa-key: #3b8dff;
   --aopoa-engaged: #f5a623;
 }
 
-/* A frame within a frame, and a band of triangles along the top. */
+/* A frame within a frame, glowing. */
 :root[data-theme="aopoa"] .nexus-ticks {
   border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
   box-shadow:
     0 0 14px -4px color-mix(in oklab, var(--seed-accent) 55%, transparent),
     inset 0 0 22px -10px color-mix(in oklab, var(--seed-accent) 60%, transparent);
-  background-image: var(--aopoa-triangles);
-  background-size: 10px 8px;
-  background-position: 50% 6px;
-  background-repeat: repeat-x;
 }
 
 :root[data-theme="aopoa"] .nexus-ticks::after {
