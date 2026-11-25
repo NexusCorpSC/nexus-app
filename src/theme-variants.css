@@ -5,7 +5,7 @@
  *
  *   .nexus-ticks     cards and dialogs (src/components/ui)
  *   .nexus-primary   the primary button, .nexus-outline the outlined one
- *   .nexus-title     page titles
+ *   .nexus-title     page titles, .nexus-section the headings of their sections
  *   .nexus-rail      the main window's rail, .nexus-subpanel its side panel
  *   .nexus-backdrop  the page behind the main window's content
  *   .nexus-overlay   an overlay drawn as a panel (src/lib/overlay-opacity.ts)
@@ -456,6 +456,25 @@
   --aopoa-engaged: #f5a623;
 }
 
+/* The colours of the text, as on the dash: icy white for what is read,
+   lime for figures and titles, blue for labels, a blue grey for the rest. */
+:root[data-theme="aopoa"] {
+  --aopoa-label: #4a8fe8;
+  --color-nexus-white: #e2f5ff;
+  --color-nexus-bright: #cdeaf6;
+  --color-nexus-soft: #a9cde6;
+  --color-nexus-muted: #8aa3c2;
+  --color-nexus-dim: #6c86ad;
+}
+
+:root[data-theme="aopoa"] :is(.nexus-label, .nexus-section) {
+  color: var(--aopoa-label);
+}
+
+:root[data-theme="aopoa"] .nexus-title {
+  color: var(--seed-accent-2);
+}
+
 /* A frame within a frame, glowing. */
 :root[data-theme="aopoa"] .nexus-ticks {
   border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
@@ -513,7 +532,7 @@
 :root[data-theme="aopoa"] .nexus-title {
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  text-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  text-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent-2) 45%, transparent);
 }
 
 :root[data-theme="aopoa"] .nexus-rail {

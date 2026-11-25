@@ -657,7 +657,8 @@
 }
 
 :root[data-theme="aopoa"] .nexus-ov-title {
-  text-shadow: 0 0 10px var(--seed-accent);
+  color: var(--seed-accent-2);
+  text-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
 }
 
 :root[data-theme="aopoa"] .nexus-ov-title::before {
@@ -669,7 +670,11 @@
 }
 
 :root[data-theme="aopoa"] .nexus-ov-label {
-  color: var(--seed-accent);
+  color: var(--aopoa-label);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label::before {
+  background: var(--aopoa-label);
 }
 
 :root[data-theme="aopoa"] .nexus-ov-label::before {
@@ -693,4 +698,9 @@
 :root[data-theme="aopoa"] .nexus-ov-viewport {
   border-radius: 10px;
   outline-color: color-mix(in oklab, var(--seed-accent) 40%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title::before {
+  background: var(--seed-accent-2);
+  box-shadow: 0 0 6px var(--seed-accent-2);
 }

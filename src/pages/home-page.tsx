@@ -108,7 +108,7 @@ export default function HomePage() {
     <div className="flex flex-col gap-7">
       <header className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-[30px] leading-tight font-bold text-nexus-white">
+          <h1 className="nexus-title font-display text-[30px] leading-tight font-bold text-nexus-white">
             {user ? t("greeting", { name: user.name }) : t("welcome")}
           </h1>
           <p className="mt-1 text-sm text-nexus-muted">

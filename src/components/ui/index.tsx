@@ -404,7 +404,7 @@ export function SectionTitle({
     <div
       className={cn("mb-3 flex items-baseline justify-between gap-4", className)}
     >
-      <h2 className="font-display text-sm font-semibold tracking-[0.12em] text-nexus-muted uppercase">
+      <h2 className="nexus-section font-display text-sm font-semibold tracking-[0.12em] text-nexus-muted uppercase">
         {children}
       </h2>
       {aside ? <div className="text-xs text-nexus-dim">{aside}</div> : null}
