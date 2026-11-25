@@ -70,7 +70,7 @@ export const THEME_SWATCHES: Record<ThemeId, { accent: string; tint: string }> =
   drake: { accent: "#ffc400", tint: "#2a2414" },
   argo: { accent: "#ff7f26", tint: "#1a1612" },
   gatac: { accent: "#a77bff", tint: "#1e1033" },
-  aopoa: { accent: "#46e8b0", tint: "#0c2b26" },
+  aopoa: { accent: "#2fe4ee", tint: "#08262e" },
   aegis: { accent: "#ff5252", tint: "#1b2129" },
   anvil: { accent: "#3fe6cf", tint: "#0d2a27" },
   rsi: { accent: "#4ea8ff", tint: "#0e2340" },

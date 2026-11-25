@@ -82,15 +82,17 @@
 
 /* Aopoa (Xi'an): jade, organic. */
 [data-theme="aopoa"] {
-  --seed-accent: #46e8b0;
-  --seed-accent-2: #c9ff6b;
-  --seed-tint: #0c2b26;
-  --seed-ink: #e6fff6;
-  --seed-radius: 1rem;
+  /* The Xi'an cockpit: glowing aqua glass in nested rounded frames, a
+     mosaic of triangles, blue keys, the engaged one amber, lime gauges. */
+  --seed-accent: #2fe4ee;
+  --seed-accent-2: #a6e22e;
+  --seed-tint: #08262e;
+  --seed-ink: #e2fcff;
+  --seed-radius: 14px;
   --seed-ticks: 0;
   --seed-glow: 0.8;
   --seed-tracking: 0.08em;
-  --seed-pattern: var(--pattern-glow);
+  --seed-pattern: var(--pattern-mosaic);
 }
 
 /* Aegis: red on steel, military. */

@@ -508,16 +508,6 @@
   background: none;
 }
 
-/* Aopoa: Xi'an organic curves, nothing cut. */
-:root[data-theme="aopoa"] {
-  --ov-cut: 0px;
-  --ov-radius: 18px;
-}
-
-:root[data-theme="aopoa"] .nexus-ov::after {
-  background: none;
-}
-
 /* Vanduul: blades. The deepest cuts, the brackets in red. */
 :root[data-theme="vanduul"] {
   --ov-cut: 22px;
@@ -635,4 +625,73 @@
 
 :root[data-theme="argo"] .nexus-ov-footer {
   background: linear-gradient(var(--seed-accent), var(--seed-accent)) top / 100% 1px no-repeat;
+}
+
+/* Aopoa: a Xi'an screen. Rounded, a second frame inside the first, the
+   glass glowing, a band of triangles under the bar. */
+:root[data-theme="aopoa"] {
+  --ov-cut: 0px;
+  --ov-radius: 18px;
+  --ov-scan: 0%;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 70%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov::after {
+  background: none;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-opaque {
+  background-image:
+    radial-gradient(ellipse 90% 160px at 50% 0, color-mix(in oklab, var(--seed-accent) 18%, transparent), transparent),
+    linear-gradient(180deg, var(--ov-holo), transparent 60%);
+  box-shadow:
+    inset 0 0 0 4px color-mix(in oklab, var(--color-nexus-abyss) 90%, transparent),
+    inset 0 0 0 5px color-mix(in oklab, var(--seed-accent) 35%, transparent),
+    inset 0 0 30px -10px var(--seed-accent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-header {
+  background:
+    var(--aopoa-triangles) 0 calc(100% - 2px) / 10px 8px repeat-x,
+    linear-gradient(90deg, transparent, var(--seed-accent) 20% 80%, transparent) bottom / 100% 1px no-repeat;
+  padding-bottom: 0.75rem;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title {
+  text-shadow: 0 0 10px var(--seed-accent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 9px;
+  height: 8px;
+  vertical-align: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label {
+  color: var(--seed-accent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label::before {
+  width: 7px;
+  height: 6px;
+  vertical-align: 0.1em;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+:root[data-theme="aopoa"] :is(.nexus-ov-row, .nexus-ov-banner, .nexus-ov-caption) {
+  border-radius: 6px;
+}
+
+/* The gauges of the dash are lime. */
+:root[data-theme="aopoa"] .nexus-ov-footer {
+  background:
+    linear-gradient(var(--seed-accent-2), var(--seed-accent-2)) 0 0 / 40px 2px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 50%, transparent), transparent) 0 0 / 100% 1px no-repeat;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-viewport {
+  border-radius: 10px;
+  outline-color: color-mix(in oklab, var(--seed-accent) 40%, transparent);
 }

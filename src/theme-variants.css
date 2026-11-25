@@ -439,3 +439,89 @@
 :root[data-theme="argo"] .nexus-rail {
   box-shadow: inset -2px 0 0 color-mix(in oklab, var(--seed-accent) 70%, transparent);
 }
+
+/* ------------------------------------------------------------------ */
+/* Aopoa (Xi'an): glowing aqua glass, nested rounded frames, a mosaic  */
+/* of triangles, blue keys with slanted letters, the engaged one amber. */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* A lattice of triangles, and the light of the glass. */
+  --pattern-mosaic:
+    repeating-linear-gradient(0deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(60deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(120deg, color-mix(in oklab, var(--seed-accent) 5%, transparent) 0 1px, transparent 1px 26px),
+    radial-gradient(ellipse 70% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 16%, transparent), transparent);
+  /* A row of small upright triangles, for a band along an edge. */
+  --aopoa-triangles: conic-gradient(from 150deg at 50% 0, color-mix(in oklab, var(--seed-accent) 70%, transparent) 0 60deg, transparent 0);
+  --aopoa-key: #3b8dff;
+  --aopoa-engaged: #f5a623;
+}
+
+/* A frame within a frame, and a band of triangles along the top. */
+:root[data-theme="aopoa"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  box-shadow:
+    0 0 14px -4px color-mix(in oklab, var(--seed-accent) 55%, transparent),
+    inset 0 0 22px -10px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  background-image: var(--aopoa-triangles);
+  background-size: 10px 8px;
+  background-position: 50% 6px;
+  background-repeat: repeat-x;
+}
+
+:root[data-theme="aopoa"] .nexus-ticks::after {
+  inset: 4px;
+  opacity: 1;
+  background: none;
+  border: 1px solid color-mix(in oklab, var(--seed-accent) 28%, transparent);
+  border-radius: calc(var(--seed-radius) - 4px);
+}
+
+/* The engaged key: amber frame, amber letters, slanted. */
+:root[data-theme="aopoa"] .nexus-primary {
+  border-radius: 6px;
+  border-color: var(--aopoa-engaged);
+  background: color-mix(in oklab, var(--aopoa-engaged) 24%, #0a1a20);
+  color: #ffd27a;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4), 0 0 14px color-mix(in oklab, var(--aopoa-engaged) 45%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--aopoa-engaged) 38%, #0a1a20);
+}
+
+/* The other keys: blue frame, blue letters, slanted. */
+:root[data-theme="aopoa"] .nexus-outline {
+  border-radius: 6px;
+  border-color: var(--aopoa-key);
+  background-color: color-mix(in oklab, var(--aopoa-key) 14%, transparent);
+  color: color-mix(in oklab, var(--aopoa-key) 70%, white);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:root[data-theme="aopoa"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, var(--aopoa-key) 26%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--aopoa-key) 50%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-rail {
+  box-shadow: inset -1px 0 0 var(--seed-accent), 4px 0 16px -8px var(--seed-accent);
+}
