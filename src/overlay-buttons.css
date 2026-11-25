@@ -463,3 +463,52 @@
   box-shadow: 0 0 0 1px var(--seed-accent);
   background-color: color-mix(in oklab, #e0301e 20%, transparent);
 }
+
+/* ------------------------------------------------------------------ */
+/* Consolidated Outland: the keys of the dash (PWR, THR, RADR). White  */
+/* letters in a teal-lit frame, the engaged one yellow.                 */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="cnou"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 4px;
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  border-width: 1.5px;
+  border-color: var(--seed-accent);
+  background-color: #15181a;
+  background-image: none;
+  box-shadow: 0 0 9px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 16%, #15181a);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-primary {
+  color: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent-2) 45%, transparent), inset 0 0 8px color-mix(in oklab, var(--seed-accent-2) 22%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent-2) 16%, #15181a);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(254 202 202);
+  border-color: rgb(248 113 113 / 0.85);
+  box-shadow: 0 0 9px rgb(248 113 113 / 0.4);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1.5px var(--seed-accent), 0 0 9px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+}

@@ -767,3 +767,81 @@
 :root[data-theme="banu"] .nexus-ov-footer {
   background: linear-gradient(90deg, transparent, var(--seed-accent) 20% 80%, transparent) top / 100% 1px no-repeat;
 }
+
+/* Consolidated Outland: a bare metal screen, the octagon of their
+   corridors, copper beams on the four cuts, a grey band for the bar. */
+:root[data-theme="cnou"] {
+  --ov-cut: 16px;
+  --ov-scan: 0%;
+  --ov-holo: rgb(255 255 255 / 0.03);
+  --ov-line: var(--cnou-copper);
+}
+
+:root[data-theme="cnou"] .nexus-ov-opaque {
+  border-color: rgb(255 255 255 / 0.16);
+  box-shadow: none;
+}
+
+:root[data-theme="cnou"] :is(.nexus-ov-opaque, .nexus-ov-shaded) {
+  clip-path: polygon(
+    var(--ov-cut) 0, calc(100% - var(--ov-cut)) 0, 100% var(--ov-cut),
+    100% calc(100% - var(--ov-cut)), calc(100% - var(--ov-cut)) 100%,
+    var(--ov-cut) 100%, 0 calc(100% - var(--ov-cut)), 0 var(--ov-cut)
+  );
+}
+
+:root[data-theme="cnou"] .nexus-ov::before {
+  --d: calc(var(--ov-cut) + 1px);
+  background:
+    linear-gradient(225deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) top right / var(--d) var(--d) no-repeat,
+    linear-gradient(135deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) top left / var(--d) var(--d) no-repeat,
+    linear-gradient(45deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) bottom left / var(--d) var(--d) no-repeat,
+    linear-gradient(315deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) bottom right / var(--d) var(--d) no-repeat;
+}
+
+:root[data-theme="cnou"] .nexus-ov::after {
+  background: none;
+}
+
+/* The bar is the grey band of the dash, between two teal-framed ends. */
+:root[data-theme="cnou"] .nexus-ov-header {
+  background:
+    linear-gradient(var(--cnou-band), var(--cnou-band)) 50% 50% / calc(100% - 20px) calc(100% - 10px) no-repeat;
+}
+
+:root[data-theme="cnou"] .nexus-ov-title {
+  font-weight: 700;
+  color: #fff;
+  text-shadow: none;
+}
+
+:root[data-theme="cnou"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 7px;
+  height: 7px;
+  vertical-align: 0.1em;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+:root[data-theme="cnou"] .nexus-ov-label {
+  color: var(--color-nexus-soft);
+}
+
+:root[data-theme="cnou"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* The rows of a list are grey bars, as on the diagnostics screen. */
+:root[data-theme="cnou"] .nexus-ov-row {
+  border-radius: 2px;
+  margin-block: 2px;
+  background-color: rgb(255 255 255 / 0.06);
+}
+
+:root[data-theme="cnou"] .nexus-ov-footer {
+  background: linear-gradient(var(--cnou-band), var(--cnou-band)) top / 100% 1px no-repeat;
+}

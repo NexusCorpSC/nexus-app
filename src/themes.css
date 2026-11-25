@@ -233,17 +233,19 @@
   --seed-pattern: var(--pattern-scanlines);
 }
 
-/* Consolidated Outland: lime. */
+/* Consolidated Outland: charcoal panels braced by copper beams, a HUD of
+   teal-lit keys, the engaged one and the figures yellow. */
 [data-theme="cnou"] {
-  --seed-accent: #9dff3c;
-  --seed-accent-2: #3ce8ff;
-  --seed-tint: #142414;
-  --seed-ink: #f1ffe6;
-  --seed-radius: 0.375rem;
-  --seed-ticks: 0.5;
-  --seed-glow: 0.6;
-  --seed-tracking: 0.14em;
-  --seed-pattern: var(--pattern-dots);
+  --seed-accent: #36d6d6;
+  --seed-accent-2: #e8e84a;
+  --seed-tint: #16191b;
+  --seed-ink: #f2f5f5;
+  --seed-radius: 4px;
+  --seed-ticks: 0;
+  --seed-glow: 0.5;
+  --seed-tracking: 0.08em;
+  --seed-chamfer: 16px;
+  --seed-pattern: var(--pattern-grid);
 }
 
 /* Greycat: worksite yellow on blue-grey. */

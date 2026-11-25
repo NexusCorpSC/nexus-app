@@ -81,7 +81,7 @@ export const THEME_SWATCHES: Record<ThemeId, { accent: string; tint: string }> =
   vanduul: { accent: "#ff3b46", tint: "#1a0c0e" },
   esperia: { accent: "#ff6f91", tint: "#2a1420" },
   mirai: { accent: "#ff2bd6", tint: "#00f0ff" },
-  cnou: { accent: "#9dff3c", tint: "#142414" },
+  cnou: { accent: "#36d6d6", tint: "#16191b" },
   greycat: { accent: "#f2d43a", tint: "#1d222b" },
   kruger: { accent: "#e8894a", tint: "#221a16" },
   tumbril: { accent: "#d4b06a", tint: "#221f17" },
