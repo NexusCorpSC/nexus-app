@@ -295,14 +295,6 @@
   box-shadow: none;
 }
 
-/* Argo: workhorse orange, the same stripes, finer. */
-:root[data-theme="argo"] .nexus-ov-header {
-  background-image:
-    repeating-linear-gradient(-45deg, var(--seed-accent) 0 3px, transparent 3px 7px) calc(100% - 4px) 100% / 36px 3px no-repeat,
-    linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat,
-    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 45%, transparent), transparent 80%) bottom / 100% 1px no-repeat;
-}
-
 /* Gatac: hard geometry. Parallelograms, a slanted bar, // before labels. */
 :root[data-theme="gatac"] {
   --ov-cut: 18px;
@@ -580,4 +572,67 @@
   height: 7px;
   vertical-align: 0.05em;
   clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Argo: a work screen. The title is the engaged tab, filled orange; the
+   bar under it is the screen's orange rule. */
+:root[data-theme="argo"] {
+  --ov-cut: 0px;
+  --ov-scan: 0%;
+  --ov-holo: transparent;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 40%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ov::after {
+  background: none;
+}
+
+:root[data-theme="argo"] .nexus-ov-header {
+  background-image: linear-gradient(var(--seed-accent), var(--seed-accent)) bottom / 100% 2px no-repeat;
+}
+
+:root[data-theme="argo"] .nexus-ov-title {
+  flex: 0 1 auto;
+  padding: 1px 12px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #160d05;
+  background: var(--seed-accent);
+  text-shadow: none;
+}
+
+:root[data-theme="argo"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 6px;
+  height: 8px;
+  background: #160d05;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* The title no longer stretches: the buttons of the bar stay on the right. */
+:root[data-theme="argo"] .nexus-ov-header > .nexus-ov-title + * {
+  margin-left: auto;
+}
+
+:root[data-theme="argo"] .nexus-ov-label {
+  font-size: 13px;
+  color: var(--seed-accent);
+}
+
+:root[data-theme="argo"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Lines of a list, ruled like the settings of the screen. */
+:root[data-theme="argo"] .nexus-ov-row {
+  border-bottom: 1px solid color-mix(in oklab, var(--seed-accent) 22%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ov-footer {
+  background: linear-gradient(var(--seed-accent), var(--seed-accent)) top / 100% 1px no-repeat;
 }

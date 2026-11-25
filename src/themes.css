@@ -52,15 +52,18 @@
 
 /* Argo: utility orange. */
 [data-theme="argo"] {
-  --seed-accent: #ff7a1a;
-  --seed-accent-2: #ffd166;
-  --seed-tint: #262019;
-  --seed-ink: #f3ece4;
-  --seed-radius: 0.125rem;
-  --seed-ticks: 0.7;
-  --seed-glow: 0.4;
-  --seed-tracking: 0.14em;
+  /* The screens of the MPUV and the Raft: orange on near black, the
+     engaged tab filled, gold switches. */
+  --seed-accent: #ff7f26;
+  --seed-accent-2: #e8b43a;
+  --seed-tint: #1a1612;
+  --seed-ink: #f6ebe0;
+  --seed-radius: 0px;
+  --seed-ticks: 0;
+  --seed-glow: 0.35;
+  --seed-tracking: 0.08em;
   --seed-pattern: var(--pattern-stripes);
+  --seed-chamfer: 0px;
 }
 
 /* Gatac (Xi'an): violet, hard geometry, oblique cuts. */

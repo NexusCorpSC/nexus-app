@@ -372,3 +372,70 @@
 :root[data-theme="anvil"] .nexus-rail {
   box-shadow: inset -1px 0 0 color-mix(in oklab, var(--seed-accent) 45%, transparent);
 }
+
+/* ------------------------------------------------------------------ */
+/* Argo: a work screen. Orange on near black, the engaged tab filled,   */
+/* ▸ before every line, narrow capitals.                                */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="argo"] {
+  --font-display: "Saira Condensed", "Chakra Petch", system-ui, sans-serif;
+}
+
+/* A screen: a filled tab on its top-left corner, an orange footer line. */
+:root[data-theme="argo"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 28%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ticks::after {
+  inset: -1px auto auto -1px;
+  width: 72px;
+  height: 4px;
+  opacity: 1;
+  background: var(--seed-accent);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme="argo"] .nexus-primary {
+  border-radius: 0;
+  background: var(--seed-accent);
+  border-color: var(--seed-accent);
+  color: #160d05;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: none;
+}
+
+:root[data-theme="argo"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--seed-accent) 85%, white);
+}
+
+/* An unselected tab: dark, an orange outline, orange letters. */
+:root[data-theme="argo"] .nexus-outline {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  background-color: rgb(0 0 0 / 0.35);
+  color: var(--seed-accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+:root[data-theme="argo"] .nexus-outline:hover {
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, var(--seed-accent) 14%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+:root[data-theme="argo"] .nexus-rail {
+  box-shadow: inset -2px 0 0 color-mix(in oklab, var(--seed-accent) 70%, transparent);
+}

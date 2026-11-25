@@ -68,7 +68,7 @@ export const MANUFACTURER_NAMES: Record<Exclude<ThemeId, "nexus">, string> = {
 export const THEME_SWATCHES: Record<ThemeId, { accent: string; tint: string }> = {
   nexus: { accent: "#62d4ff", tint: "#0b3a5a" },
   drake: { accent: "#ffc400", tint: "#2a2414" },
-  argo: { accent: "#ff7a1a", tint: "#262019" },
+  argo: { accent: "#ff7f26", tint: "#1a1612" },
   gatac: { accent: "#a77bff", tint: "#1e1033" },
   aopoa: { accent: "#46e8b0", tint: "#0c2b26" },
   aegis: { accent: "#ff5252", tint: "#1b2129" },
