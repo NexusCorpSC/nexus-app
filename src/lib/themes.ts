@@ -77,7 +77,7 @@ export const THEME_SWATCHES: Record<ThemeId, { accent: string; tint: string }> =
   origin: { accent: "#1d4f9e", tint: "#f3efe7" },
   crusader: { accent: "#5cc8ff", tint: "#122b3d" },
   misc: { accent: "#2fd0c4", tint: "#0f2a2c" },
-  banu: { accent: "#e9b44c", tint: "#5fb39c" },
+  banu: { accent: "#ff6a3d", tint: "#0d1c22" },
   vanduul: { accent: "#ff3b46", tint: "#1a0c0e" },
   esperia: { accent: "#ff6f91", tint: "#2a1420" },
   mirai: { accent: "#ff2bd6", tint: "#00f0ff" },

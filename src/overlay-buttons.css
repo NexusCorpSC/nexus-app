@@ -12,7 +12,7 @@
  * top of it change here. The primary button is painted whole.
  *
  * A clip-path also clips the outer shadow: the shapes that are cut glow
- * inwards, and only the uncut ones (Mirai, Banu, Origin) glow outwards.
+ * inwards, and only the uncut ones (Mirai, Banu, Origin, Aopoa) glow outwards.
  */
 
 /* ------------------------------------------------------------------ */
@@ -189,50 +189,6 @@
 
 :root[data-theme="mirai"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
   box-shadow: 0 0 0 1px var(--seed-accent-2), 0 0 10px var(--seed-accent-2);
-}
-
-/* ------------------------------------------------------------------ */
-/* Banu: rounded tokens of gold and bronze, a stitched edge.            */
-/* ------------------------------------------------------------------ */
-
-:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
-  clip-path: none;
-  border-radius: 9999px;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn {
-  font-size: 12.5px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
-  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 22%, transparent), color-mix(in oklab, #8a5a1f 18%, transparent));
-  outline: 1px dotted color-mix(in oklab, var(--seed-accent-2) 65%, transparent);
-  outline-offset: -4px;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
-  box-shadow: 0 0 14px -2px color-mix(in oklab, var(--seed-accent) 55%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary {
-  color: #2a170a;
-  border-color: #8a5a1f;
-  background-color: transparent;
-  background-image: linear-gradient(180deg, #f4cd76, #c4862f);
-  box-shadow: inset 0 1px 0 rgb(255 240 200 / 0.6), 0 0 14px color-mix(in oklab, var(--seed-accent) 40%, transparent);
-  outline-color: rgb(42 23 10 / 0.4);
-  text-shadow: none;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
-  text-shadow: none;
-  filter: brightness(1.08);
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-danger {
-  background-image: none;
-  outline-color: rgb(248 113 113 / 0.45);
 }
 
 /* ------------------------------------------------------------------ */
@@ -457,4 +413,53 @@
 
 :root[data-theme="aopoa"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
   box-shadow: 0 0 0 1px var(--seed-accent), 0 0 10px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banu: the keys of their dash (PWR, THR, SHLD). Red glass in a coral  */
+/* frame, white letters, the engaged one yellow.                        */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 3px;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  color: #fff1ea;
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, #e0301e 22%, transparent);
+  background-image: none;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, #e0301e 36%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary {
+  color: #ffe9a8;
+  border-color: var(--banu-engaged);
+  background-color: color-mix(in oklab, var(--banu-engaged) 28%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--banu-engaged) 40%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--banu-engaged) 42%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(254 202 202);
+  border-color: rgb(248 113 113 / 0.8);
+  background-color: rgb(127 29 29 / 0.35);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1px var(--seed-accent);
+  background-color: color-mix(in oklab, #e0301e 20%, transparent);
 }

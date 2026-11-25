@@ -367,55 +367,6 @@
   box-shadow: 0 0 6px var(--seed-accent);
 }
 
-/* Banu: warm and round. Gold, verdigris stitches, diamonds of the bazaar. */
-:root[data-theme="banu"] {
-  --ov-cut: 0px;
-  --ov-radius: 16px;
-  --ov-line: color-mix(in oklab, var(--seed-accent) 60%, transparent);
-  --ov-scan: 0%;
-  --ov-holo: color-mix(in oklab, var(--seed-accent) 14%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov::after {
-  background: none;
-}
-
-:root[data-theme="banu"] .nexus-ov-header {
-  background-image:
-    repeating-linear-gradient(90deg, var(--seed-accent) 0 6px, var(--seed-accent-2) 6px 9px, transparent 9px 12px) bottom / 100% 2px no-repeat;
-}
-
-:root[data-theme="banu"] .nexus-ov-title {
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  color: var(--seed-accent);
-}
-
-:root[data-theme="banu"] .nexus-ov-label::before {
-  width: 5px;
-  height: 5px;
-  rotate: 45deg;
-  vertical-align: 0.15em;
-  background: var(--seed-accent-2);
-}
-
-:root[data-theme="banu"] .nexus-ov-row,
-:root[data-theme="banu"] .nexus-ov-banner,
-:root[data-theme="banu"] .nexus-ov-caption {
-  border-radius: 8px;
-}
-
-:root[data-theme="banu"] .nexus-ov-viewport {
-  border-radius: 12px;
-  outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov-viewport::after {
-  background: none;
-}
-
 /* Origin: luxury and harmony. No cuts: a double gold hairline, a serif
    title, pill buttons, and the five lines of a stave behind the bar. */
 :root[data-theme="origin"] {
@@ -703,4 +654,116 @@
 :root[data-theme="aopoa"] .nexus-ov-title::before {
   background: var(--seed-accent-2);
   box-shadow: 0 0 6px var(--seed-accent-2);
+}
+
+/* Banu: an octagonal panel of their HUD. Four corners cut, the outline
+   drawn twice in coral, the glass warm and dark. */
+:root[data-theme="banu"] {
+  --ov-cut: 16px;
+  --ov-scan: 0%;
+  --ov-line: var(--seed-accent);
+  --ov-holo: color-mix(in oklab, #3a0f08 50%, transparent);
+}
+
+:root[data-theme="banu"] :is(.nexus-ov-opaque, .nexus-ov-shaded) {
+  clip-path: polygon(
+    var(--ov-cut) 0, calc(100% - var(--ov-cut)) 0, 100% var(--ov-cut),
+    100% calc(100% - var(--ov-cut)), calc(100% - var(--ov-cut)) 100%,
+    var(--ov-cut) 100%, 0 calc(100% - var(--ov-cut)), 0 var(--ov-cut)
+  );
+}
+
+:root[data-theme="banu"] .nexus-ov-opaque {
+  box-shadow: inset 0 0 30px -12px var(--seed-accent);
+}
+
+/* The four diagonals, outer and inner. */
+:root[data-theme="banu"] .nexus-ov::before {
+  --d: calc(var(--ov-cut) + 1px);
+  background:
+    linear-gradient(225deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) top right / var(--d) var(--d) no-repeat,
+    linear-gradient(135deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) top left / var(--d) var(--d) no-repeat,
+    linear-gradient(45deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) bottom left / var(--d) var(--d) no-repeat,
+    linear-gradient(315deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) bottom right / var(--d) var(--d) no-repeat;
+}
+
+/* The inner outline, cut like the outer one. */
+:root[data-theme="banu"] .nexus-ov::after {
+  inset: 5px;
+  opacity: 1;
+  filter: none;
+  background: color-mix(in oklab, var(--seed-accent) 30%, transparent);
+  --c: calc(var(--ov-cut) - 3px);
+  clip-path: polygon(
+    evenodd,
+    var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)),
+    calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c),
+    var(--c) 0, calc(var(--c) + 0.4px) 1px, 1px calc(var(--c) + 0.4px), 1px calc(100% - var(--c) - 0.4px),
+    calc(var(--c) + 0.4px) calc(100% - 1px), calc(100% - var(--c) - 0.4px) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - var(--c) - 0.4px), calc(100% - 1px) calc(var(--c) + 0.4px),
+    calc(100% - var(--c) - 0.4px) 1px, calc(var(--c) + 0.4px) 1px
+  );
+}
+
+.nexus-ov-clear:is(:root[data-theme="banu"] *)::after {
+  background: none;
+}
+
+:root[data-theme="banu"] .nexus-ov-header {
+  background:
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 50% 100% / 46px 2px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in oklab, var(--seed-accent) 70%, transparent) 15% 85%, transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="banu"] .nexus-ov-title {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  color: var(--seed-accent);
+  text-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+}
+
+/* A node of their constellations: a dot in a ring. */
+:root[data-theme="banu"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  vertical-align: 0.15em;
+  margin-right: 9px;
+  background: var(--seed-accent);
+  box-shadow: 0 0 0 2px var(--color-nexus-abyss), 0 0 0 3px var(--seed-accent);
+}
+
+:root[data-theme="banu"] .nexus-ov-label {
+  color: var(--banu-label);
+}
+
+/* The marker of their holograms: a rounded rhombus. */
+:root[data-theme="banu"] .nexus-ov-label::before {
+  width: 6px;
+  height: 6px;
+  rotate: 45deg;
+  border-radius: 1.5px;
+  vertical-align: 0.15em;
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--banu-label);
+}
+
+:root[data-theme="banu"] .nexus-ov-row {
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--seed-accent) 20%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov-row[data-status="ready"] {
+  box-shadow: inset 2px 0 0 rgb(52 211 153 / 0.9);
+}
+
+:root[data-theme="banu"] .nexus-ov-row[data-status="down"] {
+  box-shadow: inset 2px 0 0 rgb(248 113 113 / 0.95);
+}
+
+:root[data-theme="banu"] .nexus-ov-footer {
+  background: linear-gradient(90deg, transparent, var(--seed-accent) 20% 80%, transparent) top / 100% 1px no-repeat;
 }

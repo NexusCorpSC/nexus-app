@@ -178,17 +178,19 @@
   --seed-pattern: var(--pattern-dots);
 }
 
-/* Banu: gold and oxidised bronze, a warm bazaar. */
+/* Banu: the coral light of their HUD on dark glass, inside the verdigris
+   bones of their ships. */
 [data-theme="banu"] {
-  --seed-accent: #e9b44c;
-  --seed-accent-2: #5fb39c;
-  --seed-tint: #2e1d12;
-  --seed-ink: #fbefdc;
-  --seed-radius: 1rem;
+  --seed-accent: #ff6a3d;
+  --seed-accent-2: #3fc2b8;
+  --seed-tint: #0d1c22;
+  --seed-ink: #fbe9e1;
+  --seed-radius: 4px;
   --seed-ticks: 0;
-  --seed-glow: 0.55;
+  --seed-glow: 0.5;
   --seed-tracking: 0.08em;
-  --seed-pattern: var(--pattern-kilim);
+  --seed-chamfer: 14px;
+  --seed-pattern: var(--pattern-constellation);
 }
 
 /* Vanduul: blood red, aggressive. */
