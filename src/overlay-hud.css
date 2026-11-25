@@ -845,3 +845,88 @@
 :root[data-theme="cnou"] .nexus-ov-footer {
   background: linear-gradient(var(--cnou-band), var(--cnou-band)) top / 100% 1px no-repeat;
 }
+
+/* Crusader: a rounded screen in its dark bezel, held in the blue brackets
+   of the HUD gauges. The title is the lit tab of the screen (FLIGHT), the
+   foot the grey bar under it (CONFIGURATION). */
+:root[data-theme="crusader"] {
+  --ov-cut: 0px;
+  --ov-radius: 14px;
+  --ov-scan: 0%;
+  --ov-holo: color-mix(in oklab, var(--seed-accent) 9%, transparent);
+  --ov-line: color-mix(in oklab, var(--seed-accent) 35%, transparent);
+}
+
+:root[data-theme="crusader"] :is(.nexus-ov-opaque, .nexus-ov-shaded) {
+  clip-path: none;
+}
+
+:root[data-theme="crusader"] .nexus-ov-opaque {
+  box-shadow: inset 0 0 0 3px var(--crusader-bezel), inset 0 0 40px -16px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+:root[data-theme="crusader"] .nexus-ov::before {
+  background: linear-gradient(90deg, transparent, var(--seed-accent), transparent) top center / 50% 1px no-repeat;
+}
+
+:root[data-theme="crusader"] .nexus-ov::after {
+  inset: 4px;
+  opacity: 1;
+  background: none;
+  border: 2px solid var(--seed-accent);
+  border-radius: 11px;
+  filter: drop-shadow(0 0 4px color-mix(in oklab, var(--seed-accent) 75%, transparent));
+  mask-image: linear-gradient(90deg, #000 16px, transparent 16px calc(100% - 16px), #000 calc(100% - 16px));
+}
+
+:root[data-theme="crusader"] .nexus-ov-header {
+  background-image: linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 55%, transparent), color-mix(in oklab, var(--seed-accent) 12%, transparent) 70%, transparent) bottom / 100% 1px no-repeat;
+}
+
+/* The title: the lit tab, a blue gradient, white slanted capitals. */
+:root[data-theme="crusader"] .nexus-ov-title {
+  flex: 0 1 auto;
+  padding: 1px 14px 0 10px;
+  border-radius: 3px;
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: linear-gradient(180deg, #3d8cff, #1b4fb8);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25), 0 0 10px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="crusader"] .nexus-ov-title::before {
+  display: none;
+}
+
+:root[data-theme="crusader"] .nexus-ov-header > .nexus-ov-title + * {
+  margin-left: auto;
+}
+
+:root[data-theme="crusader"] .nexus-ov-label {
+  font-style: italic;
+  font-synthesis: style;
+  color: var(--crusader-key-ink);
+}
+
+:root[data-theme="crusader"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Lines of a list: the settings of the screen, a blue ▸ before each. */
+:root[data-theme="crusader"] .nexus-ov-row {
+  border-bottom: 1px solid color-mix(in oklab, var(--seed-accent) 14%, transparent);
+}
+
+/* The foot: the grey bar of the screen. */
+:root[data-theme="crusader"] .nexus-ov-footer {
+  background:
+    linear-gradient(rgb(170 190 220 / 0.12), rgb(170 190 220 / 0.12)) 50% 50% / calc(100% - 16px) calc(100% - 8px) no-repeat;
+  border-radius: 6px;
+}

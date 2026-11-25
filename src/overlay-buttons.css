@@ -512,3 +512,63 @@
 :root[data-theme="cnou"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
   box-shadow: 0 0 0 1.5px var(--seed-accent), 0 0 9px color-mix(in oklab, var(--seed-accent) 50%, transparent);
 }
+
+/* ------------------------------------------------------------------ */
+/* Crusader: the keys of the screens (PWR, THR, SHLD). Deep blue, a    */
+/* blue frame, blue slanted letters; the engaged one yellow (WPN).     */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="crusader"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 4px;
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-btn {
+  font-size: 13px;
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--crusader-key-ink);
+  border-width: 1.5px;
+  border-color: var(--crusader-key);
+  background-color: #0b1a38;
+  background-image: none;
+  box-shadow: none;
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  color: #fff;
+  background-color: color-mix(in oklab, var(--seed-accent) 22%, #0b1a38);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-btn-primary {
+  color: #ffd83a;
+  border-width: 2px;
+  border-color: var(--seed-accent-2);
+  background-color: color-mix(in oklab, var(--seed-accent-2) 22%, #0a0f1a);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent-2) 40%, transparent);
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  color: #ffe679;
+  background-color: color-mix(in oklab, var(--seed-accent-2) 34%, #0a0f1a);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(254 202 202);
+  border-color: rgb(248 113 113 / 0.8);
+  background-color: rgb(60 14 20 / 0.7);
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-tab {
+  font-style: italic;
+  font-synthesis: style;
+}
+
+:root[data-theme="crusader"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1.5px var(--seed-accent), 0 0 9px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+}
