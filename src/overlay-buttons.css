@@ -12,7 +12,7 @@
  * top of it change here. The primary button is painted whole.
  *
  * A clip-path also clips the outer shadow: the shapes that are cut glow
- * inwards, and only the uncut ones (Mirai, Banu, Origin) glow outwards.
+ * inwards, and only the uncut ones (Mirai, Banu, Origin, Aopoa) glow outwards.
  */
 
 /* ------------------------------------------------------------------ */
@@ -105,26 +105,6 @@
   background-image: linear-gradient(rgb(248 113 113), rgb(248 113 113)) bottom / 100% 2px no-repeat;
 }
 
-/* Argo: the same work plates, the stripes along the bottom. */
-:root[data-theme="argo"] {
-  --ovb-shape: polygon(0 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
-}
-
-:root[data-theme="argo"] .nexus-ov .nexus-ov-btn {
-  background-image:
-    repeating-linear-gradient(-45deg, var(--seed-accent) 0 3px, transparent 3px 6px) bottom / 100% 3px no-repeat,
-    linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 10%, transparent), transparent);
-}
-
-:root[data-theme="argo"] .nexus-ov .nexus-ov-btn-primary {
-  color: #1a0f05;
-  background-color: var(--seed-accent);
-  background-image: repeating-linear-gradient(-45deg, #1a0f05 0 3px, transparent 3px 6px);
-  background-size: 100% 3px;
-  background-position: bottom;
-  background-repeat: no-repeat;
-}
-
 /* ------------------------------------------------------------------ */
 /* Gatac: parallelograms, an underline in the second colour.            */
 /* ------------------------------------------------------------------ */
@@ -212,50 +192,6 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Banu: rounded tokens of gold and bronze, a stitched edge.            */
-/* ------------------------------------------------------------------ */
-
-:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
-  clip-path: none;
-  border-radius: 9999px;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn {
-  font-size: 12.5px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
-  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 22%, transparent), color-mix(in oklab, #8a5a1f 18%, transparent));
-  outline: 1px dotted color-mix(in oklab, var(--seed-accent-2) 65%, transparent);
-  outline-offset: -4px;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
-  box-shadow: 0 0 14px -2px color-mix(in oklab, var(--seed-accent) 55%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary {
-  color: #2a170a;
-  border-color: #8a5a1f;
-  background-color: transparent;
-  background-image: linear-gradient(180deg, #f4cd76, #c4862f);
-  box-shadow: inset 0 1px 0 rgb(255 240 200 / 0.6), 0 0 14px color-mix(in oklab, var(--seed-accent) 40%, transparent);
-  outline-color: rgb(42 23 10 / 0.4);
-  text-shadow: none;
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
-  text-shadow: none;
-  filter: brightness(1.08);
-}
-
-:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-danger {
-  background-image: none;
-  outline-color: rgb(248 113 113 / 0.45);
-}
-
-/* ------------------------------------------------------------------ */
 /* Origin: ivory pills, a gold hairline, a serif voice.                 */
 /* ------------------------------------------------------------------ */
 
@@ -296,20 +232,8 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* Aopoa: soft pebbles. Vanduul: blades pointed at both ends.           */
+/* Vanduul: blades pointed at both ends.                                */
 /* ------------------------------------------------------------------ */
-
-:root[data-theme="aopoa"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
-  clip-path: none;
-  border-radius: 9999px;
-}
-
-:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn {
-  text-transform: none;
-  letter-spacing: 0.03em;
-  font-size: 12px;
-  background-image: radial-gradient(ellipse at 50% 0, color-mix(in oklab, var(--seed-accent) 25%, transparent), transparent 70%);
-}
 
 :root[data-theme="vanduul"] {
   --ovb-shape: polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%);
@@ -346,4 +270,245 @@
 
 :root .nexus-ov .nexus-ov-footer > p {
   white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* Anvil: the keys of the dash (PWR, WPN, SHLD). Square, a teal frame   */
+/* with a dark gap inside, the engaged one yellow.                      */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="anvil"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 0;
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-color: color-mix(in oklab, var(--seed-accent) 75%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 18%, transparent), color-mix(in oklab, var(--seed-accent) 8%, transparent));
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35);
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 22%, transparent);
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35), 0 0 10px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-btn-primary {
+  color: #12160c;
+  border-color: var(--seed-accent-2);
+  background-color: var(--seed-accent-2);
+  background-image: none;
+  text-shadow: none;
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent-2) 85%, white);
+  text-shadow: none;
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-btn-danger {
+  border-color: rgb(248 113 113 / 0.7);
+  background-image: linear-gradient(180deg, rgb(248 113 113 / 0.16), rgb(248 113 113 / 0.06));
+}
+
+:root[data-theme="anvil"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--seed-accent);
+  background-color: color-mix(in oklab, var(--seed-accent) 16%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Argo: the tabs of a work screen (FLIGHT, GUNNERY, HUD). Square, dark */
+/* with an orange outline, the engaged one filled.                      */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="argo"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 0;
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--seed-accent);
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  background-color: rgb(0 0 0 / 0.35);
+  background-image: none;
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, var(--seed-accent) 14%, transparent);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn-primary {
+  color: #160d05;
+  border-color: var(--seed-accent);
+  background-color: var(--seed-accent);
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 85%, white);
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(252 165 165);
+  border-color: rgb(248 113 113 / 0.6);
+}
+
+:root[data-theme="argo"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: inset 0 0 0 1px var(--seed-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Aopoa: the keys of the Xi'an dash (PWR, WPN, RADR). Softly rounded, */
+/* a blue frame and slanted blue letters, the engaged one amber.        */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="aopoa"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 6px;
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn {
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  font-synthesis: style;
+  letter-spacing: 0.05em;
+  color: color-mix(in oklab, var(--aopoa-key) 70%, white);
+  border-color: var(--aopoa-key);
+  background-color: color-mix(in oklab, var(--aopoa-key) 12%, transparent);
+  background-image: none;
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--aopoa-key) 26%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--aopoa-key) 55%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn-primary {
+  color: #ffd27a;
+  border-color: var(--aopoa-engaged);
+  background-color: color-mix(in oklab, var(--aopoa-engaged) 22%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--aopoa-engaged) 40%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--aopoa-engaged) 36%, transparent);
+  box-shadow: 0 0 16px color-mix(in oklab, var(--aopoa-engaged) 55%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(252 165 165);
+  border-color: rgb(248 113 113 / 0.7);
+  background-color: rgb(248 113 113 / 0.1);
+}
+
+:root[data-theme="aopoa"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1px var(--seed-accent), 0 0 10px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banu: the keys of their dash (PWR, THR, SHLD). Red glass in a coral  */
+/* frame, white letters, the engaged one yellow.                        */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="banu"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 3px;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  color: #fff1ea;
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, #e0301e 22%, transparent);
+  background-image: none;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, #e0301e 36%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary {
+  color: #ffe9a8;
+  border-color: var(--banu-engaged);
+  background-color: color-mix(in oklab, var(--banu-engaged) 28%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--banu-engaged) 40%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--banu-engaged) 42%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(254 202 202);
+  border-color: rgb(248 113 113 / 0.8);
+  background-color: rgb(127 29 29 / 0.35);
+}
+
+:root[data-theme="banu"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1px var(--seed-accent);
+  background-color: color-mix(in oklab, #e0301e 20%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Consolidated Outland: the keys of the dash (PWR, THR, RADR). White  */
+/* letters in a teal-lit frame, the engaged one yellow.                 */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="cnou"] .nexus-ov :is(.nexus-ov-btn, .nexus-ov-tab, .nexus-ov-chip, .nexus-ov-icon) {
+  clip-path: none;
+  border-radius: 4px;
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #fff;
+  border-width: 1.5px;
+  border-color: var(--seed-accent);
+  background-color: #15181a;
+  background-image: none;
+  box-shadow: 0 0 9px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 16%, #15181a);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  text-shadow: none;
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-primary {
+  color: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  box-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent-2) 45%, transparent), inset 0 0 8px color-mix(in oklab, var(--seed-accent-2) 22%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-primary:not(:disabled):hover {
+  background-color: color-mix(in oklab, var(--seed-accent-2) 16%, #15181a);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-btn-danger {
+  color: rgb(254 202 202);
+  border-color: rgb(248 113 113 / 0.85);
+  box-shadow: 0 0 9px rgb(248 113 113 / 0.4);
+}
+
+:root[data-theme="cnou"] .nexus-ov .nexus-ov-icon:not(:disabled):hover {
+  box-shadow: 0 0 0 1.5px var(--seed-accent), 0 0 9px color-mix(in oklab, var(--seed-accent) 50%, transparent);
 }

@@ -52,15 +52,18 @@
 
 /* Argo: utility orange. */
 [data-theme="argo"] {
-  --seed-accent: #ff7a1a;
-  --seed-accent-2: #ffd166;
-  --seed-tint: #262019;
-  --seed-ink: #f3ece4;
-  --seed-radius: 0.125rem;
-  --seed-ticks: 0.7;
-  --seed-glow: 0.4;
-  --seed-tracking: 0.14em;
+  /* The screens of the MPUV and the Raft: orange on near black, the
+     engaged tab filled, gold switches. */
+  --seed-accent: #ff7f26;
+  --seed-accent-2: #e8b43a;
+  --seed-tint: #1a1612;
+  --seed-ink: #f6ebe0;
+  --seed-radius: 0px;
+  --seed-ticks: 0;
+  --seed-glow: 0.35;
+  --seed-tracking: 0.08em;
   --seed-pattern: var(--pattern-stripes);
+  --seed-chamfer: 0px;
 }
 
 /* Gatac (Xi'an): violet, hard geometry, oblique cuts. */
@@ -79,15 +82,17 @@
 
 /* Aopoa (Xi'an): jade, organic. */
 [data-theme="aopoa"] {
-  --seed-accent: #46e8b0;
-  --seed-accent-2: #c9ff6b;
-  --seed-tint: #0c2b26;
-  --seed-ink: #e6fff6;
-  --seed-radius: 1rem;
+  /* The Xi'an cockpit: glowing aqua glass in nested rounded frames, a
+     mosaic of triangles, blue keys, the engaged one amber, lime gauges. */
+  --seed-accent: #2fe4ee;
+  --seed-accent-2: #d4e64a;
+  --seed-tint: #08262e;
+  --seed-ink: #e2fcff;
+  --seed-radius: 14px;
   --seed-ticks: 0;
   --seed-glow: 0.8;
   --seed-tracking: 0.08em;
-  --seed-pattern: var(--pattern-glow);
+  --seed-pattern: var(--pattern-mosaic);
 }
 
 /* Aegis: red on steel, military. */
@@ -106,16 +111,18 @@
 
 /* Anvil: military green. */
 [data-theme="anvil"] {
-  --seed-accent: #a6d24a;
-  --seed-accent-2: #e8c25a;
-  --seed-tint: #1b2316;
-  --seed-ink: #eef3e2;
+  /* The cockpit of the Hornet and the Arrow: teal glass, framed keys, the
+     engaged one lit yellow. */
+  --seed-accent: #3fe6cf;
+  --seed-accent-2: #f2e26b;
+  --seed-tint: #0d2a27;
+  --seed-ink: #e2fbf6;
   --seed-radius: 0px;
-  --seed-ticks: 0.7;
-  --seed-glow: 0.4;
-  --seed-tracking: 0.18em;
+  --seed-ticks: 0.6;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.1em;
   --seed-pattern: var(--pattern-grid);
-  --seed-chamfer: 8px;
+  --seed-chamfer: 6px;
 }
 
 /* Roberts Space Industries: classic blue. */
@@ -171,17 +178,19 @@
   --seed-pattern: var(--pattern-dots);
 }
 
-/* Banu: gold and oxidised bronze, a warm bazaar. */
+/* Banu: the coral light of their HUD on dark glass, inside the verdigris
+   bones of their ships. */
 [data-theme="banu"] {
-  --seed-accent: #e9b44c;
-  --seed-accent-2: #5fb39c;
-  --seed-tint: #2e1d12;
-  --seed-ink: #fbefdc;
-  --seed-radius: 1rem;
+  --seed-accent: #ff6a3d;
+  --seed-accent-2: #3fc2b8;
+  --seed-tint: #0d1c22;
+  --seed-ink: #fbe9e1;
+  --seed-radius: 4px;
   --seed-ticks: 0;
-  --seed-glow: 0.55;
+  --seed-glow: 0.5;
   --seed-tracking: 0.08em;
-  --seed-pattern: var(--pattern-kilim);
+  --seed-chamfer: 14px;
+  --seed-pattern: var(--pattern-constellation);
 }
 
 /* Vanduul: blood red, aggressive. */
@@ -224,17 +233,19 @@
   --seed-pattern: var(--pattern-scanlines);
 }
 
-/* Consolidated Outland: lime. */
+/* Consolidated Outland: charcoal panels braced by copper beams, a HUD of
+   teal-lit keys, the engaged one and the figures yellow. */
 [data-theme="cnou"] {
-  --seed-accent: #9dff3c;
-  --seed-accent-2: #3ce8ff;
-  --seed-tint: #142414;
-  --seed-ink: #f1ffe6;
-  --seed-radius: 0.375rem;
-  --seed-ticks: 0.5;
-  --seed-glow: 0.6;
-  --seed-tracking: 0.14em;
-  --seed-pattern: var(--pattern-dots);
+  --seed-accent: #36d6d6;
+  --seed-accent-2: #e8e84a;
+  --seed-tint: #16191b;
+  --seed-ink: #f2f5f5;
+  --seed-radius: 4px;
+  --seed-ticks: 0;
+  --seed-glow: 0.5;
+  --seed-tracking: 0.08em;
+  --seed-chamfer: 16px;
+  --seed-pattern: var(--pattern-grid);
 }
 
 /* Greycat: worksite yellow on blue-grey. */

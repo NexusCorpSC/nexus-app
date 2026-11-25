@@ -4,8 +4,8 @@
  * components carry:
  *
  *   .nexus-ticks     cards and dialogs (src/components/ui)
- *   .nexus-primary   the primary button
- *   .nexus-title     page titles
+ *   .nexus-primary   the primary button, .nexus-outline the outlined one
+ *   .nexus-title     page titles, .nexus-section the headings of their sections
  *   .nexus-rail      the main window's rail, .nexus-subpanel its side panel
  *   .nexus-backdrop  the page behind the main window's content
  *   .nexus-overlay   an overlay drawn as a panel (src/lib/overlay-opacity.ts)
@@ -250,56 +250,414 @@
   box-shadow: 3px 3px 0 -1px var(--seed-accent-2), 0 0 24px -6px var(--seed-accent);
 }
 
-/* ------------------------------------------------------------------ */
-/* Banu: gold, oxidised bronze, a warm bazaar.                          */
-/* ------------------------------------------------------------------ */
-
-:root[data-theme="banu"] {
-  --font-display: "Philosopher", "IBM Plex Sans", system-ui, sans-serif;
-}
-
-:root[data-theme="banu"] .nexus-ticks {
-  border-color: color-mix(in oklab, var(--seed-accent) 45%, transparent);
-  background-image: linear-gradient(
-    180deg,
-    color-mix(in oklab, var(--seed-accent) 9%, transparent),
-    transparent 70%
-  );
-  box-shadow: 0 10px 30px -18px rgb(0 0 0 / 0.8);
-}
-
 /* An inner border of verdigris stitches, like a woven edge. */
-:root[data-theme="banu"] .nexus-ticks::after {
+/* A braided border down the rail, gold and bronze. */
+/* ------------------------------------------------------------------ */
+/* Anvil: a military cockpit. Teal glass, framed keys, the one engaged  */
+/* lit yellow, narrow capitals.                                         */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="anvil"] {
+  --font-display: "Saira Semi Condensed", "Chakra Petch", system-ui, sans-serif;
+}
+
+/* A screen of the dash: a teal frame, and the lit band of its footer. */
+:root[data-theme="anvil"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 32%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 6%, transparent), transparent 45%);
+}
+
+:root[data-theme="anvil"] .nexus-ticks::after {
+  inset: auto 0 0 0;
+  height: 3px;
+  opacity: 1;
+  background:
+    linear-gradient(90deg, transparent, var(--seed-accent) 30% 70%, transparent) center / 60% 100% no-repeat,
+    color-mix(in oklab, var(--seed-accent) 22%, transparent);
+}
+
+/* The engaged key: yellow, dark letters, a dark gap inside its frame. */
+:root[data-theme="anvil"] .nexus-primary {
+  border-radius: 0;
+  background: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  color: #12160c;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35), 0 0 14px color-mix(in oklab, var(--seed-accent-2) 35%, transparent);
+}
+
+:root[data-theme="anvil"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--seed-accent-2) 85%, white);
+}
+
+/* The other keys: a teal frame over teal glass. */
+:root[data-theme="anvil"] .nexus-outline {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--seed-accent) 75%, transparent);
+  background-color: color-mix(in oklab, var(--seed-accent) 12%, transparent);
+  color: var(--seed-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.3);
+}
+
+:root[data-theme="anvil"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 24%, transparent);
+  color: var(--seed-ink);
+}
+
+:root[data-theme="anvil"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+:root[data-theme="anvil"] .nexus-rail {
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Argo: a work screen. Orange on near black, the engaged tab filled,   */
+/* ▸ before every line, narrow capitals.                                */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="argo"] {
+  --font-display: "Saira Condensed", "Chakra Petch", system-ui, sans-serif;
+}
+
+/* A screen: a filled tab on its top-left corner, an orange footer line. */
+:root[data-theme="argo"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 28%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ticks::after {
+  inset: -1px auto auto -1px;
+  width: 72px;
+  height: 4px;
+  opacity: 1;
+  background: var(--seed-accent);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme="argo"] .nexus-primary {
+  border-radius: 0;
+  background: var(--seed-accent);
+  border-color: var(--seed-accent);
+  color: #160d05;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: none;
+}
+
+:root[data-theme="argo"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--seed-accent) 85%, white);
+}
+
+/* An unselected tab: dark, an orange outline, orange letters. */
+:root[data-theme="argo"] .nexus-outline {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  background-color: rgb(0 0 0 / 0.35);
+  color: var(--seed-accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+:root[data-theme="argo"] .nexus-outline:hover {
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, var(--seed-accent) 14%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+:root[data-theme="argo"] .nexus-rail {
+  box-shadow: inset -2px 0 0 color-mix(in oklab, var(--seed-accent) 70%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Aopoa (Xi'an): glowing aqua glass, nested rounded frames, a mosaic  */
+/* of triangles, blue keys with slanted letters, the engaged one amber. */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* A mosaic of triangles in uneven shades, darker downwards, and the
+     light of the glass. */
+  --pattern-mosaic:
+    linear-gradient(180deg, transparent 0, color-mix(in oklab, var(--color-nexus-abyss) 55%, transparent) 70%),
+    radial-gradient(ellipse 70% 320px at 50% 0, color-mix(in oklab, var(--seed-accent) 14%, transparent), transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104.0' height='90.1' fill='%232fe4ee'%3E%3Cpolygon points='-11.2,21.5 0.0,2.1 11.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='1.8,1.1 24.2,1.1 13.0,20.4' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,21.5 26.0,2.1 37.2,21.5' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,1.1 50.2,1.1 39.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='40.8,21.5 52.0,2.1 63.2,21.5' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,1.1 76.2,1.1 65.0,20.4' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,21.5 78.0,2.1 89.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='79.8,1.1 102.2,1.1 91.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='92.8,21.5 104.0,2.1 115.2,21.5' fill-opacity='0.09'/%3E%3Cpolygon points='-11.2,23.6 11.2,23.6 0.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='1.8,44.0 13.0,24.6 24.2,44.0' fill-opacity='0.05'/%3E%3Cpolygon points='14.8,23.6 37.2,23.6 26.0,42.9' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,44.0 39.0,24.6 50.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,23.6 63.2,23.6 52.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,44.0 65.0,24.6 76.2,44.0' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,23.6 89.2,23.6 78.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='79.8,44.0 91.0,24.6 102.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='92.8,23.6 115.2,23.6 104.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='-11.2,66.5 0.0,47.1 11.2,66.5' fill-opacity='0.05'/%3E%3Cpolygon points='1.8,46.1 24.2,46.1 13.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='14.8,66.5 26.0,47.1 37.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='27.8,46.1 50.2,46.1 39.0,65.4' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,66.5 52.0,47.1 63.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='53.8,46.1 76.2,46.1 65.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,66.5 78.0,47.1 89.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='79.8,46.1 102.2,46.1 91.0,65.4' fill-opacity='0.07'/%3E%3Cpolygon points='92.8,66.5 104.0,47.1 115.2,66.5' fill-opacity='0.12'/%3E%3Cpolygon points='-11.2,68.6 11.2,68.6 0.0,88.0' fill-opacity='0.22'/%3E%3Cpolygon points='1.8,89.0 13.0,69.7 24.2,89.0' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,68.6 37.2,68.6 26.0,88.0' fill-opacity='0.05'/%3E%3Cpolygon points='27.8,89.0 39.0,69.7 50.2,89.0' fill-opacity='0.12'/%3E%3Cpolygon points='40.8,68.6 63.2,68.6 52.0,88.0' fill-opacity='0.07'/%3E%3Cpolygon points='53.8,89.0 65.0,69.7 76.2,89.0' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,68.6 89.2,68.6 78.0,88.0' fill-opacity='0.09'/%3E%3Cpolygon points='79.8,89.0 91.0,69.7 102.2,89.0' fill-opacity='0.16'/%3E%3Cpolygon points='92.8,68.6 115.2,68.6 104.0,88.0' fill-opacity='0.05'/%3E%3C/svg%3E") 0 0 / 104px 90px;
+  --aopoa-key: #3b8dff;
+  --aopoa-engaged: #f5a623;
+}
+
+/* The colours of the text, as on the dash: icy white for what is read,
+   lime for figures and titles, blue for labels, a blue grey for the rest. */
+:root[data-theme="aopoa"] {
+  --aopoa-label: #4a8fe8;
+  --color-nexus-white: #e2f5ff;
+  --color-nexus-bright: #cdeaf6;
+  --color-nexus-soft: #a9cde6;
+  --color-nexus-muted: #8aa3c2;
+  --color-nexus-dim: #6c86ad;
+}
+
+:root[data-theme="aopoa"] :is(.nexus-label, .nexus-section) {
+  color: var(--aopoa-label);
+}
+
+:root[data-theme="aopoa"] .nexus-title {
+  color: var(--seed-accent-2);
+}
+
+/* A frame within a frame, glowing. */
+:root[data-theme="aopoa"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
+  box-shadow:
+    0 0 14px -4px color-mix(in oklab, var(--seed-accent) 55%, transparent),
+    inset 0 0 22px -10px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ticks::after {
   inset: 4px;
-  opacity: 0.7;
+  opacity: 1;
   background: none;
-  border: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 70%, transparent);
+  border: 1px solid color-mix(in oklab, var(--seed-accent) 28%, transparent);
   border-radius: calc(var(--seed-radius) - 4px);
 }
 
+/* The engaged key: amber frame, amber letters, slanted. */
+:root[data-theme="aopoa"] .nexus-primary {
+  border-radius: 6px;
+  border-color: var(--aopoa-engaged);
+  background: color-mix(in oklab, var(--aopoa-engaged) 24%, #0a1a20);
+  color: #ffd27a;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.4), 0 0 14px color-mix(in oklab, var(--aopoa-engaged) 45%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--aopoa-engaged) 38%, #0a1a20);
+}
+
+/* The other keys: blue frame, blue letters, slanted. */
+:root[data-theme="aopoa"] .nexus-outline {
+  border-radius: 6px;
+  border-color: var(--aopoa-key);
+  background-color: color-mix(in oklab, var(--aopoa-key) 14%, transparent);
+  color: color-mix(in oklab, var(--aopoa-key) 70%, white);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-synthesis: style;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+:root[data-theme="aopoa"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, var(--aopoa-key) 26%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--aopoa-key) 50%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 14px color-mix(in oklab, var(--seed-accent-2) 45%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-rail {
+  box-shadow: inset -1px 0 0 var(--seed-accent), 4px 0 16px -8px var(--seed-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Banu: the coral light of their HUD on dark glass, octagonal panels  */
+/* drawn twice, constellations of nodes, inside verdigris bones.        */
+/* ------------------------------------------------------------------ */
+
+:root {
+  /* Nodes joined by lines, as on the side panels of their cockpits, over
+     the teal light of their halls. */
+  --pattern-constellation:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='200' fill='none' stroke='%23ff6a3d' stroke-opacity='.22' stroke-width='1.2'%3E%3Cline x1='132' y1='115' x2='160' y2='150'/%3E%3Cline x1='132' y1='115' x2='174' y2='22'/%3E%3Cline x1='228' y1='94' x2='241' y2='179'/%3E%3Cline x1='228' y1='94' x2='160' y2='150'/%3E%3Cline x1='119' y1='110' x2='132' y2='115'/%3E%3Cline x1='228' y1='94' x2='174' y2='22'/%3E%3Cline x1='37' y1='67' x2='36' y2='153'/%3E%3Cline x1='57' y1='102' x2='36' y2='153'/%3E%3Cline x1='57' y1='102' x2='37' y2='67'/%3E%3Ccircle cx='119' cy='110' r='4'/%3E%3Ccircle cx='228' cy='94' r='3'/%3E%3Ccircle cx='132' cy='115' r='3'/%3E%3Ccircle cx='57' cy='102' r='3'/%3E%3Ccircle cx='160' cy='150' r='3'/%3E%3Ccircle cx='37' cy='67' r='4'/%3E%3Ccircle cx='36' cy='153' r='4'/%3E%3Ccircle cx='174' cy='22' r='3'/%3E%3Ccircle cx='241' cy='179' r='7'/%3E%3Ccircle cx='241' cy='179' r='11' stroke-opacity='.6'/%3E%3C/svg%3E") 0 0 / 260px 200px,
+    radial-gradient(ellipse 45% 70% at 0 40%, color-mix(in oklab, #3fc2b8 16%, transparent), transparent),
+    radial-gradient(ellipse 45% 70% at 100% 40%, color-mix(in oklab, #3fc2b8 16%, transparent), transparent),
+    radial-gradient(ellipse 60% 260px at 50% 0, color-mix(in oklab, #ff6a3d 10%, transparent), transparent);
+  --banu-engaged: #f5c542;
+  --banu-label: #46c6bd;
+}
+
+/* What is read is warm white, titles coral, labels verdigris. */
+:root[data-theme="banu"] {
+  --font-display: "Philosopher", "IBM Plex Sans", system-ui, sans-serif;
+  --nexus-cut-line: color-mix(in oklab, var(--seed-accent) 70%, transparent);
+  --color-nexus-white: #fbe9e1;
+  --color-nexus-bright: #f3d9cf;
+  --color-nexus-soft: #d9b4a6;
+  --color-nexus-muted: #a98f88;
+  --color-nexus-dim: #8a7672;
+}
+
+:root[data-theme="banu"] :is(.nexus-label, .nexus-section) {
+  color: var(--banu-label);
+}
+
+/* A panel of dark warm glass, its outline drawn twice, cut on two
+   corners. */
+:root[data-theme="banu"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 60%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, #3a0f08 45%, transparent), transparent 80%);
+  box-shadow: 0 0 16px -6px color-mix(in oklab, var(--seed-accent) 60%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ticks::after {
+  inset: 4px;
+  opacity: 1;
+  background: none;
+  border: 1px solid color-mix(in oklab, var(--seed-accent) 26%, transparent);
+  border-radius: 2px;
+}
+
+/* The engaged key: yellow, as WPN in their cockpit. */
 :root[data-theme="banu"] .nexus-primary {
-  border-radius: 9999px;
-  background: linear-gradient(180deg, #f4cd76, #c4862f);
-  border-color: #8a5a1f;
-  color: #2a170a;
-  box-shadow: inset 0 1px 0 rgb(255 240 200 / 0.6), 0 0 16px color-mix(in oklab, var(--seed-accent) 40%, transparent);
+  border-radius: 3px;
+  border-color: var(--banu-engaged);
+  background: color-mix(in oklab, var(--banu-engaged) 30%, #2a0d06);
+  color: #ffe9a8;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0 14px color-mix(in oklab, var(--banu-engaged) 40%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--banu-engaged) 45%, #2a0d06);
+}
+
+/* The other keys: red glass, coral frame, white letters. */
+:root[data-theme="banu"] .nexus-outline {
+  border-radius: 3px;
+  border-color: var(--seed-accent);
+  background-color: color-mix(in oklab, #e0301e 22%, transparent);
+  color: #fff1ea;
+  font-weight: 700;
+}
+
+:root[data-theme="banu"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, #e0301e 36%, transparent);
+  box-shadow: 0 0 12px color-mix(in oklab, var(--seed-accent) 50%, transparent);
 }
 
 :root[data-theme="banu"] .nexus-title {
-  font-size: 32px;
   color: var(--seed-accent);
+  text-shadow: 0 0 16px color-mix(in oklab, var(--seed-accent) 40%, transparent);
 }
 
-/* A braided border down the rail, gold and bronze. */
 :root[data-theme="banu"] .nexus-rail {
-  border-right: 0;
-  background:
-    repeating-linear-gradient(180deg, var(--seed-accent) 0 6px, var(--seed-accent-2) 6px 9px, transparent 9px 12px) right / 2px 100% no-repeat,
-    var(--color-nexus-rail);
+  box-shadow: inset -1px 0 0 var(--seed-accent), inset -4px 0 0 color-mix(in oklab, var(--seed-accent) 22%, transparent);
 }
 
 :root[data-theme="banu"] .nexus-overlay {
-  border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
-  outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
-  outline-offset: -5px;
+  border-color: var(--seed-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Consolidated Outland: charcoal panels, copper beams on the cut      */
+/* corners, keys lit teal, the engaged one yellow, grey bands.          */
+/* ------------------------------------------------------------------ */
+
+:root {
+  --cnou-copper: #c45a2c;
+  --cnou-band: rgb(255 255 255 / 0.09);
+}
+
+/* Neutral greys, not tinted: the panels are bare metal. */
+:root[data-theme="cnou"] {
+  --nexus-cut-line: var(--cnou-copper);
+  --color-nexus-white: #f2f5f5;
+  --color-nexus-bright: #e1e6e7;
+  --color-nexus-soft: #c3cacc;
+  --color-nexus-muted: #9aa3a6;
+  --color-nexus-dim: #7b8487;
+}
+
+:root[data-theme="cnou"] :is(.nexus-label, .nexus-section) {
+  color: var(--color-nexus-soft);
+}
+
+/* A bare metal panel; the cut corners are braced by thick copper beams,
+   and a grey band runs along its foot like the labels of the dash. */
+:root[data-theme="cnou"] .nexus-ticks {
+  border-color: rgb(255 255 255 / 0.14);
+  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 50%);
+}
+
+:root[data-theme="cnou"] .nexus-ticks::before {
+  background:
+    linear-gradient(225deg, var(--nexus-cut-bg) calc(50% - 2px), var(--cnou-copper) calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px))
+      top right / var(--seed-chamfer) var(--seed-chamfer) no-repeat,
+    linear-gradient(45deg, var(--nexus-cut-bg) calc(50% - 2px), var(--cnou-copper) calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px))
+      bottom left / var(--seed-chamfer) var(--seed-chamfer) no-repeat;
+}
+
+:root[data-theme="cnou"] .nexus-ticks::after {
+  inset: auto 1px 1px 1px;
+  height: 3px;
+  opacity: 1;
+  background: var(--cnou-band);
+}
+
+/* The engaged key: yellow letters in a yellow frame, lit. */
+:root[data-theme="cnou"] .nexus-primary {
+  border-radius: 4px;
+  border-width: 1.5px;
+  border-color: var(--seed-accent-2);
+  background: color-mix(in oklab, var(--seed-accent-2) 10%, #15181a);
+  color: var(--seed-accent-2);
+  font-weight: 700;
+  box-shadow: 0 0 12px color-mix(in oklab, var(--seed-accent-2) 45%, transparent), inset 0 0 8px color-mix(in oklab, var(--seed-accent-2) 25%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--seed-accent-2) 22%, #15181a);
+}
+
+/* The other keys: white letters in a teal-lit frame. */
+:root[data-theme="cnou"] .nexus-outline {
+  border-radius: 4px;
+  border-width: 1.5px;
+  border-color: var(--seed-accent);
+  background-color: #15181a;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent) 45%, transparent);
+}
+
+:root[data-theme="cnou"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 16%, #15181a);
+}
+
+:root[data-theme="cnou"] .nexus-title {
+  color: #fff;
+}
+
+/* A copper beam down the rail. */
+:root[data-theme="cnou"] .nexus-rail {
+  box-shadow: inset -3px 0 0 var(--cnou-copper);
 }

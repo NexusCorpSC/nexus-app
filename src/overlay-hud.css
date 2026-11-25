@@ -295,14 +295,6 @@
   box-shadow: none;
 }
 
-/* Argo: workhorse orange, the same stripes, finer. */
-:root[data-theme="argo"] .nexus-ov-header {
-  background-image:
-    repeating-linear-gradient(-45deg, var(--seed-accent) 0 3px, transparent 3px 7px) calc(100% - 4px) 100% / 36px 3px no-repeat,
-    linear-gradient(var(--seed-accent), var(--seed-accent)) 12px 100% / 34px 2px no-repeat,
-    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 45%, transparent), transparent 80%) bottom / 100% 1px no-repeat;
-}
-
 /* Gatac: hard geometry. Parallelograms, a slanted bar, // before labels. */
 :root[data-theme="gatac"] {
   --ov-cut: 18px;
@@ -373,55 +365,6 @@
 :root[data-theme="mirai"] .nexus-ov-label::before {
   background: var(--seed-accent);
   box-shadow: 0 0 6px var(--seed-accent);
-}
-
-/* Banu: warm and round. Gold, verdigris stitches, diamonds of the bazaar. */
-:root[data-theme="banu"] {
-  --ov-cut: 0px;
-  --ov-radius: 16px;
-  --ov-line: color-mix(in oklab, var(--seed-accent) 60%, transparent);
-  --ov-scan: 0%;
-  --ov-holo: color-mix(in oklab, var(--seed-accent) 14%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov::after {
-  background: none;
-}
-
-:root[data-theme="banu"] .nexus-ov-header {
-  background-image:
-    repeating-linear-gradient(90deg, var(--seed-accent) 0 6px, var(--seed-accent-2) 6px 9px, transparent 9px 12px) bottom / 100% 2px no-repeat;
-}
-
-:root[data-theme="banu"] .nexus-ov-title {
-  font-size: 15px;
-  font-weight: 700;
-  text-transform: none;
-  letter-spacing: 0.02em;
-  color: var(--seed-accent);
-}
-
-:root[data-theme="banu"] .nexus-ov-label::before {
-  width: 5px;
-  height: 5px;
-  rotate: 45deg;
-  vertical-align: 0.15em;
-  background: var(--seed-accent-2);
-}
-
-:root[data-theme="banu"] .nexus-ov-row,
-:root[data-theme="banu"] .nexus-ov-banner,
-:root[data-theme="banu"] .nexus-ov-caption {
-  border-radius: 8px;
-}
-
-:root[data-theme="banu"] .nexus-ov-viewport {
-  border-radius: 12px;
-  outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
-}
-
-:root[data-theme="banu"] .nexus-ov-viewport::after {
-  background: none;
 }
 
 /* Origin: luxury and harmony. No cuts: a double gold hairline, a serif
@@ -516,16 +459,6 @@
   background: none;
 }
 
-/* Aopoa: Xi'an organic curves, nothing cut. */
-:root[data-theme="aopoa"] {
-  --ov-cut: 0px;
-  --ov-radius: 18px;
-}
-
-:root[data-theme="aopoa"] .nexus-ov::after {
-  background: none;
-}
-
 /* Vanduul: blades. The deepest cuts, the brackets in red. */
 :root[data-theme="vanduul"] {
   --ov-cut: 22px;
@@ -546,4 +479,369 @@
 
 :root[data-effects="off"] .nexus-ov-title {
   text-shadow: none;
+}
+
+/* Anvil: an MFD of the dash. The bar is the screen's lit footer band. */
+:root[data-theme="anvil"] {
+  --ov-cut: 6px;
+  --ov-scan: 4%;
+}
+
+:root[data-theme="anvil"] .nexus-ov-header {
+  background-image:
+    linear-gradient(90deg, transparent, var(--seed-accent) 25% 75%, transparent) bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, transparent 20%, color-mix(in oklab, var(--seed-accent) 14%, transparent));
+}
+
+:root[data-theme="anvil"] .nexus-ov-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* The ▸ of the weapon lists. */
+:root[data-theme="anvil"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 6px;
+  height: 8px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  box-shadow: none;
+}
+
+:root[data-theme="anvil"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Argo: a work screen. The title is the engaged tab, filled orange; the
+   bar under it is the screen's orange rule. */
+:root[data-theme="argo"] {
+  --ov-cut: 0px;
+  --ov-scan: 0%;
+  --ov-holo: transparent;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 40%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ov::after {
+  background: none;
+}
+
+:root[data-theme="argo"] .nexus-ov-header {
+  background-image: linear-gradient(var(--seed-accent), var(--seed-accent)) bottom / 100% 2px no-repeat;
+}
+
+:root[data-theme="argo"] .nexus-ov-title {
+  flex: 0 1 auto;
+  padding: 1px 12px 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #160d05;
+  background: var(--seed-accent);
+  text-shadow: none;
+}
+
+:root[data-theme="argo"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 6px;
+  height: 8px;
+  background: #160d05;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* The title no longer stretches: the buttons of the bar stay on the right. */
+:root[data-theme="argo"] .nexus-ov-header > .nexus-ov-title + * {
+  margin-left: auto;
+}
+
+:root[data-theme="argo"] .nexus-ov-label {
+  font-size: 13px;
+  color: var(--seed-accent);
+}
+
+:root[data-theme="argo"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* Lines of a list, ruled like the settings of the screen. */
+:root[data-theme="argo"] .nexus-ov-row {
+  border-bottom: 1px solid color-mix(in oklab, var(--seed-accent) 22%, transparent);
+}
+
+:root[data-theme="argo"] .nexus-ov-footer {
+  background: linear-gradient(var(--seed-accent), var(--seed-accent)) top / 100% 1px no-repeat;
+}
+
+/* Aopoa: a Xi'an screen. Rounded, a second frame inside the first, the
+   glass glowing, the mosaic of triangles fading from the top. */
+:root[data-theme="aopoa"] {
+  --ov-cut: 0px;
+  --ov-radius: 18px;
+  --ov-scan: 0%;
+  --ov-line: color-mix(in oklab, var(--seed-accent) 70%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov::after {
+  background: none;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-opaque {
+  background-image:
+    linear-gradient(180deg, transparent 0, var(--color-nexus-abyss) 45%),
+    radial-gradient(ellipse 90% 160px at 50% 0, color-mix(in oklab, var(--seed-accent) 18%, transparent), transparent),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='104.0' height='90.1' fill='%232fe4ee'%3E%3Cpolygon points='-11.2,21.5 0.0,2.1 11.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='1.8,1.1 24.2,1.1 13.0,20.4' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,21.5 26.0,2.1 37.2,21.5' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,1.1 50.2,1.1 39.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='40.8,21.5 52.0,2.1 63.2,21.5' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,1.1 76.2,1.1 65.0,20.4' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,21.5 78.0,2.1 89.2,21.5' fill-opacity='0.16'/%3E%3Cpolygon points='79.8,1.1 102.2,1.1 91.0,20.4' fill-opacity='0.03'/%3E%3Cpolygon points='92.8,21.5 104.0,2.1 115.2,21.5' fill-opacity='0.09'/%3E%3Cpolygon points='-11.2,23.6 11.2,23.6 0.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='1.8,44.0 13.0,24.6 24.2,44.0' fill-opacity='0.05'/%3E%3Cpolygon points='14.8,23.6 37.2,23.6 26.0,42.9' fill-opacity='0.22'/%3E%3Cpolygon points='27.8,44.0 39.0,24.6 50.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,23.6 63.2,23.6 52.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='53.8,44.0 65.0,24.6 76.2,44.0' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,23.6 89.2,23.6 78.0,42.9' fill-opacity='0.05'/%3E%3Cpolygon points='79.8,44.0 91.0,24.6 102.2,44.0' fill-opacity='0.22'/%3E%3Cpolygon points='92.8,23.6 115.2,23.6 104.0,42.9' fill-opacity='0.03'/%3E%3Cpolygon points='-11.2,66.5 0.0,47.1 11.2,66.5' fill-opacity='0.05'/%3E%3Cpolygon points='1.8,46.1 24.2,46.1 13.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='14.8,66.5 26.0,47.1 37.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='27.8,46.1 50.2,46.1 39.0,65.4' fill-opacity='0.22'/%3E%3Cpolygon points='40.8,66.5 52.0,47.1 63.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='53.8,46.1 76.2,46.1 65.0,65.4' fill-opacity='0.09'/%3E%3Cpolygon points='66.8,66.5 78.0,47.1 89.2,66.5' fill-opacity='0.03'/%3E%3Cpolygon points='79.8,46.1 102.2,46.1 91.0,65.4' fill-opacity='0.07'/%3E%3Cpolygon points='92.8,66.5 104.0,47.1 115.2,66.5' fill-opacity='0.12'/%3E%3Cpolygon points='-11.2,68.6 11.2,68.6 0.0,88.0' fill-opacity='0.22'/%3E%3Cpolygon points='1.8,89.0 13.0,69.7 24.2,89.0' fill-opacity='0.07'/%3E%3Cpolygon points='14.8,68.6 37.2,68.6 26.0,88.0' fill-opacity='0.05'/%3E%3Cpolygon points='27.8,89.0 39.0,69.7 50.2,89.0' fill-opacity='0.12'/%3E%3Cpolygon points='40.8,68.6 63.2,68.6 52.0,88.0' fill-opacity='0.07'/%3E%3Cpolygon points='53.8,89.0 65.0,69.7 76.2,89.0' fill-opacity='0.05'/%3E%3Cpolygon points='66.8,68.6 89.2,68.6 78.0,88.0' fill-opacity='0.09'/%3E%3Cpolygon points='79.8,89.0 91.0,69.7 102.2,89.0' fill-opacity='0.16'/%3E%3Cpolygon points='92.8,68.6 115.2,68.6 104.0,88.0' fill-opacity='0.05'/%3E%3C/svg%3E");
+  background-size: auto, auto, 104px 90px;
+  box-shadow:
+    inset 0 0 0 4px color-mix(in oklab, var(--color-nexus-abyss) 90%, transparent),
+    inset 0 0 0 5px color-mix(in oklab, var(--seed-accent) 35%, transparent),
+    inset 0 0 30px -10px var(--seed-accent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-header {
+  background: linear-gradient(90deg, transparent, var(--seed-accent) 20% 80%, transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title {
+  color: var(--seed-accent-2);
+  text-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent-2) 55%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 9px;
+  height: 8px;
+  vertical-align: 0;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label {
+  color: var(--aopoa-label);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label::before {
+  background: var(--aopoa-label);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-label::before {
+  width: 7px;
+  height: 6px;
+  vertical-align: 0.1em;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+:root[data-theme="aopoa"] :is(.nexus-ov-row, .nexus-ov-banner, .nexus-ov-caption) {
+  border-radius: 6px;
+}
+
+/* The gauges of the dash are lime. */
+:root[data-theme="aopoa"] .nexus-ov-footer {
+  background:
+    linear-gradient(var(--seed-accent-2), var(--seed-accent-2)) 0 0 / 40px 2px no-repeat,
+    linear-gradient(90deg, color-mix(in oklab, var(--seed-accent) 50%, transparent), transparent) 0 0 / 100% 1px no-repeat;
+}
+
+:root[data-theme="aopoa"] .nexus-ov-viewport {
+  border-radius: 10px;
+  outline-color: color-mix(in oklab, var(--seed-accent) 40%, transparent);
+}
+
+:root[data-theme="aopoa"] .nexus-ov-title::before {
+  background: var(--seed-accent-2);
+  box-shadow: 0 0 6px var(--seed-accent-2);
+}
+
+/* Banu: an octagonal panel of their HUD. Four corners cut, the outline
+   drawn twice in coral, the glass warm and dark. */
+:root[data-theme="banu"] {
+  --ov-cut: 16px;
+  --ov-scan: 0%;
+  --ov-line: var(--seed-accent);
+  --ov-holo: color-mix(in oklab, #3a0f08 50%, transparent);
+}
+
+:root[data-theme="banu"] :is(.nexus-ov-opaque, .nexus-ov-shaded) {
+  clip-path: polygon(
+    var(--ov-cut) 0, calc(100% - var(--ov-cut)) 0, 100% var(--ov-cut),
+    100% calc(100% - var(--ov-cut)), calc(100% - var(--ov-cut)) 100%,
+    var(--ov-cut) 100%, 0 calc(100% - var(--ov-cut)), 0 var(--ov-cut)
+  );
+}
+
+:root[data-theme="banu"] .nexus-ov-opaque {
+  box-shadow: inset 0 0 30px -12px var(--seed-accent);
+}
+
+/* The four diagonals, outer and inner. */
+:root[data-theme="banu"] .nexus-ov::before {
+  --d: calc(var(--ov-cut) + 1px);
+  background:
+    linear-gradient(225deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) top right / var(--d) var(--d) no-repeat,
+    linear-gradient(135deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) top left / var(--d) var(--d) no-repeat,
+    linear-gradient(45deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) bottom left / var(--d) var(--d) no-repeat,
+    linear-gradient(315deg, transparent calc(50% - 0.75px), var(--ov-line) calc(50% - 0.75px) calc(50% + 0.75px), transparent calc(50% + 0.75px)) bottom right / var(--d) var(--d) no-repeat;
+}
+
+/* The inner outline, cut like the outer one. */
+:root[data-theme="banu"] .nexus-ov::after {
+  inset: 5px;
+  opacity: 1;
+  filter: none;
+  background: color-mix(in oklab, var(--seed-accent) 30%, transparent);
+  --c: calc(var(--ov-cut) - 3px);
+  clip-path: polygon(
+    evenodd,
+    var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)),
+    calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c),
+    var(--c) 0, calc(var(--c) + 0.4px) 1px, 1px calc(var(--c) + 0.4px), 1px calc(100% - var(--c) - 0.4px),
+    calc(var(--c) + 0.4px) calc(100% - 1px), calc(100% - var(--c) - 0.4px) calc(100% - 1px),
+    calc(100% - 1px) calc(100% - var(--c) - 0.4px), calc(100% - 1px) calc(var(--c) + 0.4px),
+    calc(100% - var(--c) - 0.4px) 1px, calc(var(--c) + 0.4px) 1px
+  );
+}
+
+.nexus-ov-clear:is(:root[data-theme="banu"] *)::after {
+  background: none;
+}
+
+:root[data-theme="banu"] .nexus-ov-header {
+  background:
+    linear-gradient(var(--seed-accent), var(--seed-accent)) 50% 100% / 46px 2px no-repeat,
+    linear-gradient(90deg, transparent, color-mix(in oklab, var(--seed-accent) 70%, transparent) 15% 85%, transparent) bottom / 100% 1px no-repeat;
+}
+
+:root[data-theme="banu"] .nexus-ov-title {
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.03em;
+  color: var(--seed-accent);
+  text-shadow: 0 0 10px color-mix(in oklab, var(--seed-accent) 50%, transparent);
+}
+
+/* A node of their constellations: a dot in a ring. */
+:root[data-theme="banu"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  vertical-align: 0.15em;
+  margin-right: 9px;
+  background: var(--seed-accent);
+  box-shadow: 0 0 0 2px var(--color-nexus-abyss), 0 0 0 3px var(--seed-accent);
+}
+
+:root[data-theme="banu"] .nexus-ov-label {
+  color: var(--banu-label);
+}
+
+/* The marker of their holograms: a rounded rhombus. */
+:root[data-theme="banu"] .nexus-ov-label::before {
+  width: 6px;
+  height: 6px;
+  rotate: 45deg;
+  border-radius: 1.5px;
+  vertical-align: 0.15em;
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--banu-label);
+}
+
+:root[data-theme="banu"] .nexus-ov-row {
+  box-shadow: none;
+  border-bottom: 1px solid color-mix(in oklab, var(--seed-accent) 20%, transparent);
+}
+
+:root[data-theme="banu"] .nexus-ov-row[data-status="ready"] {
+  box-shadow: inset 2px 0 0 rgb(52 211 153 / 0.9);
+}
+
+:root[data-theme="banu"] .nexus-ov-row[data-status="down"] {
+  box-shadow: inset 2px 0 0 rgb(248 113 113 / 0.95);
+}
+
+:root[data-theme="banu"] .nexus-ov-footer {
+  background: linear-gradient(90deg, transparent, var(--seed-accent) 20% 80%, transparent) top / 100% 1px no-repeat;
+}
+
+/* Consolidated Outland: a bare metal screen, the octagon of their
+   corridors, copper beams on the four cuts, a grey band for the bar. */
+:root[data-theme="cnou"] {
+  --ov-cut: 16px;
+  --ov-scan: 0%;
+  --ov-holo: rgb(255 255 255 / 0.03);
+  --ov-line: var(--cnou-copper);
+}
+
+:root[data-theme="cnou"] .nexus-ov-opaque {
+  border-color: rgb(255 255 255 / 0.16);
+  box-shadow: none;
+}
+
+:root[data-theme="cnou"] :is(.nexus-ov-opaque, .nexus-ov-shaded) {
+  clip-path: polygon(
+    var(--ov-cut) 0, calc(100% - var(--ov-cut)) 0, 100% var(--ov-cut),
+    100% calc(100% - var(--ov-cut)), calc(100% - var(--ov-cut)) 100%,
+    var(--ov-cut) 100%, 0 calc(100% - var(--ov-cut)), 0 var(--ov-cut)
+  );
+}
+
+:root[data-theme="cnou"] .nexus-ov::before {
+  --d: calc(var(--ov-cut) + 1px);
+  background:
+    linear-gradient(225deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) top right / var(--d) var(--d) no-repeat,
+    linear-gradient(135deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) top left / var(--d) var(--d) no-repeat,
+    linear-gradient(45deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) bottom left / var(--d) var(--d) no-repeat,
+    linear-gradient(315deg, transparent calc(50% - 2.5px), var(--ov-line) calc(50% - 2.5px) calc(50% + 1px), transparent calc(50% + 1px)) bottom right / var(--d) var(--d) no-repeat;
+}
+
+:root[data-theme="cnou"] .nexus-ov::after {
+  background: none;
+}
+
+/* The bar is the grey band of the dash, between two teal-framed ends. */
+:root[data-theme="cnou"] .nexus-ov-header {
+  background:
+    linear-gradient(var(--cnou-band), var(--cnou-band)) 50% 50% / calc(100% - 20px) calc(100% - 10px) no-repeat;
+}
+
+:root[data-theme="cnou"] .nexus-ov-title {
+  font-weight: 700;
+  color: #fff;
+  text-shadow: none;
+}
+
+:root[data-theme="cnou"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 7px;
+  height: 7px;
+  vertical-align: 0.1em;
+  box-shadow: none;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+:root[data-theme="cnou"] .nexus-ov-label {
+  color: var(--color-nexus-soft);
+}
+
+:root[data-theme="cnou"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* The rows of a list are grey bars, as on the diagnostics screen. */
+:root[data-theme="cnou"] .nexus-ov-row {
+  border-radius: 2px;
+  margin-block: 2px;
+  background-color: rgb(255 255 255 / 0.06);
+}
+
+:root[data-theme="cnou"] .nexus-ov-footer {
+  background: linear-gradient(var(--cnou-band), var(--cnou-band)) top / 100% 1px no-repeat;
 }

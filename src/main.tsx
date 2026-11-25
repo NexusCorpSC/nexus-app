@@ -24,6 +24,11 @@ import "@fontsource/orbitron/600.css";
 import "@fontsource/orbitron/700.css";
 import "@fontsource/philosopher/400.css";
 import "@fontsource/philosopher/700.css";
+import "@fontsource/saira-semi-condensed/500.css";
+import "@fontsource/saira-semi-condensed/600.css";
+import "@fontsource/saira-semi-condensed/700.css";
+import "@fontsource/saira-condensed/500.css";
+import "@fontsource/saira-condensed/600.css";
 import "@/styles.css";
 
 const queryClient = new QueryClient({
