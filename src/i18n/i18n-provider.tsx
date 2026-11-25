@@ -48,6 +48,7 @@ function relabelNative(locale: Locale) {
       chat: t("chat"),
       radar: t("radar"),
       halo: t("halo"),
+      mining: t("mining"),
       quit: t("quit"),
       captureFailed: t("captureFailed"),
       ocrFailed: t("ocrFailed"),

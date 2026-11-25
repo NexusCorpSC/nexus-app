@@ -195,6 +195,39 @@ du jeu affiche (la signature radar) et le compare aux signatures connues.
   administrateurs du site), gardées dans le store `radarSignatures`, avec la
   liste du patch 4.10.3 intégrée en dernier recours.
 
+## Assistance au minage
+
+La superposition **Assistance au minage** (`Ctrl+Shift+U`) lit la jauge
+« Charge level » du HUD de minage et dit quoi faire du laser : monter la
+puissance, tenir, la baisser, ou couper le laser.
+
+- La calibration passe par la fenêtre de capture
+  (`CapturePurpose::MiningCalibration`) : le joueur trace une zone autour de
+  tout l'arc, du bas jusqu'en haut du bloc rouge. Elle est ensuite capturée
+  toutes les 250 ms par défaut, fenêtre affichée seulement
+  (`src-tauri/src/mining_screen.rs`, réglages dans le store `miningScreen`).
+- Pas d'OCR : la jauge se lit à la couleur des pixels. La charge est la barre
+  vert vif qui monte du bas de l'arc, suivie ligne à ligne pour ne pas la
+  confondre avec les libellés à côté ; la zone optimale est le bloc vert
+  sombre, la surcharge le bloc rouge juste au-dessus. Les deux blocs sont
+  retrouvés à chaque lecture : leur taille et leur place changent avec le
+  rocher, le laser et les modules. Les positions sont des fractions de la
+  hauteur de la zone ; l'arc ne monte que dans un sens, donc comparer les
+  hauteurs suffit.
+- Le conseil (`advise`) : pas de barre, laser éteint ; sous la zone et la
+  charge immobile depuis plus d'une demi-seconde, monter ; sous la zone et la
+  charge qui monte, ou dans la zone, tenir ; dans le quart haut de la zone
+  avec une charge qui monte, baisser ; au-dessus de la zone ou dans le rouge,
+  couper.
+- **Mode automatique**, désactivé par défaut et jamais réactivé au
+  démarrage : après un avertissement (les conditions de CIG interdisent
+  l'automatisation), l'app tourne la molette (`SendInput`, crans et sens
+  réglables) et coupe le laser d'un clic gauche. Un conseil doit tenir deux
+  lectures, la molette attend 450 ms entre deux réglages, et après la
+  coupure plus rien n'est envoyé tant que la barre n'est pas retombée (le clic
+  bascule le laser). Rien n'est envoyé si la fenêtre au premier plan n'est
+  pas celle de Star Citizen.
+
 ## Nexus Chat
 
 L'assistant du site (Claude), dans l'écran **Nexus Chat** et en superposition

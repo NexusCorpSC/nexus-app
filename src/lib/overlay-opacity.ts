@@ -26,6 +26,7 @@ export type OverlayLabel =
   | "nps"
   | "chat"
   | "radar"
+  | "mining"
   | "halo";
 
 /**
@@ -81,6 +82,8 @@ export const DEFAULT_OVERLAY_OPACITY: OverlayOpacity = {
   chat: "shaded",
   // A name and a count read over the game: shaded, like the NPS.
   radar: "shaded",
+  // One word of advice read over the game: shaded, like the NPS.
+  mining: "shaded",
   // One distance watched during the jump: shaded, like the NPS.
   halo: "shaded",
 };

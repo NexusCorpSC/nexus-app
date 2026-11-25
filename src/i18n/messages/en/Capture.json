@@ -5,5 +5,6 @@
   "unreadable": "This image cannot be read.",
   "tooLarge": "The image is still too large, even scaled down.",
   "npsHint": "Draw a wide box around the “Zone: … Pos:” lines of r_displayInfo 1, down to the FPS line: the number of lines varies · Esc to cancel",
-  "radarHint": "Draw a box around the radar signature number the scan shows, without the text around it if you can · Esc to cancel"
+  "radarHint": "Draw a box around the radar signature number the scan shows, without the text around it if you can · Esc to cancel",
+  "miningHint": "Draw a box around the whole \"Charge level\" arc, from the bottom of the arc to the top of the red block, without the text around it if you can · Esc to cancel"
 }

@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "mining-overlay",
+  "description": "Mining assistance overlay. Like the radar scanner it has no decorations, so its header doubles as the title bar and the webview has to be allowed to drag the window — `core:default` does not cover that. The rest — the store for its settings, the events carrying what is read on screen — comes from `default`, whose window list it joins.",
+  "windows": ["mining"],
+  "permissions": ["core:window:allow-start-dragging"]
+}

@@ -39,6 +39,9 @@ pub(crate) struct NativeLabels {
     /// Missing from what a frontend older than the Aaron Halo navigator sends.
     #[serde(default = "default_halo_label")]
     pub halo: String,
+    /// Missing from what a frontend older than the mining assistance sends.
+    #[serde(default = "default_mining_label")]
+    pub mining: String,
     pub quit: String,
     pub capture_failed: String,
     pub ocr_failed: String,
@@ -62,6 +65,7 @@ impl Default for NativeLabels {
             chat: default_chat_label(),
             radar: default_radar_label(),
             halo: default_halo_label(),
+            mining: default_mining_label(),
             quit: "Quitter Nexus App".into(),
             capture_failed: "Capture impossible".into(),
             ocr_failed: "Lecture du texte impossible".into(),
@@ -76,6 +80,10 @@ fn default_nps_label() -> String {
 
 fn default_radar_label() -> String {
     "Scanner radar".into()
+}
+
+fn default_mining_label() -> String {
+    "Assistance au minage".into()
 }
 
 fn default_halo_label() -> String {

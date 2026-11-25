@@ -14,6 +14,7 @@ export type OverlayLabel =
   | "cargo"
   | "chat"
   | "radar"
+  | "mining"
   | "halo";
 
 /** Shows an overlay — never hides it, unlike its shortcut. */

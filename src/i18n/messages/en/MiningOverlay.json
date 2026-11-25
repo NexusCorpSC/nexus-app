@@ -1,0 +1,57 @@
+{
+  "title": "Mining assistance",
+  "close": "Close",
+  "advice": {
+    "off": "Laser off",
+    "raise": "Raise the power",
+    "hold": "Hold",
+    "lower": "Lower the power",
+    "cut": "Cut the laser"
+  },
+  "detail": {
+    "off": "No charge on the gauge.",
+    "raise": "The charge is under the green window and no longer climbing.",
+    "holdRising": "The charge is climbing towards the green window.",
+    "holdWindow": "The charge is in the green window.",
+    "holdNoWindow": "No green window found: nothing to aim for.",
+    "lower": "The charge is nearing the top of the green window.",
+    "cut": "The charge is going into overcharge."
+  },
+  "gauge": "Gauge read",
+  "acted": {
+    "raised": "Wheel sent: power raised.",
+    "lowered": "Wheel sent: power lowered.",
+    "cut": "Click sent: laser cut.",
+    "notFocused": "Nothing sent: Star Citizen is not the active window."
+  },
+  "waiting": "Turn the reading on and switch to mining mode: the advice shows here.",
+  "screen": {
+    "on": "Gauge reading on",
+    "off": "Gauge reading",
+    "start": "Read the charge gauge on screen",
+    "stop": "Stop reading",
+    "calibrate": "Calibrate",
+    "recalibrate": "Recalibrate",
+    "calibrateHint": "Draw the box around the \"Charge level\" arc",
+    "interval": "Reading interval",
+    "every": "{seconds} s",
+    "setup": "In mining mode, calibrate by drawing a box around the whole \"Charge level\" arc, from its bottom to the top of the red block. Keep the same camera position afterwards.",
+    "calibrationFound": "Box saved: the gauge reads in it.",
+    "calibrationEmpty": "Box saved, but neither the green window nor the charge reads in it. Calibrate in mining mode, with the arc in plain view.",
+    "tooSmall": "Box too small: draw it around the whole arc.",
+    "unreadable": "Gauge not found: not in mining mode, or something covers the box, this window included.",
+    "failed": "Reading the screen failed: {message}",
+    "reading": "Gauge read on screen."
+  },
+  "auto": {
+    "label": "Automatic mode",
+    "on": "Automatic on",
+    "warning": "The automatic mode turns the wheel and clicks for you. Cloud Imperium's terms forbid macros and automation: use it at your own risk, your account may be sanctioned.",
+    "confirm": "I understand, turn it on",
+    "disable": "Turn off",
+    "focus": "Nothing is sent unless Star Citizen is the active window. The laser is cut with one click, once, then nothing until the bar drops.",
+    "wheelUpRaises": "Wheel up = more power",
+    "notches": "Notches per change",
+    "autoCut": "Cut the laser at overcharge"
+  }
+}

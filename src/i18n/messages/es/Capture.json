@@ -5,5 +5,6 @@
   "unreadable": "Esta imagen no se puede leer.",
   "tooLarge": "La imagen sigue siendo demasiado pesada, incluso reducida.",
   "npsHint": "Traza una zona amplia alrededor de las líneas «Zone: … Pos:» de r_displayInfo 1, hasta la línea FPS: el número de líneas varía · Esc para cancelar",
-  "radarHint": "Traza una zona alrededor del número de la firma de radar que muestra el escaneo, sin el texto de alrededor si es posible · Esc para cancelar"
+  "radarHint": "Traza una zona alrededor del número de la firma de radar que muestra el escaneo, sin el texto de alrededor si es posible · Esc para cancelar",
+  "miningHint": "Traza una zona alrededor de todo el arco «Charge level», desde abajo del arco hasta arriba del bloque rojo, sin el texto de alrededor si es posible · Esc para cancelar"
 }

@@ -76,6 +76,19 @@ la valeur. Indiquez où vous scannez (vaisseau, ROC, à pied) pour que ce que
 vous pouvez y croiser passe en tête. Les signatures connues viennent du site et
 restent disponibles hors ligne.
 
+### Assistance au minage
+
+La superposition Minage (`Ctrl+Maj+U`) lit la jauge « Charge level » du HUD
+de minage, dans une zone que vous tracez une fois autour de l'arc, et dit quoi
+faire du laser : **monter** la puissance, **tenir**, **baisser**, ou
+**couper** avant la surcharge. La zone verte et la zone rouge sont retrouvées à
+chaque lecture, quelle que soit leur taille.
+
+Un mode automatique, désactivé par défaut, peut régler la puissance à la
+molette et couper le laser d'un clic, seulement quand Star Citizen est la
+fenêtre active. Il simule des entrées souris : les conditions de Cloud
+Imperium interdisent l'automatisation, vous l'utilisez à vos risques.
+
 ### Navigation quantique : Aaron Halo et point sans balise
 
 L'Aaron Halo, la ceinture d'astéroïdes de Stanton, n'a pas de balise de saut :
@@ -192,6 +205,7 @@ votre espace :
 | `Ctrl+Maj+X` | marquer ma position |
 | `Ctrl+Maj+R` | scanner de signature radar |
 | `Ctrl+Maj+A` | navigation quantique (Aaron Halo, point sans balise) |
+| `Ctrl+Maj+U` | assistance au minage |
 | `Ctrl+Maj+H` | Nexus Chat |
 | `Ctrl+Maj+J` (maintenu) | parler à Nexus Chat |
 | `Ctrl+Maj+E` | escouade |
@@ -210,9 +224,11 @@ Tous se changent dans **Paramètres**.
 **Est-ce compatible avec l'anti-triche ?** L'application ne touche pas au jeu :
 elle ne lit que le clavier (comme les autres overlays de la communauté), le
 presse-papiers quand le NPS est ouvert, le journal `Game.log`, les captures
-d'écran que vous déclenchez (et la zone calibrée du NPS ou du scanner radar) et, si vous l'activez, le service de télémétrie que
+d'écran que vous déclenchez (et la zone calibrée du NPS, du scanner radar ou de l'assistance au minage) et, si vous l'activez, le service de télémétrie que
 le jeu ouvre lui-même sur votre PC. Elle n'injecte rien dans le processus du
-jeu.
+jeu. Seule exception, si vous l'activez : le mode automatique de l'assistance
+au minage envoie des mouvements de molette et des clics, comme une souris ;
+c'est de l'automatisation, à vos risques.
 
 **Un raccourci ne réagit pas.** Vérifiez dans **Paramètres** qu'il n'est pas
 pris deux fois. Le journal de l'application, dans
