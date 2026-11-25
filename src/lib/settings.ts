@@ -49,6 +49,7 @@ const KEY_SHORTCUT_NPS = "shortcutNps";
 const KEY_SHORTCUT_CHAT = "shortcutChat";
 const KEY_SHORTCUT_RADAR = "shortcutRadar";
 const KEY_SHORTCUT_HALO = "shortcutHalo";
+const KEY_SHORTCUT_MINING = "shortcutMining";
 const KEY_SHORTCUT_TALK = "shortcutTalk";
 const KEY_SHORTCUT_OPACITY = "shortcutOpacity";
 const KEY_SHORTCUT_LOCK = "shortcutLock";
@@ -65,6 +66,7 @@ const KEY_NPS_SCREEN = "npsScreen";
 const KEY_MARKER_DEFAULTS = "markerDefaults";
 const KEY_CARGO_SHIPS = "cargoShips";
 const KEY_RADAR_SCREEN = "radarScreen";
+const KEY_MINING_SCREEN = "miningScreen";
 const KEY_RADAR_SIGNATURES = "radarSignatures";
 const KEY_RADAR_CONTEXT = "radarContext";
 const KEY_HALO_DATA = "haloData";
@@ -170,6 +172,8 @@ export const DEFAULT_SHORTCUTS = {
   radar: "Ctrl+Shift+KeyR",
   // A for Aaron: H is the chat's.
   halo: "Ctrl+Shift+KeyA",
+  // U: M is the map's, and the letters of « minage » are taken.
+  mining: "Ctrl+Shift+KeyU",
   // Held, not pressed: the microphone is open while it is down.
   talk: "Ctrl+Shift+KeyJ",
   opacity: "Ctrl+Shift+KeyO",
@@ -210,6 +214,9 @@ export async function getShortcuts(): Promise<Shortcuts> {
       (await store.get<string>(KEY_SHORTCUT_RADAR)) ?? DEFAULT_SHORTCUTS.radar,
     halo:
       (await store.get<string>(KEY_SHORTCUT_HALO)) ?? DEFAULT_SHORTCUTS.halo,
+    mining:
+      (await store.get<string>(KEY_SHORTCUT_MINING)) ??
+      DEFAULT_SHORTCUTS.mining,
     talk:
       (await store.get<string>(KEY_SHORTCUT_TALK)) ?? DEFAULT_SHORTCUTS.talk,
     opacity:
@@ -238,6 +245,7 @@ export async function setShortcuts(shortcuts: Shortcuts): Promise<void> {
   await store.set(KEY_SHORTCUT_CHAT, shortcuts.chat);
   await store.set(KEY_SHORTCUT_RADAR, shortcuts.radar);
   await store.set(KEY_SHORTCUT_HALO, shortcuts.halo);
+  await store.set(KEY_SHORTCUT_MINING, shortcuts.mining);
   await store.set(KEY_SHORTCUT_TALK, shortcuts.talk);
   await store.set(KEY_SHORTCUT_OPACITY, shortcuts.opacity);
   await store.set(KEY_SHORTCUT_LOCK, shortcuts.lock);
@@ -284,6 +292,7 @@ export async function getOverlayOpacity(): Promise<OverlayOpacity> {
     chat: storedMode(stored?.chat, "chat"),
     radar: storedMode(stored?.radar, "radar"),
     halo: storedMode(stored?.halo, "halo"),
+    mining: storedMode(stored?.mining, "mining"),
   };
 }
 
@@ -926,6 +935,51 @@ export async function getCachedCargoShips(): Promise<unknown> {
 export async function setCachedCargoShips(ships: unknown): Promise<void> {
   const store = await getStore();
   await store.set(KEY_CARGO_SHIPS, ships);
+}
+
+/**
+ * The mining assistance reading the charge gauge
+ * (`src-tauri/src/mining_screen.rs`).
+ */
+export type MiningScreenSettings = {
+  enabled: boolean;
+  intervalMs: number;
+  /** The box around the "Charge level" arc, as drawn in the calibration. */
+  region: NpsScreenRegion | null;
+  /** Acts on the advice with the wheel and a click: off unless turned on. */
+  auto: boolean;
+  /** Whether turning the wheel up raises the laser power. */
+  wheelUpRaises: boolean;
+  /** Wheel notches sent each time the power changes. */
+  notches: number;
+  /** Whether the automatic mode may cut the laser at the overcharge. */
+  autoCut: boolean;
+};
+
+export const DEFAULT_MINING_SCREEN: MiningScreenSettings = {
+  enabled: false,
+  intervalMs: 250,
+  region: null,
+  auto: false,
+  wheelUpRaises: true,
+  notches: 1,
+  autoCut: true,
+};
+
+export async function getMiningScreen(): Promise<MiningScreenSettings> {
+  const store = await getStore();
+  const stored =
+    await store.get<Partial<MiningScreenSettings>>(KEY_MINING_SCREEN);
+  // The automatic mode never comes back on by itself: it is chosen anew
+  // each time the app starts.
+  return { ...DEFAULT_MINING_SCREEN, ...stored, auto: false };
+}
+
+export async function setMiningScreen(
+  settings: MiningScreenSettings,
+): Promise<void> {
+  const store = await getStore();
+  await store.set(KEY_MINING_SCREEN, settings);
 }
 
 /** The radar scanner reading the scan's signature (`src-tauri/src/radar_screen.rs`). */

@@ -22,7 +22,7 @@ export default function CapturePage() {
   const [busy, setBusy] = useState(false);
   // The NPS borrows this window to have its box drawn: the hint says so.
   const [purpose, setPurpose] = useState<
-    "search" | "npsCalibration" | "radarCalibration"
+    "search" | "npsCalibration" | "radarCalibration" | "miningCalibration" | "miningCalibration"
   >("search");
   const surfaceRef = useRef<HTMLDivElement>(null);
 
@@ -148,7 +148,9 @@ export default function CapturePage() {
             ? t("npsHint")
             : purpose === "radarCalibration"
               ? t("radarHint")
-              : t("hint")}
+              : purpose === "miningCalibration"
+                ? t("miningHint")
+                : t("hint")}
         </p>
       )}
 

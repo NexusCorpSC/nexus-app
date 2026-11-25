@@ -47,6 +47,10 @@
       "label": "Scanner radar",
       "hint": "Lit la signature radar du scan et dit ce qu'elle désigne."
     },
+    "mining": {
+      "label": "Assistance au minage",
+      "hint": "Lit la jauge de charge du laser de minage et dit quand monter, baisser ou couper la puissance."
+    },
     "halo": {
       "label": "Navigation quantique",
       "hint": "Dit à quelle distance restante couper un saut quantique pour tomber dans une bande de l'Aaron Halo ou s'approcher d'un point sans balise."

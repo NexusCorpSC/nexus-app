@@ -1,0 +1,57 @@
+{
+  "title": "Assistance au minage",
+  "close": "Fermer",
+  "advice": {
+    "off": "Laser éteint",
+    "raise": "Monter la puissance",
+    "hold": "Tenir",
+    "lower": "Baisser la puissance",
+    "cut": "Couper le laser"
+  },
+  "detail": {
+    "off": "Aucune charge sur la jauge.",
+    "raise": "La charge est sous la zone verte et ne monte plus.",
+    "holdRising": "La charge monte vers la zone verte.",
+    "holdWindow": "La charge est dans la zone verte.",
+    "holdNoWindow": "Zone verte introuvable : rien à viser.",
+    "lower": "La charge approche du haut de la zone verte.",
+    "cut": "La charge entre dans la surcharge."
+  },
+  "gauge": "Jauge lue",
+  "acted": {
+    "raised": "Molette envoyée : puissance montée.",
+    "lowered": "Molette envoyée : puissance baissée.",
+    "cut": "Clic envoyé : laser coupé.",
+    "notFocused": "Rien envoyé : Star Citizen n'est pas la fenêtre active."
+  },
+  "waiting": "Activez la lecture et passez en mode minage : l'indication s'affiche ici.",
+  "screen": {
+    "on": "Lecture de la jauge active",
+    "off": "Lecture de la jauge",
+    "start": "Lire la jauge de charge à l'écran",
+    "stop": "Arrêter la lecture",
+    "calibrate": "Calibrer",
+    "recalibrate": "Recalibrer",
+    "calibrateHint": "Tracer la zone autour de l'arc « Charge level »",
+    "interval": "Intervalle de lecture",
+    "every": "{seconds} s",
+    "setup": "En mode minage, calibrez en traçant une zone autour de tout l'arc « Charge level », du bas jusqu'en haut de la zone rouge. Gardez la même position de caméra ensuite.",
+    "calibrationFound": "Zone enregistrée : la jauge y est bien lue.",
+    "calibrationEmpty": "Zone enregistrée, mais ni la zone verte ni la charge n'y sont lues. Calibrez en mode minage, l'arc bien visible.",
+    "tooSmall": "Zone trop petite : tracez-la autour de tout l'arc.",
+    "unreadable": "Jauge introuvable : pas en mode minage, ou quelque chose couvre la zone, pas même cette fenêtre.",
+    "failed": "La lecture de l'écran a échoué : {message}",
+    "reading": "Jauge lue à l'écran."
+  },
+  "auto": {
+    "label": "Mode automatique",
+    "on": "Automatique actif",
+    "warning": "Le mode automatique tourne la molette et clique à votre place. Les conditions de Cloud Imperium interdisent les macros et l'automatisation : vous l'utilisez à vos risques, votre compte peut être sanctionné.",
+    "confirm": "J'ai compris, activer",
+    "disable": "Désactiver",
+    "focus": "Rien n'est envoyé tant que Star Citizen n'est pas la fenêtre active. Le laser est coupé d'un clic, une seule fois, puis plus rien jusqu'à ce que la barre retombe.",
+    "wheelUpRaises": "Molette vers le haut = plus de puissance",
+    "notches": "Crans par réglage",
+    "autoCut": "Couper le laser à la surcharge"
+  }
+}

@@ -47,6 +47,10 @@
       "label": "Escáner de radar",
       "hint": "Lee la firma de radar del escaneo y dice lo que indica."
     },
+    "mining": {
+      "label": "Asistencia de minería",
+      "hint": "Lee el indicador de carga del láser de minería y dice cuándo subir, bajar o cortar la potencia."
+    },
     "halo": {
       "label": "Navegación cuántica",
       "hint": "Indica a qué distancia restante cortar un salto cuántico para caer en una banda del Aaron Halo o acercarse a un punto sin baliza."

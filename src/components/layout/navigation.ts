@@ -18,6 +18,7 @@ import {
   NotebookPen,
   Orbit,
   Package,
+  Pickaxe,
   Radar,
   Rocket,
   Route as RouteIcon,
@@ -174,6 +175,7 @@ export type DrawerOverlayKey =
   | "map"
   | "nps"
   | "radar"
+  | "mining"
   | "halo"
   | "plan"
   | "notes"
@@ -192,6 +194,7 @@ export const DRAWER_OVERLAYS: {
   { label: "map", key: "map", icon: MapIcon, shortcut: "map" },
   { label: "nps", key: "nps", icon: Compass, shortcut: "nps" },
   { label: "radar", key: "radar", icon: Radar, shortcut: "radar" },
+  { label: "mining", key: "mining", icon: Pickaxe, shortcut: "mining" },
   { label: "halo", key: "halo", icon: Orbit, shortcut: "halo" },
   { label: "plan", key: "plan", icon: RouteIcon, shortcut: "plan" },
   { label: "notes", key: "notes", icon: NotebookPen, shortcut: "notes" },

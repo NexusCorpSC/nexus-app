@@ -1,0 +1,57 @@
+{
+  "title": "Asistencia de minería",
+  "close": "Cerrar",
+  "advice": {
+    "off": "Láser apagado",
+    "raise": "Subir la potencia",
+    "hold": "Mantener",
+    "lower": "Bajar la potencia",
+    "cut": "Cortar el láser"
+  },
+  "detail": {
+    "off": "Ninguna carga en el indicador.",
+    "raise": "La carga está bajo la zona verde y ya no sube.",
+    "holdRising": "La carga sube hacia la zona verde.",
+    "holdWindow": "La carga está en la zona verde.",
+    "holdNoWindow": "Zona verde no encontrada: nada a lo que apuntar.",
+    "lower": "La carga se acerca a lo alto de la zona verde.",
+    "cut": "La carga entra en sobrecarga."
+  },
+  "gauge": "Indicador leído",
+  "acted": {
+    "raised": "Rueda enviada: potencia subida.",
+    "lowered": "Rueda enviada: potencia bajada.",
+    "cut": "Clic enviado: láser cortado.",
+    "notFocused": "Nada enviado: Star Citizen no es la ventana activa."
+  },
+  "waiting": "Activa la lectura y pasa al modo minería: la indicación aparece aquí.",
+  "screen": {
+    "on": "Lectura del indicador activa",
+    "off": "Lectura del indicador",
+    "start": "Leer el indicador de carga en pantalla",
+    "stop": "Detener la lectura",
+    "calibrate": "Calibrar",
+    "recalibrate": "Recalibrar",
+    "calibrateHint": "Trazar la zona alrededor del arco «Charge level»",
+    "interval": "Intervalo de lectura",
+    "every": "{seconds} s",
+    "setup": "En modo minería, calibra trazando una zona alrededor de todo el arco «Charge level», desde abajo hasta arriba del bloque rojo. Mantén luego la misma posición de cámara.",
+    "calibrationFound": "Zona guardada: el indicador se lee bien en ella.",
+    "calibrationEmpty": "Zona guardada, pero no se lee ni la zona verde ni la carga. Calibra en modo minería, con el arco bien visible.",
+    "tooSmall": "Zona demasiado pequeña: trázala alrededor de todo el arco.",
+    "unreadable": "Indicador no encontrado: no estás en modo minería, o algo tapa la zona, ni siquiera esta ventana.",
+    "failed": "La lectura de la pantalla falló: {message}",
+    "reading": "Indicador leído en pantalla."
+  },
+  "auto": {
+    "label": "Modo automático",
+    "on": "Automático activo",
+    "warning": "El modo automático gira la rueda y hace clic por ti. Las condiciones de Cloud Imperium prohíben las macros y la automatización: lo usas bajo tu responsabilidad, tu cuenta puede ser sancionada.",
+    "confirm": "Entendido, activar",
+    "disable": "Desactivar",
+    "focus": "No se envía nada mientras Star Citizen no sea la ventana activa. El láser se corta con un clic, una sola vez, y luego nada hasta que la barra baje.",
+    "wheelUpRaises": "Rueda hacia arriba = más potencia",
+    "notches": "Muescas por ajuste",
+    "autoCut": "Cortar el láser en sobrecarga"
+  }
+}

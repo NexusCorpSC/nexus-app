@@ -6,6 +6,7 @@ mod event_feed;
 mod game_log;
 #[cfg(windows)]
 mod hotkeys;
+mod mining_screen;
 mod native_labels;
 mod notifications;
 mod nps;
@@ -49,6 +50,8 @@ const PLAN_WINDOW: &str = "plan";
 /// image. The label stays English like its neighbours; the user reads
 /// «Carte».
 const MAP_WINDOW: &str = "map";
+/// Mining assistance: the charge gauge read off the screen (`mining_screen.rs`).
+use mining_screen::MINING_WINDOW;
 /// The NPS — Nexus Positioning System: distance and heading to a place, from
 /// the game's `/showlocation` (`nps.rs`).
 use nps::NPS_WINDOW;
@@ -153,6 +156,9 @@ struct OverlayOpacity {
     /// Missing from what a frontend older than the Aaron Halo navigator sends.
     #[serde(default = "default_halo_mode")]
     halo: OverlayMode,
+    /// Missing from what a frontend older than the mining assistance sends.
+    #[serde(default = "default_mining_mode")]
+    mining: OverlayMode,
 }
 
 fn default_nps_mode() -> OverlayMode {
@@ -168,6 +174,10 @@ fn default_radar_mode() -> OverlayMode {
 }
 
 fn default_halo_mode() -> OverlayMode {
+    OverlayMode::Shaded
+}
+
+fn default_mining_mode() -> OverlayMode {
     OverlayMode::Shaded
 }
 
@@ -195,6 +205,8 @@ impl Default for OverlayOpacity {
             radar: default_radar_mode(),
             // One distance to watch during the jump: shaded, like the NPS.
             halo: default_halo_mode(),
+            // One word of advice, read over the game: shaded, like the NPS.
+            mining: default_mining_mode(),
         }
     }
 }
@@ -211,6 +223,7 @@ impl OverlayOpacity {
             CHAT_WINDOW => Some(self.chat),
             RADAR_WINDOW => Some(self.radar),
             HALO_WINDOW => Some(self.halo),
+            MINING_WINDOW => Some(self.mining),
             _ => None,
         }
     }
@@ -227,6 +240,7 @@ impl OverlayOpacity {
             CHAT_WINDOW => &mut self.chat,
             RADAR_WINDOW => &mut self.radar,
             HALO_WINDOW => &mut self.halo,
+            MINING_WINDOW => &mut self.mining,
             other => return Err(format!("{other} is not an overlay")),
         };
 
@@ -237,8 +251,16 @@ impl OverlayOpacity {
     /// Whether any of them still draws something behind its text.
     fn any_drawn(&self) -> bool {
         [
-            self.notes, self.cargo, self.squad, self.plan, self.map, self.nps, self.chat,
-            self.radar, self.halo,
+            self.notes,
+            self.cargo,
+            self.squad,
+            self.plan,
+            self.map,
+            self.nps,
+            self.chat,
+            self.radar,
+            self.halo,
+            self.mining,
         ]
         .iter()
         .any(|mode| *mode != OverlayMode::Clear)
@@ -254,6 +276,7 @@ impl OverlayOpacity {
         self.chat = mode;
         self.radar = mode;
         self.halo = mode;
+        self.mining = mode;
     }
 }
 
@@ -310,6 +333,7 @@ fn is_overlay(label: &str) -> bool {
             | CHAT_WINDOW
             | RADAR_WINDOW
             | HALO_WINDOW
+            | MINING_WINDOW
     )
 }
 
@@ -329,6 +353,8 @@ enum CapturePurpose {
     NpsCalibration,
     /// Where the scanner reads the radar signature (`radar_screen.rs`).
     RadarCalibration,
+    /// Where the mining assistance reads the charge gauge (`mining_screen.rs`).
+    MiningCalibration,
 }
 
 /// What a global shortcut triggers.
@@ -347,6 +373,8 @@ pub(crate) enum Action {
     Radar,
     /// The Aaron Halo navigator.
     Halo,
+    /// The mining assistance (`mining_screen.rs`).
+    Mining,
     /// Held rather than fired: see `talk.rs`.
     Talk,
     Opacity,
@@ -373,6 +401,7 @@ impl Action {
             Action::Chat => "chat",
             Action::Radar => "radar",
             Action::Halo => "halo",
+            Action::Mining => "mining",
             Action::Talk => "talk",
             Action::Opacity => "opacity",
             Action::Lock => "lock",
@@ -423,6 +452,7 @@ pub(crate) fn trigger(app: &AppHandle, action: Action, source: &str) {
         Action::Chat => toggle_overlay(app, CHAT_WINDOW),
         Action::Radar => toggle_overlay(app, RADAR_WINDOW),
         Action::Halo => toggle_overlay(app, HALO_WINDOW),
+        Action::Mining => toggle_overlay(app, MINING_WINDOW),
         // Never routed here either: both shortcut paths handle its two edges.
         Action::Talk => talk::press(app),
         Action::Opacity => flip_all_overlay_opacity(app),
@@ -487,6 +517,9 @@ struct ShortcutSettings {
     /// Missing from what a frontend older than the Aaron Halo navigator sends.
     #[serde(default = "default_halo_shortcut")]
     halo: String,
+    /// Missing from what a frontend older than the mining assistance sends.
+    #[serde(default = "default_mining_shortcut")]
+    mining: String,
     /// Missing from what a frontend older than the voice sends.
     #[serde(default = "default_talk_shortcut")]
     talk: String,
@@ -523,6 +556,10 @@ fn default_radar_shortcut() -> String {
 }
 
 /// A for Aaron: H is the chat's.
+fn default_mining_shortcut() -> String {
+    "Ctrl+Shift+KeyU".to_string()
+}
+
 fn default_halo_shortcut() -> String {
     "Ctrl+Shift+KeyA".to_string()
 }
@@ -550,6 +587,7 @@ impl Default for ShortcutSettings {
             chat: default_chat_shortcut(),
             radar: default_radar_shortcut(),
             halo: default_halo_shortcut(),
+            mining: default_mining_shortcut(),
             talk: default_talk_shortcut(),
             opacity: "Ctrl+Shift+KeyO".to_string(),
             lock: default_lock_shortcut(),
@@ -608,6 +646,7 @@ fn apply_shortcuts(app: &AppHandle, requested: &ShortcutSettings) -> Vec<Shortcu
         // combination keeps it, and a new default must not take one the
         // player already gave to another action.
         (Action::Halo, &requested.halo),
+        (Action::Mining, &requested.mining),
     ];
 
     let mut bound: Vec<(Action, Shortcut)> = Vec::new();
@@ -1054,6 +1093,7 @@ impl CapturePurpose {
             CapturePurpose::Search => None,
             CapturePurpose::NpsCalibration => Some(NPS_WINDOW),
             CapturePurpose::RadarCalibration => Some(RADAR_WINDOW),
+            CapturePurpose::MiningCalibration => Some(MINING_WINDOW),
         }
     }
 }
@@ -1089,6 +1129,12 @@ fn nps_calibrate(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn radar_calibrate(app: AppHandle) -> Result<(), String> {
     start_calibration(&app, CapturePurpose::RadarCalibration)
+}
+
+/// The box around the charge gauge, drawn from the mining window.
+#[tauri::command]
+fn mining_calibrate(app: AppHandle) -> Result<(), String> {
+    start_calibration(&app, CapturePurpose::MiningCalibration)
 }
 
 /// What the selection window is open for, so it can say what to draw.
@@ -1189,7 +1235,7 @@ fn show_overlay(app: AppHandle, label: String) -> Result<(), String> {
             announce_plan_visibility(&app)
         }
         OVERLAY_WINDOW | NOTES_WINDOW | CARGO_WINDOW | MAP_WINDOW | NPS_WINDOW | CHAT_WINDOW
-        | RADAR_WINDOW | HALO_WINDOW => show_window(&app, &label),
+        | RADAR_WINDOW | HALO_WINDOW | MINING_WINDOW => show_window(&app, &label),
         other => Err(format!("{other} is not an overlay")),
     }
 }
@@ -1306,6 +1352,11 @@ fn close_radar_overlay(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn close_halo_overlay(app: AppHandle) -> Result<(), String> {
     hide_window(&app, HALO_WINDOW)
+}
+
+#[tauri::command]
+fn close_mining_overlay(app: AppHandle) -> Result<(), String> {
+    hide_window(&app, MINING_WINDOW)
 }
 
 #[tauri::command]
@@ -1622,6 +1673,7 @@ fn flip_all_overlay_locks(app: &AppHandle) -> Result<(), String> {
         CHAT_WINDOW,
         RADAR_WINDOW,
         HALO_WINDOW,
+        MINING_WINDOW,
     ] {
         let visible = window(app, label)?
             .is_visible()
@@ -1716,6 +1768,12 @@ async fn recognize_selection(
         return calibrated.map(|()| String::new());
     }
 
+    if purpose == CapturePurpose::MiningCalibration {
+        let calibrated = mining_screen::calibrate(&app, frame, selection).await;
+        show_window(&app, MINING_WINDOW)?;
+        return calibrated.map(|()| String::new());
+    }
+
     let recognized = frame.recognize(selection).await;
 
     // The overlay opens either way — a failed read should still leave the user
@@ -1763,6 +1821,7 @@ pub fn run() {
         .manage(CaptureState::default())
         .manage(nps_screen::Tracking::default())
         .manage(radar_screen::Tracking::default())
+        .manage(mining_screen::Tracking::default())
         .manage(Shortcuts::default())
         .manage(ShortcutSupport::default())
         .manage(notifications::Notifications::default())
@@ -1791,6 +1850,7 @@ pub fn run() {
             close_nps_overlay,
             close_radar_overlay,
             close_halo_overlay,
+            close_mining_overlay,
             close_chat_overlay,
             voice_start,
             voice_stop,
@@ -1805,6 +1865,8 @@ pub fn run() {
             nps_calibrate,
             radar_screen::radar_screen_configure,
             radar_calibrate,
+            mining_screen::mining_screen_configure,
+            mining_calibrate,
             capture_purpose,
             toggle_overlay_opacity,
             set_overlay_opacity,
@@ -1978,6 +2040,7 @@ pub fn run() {
             // has asked for it.
             nps_screen::install(app.handle());
             radar_screen::install(app.handle());
+            mining_screen::install(app.handle());
 
             Ok(())
         })

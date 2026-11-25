@@ -5,5 +5,6 @@
   "unreadable": "Cette image ne peut pas être lue.",
   "tooLarge": "L'image reste trop lourde, même réduite.",
   "npsHint": "Tracez une zone large autour des lignes « Zone: … Pos: » de r_displayInfo 1, jusqu'à la ligne FPS : le nombre de lignes varie · Échap pour annuler",
-  "radarHint": "Tracez une zone autour du nombre de la signature radar affiché par le scan, sans le texte autour si possible · Échap pour annuler"
+  "radarHint": "Tracez une zone autour du nombre de la signature radar affiché par le scan, sans le texte autour si possible · Échap pour annuler",
+  "miningHint": "Tracez une zone autour de tout l'arc « Charge level », du bas de l'arc jusqu'en haut de la zone rouge, sans le texte autour si possible · Échap pour annuler"
 }

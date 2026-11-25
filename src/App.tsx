@@ -47,6 +47,7 @@ import PlanOverlayPage from "@/pages/plan-overlay-page";
 import MapOverlayPage from "@/pages/map-overlay-page";
 import NpsOverlayPage from "@/pages/nps-overlay-page";
 import RadarOverlayPage from "@/pages/radar-overlay-page";
+import MiningOverlayPage from "@/pages/mining-overlay-page";
 import HaloOverlayPage from "@/pages/halo-overlay-page";
 import RadialOverlayPage from "@/pages/radial-overlay-page";
 // Loaded on first visit too: the AI SDK and the Markdown renderer are only
@@ -76,6 +77,7 @@ export default function App() {
       <Route path="map-overlay" element={<MapOverlayPage />} />
       <Route path="nps-overlay" element={<NpsOverlayPage />} />
       <Route path="radar-overlay" element={<RadarOverlayPage />} />
+      <Route path="mining-overlay" element={<MiningOverlayPage />} />
       <Route path="halo-overlay" element={<HaloOverlayPage />} />
       <Route path="radial" element={<RadialOverlayPage />} />
       <Route
