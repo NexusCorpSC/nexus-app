@@ -75,7 +75,7 @@ export const THEME_SWATCHES: Record<ThemeId, { accent: string; tint: string }> =
   anvil: { accent: "#3fe6cf", tint: "#0d2a27" },
   rsi: { accent: "#4ea8ff", tint: "#0e2340" },
   origin: { accent: "#1d4f9e", tint: "#f3efe7" },
-  crusader: { accent: "#5cc8ff", tint: "#122b3d" },
+  crusader: { accent: "#3d9bff", tint: "#0a1830" },
   misc: { accent: "#2fd0c4", tint: "#0f2a2c" },
   banu: { accent: "#ff6a3d", tint: "#0d1c22" },
   vanduul: { accent: "#ff3b46", tint: "#1a0c0e" },

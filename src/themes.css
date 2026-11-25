@@ -152,17 +152,19 @@
   --seed-pattern: none;
 }
 
-/* Crusader: sky blue, airline. */
+/* Crusader: the screens of their cockpits. Electric blue keys and
+   bracketed gauges on deep navy, the engaged key yellow, slanted capitals. */
 [data-theme="crusader"] {
-  --seed-accent: #5cc8ff;
-  --seed-accent-2: #ffe7a8;
-  --seed-tint: #122b3d;
-  --seed-ink: #f4fbff;
-  --seed-radius: 0.625rem;
+  --seed-accent: #3d9bff;
+  --seed-accent-2: #f5c400;
+  --seed-tint: #0a1830;
+  --seed-ink: #e4f0ff;
+  --seed-radius: 12px;
   --seed-ticks: 0;
-  --seed-glow: 0.45;
-  --seed-tracking: 0.12em;
-  --seed-pattern: var(--pattern-dots);
+  --seed-glow: 0.5;
+  --seed-tracking: 0.06em;
+  --seed-pattern: none;
+  --seed-chamfer: 0px;
 }
 
 /* MISC: industrial teal. */
