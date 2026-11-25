@@ -32,7 +32,7 @@ const BUTTON_VARIANTS: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
     "nexus-primary nexus-glow bg-nexus-accent text-nexus-abyss border-nexus-accent font-semibold hover:bg-nexus-bright",
   outline:
-    "bg-transparent text-nexus-bright border-nexus-accent/25 hover:border-nexus-accent/45 hover:bg-nexus-accent/8",
+    "nexus-outline bg-transparent text-nexus-bright border-nexus-accent/25 hover:border-nexus-accent/45 hover:bg-nexus-accent/8",
   ghost:
     "bg-transparent text-nexus-accent/80 border-transparent hover:bg-nexus-accent/10 hover:text-nexus-accent",
   danger:

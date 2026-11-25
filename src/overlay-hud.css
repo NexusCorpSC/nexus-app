@@ -547,3 +547,37 @@
 :root[data-effects="off"] .nexus-ov-title {
   text-shadow: none;
 }
+
+/* Anvil: an MFD of the dash. The bar is the screen's lit footer band. */
+:root[data-theme="anvil"] {
+  --ov-cut: 6px;
+  --ov-scan: 4%;
+}
+
+:root[data-theme="anvil"] .nexus-ov-header {
+  background-image:
+    linear-gradient(90deg, transparent, var(--seed-accent) 25% 75%, transparent) bottom / 100% 1px no-repeat,
+    linear-gradient(180deg, transparent 20%, color-mix(in oklab, var(--seed-accent) 14%, transparent));
+}
+
+:root[data-theme="anvil"] .nexus-ov-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* The ▸ of the weapon lists. */
+:root[data-theme="anvil"] .nexus-ov-title::before {
+  rotate: 0deg;
+  width: 6px;
+  height: 8px;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+  box-shadow: none;
+}
+
+:root[data-theme="anvil"] .nexus-ov-label::before {
+  width: 5px;
+  height: 7px;
+  vertical-align: 0.05em;
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}

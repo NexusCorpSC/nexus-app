@@ -4,7 +4,7 @@
  * components carry:
  *
  *   .nexus-ticks     cards and dialogs (src/components/ui)
- *   .nexus-primary   the primary button
+ *   .nexus-primary   the primary button, .nexus-outline the outlined one
  *   .nexus-title     page titles
  *   .nexus-rail      the main window's rail, .nexus-subpanel its side panel
  *   .nexus-backdrop  the page behind the main window's content
@@ -302,4 +302,73 @@
   border-color: color-mix(in oklab, var(--seed-accent) 55%, transparent);
   outline: 1.5px dotted color-mix(in oklab, var(--seed-accent-2) 60%, transparent);
   outline-offset: -5px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Anvil: a military cockpit. Teal glass, framed keys, the one engaged  */
+/* lit yellow, narrow capitals.                                         */
+/* ------------------------------------------------------------------ */
+
+:root[data-theme="anvil"] {
+  --font-display: "Saira Semi Condensed", "Chakra Petch", system-ui, sans-serif;
+}
+
+/* A screen of the dash: a teal frame, and the lit band of its footer. */
+:root[data-theme="anvil"] .nexus-ticks {
+  border-color: color-mix(in oklab, var(--seed-accent) 32%, transparent);
+  background-image: linear-gradient(180deg, color-mix(in oklab, var(--seed-accent) 6%, transparent), transparent 45%);
+}
+
+:root[data-theme="anvil"] .nexus-ticks::after {
+  inset: auto 0 0 0;
+  height: 3px;
+  opacity: 1;
+  background:
+    linear-gradient(90deg, transparent, var(--seed-accent) 30% 70%, transparent) center / 60% 100% no-repeat,
+    color-mix(in oklab, var(--seed-accent) 22%, transparent);
+}
+
+/* The engaged key: yellow, dark letters, a dark gap inside its frame. */
+:root[data-theme="anvil"] .nexus-primary {
+  border-radius: 0;
+  background: var(--seed-accent-2);
+  border-color: var(--seed-accent-2);
+  color: #12160c;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.35), 0 0 14px color-mix(in oklab, var(--seed-accent-2) 35%, transparent);
+}
+
+:root[data-theme="anvil"] .nexus-primary:hover {
+  background: color-mix(in oklab, var(--seed-accent-2) 85%, white);
+}
+
+/* The other keys: a teal frame over teal glass. */
+:root[data-theme="anvil"] .nexus-outline {
+  border-radius: 0;
+  border-color: color-mix(in oklab, var(--seed-accent) 75%, transparent);
+  background-color: color-mix(in oklab, var(--seed-accent) 12%, transparent);
+  color: var(--seed-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.3);
+}
+
+:root[data-theme="anvil"] .nexus-outline:hover {
+  background-color: color-mix(in oklab, var(--seed-accent) 24%, transparent);
+  color: var(--seed-ink);
+}
+
+:root[data-theme="anvil"] .nexus-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+:root[data-theme="anvil"] .nexus-rail {
+  box-shadow: inset -1px 0 0 color-mix(in oklab, var(--seed-accent) 45%, transparent);
 }

@@ -106,16 +106,18 @@
 
 /* Anvil: military green. */
 [data-theme="anvil"] {
-  --seed-accent: #a6d24a;
-  --seed-accent-2: #e8c25a;
-  --seed-tint: #1b2316;
-  --seed-ink: #eef3e2;
+  /* The cockpit of the Hornet and the Arrow: teal glass, framed keys, the
+     engaged one lit yellow. */
+  --seed-accent: #3fe6cf;
+  --seed-accent-2: #f2e26b;
+  --seed-tint: #0d2a27;
+  --seed-ink: #e2fbf6;
   --seed-radius: 0px;
-  --seed-ticks: 0.7;
-  --seed-glow: 0.4;
-  --seed-tracking: 0.18em;
+  --seed-ticks: 0.6;
+  --seed-glow: 0.45;
+  --seed-tracking: 0.1em;
   --seed-pattern: var(--pattern-grid);
-  --seed-chamfer: 8px;
+  --seed-chamfer: 6px;
 }
 
 /* Roberts Space Industries: classic blue. */
